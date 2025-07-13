@@ -1,0 +1,43 @@
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === IDEs & Editors ===
+.vscode/
+.idea/
+
+# === Dependencies ===
+node_modules/
+apps/*/node_modules/
+packages/*/node_modules/
+
+# === Build Outputs ===
+# Frontend (Next.js)
+apps/frontend/.next/
+apps/frontend/out/
+# Backend (Nest.js)
+apps/backend/dist/
+# Shared packages
+packages/*/dist/
+# Global
+dist/
+build/
+
+# === Lockfiles ===
+# preserve root lockfile only
+apps/*/package-lock.json
+packages/*/package-lock.json
+
+# === Environment ===
+.env
+.env.*.local
+
+# === Logs & Cache ===
+*.log
+logs/
+.cache/
+coverage/
+*.tsbuildinfo
+
+# === Miscellaneous ===
+npm-debug.log*

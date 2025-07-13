@@ -1,0 +1,49 @@
+{
+  "name": "crwsync",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspaces --if-present build",
+    "lint": "npm run --workspaces --if-present lint",
+    "test": "npm run --workspaces --if-present test",
+    "dev": "npm run --workspaces --if-present dev"
+  },
+  "keywords": [
+    "crwsync",
+    "crew",
+    "sync",
+    "synchronization",
+    "teamwork",
+    "collaboration",
+    "team-management",
+    "productivity",
+    "workflow",
+    "task-management",
+    "project-management",
+    "real-time",
+    "communication",
+    "collaborative-tools",
+    "team-communication",
+    "remote-work",
+    "distributed-teams",
+    "cloud-sync",
+    "file-sync",
+    "data-sync"
+  ],
+  "author": "Tunya Lénárd-Sándor",
+  "description": "crwsync is a collaborative tool designed to enhance teamwork and productivity by providing real-time synchronization of tasks, files, and communication across distributed teams. It aims to streamline project management and improve workflow efficiency in remote work environments.",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "eslint": "^9.31.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-import": "^2.32.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3"
+  }
+}
