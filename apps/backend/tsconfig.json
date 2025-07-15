@@ -7,7 +7,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@crwsync/types": ["../../packages/types/src/index.ts"],
+      "@crwsync/types": ["../../packages/types/src/index"],
       "@crwsync/types/*": ["../../packages/types/dist/*"],
     },
   },
