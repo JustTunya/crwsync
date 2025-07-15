@@ -25,7 +25,7 @@ export class UserEntity {
   birthdate!: string;
 
   @Column({ nullable: true })
-  avatarUrl!: UserProfile;
+  avatarUrl!: string;
 
   @Column('enum', { enum: UserRole, array: true, default: [UserRole.MEMBER] })
   roles!: UserRole[];
