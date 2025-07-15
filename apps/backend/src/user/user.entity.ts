@@ -1,0 +1,59 @@
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { UserRole, UserStatus, UserPreference, UserProfile } from '@crwsync/types';
+
+@Entity({ name: 'users' })
+export class UserEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column({ unique: true })
+  email!: string;
+
+  @Column({ nullable: true })
+  phone!: string;
+
+  @Column({ unique: true })
+  username!: string;
+
+  @Column()
+  firstName!: string;
+
+  @Column()
+  lastName!: string;
+
+  @Column({ type: 'date' })
+  birthdate!: string;
+
+  @Column({ nullable: true })
+  avatarUrl!: UserProfile;
+
+  @Column('enum', { enum: UserRole, array: true, default: [UserRole.MEMBER] })
+  roles!: UserRole[];
+
+  @Column('enum', { enum: UserStatus, default: UserStatus.OFFLINE })
+  status!: UserStatus;
+
+  @Column({ type: 'jsonb', default: () => `'{"theme":"system","notifications":{"email":false,"push":false}}'` })
+  preferences!: UserPreference;
+
+  @Column({ type: 'jsonb', nullable: true })
+  profile!: UserProfile;
+
+  @Column()
+  passwordHash!: string;
+
+  @Column({ default: false })
+  emailVerified!: boolean;
+
+  @Column({ nullable: true })
+  refreshToken!: string;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt!: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lastLogin!: Date;
+}
