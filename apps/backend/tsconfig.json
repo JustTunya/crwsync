@@ -3,14 +3,10 @@
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "rootDir": "../../",
-    "outDir": "./dist",
+    "rootDir": "src",
+    "outDir": "dist",
     "baseUrl": "./",
-    "paths": {
-      "@crwsync/types": ["../../packages/types/src/index"],
-      "@crwsync/types/*": ["../../packages/types/dist/*"],
-    },
   },
-  "include": ["./src/**/*.ts", "../../packages/types/src/**/*.ts"],
+  "include": ["./src/**/*.ts"],
   "exclude": ["node_modules", "dist", "test"],
 }

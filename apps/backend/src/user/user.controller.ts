@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, UsePipes, ValidationPipe, Patch, Delete } from "@nestjs/common";
-import { UserService } from "./user.service";
-import { CreateUserDto } from "./create-user.dto";
-import { UserEntity } from "./user.entity";
+import { UserService } from "./user.service.js";
+import { CreateUserDto } from "./create-user.dto.js";
+import { UserEntity } from "./user.entity.js";
 
 @Controller('user')
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
