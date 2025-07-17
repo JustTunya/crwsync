@@ -23,7 +23,7 @@ export interface UserProfile {
   bio?: string;
   location?: string;
   website?: string;
-  socialLinks?: Record<string, string>;
+  socials?: Record<string, string>;
 }
 
 export interface User {

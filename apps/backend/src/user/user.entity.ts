@@ -9,7 +9,7 @@ export class UserEntity {
   @Column({ unique: true })
   email!: string;
 
-  @Column({ nullable: true })
+  @Column()
   phone!: string;
 
   @Column({ unique: true })
@@ -25,7 +25,7 @@ export class UserEntity {
   birthdate!: string;
 
   @Column({ nullable: true })
-  avatarUrl!: string;
+  avatarUrl?: string;
 
   @Column('enum', { enum: UserRole, array: true, default: [UserRole.MEMBER] })
   roles!: UserRole[];
@@ -36,7 +36,7 @@ export class UserEntity {
   @Column({ type: 'jsonb', default: () => `'{"theme":"system","notifications":{"email":false,"push":false}}'` })
   preferences!: UserPreference;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'jsonb', default: () => `'{}'` })
   profile!: UserProfile;
 
   @Column()
@@ -45,8 +45,11 @@ export class UserEntity {
   @Column({ default: false })
   emailVerified!: boolean;
 
+  @Column({ default: false })
+  phoneVerified!: boolean;
+
   @Column({ nullable: true })
-  refreshToken!: string;
+  refreshToken?: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
@@ -55,5 +58,5 @@ export class UserEntity {
   updatedAt!: Date;
 
   @Column({ type: 'timestamptz', nullable: true })
-  lastLogin!: Date;
+  lastLogin?: Date;
 }

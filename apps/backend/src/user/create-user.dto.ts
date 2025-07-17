@@ -7,6 +7,7 @@ import {
   IsArray,
   ArrayNotEmpty,
   IsObject,
+  IsPhoneNumber
 } from 'class-validator';
 import { UserRole, UserStatus, UserPreference, UserProfile } from '@crwsync/types';
 
@@ -14,9 +15,8 @@ export class CreateUserDto {
   @IsEmail()
   email!: string;
 
-  @IsOptional()
-  @IsString()
-  phone?: string;
+  @IsPhoneNumber(undefined, { message: 'Invalid phone number format' })
+  phone!: string;
 
   @IsString()
   username!: string;
@@ -34,16 +34,19 @@ export class CreateUserDto {
   @IsString()
   avatarUrl?: string;
 
+  @IsOptional()
   @IsArray()
   @ArrayNotEmpty()
   @IsEnum(UserRole, { each: true })
-  roles!: UserRole[];
+  roles?: UserRole[];
 
+  @IsOptional()
   @IsEnum(UserStatus)
-  status!: UserStatus;
+  status?: UserStatus;
 
+  @IsOptional()
   @IsObject()
-  preferences!: UserPreference;
+  preferences?: UserPreference;
 
   @IsOptional()
   @IsObject()
