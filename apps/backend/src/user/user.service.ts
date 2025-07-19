@@ -34,6 +34,15 @@ export class UserService {
     return user;
   }
 
+  async findByEmailOrUsername(identifier: string): Promise<UserEntity | null> {
+    return this.repo.findOne({
+      where: [
+        { email: identifier },
+        { username: identifier }
+      ]
+    });
+  }
+
   async update(id: string, dto: UpdateUserDto): Promise<UserEntity> {
     const user = await this.findOne(id);
     Object.assign(user, dto);

@@ -22,10 +22,10 @@ export class CreateUserDto {
   username!: string;
 
   @IsString()
-  firstName!: string;
+  firstname!: string;
 
   @IsString()
-  lastName!: string;
+  lastname!: string;
 
   @IsISO8601()
   birthdate!: string;

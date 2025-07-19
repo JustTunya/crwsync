@@ -3,7 +3,7 @@ import { UserService } from "./user.service.js";
 import { CreateUserDto } from "./create-user.dto.js";
 import { UserEntity } from "./user.entity.js";
 
-@Controller('user')
+@Controller('users')
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 export class UserController {
   constructor(private readonly userService: UserService) {}
