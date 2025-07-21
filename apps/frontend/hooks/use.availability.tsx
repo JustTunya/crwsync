@@ -5,13 +5,13 @@ import { checkAvailability } from '@/services/auth.service';
 
 export function useAvailability(field: 'email' | 'username', value: string) {
   const [debounced] = useDebounce(value, 500);
-  const [availability, setAvailability] = useState<boolean | null>(null);
+  const [availability, setAvailability] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
     const term = debounced.trim();
 
     if (!term) {
-      setAvailability(null);
+      setAvailability(undefined);
       return;
     }
 
@@ -29,7 +29,7 @@ export function useAvailability(field: 'email' | 'username', value: string) {
           console.error('Unexpected error:', error);
         }
         if (!isCancelled) {
-          setAvailability(null);
+          setAvailability(undefined);
         }
       }
     };

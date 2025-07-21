@@ -4,8 +4,11 @@ import Image from "next/image";
 import countries from "world-countries";
 import { useState, useActionState } from "react";
 import { SignupState, SignupPayload, Country } from "@crwsync/types";
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Calendar04Icon } from "@hugeicons/core-free-icons";
 import { useAvailability } from "@/hooks/use.availability";
 import { signup } from "@/services/auth.service";
+import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +19,11 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
 
 const initState: SignupState = {
   success: false,
@@ -33,7 +41,7 @@ export function SignupForm() {
       username: username,
       firstname: firstname,
       lastname: lastname,
-      birthdate: birthdate,
+      birthdate: birthdate ? birthdate.toISOString().split("T")[0] : "",
       password: password
     };
     dispFormAction(payload);
@@ -56,9 +64,12 @@ export function SignupForm() {
   const [phone, setPhone] = useState("");
   const [firstname, setFirstName] = useState("");
   const [lastname, setLastName] = useState("");
-  const [birthdate, setBirthdate] = useState("");
+  const [birthdate, setBirthdate] = useState<Date | undefined>(undefined);
+  const [openCalendar, setOpenCalendar] = useState(false);
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [confpassword, setConfirmPassword] = useState("");
+  const [showConfPass, setShowConfPass] = useState(false);
 
   const checkEmail = useAvailability("email", email);
   const checkUsername = useAvailability("username", username);
@@ -77,6 +88,7 @@ export function SignupForm() {
             id="email"
             type="email"
             value={email}
+            validation={checkEmail}
             onChange={(e) => setEmail(e.target.value)}
           />
           {!checkEmail && (
@@ -90,6 +102,7 @@ export function SignupForm() {
             id="username"
             type="text"
             value={username}
+            validation={checkUsername}
             onChange={(e) => setUsername(e.target.value)}
           />
           {!checkUsername && (
@@ -184,12 +197,31 @@ export function SignupForm() {
 
         <div className="space-y-4">
           <Label htmlFor="birthdate">Birthdate</Label>
-          <Input
-            id="birthdate"
-            type="date"
-            value={birthdate}
-            onChange={(e) => setBirthdate(e.target.value)}
-          />
+          <Popover open={openCalendar} onOpenChange={setOpenCalendar}>
+            <PopoverTrigger asChild className="bg-transparent">
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => setOpenCalendar(!openCalendar)}
+              >
+                {birthdate ? birthdate.toISOString().split("T")[0] : "Select Birthdate"}
+                <HugeiconsIcon icon={Calendar04Icon} size={18} strokeWidth={1} className="ml-2" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={birthdate}
+                captionLayout="dropdown"
+                onSelect={(date) => {
+                  if (date) {
+                    setBirthdate(date);
+                    setOpenCalendar(false);
+                  }
+                }}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-4">
@@ -198,6 +230,8 @@ export function SignupForm() {
             id="password"
             type="password"
             value={password}
+            visible={showPass}
+            setVisible={() => setShowPass(!showPass)}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
@@ -208,6 +242,8 @@ export function SignupForm() {
             id="confpassword"
             type="password"
             value={confpassword}
+            visible={showConfPass}
+            setVisible={() => setShowConfPass(!showConfPass)}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
         </div>
