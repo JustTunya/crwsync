@@ -1,11 +1,21 @@
 "use client";
 
+import Image from "next/image";
+import countries from "world-countries";
 import { useState, useActionState } from "react";
-import { SignupState, SignupPayload } from "@crwsync/types";
+import { SignupState, SignupPayload, Country } from "@crwsync/types";
+import { useAvailability } from "@/hooks/use.availability";
 import { signup } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 const initState: SignupState = {
   success: false,
@@ -19,40 +29,43 @@ export function SignupForm() {
   const formAction = () => {
     const payload: SignupPayload = {
       email: email,
-      phone: phone,
+      phone: `${dial}${phone}`,
       username: username,
       firstname: firstname,
       lastname: lastname,
       birthdate: birthdate,
       password: password
     };
-    console.log("Form submitted:", payload);
     dispFormAction(payload);
   };
 
+  const countrylist: Country[] = countries.map((country) => ({
+    name: country.name.common,
+    iso3166: {
+      alpha2: country.cca2,
+      alpha3: country.cca3,
+      numeric: country.ccn3,
+    },
+    dial_code: country.idd.root + (country.idd.suffixes[0] || ""),
+    flag: `/flags/${country.ccn3}.svg`,
+  }));
+
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [username, setUsername] = useState("");
+  const [dial, setDial] = useState("US");
+  const [phone, setPhone] = useState("");
   const [firstname, setFirstName] = useState("");
   const [lastname, setLastName] = useState("");
   const [birthdate, setBirthdate] = useState("");
   const [password, setPassword] = useState("");
   const [confpassword, setConfirmPassword] = useState("");
 
-  const [emailCheck, setEmailCheck] = useState<"checking" | "available" | "taken" | null>(null);
-  const [phoneCheck, setPhoneCheck] = useState<"checking" | "available" | "taken" | null>(null);
-  const [usernameCheck, setUsernameCheck] = useState<"checking" | "available" | "taken" | null>(null);
+  const checkEmail = useAvailability("email", email);
+  const checkUsername = useAvailability("username", username);
 
-  const handleEmailCheck = async (email: string) => {
-    return; // TODO: Implement email availability check
-  };
-
-  const handlePhoneCheck = async (phone: string) => {
-    return; // TODO: Implement phone availability check
-  };
-
-  const handleUsernameCheck = async (username: string) => {
-    return; // TODO: Implement username availability check
+  const onSelectCountry = (value: string) => {
+    setDial(value);
+    console.log("Selected country:", value);
   };
 
   return (
@@ -65,19 +78,10 @@ export function SignupForm() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onBlur={() => handleEmailCheck(email)}
           />
-        </div>
-
-        <div className="space-y-4">
-          <Label htmlFor="phone">Phone Number</Label>
-          <Input
-            id="phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            onBlur={() => handlePhoneCheck(phone)}
-          />
+          {!checkEmail && (
+            <Label className="text-red-500">Email is already taken</Label>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -87,8 +91,73 @@ export function SignupForm() {
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            onBlur={() => handleUsernameCheck(username)}
           />
+          {!checkUsername && (
+            <Label className="text-red-500">Username is already taken</Label>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <Label htmlFor="phone">Phone Number</Label>
+
+          <div className="flex flex-row items-center space-x-2">
+            <Select value={dial} onValueChange={onSelectCountry}>
+              <SelectTrigger>
+                <SelectValue>
+                  {(() => {
+                    const selection = countrylist.find((c) => c.iso3166.alpha2 === dial);
+                    if (!selection) return <span>Select Country</span>;
+                    return (
+                      <>
+                        <div className="w-6 h-4 relative">
+                          <Image
+                            src={selection.flag}
+                            alt={selection.iso3166.alpha2}
+                            fill
+                            className="object-cover rounded-[3px] shadow-xs"
+                            onError={(e) => {
+                              // Fallback to a placeholder if the flag image fails to load
+                              e.currentTarget.src = "/flags/placeholder.svg";
+                            }}
+                          />
+                          <div className="absolute inset-0 rounded-[3px] shadow-[inset_0_4px_4px_-2px_rgba(255,255,255,0.5),inset_0_-1px_3px_-1px_rgba(0,0,0,0.4)]" />
+                        </div>
+                        <p className="text-sm font-medium">{selection.dial_code}</p>
+                      </>
+                    );
+                  })()}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {countrylist.filter((c) => c.dial_code).sort((a, b) => a.iso3166.alpha2.localeCompare(b.iso3166.alpha2)).map((c) => (
+                  <SelectItem key={c.iso3166.alpha2} value={c.iso3166.alpha2}>
+                    <div className="w-6 h-4 relative">
+                      <Image 
+                        src={c.flag} 
+                        alt={c.iso3166.alpha2} 
+                        fill 
+                        className="object-cover rounded-[4px] shadow-md"
+                        onError={(e) => {
+                          // Fallback to a placeholder if the flag image fails to load
+                          e.currentTarget.src = "/flags/placeholder.svg";
+                        }}
+                      />
+                      <div className="absolute inset-0 rounded-[4px] shadow-[inset_0_4px_4px_-2px_rgba(255,255,255,0.5),inset_0_-1px_3px_-1px_rgba(0,0,0,0.4)]" />
+                    </div>
+                    <p className="text-sm font-medium">{c.iso3166.alpha2}</p>
+                    <p className="text-xs text-blue-800 bg-blue-800/10 px-1 pb-0.5 pt-0 rounded-sm">{c.dial_code}</p>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="flex flex-row space-x-4">

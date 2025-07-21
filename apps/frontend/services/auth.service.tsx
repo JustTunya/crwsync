@@ -55,3 +55,19 @@ export async function signin(_prev: SigninState, data: SigninPayload): Promise<S
     };
   }
 }
+
+export async function checkAvailability(field: 'email' | 'username', value: string): Promise<{ available: boolean }> {
+  try {
+    const response = await api.get("/auth/check-availability", {
+      params: { field, value }
+    });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Error checking availability:", error.response?.data);
+    } else {
+      console.error("An unexpected error occurred while checking availability");
+    }
+    return { available: false };
+  }
+}

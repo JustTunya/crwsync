@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { JwtResponse } from "./jwt-resp.interface.js";
 import { UserService } from "../user/user.service.js";
-import { UserEntity } from "../user/user.entity";
+import { UserEntity } from "../user/user.entity.js";
 import { SigninDto } from "./signin.dto.js";
 import * as bcrypt from "bcrypt";
 

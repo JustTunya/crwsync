@@ -43,6 +43,13 @@ export class UserService {
     });
   }
 
+  async checkEmailOrUsername(field: 'email' | 'username', value: string): Promise<{ available: boolean }> {
+    const exists = await this.repo.findOne({
+      where: { [field]: value }
+    });
+    return { available: !exists };
+  }
+
   async update(id: string, dto: UpdateUserDto): Promise<UserEntity> {
     const user = await this.findOne(id);
     Object.assign(user, dto);
