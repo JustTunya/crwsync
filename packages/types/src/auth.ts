@@ -2,10 +2,10 @@ export interface SignupState {
   success?: boolean;
   errors?: {
     email?: string;
-    phone?: string;
     username?: string;
     firstname?: string;
     lastname?: string;
+    gender?: string;
     birthdate?: string;
     password?: string;
     confpassword?: string;
@@ -15,10 +15,10 @@ export interface SignupState {
 
 export interface SignupPayload {
   email: string;
-  phone: string;
   username: string;
   firstname: string;
   lastname: string;
+  gender: string;
   birthdate: string;
   password: string;
 }
