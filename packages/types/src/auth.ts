@@ -35,4 +35,5 @@ export interface SigninState {
 export interface SigninPayload {
   identifier: string;
   password: string;
+  rememberMe?: boolean;
 }

@@ -21,7 +21,7 @@ export function useValidator(value: string, validator: (value: string) => boolea
           setIsValid(result);
         }
       } catch (error) {
-        console.error('Validation error:', error);
+        // console.error('Validation error:', error);
         if (!isCancelled) {
           setIsValid(undefined);
         }

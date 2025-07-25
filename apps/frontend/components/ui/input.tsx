@@ -20,14 +20,14 @@ function Input({ className, type, visible, setVisible, validation, ...props }: I
   return (
     <div className={cn(
       "w-full flex bg-base-100/50 backdrop-blur-md border border-base-100 shadow-lg/5 rounded-md", 
-      "focus-within:ring-3 focus-within:ring-accent/20 focus-within:border-accent/40",
+      "focus-within:ring-3 focus-within:ring-accent/20",
       className
       )}>
       <input
         type={type === "password" && visible ? "text" : type}
         data-slot="input"
         className={cn(
-          "file:text-foreground placeholder:text-muted-foreground selection:text-primary selection:bg-accent/20 dark:bg-input/30 flex h-9 w-full min-w-0 px-3 py-1 text-sm sm:text-base transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          "file:text-foreground placeholder:text-muted-foreground/80 selection:text-primary selection:bg-accent/20 dark:bg-input/30 flex h-9 w-full min-w-0 px-3 py-1 text-sm sm:text-base transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
           "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
         )}
         {...props}

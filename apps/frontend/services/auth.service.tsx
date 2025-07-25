@@ -64,9 +64,9 @@ export async function checkAvailability(field: 'email' | 'username', value: stri
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error("Error checking availability:", error.response?.data);
+      // console.error("Error checking availability:", error.response?.data);
     } else {
-      console.error("An unexpected error occurred while checking availability");
+      // console.error("An unexpected error occurred while checking availability");
     }
     return { available: false };
   }

@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 
+
 const initState: SignupState = {
   success: false,
   errors: {},
@@ -112,12 +113,23 @@ export function SignupForm() {
   return (
     <div className="max-w-[calc(100vw-4rem)] mx-auto p-6 sm:p-8 bg-base-200/50 backdrop-blur-md border border-base-100 shadow-xl/5 rounded-2xl">
       <div className="z-[-1] absolute inset-0 rounded-2xl shadow-[inset_0_8px_16px_8px_rgba(255,255,255,0.2),inset_0_-16px_32px_-16px_rgba(0,0,0,0.1)]" />
+
+      <div className="text-center space-y-2 mb-12">
+        <h1 className="text-2xl font-medium">Create Your Account</h1>
+        <p className="text-sm text-muted-foreground/75 font-light">
+          Please fill in the details below to create your account.
+        </p>
+      </div>
+
       <form action={formAction} className="z-10 min-w-sm space-y-6">
-        <div className="w-full flex justify-center">
-          <div className="w-1/2 flex flex-row gap-3 items-center justify-between">
+        <div className="w-full flex justify-center mb-12">
+          <div className="w-1/2 flex gap-3">
             {Array.from({ length: 3 }, (_, i) => (
-              <>
-                <div key={i} className={cn(
+              <div key={i} className={cn(
+                "flex flex-row justify-between items-center gap-3",
+                (step >= i) && "w-full"
+              )}>
+                <div className={cn(
                   "w-6 h-6 rounded-full bg-accent flex items-center justify-center",
                   (step > i) ? "bg-accent/60" : "bg-muted-foreground/40 text-base text-primary-content"
                 )}>
@@ -131,7 +143,7 @@ export function SignupForm() {
                 {i < 2 && (
                   <div className={cn("flex-1 h-[2px]", (step > i+1) ? "bg-accent/60" : "bg-muted-foreground/40")} />
                 )}
-              </>
+              </div>
             ))}
           </div>
         </div>
@@ -241,8 +253,8 @@ export function SignupForm() {
           className="space-y-6"
         >
           <div className="space-y-3">
-            <div className="flex flex-row space-x-3">
-              <div className="space-y-3">
+            <div className="flex flex-row justify-between gap-3">
+              <div className="w-full space-y-3">
                 <Label htmlFor="firstname">First Name</Label>
                 <Input
                   id="firstname"
@@ -254,7 +266,7 @@ export function SignupForm() {
                 />
               </div>
 
-              <div className="space-y-3">
+              <div className="w-full space-y-3">
                 <Label htmlFor="lastname">Last Name</Label>
                 <Input
                   id="lastname"
@@ -350,11 +362,11 @@ export function SignupForm() {
 
           <div className="mx-auto max-w-xs text-xs text-center text-muted-foreground text-pretty">
             By creating an account, you agree to our{" "}
-            <Link href="/legal/terms" className="text-accent underline underline-offset-2">
+            <Link href="/legal/terms" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/legal/privacy" className="text-accent underline underline-offset-2">
+            <Link href="/legal/privacy" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
               Privacy Policy
             </Link>.
           </div>
@@ -411,10 +423,16 @@ export function SignupForm() {
         </motion.div>
       )}
 
+      {state.message && (
+        <Label error className="mt-4 text-center">
+          {state.message}
+        </Label>
+      )}
+
       <div className="mt-6">
         <p className="w-full text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link href="/auth/signin" className="text-accent underline underline-offset-2">
+          <Link href="/auth/signin" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
             Sign In
           </Link>
         </p>

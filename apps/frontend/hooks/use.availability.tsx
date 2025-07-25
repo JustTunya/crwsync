@@ -24,9 +24,9 @@ export function useAvailability(field: 'email' | 'username', value: string) {
         }
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          console.error('Error checking availability:', error.response?.data);
+          // console.error('Error checking availability:', error.response?.data);
         } else {
-          console.error('Unexpected error:', error);
+          // console.error('Unexpected error:', error);
         }
         if (!isCancelled) {
           setAvailability(undefined);
