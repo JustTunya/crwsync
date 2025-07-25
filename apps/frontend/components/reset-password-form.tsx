@@ -12,7 +12,7 @@ import { resetPassword } from "@/services/auth.service";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useMatch } from "@/hooks/use.match";
+import { useMatch } from "@/hooks/use-match";
 import { cn, variants } from "@/lib/utils";
 import { GlassBox } from "@/components/ui/glassbox";
 

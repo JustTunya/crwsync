@@ -32,8 +32,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} ${roboto.variable} antialiased font-roboto`}>
-        <div className="absolute inset-0 size-full bg-base-300">
-          <div className="absolute inset-0 size-full bg-[radial-gradient(var(--color-muted)_1px,transparent_1px)] [background-size:12px_12px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <div className="fixed inset-0 size-full bg-base-300">
+          <div className="absolute inset-0 size-full bg-[radial-gradient(var(--color-muted)_1.6px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
         </div>
 
         {children}

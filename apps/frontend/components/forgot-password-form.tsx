@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { isEmailValid } from "@/lib/validations";
-import { useValidator } from "@/hooks/use.validator";
+import { useValidator } from "@/hooks/use-validator";
 import { cn, variants } from "@/lib/utils";
 import { GlassBox } from "@/components/ui/glassbox";
 
