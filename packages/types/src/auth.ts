@@ -37,3 +37,29 @@ export interface SigninPayload {
   password: string;
   rememberMe?: boolean;
 }
+
+export interface ForgotPasswordState {
+  success?: boolean;
+  errors?: {
+    email?: string;
+  };
+  message?: string;
+}
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordState {
+  success?: boolean;
+  errors?: {
+    password?: string;
+    token?: string;
+  };
+  message?: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  password: string;
+}

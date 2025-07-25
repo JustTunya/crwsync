@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useEffect, useActionState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { 
   UserGender, 
   UserGenderType, 
@@ -29,9 +31,8 @@ import {
 } from "@/lib/validations"
 import { useMatch } from "@/hooks/use.match";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { cn, variants } from "@/lib/utils";
+import { GlassBox } from "@/components/ui/glassbox";
 
 
 const initState: SignupState = {
@@ -40,13 +41,9 @@ const initState: SignupState = {
   message: "",
 };
 
-const variants = {
-  enter: { opacity: 0, x: 50 },
-  center: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -50 },
-};
-
 export function SignupForm() {
+  const steps = 3;
+
   const [state, dispFormAction, pending] = useActionState(signup, initState);
   
   const formAction = () => {
@@ -111,42 +108,30 @@ export function SignupForm() {
   }, [birthday, daysInMonth]);
 
   return (
-    <div className="max-w-[calc(100vw-4rem)] mx-auto p-6 sm:p-8 bg-base-200/50 backdrop-blur-md border border-base-100 shadow-xl/5 rounded-2xl">
-      <div className="z-[-1] absolute inset-0 rounded-2xl shadow-[inset_0_8px_16px_8px_rgba(255,255,255,0.2),inset_0_-16px_32px_-16px_rgba(0,0,0,0.1)]" />
-
-      <div className="text-center space-y-2 mb-12">
-        <h1 className="text-2xl font-medium">Create Your Account</h1>
-        <p className="text-sm text-muted-foreground/75 font-light">
+    <GlassBox>
+      <div className="text-center space-y-2 mb-8 sm:mb-12">
+        <h1 className="text-xl sm:text-2xl font-medium">Create Your Account</h1>
+        <p className="text-xs sm:text-sm text-balance text-muted-foreground/75 font-light">
           Please fill in the details below to create your account.
         </p>
       </div>
 
-      <form action={formAction} className="z-10 min-w-sm space-y-6">
-        <div className="w-full flex justify-center mb-12">
-          <div className="w-1/2 flex gap-3">
-            {Array.from({ length: 3 }, (_, i) => (
+      <form action={formAction} className="sm:min-w-sm flex flex-col items-center space-y-8">
+          <div className="w-1/2 flex justify-between items-center mb-12 sm:mb-16">
+            {Array.from({ length: steps }, (_, i) => (
               <div key={i} className={cn(
-                "flex flex-row justify-between items-center gap-3",
-                (step >= i) && "w-full"
+                "size-6 rounded-full bg-accent flex items-center justify-center text-base text-primary-content",
+                (step > i) ? "bg-accent/60" : "bg-muted-foreground/50"
               )}>
-                <div className={cn(
-                  "w-6 h-6 rounded-full bg-accent flex items-center justify-center",
-                  (step > i) ? "bg-accent/60" : "bg-muted-foreground/40 text-base text-primary-content"
-                )}>
-                  {(step > i) ? (
-                    <>
-                      <div className="w-3 h-3 rounded-full bg-base-200 shadow-[0_0_4px_2px_rgba(255,255,255,0.2)]" />
-                      {(step === i+1) && <div className={cn("absolute inline-0 opacity-50 w-3 h-3 rounded-full bg-base-200 shadow-[0_0_4px_2px_rgba(255,255,255,0.2)]", (step === i+1) && "animate-ping")}/>}
-                    </>
-                  ) : (i+1)}
-                </div>
-                {i < 2 && (
-                  <div className={cn("flex-1 h-[2px]", (step > i+1) ? "bg-accent/60" : "bg-muted-foreground/40")} />
-                )}
+                {(step > i) ? (
+                  <>
+                    <div className="w-3 h-3 rounded-full bg-base-200 shadow-[0_0_4px_2px_rgba(255,255,255,0.2)]" />
+                    {(step === i+1) && <div className={cn("absolute inline-0 opacity-50 w-3 h-3 rounded-full bg-base-200 shadow-[0_0_4px_2px_rgba(255,255,255,0.2)]", (step === i+1) && "animate-ping")}/>}
+                  </>
+                ) : (i+1)}
               </div>
             ))}
           </div>
-        </div>
 
         <AnimatePresence mode="wait">
         {step === 1 && (
@@ -157,9 +142,9 @@ export function SignupForm() {
             animate="center"
             exit="exit"
             transition={{ duration: 0.3 }}
-            className="space-y-6"
+            className="w-full space-y-6"
           >
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
@@ -178,7 +163,7 @@ export function SignupForm() {
             )}
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Label htmlFor="username">Username</Label>
             <Input
               id="username"
@@ -197,7 +182,7 @@ export function SignupForm() {
             )}
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
@@ -210,7 +195,7 @@ export function SignupForm() {
             />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Label htmlFor="confpassword">Confirm Password</Label>
             <Input
               id="confpassword"
@@ -250,11 +235,11 @@ export function SignupForm() {
           animate="center"
           exit="exit"
           transition={{ duration: 0.3 }}
-          className="space-y-6"
+          className="w-full space-y-6"
         >
-          <div className="space-y-3">
-            <div className="flex flex-row justify-between gap-3">
-              <div className="w-full space-y-3">
+          <div className="space-y-4">
+            <div className="flex flex-row justify-between gap-4">
+              <div className="w-full space-y-4">
                 <Label htmlFor="firstname">First Name</Label>
                 <Input
                   id="firstname"
@@ -266,7 +251,7 @@ export function SignupForm() {
                 />
               </div>
 
-              <div className="w-full space-y-3">
+              <div className="w-full space-y-4">
                 <Label htmlFor="lastname">Last Name</Label>
                 <Input
                   id="lastname"
@@ -286,7 +271,7 @@ export function SignupForm() {
             )}
           </div>
         
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Label htmlFor="lastname">Gender</Label>
             <Select value={gender?.value} onValueChange={(value) => {
               const selectedGender = Object.values(UserGender).find(g => g.value === value);
@@ -307,9 +292,9 @@ export function SignupForm() {
             </Select>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Label htmlFor="birthdate">Birthdate</Label>
-            <div className="flex flex-row justify-center items-center gap-3">
+            <div className="flex flex-row justify-center items-center gap-4">
               <Select value={birthyear} onValueChange={setBirthyear}>
                 <SelectTrigger size="full">
                   <SelectValue placeholder="Year">
@@ -371,12 +356,13 @@ export function SignupForm() {
             </Link>.
           </div>
 
-          <div className="flex justify-between items-center">
+          <div className="flex justify-center items-center gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setStep(1)}
-              className="w-[calc(25%-0.3rem)] gap-1"
+              disabled={pending}
+              className="w-[calc(25%-0.5rem)]"
             >
               <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={1.5} />
               Back
@@ -384,7 +370,6 @@ export function SignupForm() {
 
             <Button
               type="submit"
-              className="w-[calc(75%-0.3rem)]"
               onClick={() => setStep(3)}
               disabled={pending || !(
                 validEmail && 
@@ -397,6 +382,7 @@ export function SignupForm() {
                 checkEmail &&
                 checkUsername
               )}
+              className="w-[calc(75%-0.5rem)]"
             >
               {pending ? "Creating account..." : "Create Account"}
             </Button>
@@ -429,14 +415,14 @@ export function SignupForm() {
         </Label>
       )}
 
-      <div className="mt-6">
-        <p className="w-full text-center text-sm text-muted-foreground">
+      <div className="mt-8">
+        <p className="w-full text-center text-xs sm:text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link href="/auth/signin" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
             Sign In
           </Link>
         </p>
       </div>
-    </div>
+    </GlassBox>
   );
 }
