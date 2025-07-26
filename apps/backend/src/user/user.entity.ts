@@ -1,7 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue, UserGender } from '@crwsync/types';
 
 @Entity({ name: 'users' })
+@Index("idx_user_email", ["email"], { unique: true })
+@Index("idx_user_username", ["username"], { unique: true })
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
