@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
-import { UserGender, UserGenderType } from "@crwsync/types";
+import { UserGender, UserGenderValue } from "@crwsync/types";
 import { isNameValid, isBirthdateValid } from "@/lib/validations";
 import { useValidator } from "@/hooks/use-validator";
 import { 
@@ -20,12 +20,12 @@ interface SignupStep2Props {
   form: {
     firstname: string;
     lastname: string;
-    gender: UserGenderType | undefined;
+    gender: UserGenderValue | undefined;
     birthyear: string;
     birthmonth: string;
     birthday: string;
   };
-  updateForm: (field: keyof SignupStep2Props["form"], value: string | UserGenderType | undefined) => void;
+  updateForm: (field: keyof SignupStep2Props["form"], value: string | UserGenderValue | undefined) => void;
   onBack: () => void;
   onSubmit: () => void;
   pending: boolean;
@@ -34,7 +34,7 @@ interface SignupStep2Props {
 export default function SignupStep2(props: SignupStep2Props) {
   const [firstname, setFirstName] = useState<string>("");
   const [lastname, setLastName] = useState<string>("");
-  const [gender, setGender] = useState<UserGenderType | undefined>(undefined);
+  const [gender, setGender] = useState<UserGenderValue | undefined>(undefined);
   const [birthyear, setBirthYear] = useState<string>("");
   const [birthmonth, setBirthMonth] = useState<string>("");
   const [birthday, setBirthDay] = useState<string>("");
@@ -42,7 +42,7 @@ export default function SignupStep2(props: SignupStep2Props) {
   const validFirstName = useValidator(firstname, isNameValid);
   const validLastName = useValidator(lastname, isNameValid);
   const validGender = useMemo(() => {
-    return gender?.value !== undefined;
+    return gender !== undefined && Object.values(UserGender).some(g => g.value === gender);
   }, [gender]);
   const validBirthdate = useMemo(() => {
     if (!birthyear || !birthmonth || !birthday) return undefined;
@@ -60,26 +60,33 @@ export default function SignupStep2(props: SignupStep2Props) {
 
   const handleFirstNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setFirstName(e.target.value);
+    props.updateForm("firstname", e.target.value);
   }, []);
 
   const handleLastNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLastName(e.target.value);
+    props.updateForm("lastname", e.target.value);
   }, []);
 
   const handleGenderChange = useCallback((value: string) => {
-    setGender(UserGender[value as keyof typeof UserGender]);
+    const gen = Object.values(UserGender).find(g => g.value === value);
+    setGender(gen?.value);
+    props.updateForm("gender", gen?.value);
   }, []);
 
   const handleYearChange = useCallback((value: string) => {
     setBirthYear(value);
+    props.updateForm("birthyear", value);
   }, []);
 
   const handleMonthChange = useCallback((value: string) => {
     setBirthMonth(value);
+    props.updateForm("birthmonth", value);
   }, []);
 
   const handleDayChange = useCallback((value: string) => {
     setBirthDay(value);
+    props.updateForm("birthday", value);
   }, []);
 
   const daysInMonth = useMemo(() => {
@@ -138,10 +145,10 @@ export default function SignupStep2(props: SignupStep2Props) {
     
       <div className="space-y-4">
         <Label htmlFor="lastname">Gender</Label>
-        <Select value={gender?.value} onValueChange={handleGenderChange}>
+        <Select value={gender} onValueChange={handleGenderChange}>
           <SelectTrigger size="full">
             <SelectValue placeholder="Gender">
-              {gender?.label || "Select"}
+              {gender || "Select"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>

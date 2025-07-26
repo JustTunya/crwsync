@@ -11,13 +11,17 @@ export enum UserStatus {
   OFFLINE = 'offline',
 }
 
-export const UserGender = {
-  FEMALE: { value: 'female', label: 'Female' },
-  MALE: { value: 'male', label: 'Male' },
-  PREFER_NOT_TO_SAY: { value: 'prefer_not_to_say', label: 'Prefer not to say' },
-} as const;
+export enum UserGenderValue {
+  FEMALE = 'female',
+  MALE = 'male',
+  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
+}
 
-export type UserGenderType = typeof UserGender[keyof typeof UserGender];
+export const UserGender = {
+  FEMALE: { value: UserGenderValue.FEMALE, label: 'Female' },
+  MALE: { value: UserGenderValue.MALE, label: 'Male' },
+  PREFER_NOT_TO_SAY: { value: UserGenderValue.PREFER_NOT_TO_SAY, label: 'Prefer not to say' },
+} as const;
 
 export interface UserPreference {
   theme: 'light' | 'dark' | 'system';
@@ -40,7 +44,7 @@ export interface User {
   username: string;
   firstName: string;
   lastName: string;
-  gender: UserGenderType;
+  gender: UserGenderValue;
   birthdate: string;
   avatarUrl?: string;
   roles: UserRole[];

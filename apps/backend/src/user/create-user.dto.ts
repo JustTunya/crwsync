@@ -7,16 +7,12 @@ import {
   IsArray,
   ArrayNotEmpty,
   IsObject,
-  IsPhoneNumber
 } from 'class-validator';
-import { UserRole, UserStatus, UserPreference, UserProfile } from '@crwsync/types';
+import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue } from '@crwsync/types';
 
 export class CreateUserDto {
   @IsEmail()
   email!: string;
-
-  @IsPhoneNumber(undefined, { message: 'Invalid phone number format' })
-  phone!: string;
 
   @IsString()
   username!: string;
@@ -26,6 +22,9 @@ export class CreateUserDto {
 
   @IsString()
   lastname!: string;
+
+  @IsEnum(UserGenderValue, { message: 'gender must be one of: ' + Object.values(UserGenderValue).join(', ') })
+  gender!: UserGenderValue;
 
   @IsISO8601()
   birthdate!: string;
@@ -54,4 +53,8 @@ export class CreateUserDto {
 
   @IsString()
   password!: string;
+
+  @IsOptional()
+  @IsString()
+  refreshToken?: string;
 }

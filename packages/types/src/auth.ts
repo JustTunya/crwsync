@@ -63,3 +63,7 @@ export interface ResetPasswordPayload {
   token: string;
   password: string;
 }
+
+export interface JwtResponse {
+  accessToken: string;
+}

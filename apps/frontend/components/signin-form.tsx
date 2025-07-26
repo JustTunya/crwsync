@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useActionState } from "react";
+import { useActionState, startTransition } from "react";
 import { motion } from "framer-motion";
 import { SigninState, SigninPayload } from "@crwsync/types";
 import { signin } from "@/services/auth.service";
@@ -25,11 +25,13 @@ export function SigninForm() {
   const [showPass, setShowPass] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const [state, dispatchLogin, pending] = useActionState(signin, initState);
+  const [state, dispatch, pending] = useActionState(signin, initState);
 
-  const formAction = () => {
+  const handleSignin = () => {
     const payload: SigninPayload = { identifier, password, rememberMe };
-    dispatchLogin(payload);
+    startTransition(() => {
+      dispatch(payload);
+    });
   };
 
   return (
@@ -50,7 +52,7 @@ export function SigninForm() {
         transition={{ duration: 0.3 }}
         className="w-full space-y-6"
       >
-        <form action={formAction} className="w-full space-y-6">
+        <form action={handleSignin} className="w-full space-y-6">
           <div className="space-y-3">
             <Label htmlFor="identifier">Username or Email</Label>
             <Input
@@ -93,8 +95,7 @@ export function SigninForm() {
           </div>
 
           <Button
-            type="button"
-            onClick={formAction}
+            type="submit"
             disabled={pending || !identifier || !password}
             className="w-full"
           >
@@ -102,6 +103,10 @@ export function SigninForm() {
           </Button>
         </form>
       </motion.div>
+
+      {(!state.success && state.message) && (
+        <Label error className="w-full flex justify-center mt-2">{state.message}</Label>
+      )}
 
       <p className="mt-6 text-center text-xs sm:text-sm text-muted-foreground">
         Don&apos;t have an account yet?{' '}

@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { UserRole, UserStatus, UserPreference, UserProfile } from '@crwsync/types';
+import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue, UserGender } from '@crwsync/types';
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -9,9 +9,6 @@ export class UserEntity {
   @Column({ unique: true })
   email!: string;
 
-  @Column()
-  phone!: string;
-
   @Column({ unique: true })
   username!: string;
 
@@ -20,6 +17,9 @@ export class UserEntity {
 
   @Column()
   lastname!: string;
+
+  @Column('jsonb', { default: UserGender.PREFER_NOT_TO_SAY })
+  gender!: UserGenderValue;
 
   @Column({ type: 'date' })
   birthdate!: string;
@@ -32,7 +32,7 @@ export class UserEntity {
 
   @Column('enum', { enum: UserStatus, default: UserStatus.OFFLINE })
   status!: UserStatus;
-
+ 
   @Column({ type: 'jsonb', default: () => `'{"theme":"system","notifications":{"email":false,"push":false}}'` })
   preferences!: UserPreference;
 
@@ -44,9 +44,6 @@ export class UserEntity {
 
   @Column({ default: false })
   emailVerified!: boolean;
-
-  @Column({ default: false })
-  phoneVerified!: boolean;
 
   @Column({ nullable: true })
   refreshToken?: string;

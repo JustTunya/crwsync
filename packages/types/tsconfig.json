@@ -1,12 +1,14 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "composite": true,
+    "strict": true,
     "declaration": true,
-    "declarationMap": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es2022",
+    "module": "commonjs",
     "rootDir": "src",
     "outDir": "dist",
-    "strict": true,
   },
   "include": ["./src/**/*.ts"]
 }
