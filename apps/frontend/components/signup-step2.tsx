@@ -112,6 +112,7 @@ export default function SignupStep2(props: SignupStep2Props) {
               value={firstname}
               onChange={handleFirstNameChange}
               className={(validFirstName === false) ? "border-error" : ""}
+              autoFocus
             />
           </div>
 

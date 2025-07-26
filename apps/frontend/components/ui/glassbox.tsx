@@ -1,4 +1,5 @@
-import SpotlightCard from "@/components/ui/spotlight";
+import dynamic from "next/dynamic";
+const SpotlightCard = dynamic(() => import("@/components/ui/spotlight"), { ssr: false });
 
 export function GlassBox({ children }: { children: React.ReactNode }) {
   return (

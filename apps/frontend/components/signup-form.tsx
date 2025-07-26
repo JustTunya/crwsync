@@ -58,7 +58,7 @@ export function SignupForm() {
     <GlassBox>
       <div className="text-center space-y-2 mb-8 sm:mb-12">
         <h1 className="text-xl sm:text-2xl font-medium">Create Your Account</h1>
-        <p className="text-xs sm:text-sm text-balance text-muted-foreground/75 font-light">
+        <p className="text-xs sm:text-sm text-balance text-muted-foreground font-light">
           Please fill in the details below to create your account.
         </p>
       </div>
@@ -71,7 +71,7 @@ export function SignupForm() {
                 (i + 1 < steps) && "w-full"
               )}>
                 <div key={i} className={cn(
-                  "size-6 rounded-full bg-accent flex items-center justify-center text-base text-primary-content",
+                  "size-6 rounded-full bg-accent flex items-center justify-center text-sm sm:text-base text-primary-content",
                   (step > i) ? "bg-accent/60" : "bg-muted-foreground/50"
                 )}>
                   {(step > i) ? (
@@ -93,7 +93,7 @@ export function SignupForm() {
           </div>
 
         <AnimatePresence mode="wait">
-          {step === 1 && (
+          {(step === 1) && (
             <motion.div 
               key="step1"
               variants={variants}
@@ -112,7 +112,7 @@ export function SignupForm() {
             </motion.div>
           )}
 
-          {step === 2 && (
+          {(step === 2) && (
             <motion.div 
               key="step2"
               variants={variants}
@@ -132,7 +132,7 @@ export function SignupForm() {
             </motion.div>
           )}
 
-          {step === 3 && (
+          {(step === 3) && (
             <motion.div 
               key="step3"
               variants={variants}

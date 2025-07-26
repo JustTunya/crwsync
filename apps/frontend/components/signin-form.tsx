@@ -42,7 +42,7 @@ export function SigninForm() {
       </div>
 
       <motion.div 
-        key="step1"
+        key="signin"
         variants={variants}
         initial="enter"
         animate="center"
@@ -59,6 +59,7 @@ export function SigninForm() {
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               className={cn(state.errors?.identifier && "border-error")}
+              autoFocus
             />
           </div>
 

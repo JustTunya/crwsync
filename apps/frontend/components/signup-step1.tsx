@@ -77,6 +77,7 @@ export default function SignupStep1(props: SignupStep1Props) {
           validation={checkEmail && validEmail}
           onChange={handleEmailChange}
           className={(checkEmail === false || validEmail === false) ? "border-error" : ""}
+          autoFocus
         />
         {(checkEmail === false) && (
           <Label error>This email address is already taken</Label>
