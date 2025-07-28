@@ -33,11 +33,11 @@ export default function SignupStep1(props: SignupStep1Props) {
 
   const validStep = useMemo(() => {
     return (
-      validEmail?.available &&
-      validUsername?.available &&
-      validPassword
+      validEmail?.available === true &&
+      validUsername?.available === true &&
+      validPassword === true
     );
-  }, [validEmail, validUsername, password, confpassword]);
+  }, [validEmail, validUsername, validPassword]);
 
   const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -70,7 +70,7 @@ export default function SignupStep1(props: SignupStep1Props) {
           placeholder="johndoe@example.com"
           validation={validEmail?.available}
           onChange={handleEmailChange}
-          className={(validEmail?.available === false) ? "border-error" : ""}
+          error={validEmail?.available === false}
           autoFocus
         />
         {(validEmail?.available === false && validEmail?.message) && (
@@ -87,7 +87,7 @@ export default function SignupStep1(props: SignupStep1Props) {
           placeholder="johndoe"
           validation={validUsername?.available}
           onChange={handleUsernameChange}
-          className={(validUsername?.available === false) ? "border-error" : ""}
+          error={validUsername?.available === false}
         />
         {(validUsername?.available === false && validUsername?.message) && (
           <Label error>{validUsername.message}</Label>
@@ -103,7 +103,7 @@ export default function SignupStep1(props: SignupStep1Props) {
           visible={showPass}
           setVisible={() => setShowPass(!showPass)}
           onChange={handlePasswordChange}
-          className={(validPassword === false) ? "border-error" : ""}
+          error={validPassword === false}
         />
       </div>
 
@@ -116,7 +116,7 @@ export default function SignupStep1(props: SignupStep1Props) {
           visible={showConfPass}
           setVisible={() => setShowConfPass(!showConfPass)}
           onChange={handleConfirmPasswordChange}
-          className={(validPassword === false) ? "border-error" : ""}
+          error={validPassword === false}
         />
         {(validPassword === false) && (
           <Label error>Passwords do not match or are too short</Label>

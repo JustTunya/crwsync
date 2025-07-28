@@ -51,10 +51,10 @@ export default function SignupStep2(props: SignupStep2Props) {
 
   const validForm = useMemo(() => {
     return (
-      validFirstName === true &&
-      validLastName === true &&
-      validGender === true &&
-      validBirthdate === true
+      validFirstName &&
+      validLastName &&
+      validGender &&
+      validBirthdate
     );
   }, [validFirstName, validLastName, validGender, validBirthdate]);
 
@@ -69,9 +69,8 @@ export default function SignupStep2(props: SignupStep2Props) {
   }, []);
 
   const handleGenderChange = useCallback((value: string) => {
-    const gen = Object.values(UserGender).find(g => g.value === value);
-    setGender(gen?.value);
-    props.updateForm("gender", gen?.value);
+    setGender(value as UserGenderValue);
+    props.updateForm("gender", value as UserGenderValue);
   }, []);
 
   const handleYearChange = useCallback((value: string) => {
@@ -148,7 +147,7 @@ export default function SignupStep2(props: SignupStep2Props) {
         <Select value={gender} onValueChange={handleGenderChange}>
           <SelectTrigger size="full">
             <SelectValue placeholder="Gender">
-              {gender || "Select"}
+              { Object.values(UserGender).find(g => g.value === gender)?.label || "Select" }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>

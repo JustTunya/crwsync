@@ -8,9 +8,10 @@ interface InputProps extends React.ComponentProps<"input"> {
   visible?: boolean;
   setVisible?: () => void;
   validation?: boolean;
+  error?: boolean;
 }
 
-function Input({ className, type, visible, setVisible, validation, ...props }: InputProps) {
+function Input({ className, type, visible, setVisible, validation, error, ...props }: InputProps) {
   const hasVisibilityIcon = type === "password" && visible !== undefined && setVisible;
   const hasValidationIcon = validation !== undefined;
 
@@ -19,8 +20,9 @@ function Input({ className, type, visible, setVisible, validation, ...props }: I
 
   return (
     <div className={cn(
-      "w-full flex bg-base-100/50 backdrop-blur-md border border-base-100 shadow-lg/5 rounded-md", 
+      "w-full flex bg-base-100/50 backdrop-blur-md border shadow-lg/5 rounded-md", 
       "focus-within:ring-3 focus-within:ring-accent/20",
+      error ? "border-error" : "border-base-100",
       className
       )}>
       <input
