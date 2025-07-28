@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { isEmailValid } from "@/lib/validations";
-import { useValidator } from "@/hooks/use-validator";
+import { useAvailability } from "@/hooks/use-availability";
 import { cn, variants } from "@/lib/utils";
 import { GlassBox } from "@/components/ui/glassbox";
 
@@ -24,7 +24,7 @@ const initState: ForgotPasswordState = {
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
-  const validEmail = useValidator(email, isEmailValid);
+  const validEmail = useAvailability("email", email, isEmailValid);
 
   const [state, dispatchReset, pending] = useActionState(forgotPassword, initState);
 
@@ -61,13 +61,12 @@ export function ForgotPasswordForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={cn(
-                (validEmail === false || state.errors?.email) && "border-error"
+                (validEmail?.available === false || state.errors?.email) && "border-error"
               )}
             />
-            {validEmail === false && (
-              <Label error>This email address is invalid</Label>
+            {(validEmail?.available === false && validEmail?.message) && (
+              <Label error>{validEmail.message}</Label>
             )}
-            {state.errors?.email && <Label error>{state.errors.email}</Label>}
           </div>
 
           {state.message && (

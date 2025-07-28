@@ -1,12 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
 import { isEmailValid, isUsernameValid } from "@/lib/validations";
 import { useMatch } from "@/hooks/use-match";
-import { useValidator } from "@/hooks/use-validator";
 import { useAvailability } from "@/hooks/use-availability";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SignupState } from "@crwsync/types";
 
 interface SignupStep1Props {
   form: {
@@ -29,22 +27,17 @@ export default function SignupStep1(props: SignupStep1Props) {
   const [showPass, setShowPass] = useState(false);
   const [showConfPass, setShowConfPass] = useState(false);
 
-  const checkEmail = useAvailability("email", email);
-  const checkUsername = useAvailability("username", username);
-  const validEmail = useValidator(email, isEmailValid);
-  const validUsername = useValidator(username, isUsernameValid);
+  const validEmail = useAvailability("email", email, isEmailValid);
+  const validUsername = useAvailability("username", username, isUsernameValid);
   const validPassword = useMatch(password, confpassword);
 
   const validStep = useMemo(() => {
     return (
-      validEmail === true &&
-      validUsername === true &&
-      checkEmail === true &&
-      checkUsername === true &&
-      password.length >= 8 &&
-      password === confpassword
+      validEmail?.available &&
+      validUsername?.available &&
+      validPassword
     );
-  }, [validEmail, validUsername, checkEmail, checkUsername, password, confpassword]);
+  }, [validEmail, validUsername, password, confpassword]);
 
   const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -75,16 +68,13 @@ export default function SignupStep1(props: SignupStep1Props) {
           type="email"
           value={email}
           placeholder="johndoe@example.com"
-          validation={checkEmail && validEmail}
+          validation={validEmail?.available}
           onChange={handleEmailChange}
-          className={(checkEmail === false || validEmail === false) ? "border-error" : ""}
+          className={(validEmail?.available === false) ? "border-error" : ""}
           autoFocus
         />
-        {(checkEmail === false) && (
-          <Label error>This email address is already taken</Label>
-        )}
-        {(validEmail === false) && (
-          <Label error>This email address is invalid</Label>
+        {(validEmail?.available === false && validEmail?.message) && (
+          <Label error>{validEmail.message}</Label>
         )}
       </div>
 
@@ -95,15 +85,12 @@ export default function SignupStep1(props: SignupStep1Props) {
           type="text"
           value={username}
           placeholder="johndoe"
-          validation={checkUsername && validUsername}
+          validation={validUsername?.available}
           onChange={handleUsernameChange}
-          className={(checkUsername === false || validUsername === false) ? "border-error" : ""}
+          className={(validUsername?.available === false) ? "border-error" : ""}
         />
-        {(checkUsername === false) && (
-          <Label error>This username is already taken</Label>
-        )}
-        {(validUsername === false) && (
-          <Label error>This username is invalid</Label>
+        {(validUsername?.available === false && validUsername?.message) && (
+          <Label error>{validUsername.message}</Label>
         )}
       </div>
 
