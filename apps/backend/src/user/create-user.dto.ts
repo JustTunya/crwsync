@@ -7,6 +7,7 @@ import {
   IsArray,
   ArrayNotEmpty,
   IsObject,
+  IsBoolean,
 } from 'class-validator';
 import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue } from '@crwsync/types';
 
@@ -55,6 +56,18 @@ export class CreateUserDto {
   password!: string;
 
   @IsOptional()
+  @IsBoolean()
+  emailVerified?: boolean;
+
+  @IsOptional()
   @IsString()
   refreshToken?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  updatedAt?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  lastLogin?: string;
 }

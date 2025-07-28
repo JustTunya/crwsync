@@ -4,18 +4,18 @@ import { JwtResponse } from "@crwsync/types";
 import { UserService } from "../user/user.service";
 import { UserEntity } from "../user/user.entity";
 import { SigninDto } from "./signin.dto";
-import * as bcrypt from "bcrypt";
+import { compare } from "bcrypt";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
   ) {}
 
   async validateUser(dto: SigninDto): Promise<UserEntity | null> {
     const user = await this.userService.findByEmailOrUsername(dto.identifier);
-    if (user && await bcrypt.compare(dto.password, user.passwordHash)) {
+    if (user && await compare(dto.password, user.passwordHash)) {
       return user;
     }
     return null;
@@ -23,8 +23,13 @@ export class AuthService {
 
   async signin(user: UserEntity): Promise<JwtResponse> {
     const payload = { id: user.id, email: user.email };
-    const token = this.jwtService.sign(payload);
 
-    return { accessToken: token };
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+    await this.userService.update(user.id, { lastLogin: new Date().toISOString() });
+    await this.userService.update(user.id, { refreshToken });
+
+    return { accessToken, refreshToken };
   }
 }

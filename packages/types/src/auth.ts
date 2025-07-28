@@ -66,4 +66,5 @@ export interface ResetPasswordPayload {
 
 export interface JwtResponse {
   accessToken: string;
+  refreshToken: string;
 }

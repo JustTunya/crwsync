@@ -115,10 +115,24 @@ export async function checkAvailability(field: 'email' | 'username', value: stri
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      // console.error("Error checking availability:", error.response?.data);
-    } else {
-      // console.error("An unexpected error occurred while checking availability");
+      const resp = error.response?.data;
+      if (resp && resp.available !== undefined) {
+        return { available: resp.available };
+      }
     }
     return { available: false };
+  }
+}
+
+export async function verifyEmail(token: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const response = await api.post("/auth/verify-email", { token });
+    return { success: true, message: response.data.message };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp.message || "An unexpected error occurred" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
   }
 }
