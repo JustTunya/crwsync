@@ -1,26 +1,36 @@
-import { Entity, Index, PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm";
+import { UserEntity } from "src/user/user.entity";
+import { Entity, Index, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 
 @Entity({ name: 'email_verifications' })
 @Index("idx_verification_email", ["email"], { unique: true })
+@Index("idx_verification_token", ["token"], { unique: true })
+@Index("idx_verification_user_id", ["user_id"], { unique: false })
 export class VerificationEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
-  userId!: string;
-
   @Column({ unique: true })
   email!: string;
+  
+  @ManyToOne(() => UserEntity, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user?: UserEntity;
+
+  @Column({ nullable: true })
+  user_id!: string;
+
+  @Column()
+  token!: string;
 
   @Column({ default: false })
-  isVerified!: boolean;
+  is_verified!: boolean;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  createdAt!: Date;
-
-  @Column({ type: 'timestamptz', default: () => "CURRENT_TIMESTAMP + INTERVAL '30 days'" })
-  expiresAt?: Date;
+  created_at!: Date;
 
   @Column({ type: 'timestamptz', nullable: true })
-  verifiedAt?: Date;
+  expires_at!: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  verified_at?: Date;
 }

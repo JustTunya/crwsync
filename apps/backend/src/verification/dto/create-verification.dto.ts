@@ -2,12 +2,8 @@ import { IsEmail, IsOptional, IsBoolean, IsString } from "class-validator";
 
 export class CreateVerificationDto {
   @IsString()
-  userId!: string;
+  user_id!: string;
 
   @IsEmail()
   email!: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isVerified?: boolean;
 }

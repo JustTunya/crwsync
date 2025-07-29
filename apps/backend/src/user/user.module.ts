@@ -6,10 +6,7 @@ import { UserController } from 'src/user/user.controller';
 import { VerificationModule } from 'src/verification/verification.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([UserEntity]),
-    VerificationModule
-  ],
+  imports: [TypeOrmModule.forFeature([UserEntity])],
   providers: [UserService],
   controllers: [UserController],
   exports: [UserService],

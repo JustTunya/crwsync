@@ -17,7 +17,13 @@ const api: AxiosInstance = axios.create({
 
 export async function signup(_prev: SignupState, data: SignupPayload): Promise<SignupState> {
   try {
-    await api.post("/users", data);
+    const user = await api.post("/users", data);
+
+    await api.post("/email_verifications", {
+      email: data.email,
+      user_id: user.data.id
+    });
+
     return {
       success: true,
       errors: {},
@@ -126,8 +132,8 @@ export async function checkAvailability(field: 'email' | 'username', value: stri
 
 export async function verifyEmail(token: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await api.post("/auth/verify-email", { token });
-    return { success: true, message: response.data.message };
+    const response = await api.post("/email_verifications/verify", { token });
+    return { success: response.data.success, message: response.data.message || "Email verified successfully" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const resp = error.response?.data;

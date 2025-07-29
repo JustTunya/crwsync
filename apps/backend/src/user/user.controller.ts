@@ -1,7 +1,8 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, UsePipes, ValidationPipe, Patch, Delete } from "@nestjs/common";
 import { UserService } from "./user.service";
-import { CreateUserDto } from "./create-user.dto";
+import { CreateUserDto } from "./dto/create-user.dto";
 import { UserEntity } from "./user.entity";
+import { UpdateUserDto } from "./dto/update-user.dto";
 
 @Controller('users')
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -29,7 +30,7 @@ export class UserController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  update(@Param('id') id: string, @Body() dto: CreateUserDto): Promise<UserEntity> {
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
     return this.userService.update(id, dto);
   }
 

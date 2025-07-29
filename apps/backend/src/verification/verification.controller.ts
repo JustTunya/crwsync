@@ -1,12 +1,11 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards, HttpCode, HttpStatus, Delete } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { CreateVerificationDto } from 'src/verification/create-verification.dto';
-import { UpdateVerificationDto } from 'src/verification/update-verification.dto';
+import { Body, Controller, Get, Param, Post, Put, HttpCode, HttpStatus, Delete, Patch } from '@nestjs/common';
+import { CreateVerificationDto } from 'src/verification/dto/create-verification.dto';
+import { UpdateVerificationDto } from 'src/verification/dto/update-verification.dto';
 import { VerificationService } from 'src/verification/verification.service';
 import { VerificationEntity } from 'src/verification/verification.entity';
 
-@UseGuards(AuthGuard('jwt'))
-@Controller('verifications')
+// @UseGuards(AuthGuard('jwt'))
+@Controller('email_verifications')
 export class VerificationController {
   constructor(private readonly verificationService: VerificationService) {}
 
@@ -16,10 +15,10 @@ export class VerificationController {
     return this.verificationService.create(dto);
   }
 
-  @Post('verify/:id')
+  @Post('verify')
   @HttpCode(HttpStatus.OK)
-  async verify(@Param('id') id: string): Promise<VerificationEntity> {
-    return this.verificationService.verify(id);
+  async verify(@Body('token') token: string): Promise<VerificationEntity> {
+    return this.verificationService.verify(token);
   }
 
   @Get()
@@ -40,7 +39,7 @@ export class VerificationController {
     return this.verificationService.findByEmail(email);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(@Param('id') id: string, @Body() dto: UpdateVerificationDto): Promise<VerificationEntity> {
     return this.verificationService.update(id, dto);

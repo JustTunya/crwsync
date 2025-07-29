@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UserEntity } from '../user/user.entity';
 
 @Module({
   imports: [
@@ -17,8 +16,8 @@ import { UserEntity } from '../user/user.entity';
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
         logging: process.env.NODE_ENV !== 'production',
-        entities: [UserEntity],
-        synchronize: true, // TODO: Set to false in production
+        synchronize: process.env.NODE_ENV !== 'production',
+        autoLoadEntities: true,
       }),
     }),
   ],

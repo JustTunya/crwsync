@@ -32,7 +32,7 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsString()
-  avatarUrl?: string;
+  avatar_url?: string;
 
   @IsOptional()
   @IsArray()
@@ -57,17 +57,17 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsBoolean()
-  emailVerified?: boolean;
+  email_verified?: boolean;
 
   @IsOptional()
   @IsString()
-  refreshToken?: string;
+  refresh_token?: string;
 
   @IsOptional()
   @IsISO8601()
-  updatedAt?: string;
+  updated_at?: string;
 
   @IsOptional()
   @IsISO8601()
-  lastLogin?: string;
+  last_login?: string;
 }

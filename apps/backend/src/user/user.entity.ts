@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, OneToMany } from 'typeorm';
 import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue, UserGender } from '@crwsync/types';
+import { VerificationEntity } from 'src/verification/verification.entity';
 
 @Entity({ name: 'users' })
 @Index("idx_user_email", ["email"], { unique: true })
@@ -27,7 +28,7 @@ export class UserEntity {
   birthdate!: string;
 
   @Column({ nullable: true })
-  avatarUrl?: string;
+  avatar_url?: string;
 
   @Column('enum', { enum: UserRole, array: true, default: [UserRole.MEMBER] })
   roles!: UserRole[];
@@ -42,20 +43,23 @@ export class UserEntity {
   profile!: UserProfile;
 
   @Column()
-  passwordHash!: string;
+  password_hash!: string;
+
+  @OneToMany(() => VerificationEntity, v => v.user)
+  verifications?: VerificationEntity[];
 
   @Column({ default: false })
-  emailVerified!: boolean;
+  email_verified!: boolean;
 
   @Column({ nullable: true })
-  refreshToken?: string;
+  refresh_token?: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  createdAt!: Date;
+  created_at!: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updatedAt!: Date;
+  updated_at!: Date;
 
   @Column({ type: 'timestamptz', nullable: true })
-  lastLogin?: Date;
+  last_login?: Date;
 }
