@@ -14,18 +14,4 @@ export class MailService {
       context: data.context,
     });
   }
-
-  async sendEmailVerification(to: string, token: string): Promise<void> {
-    const url = `https://crwsync.com/verify/${token}`;
-
-    await this.sendMail({
-      to,
-      subject: 'Verify your crwsync email',
-      template: 'verify-email',
-      context: {
-        url,
-        product: 'crwsync',
-      },
-    });
-  }
 }

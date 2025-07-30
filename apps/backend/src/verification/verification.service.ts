@@ -6,6 +6,7 @@ import { CreateVerificationDto } from "./dto/create-verification.dto";
 import { UpdateVerificationDto } from "./dto/update-verification.dto";
 import { UserEntity } from "src/user/user.entity";
 import { randomBytes } from "crypto";
+import { MailService } from "src/mail/mail.service";
 
 @Injectable()
 export class VerificationService {
@@ -13,7 +14,8 @@ export class VerificationService {
     @InjectRepository(VerificationEntity)
     private readonly vRepo: Repository<VerificationEntity>,
     @InjectRepository(UserEntity)
-    private readonly uRepo: Repository<UserEntity>
+    private readonly uRepo: Repository<UserEntity>,
+    private readonly mailService: MailService
   ) {}
 
   async create(dto: CreateVerificationDto): Promise<VerificationEntity> {
@@ -37,6 +39,15 @@ export class VerificationService {
       token,
       user,
       expires_at: exp,
+    });
+
+    await this.mailService.sendMail({
+      to: dto.email,
+      subject: 'Welcome to CRWSYNC',
+      template: 'email-verification',
+      context: {
+        url: `https://crwsync.com/verify-email/${token}`
+      },
     });
 
     return this.vRepo.save(verification);
