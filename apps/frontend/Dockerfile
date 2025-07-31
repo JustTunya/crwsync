@@ -1,29 +1,38 @@
 # --- BUILDER STAGE ---
 FROM node:20-alpine AS builder
 
-WORKDIR /app
-
-COPY apps/frontend/package*.json ./apps/frontend/
-COPY apps/frontend/tsconfig*.json ./apps/frontend/
-
-COPY apps/frontend ./apps/frontend
-COPY packages ./packages
-
-RUN npm ci --frozen-lockfile
+# Set working directory
 WORKDIR /app/apps/frontend
+
+# Copy package manifest and lockfile (if present)
+COPY apps/frontend/package*.json ./
+COPY apps/frontend/tsconfig*.json ./
+
+# Copy source code and shared packages
+COPY apps/frontend ./
+COPY packages ../packages/
+
+# Install dependencies and build
+RUN npm install
 RUN npm run build
 
 # --- RUNNER STAGE ---
-FROM node:20-alpine
+FROM node:20-alpine AS runner
 
-WORKDIR /app
+# Set environment and working directory
 ENV NODE_ENV=production
+WORKDIR /app
 
-COPY --from=builder /app/apps/frontend/public ./frontend/public
+# Copy build output and public assets
 COPY --from=builder /app/apps/frontend/.next ./.next
-COPY apps/frontend/package*.json ./
+COPY --from=builder /app/apps/frontend/public ./public
 
-RUN npm ci --omit=dev --only=production
+# Copy production manifest
+COPY apps/frontend/package*.json ./package.json
 
+# Install production dependencies
+RUN npm install --omit=dev
+
+# Expose port and start Next.js
 EXPOSE 3000
 CMD ["npx", "next", "start"]
