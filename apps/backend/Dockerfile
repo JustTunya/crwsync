@@ -3,21 +3,26 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY tsconfig*.json ./
+COPY apps/backend/package*.json ./apps/backend/
+COPY apps/backend/tsconfig*.json ./apps/backend/
+
 COPY apps/backend ./apps/backend
 COPY packages ./packages
 
-RUN npm install --frozen-lockfile
-RUN npm run build --workspace=backend
+RUN npm ci --frozen-lockfile
+WORKDIR /app/apps/backend
+RUN npm run build
 
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-COPY --from=builder /app/dist/apps/backend ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/backend/package.json ./
+ENV NODE_ENV=production
+
+COPY --from=builder /app/apps/backend/dist ./dist
+COPY apps/backend/package*.json ./apps/backend/
+
+RUN npm ci --omit=dev --only=production
 
 CMD ["node", "dist/main.js"]
