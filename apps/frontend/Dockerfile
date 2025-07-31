@@ -1,41 +1,40 @@
 # --- BUILDER STAGE ---
 FROM node:20-alpine AS builder
 
-# Set working directory
+# 1) install dependencies for the whole monorepo (including workspaces)
 WORKDIR /app
-
-# 1. Copy root manifests for workspace resolution
 COPY package.json package-lock.json ./
-
-# 2. Copy frontend code and shared packages
 COPY apps/frontend       ./apps/frontend/
 COPY packages            ./packages/
 
-# 3. Install all dependencies (including @crwsync/types)
-RUN npm ci --frozen-lockfile
+# npm install will pull in all workspaces and hoist them under /app/node_modules
+RUN npm install
 
-# 4. Build the frontend workspace
+# 2) build the frontend
 WORKDIR /app/apps/frontend
+COPY apps/frontend/next.config.js ./
 RUN npm run build
+
+# 3) prune out devDependencies to slim down node_modules
+WORKDIR /app
+RUN npm prune --production
+
 
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
-
-# Set environment and working directory
 ENV NODE_ENV=production
 WORKDIR /app
 
-# 5. Copy build output and public assets
-COPY --from=builder /app/apps/frontend/.next   ./.next
-COPY --from=builder /app/apps/frontend/public ./public
+# 4) Copy runtime bits
+COPY --from=builder /app/apps/frontend/.next       ./.next
+COPY --from=builder /app/apps/frontend/public      ./public
 
-# 6. Copy production manifest
-COPY apps/frontend/package.json      ./package.json
-COPY package-lock.json               ./package-lock.json
+# 5) Copy just the frontend’s package.json & next.config
+COPY --from=builder /app/apps/frontend/package.json   ./package.json
+COPY --from=builder /app/apps/frontend/next.config.js ./next.config.js
 
-# 7. Install production dependencies only
-RUN npm ci --omit=dev --only=production
+# 6) Bring in only the production node_modules
+COPY --from=builder /app/node_modules ./node_modules
 
-# 8. Expose port and start Next.js server
 EXPOSE 3000
 CMD ["npx", "next", "start"]
