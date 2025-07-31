@@ -28,7 +28,7 @@ COPY --from=builder /app/apps/frontend/.next ./.next
 COPY --from=builder /app/apps/frontend/public ./public
 
 # Copy production manifest
-COPY apps/frontend/package*.json ./package.json
+COPY apps/frontend/package*.json ./
 
 # Install production dependencies
 RUN npm install --omit=dev
