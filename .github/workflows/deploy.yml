@@ -38,7 +38,7 @@ jobs:
       - name: Build & push frontend
         uses: docker/build-push-action@v4
         with:
-          context: apps/frontend
+          context: .
           file: apps/frontend/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPOSITORY }}/frontend:${{ github.sha }}
@@ -46,7 +46,7 @@ jobs:
       - name: Build & push backend
         uses: docker/build-push-action@v4
         with:
-          context: apps/backend
+          context: .
           file: apps/backend/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPOSITORY }}/backend:${{ github.sha }}
