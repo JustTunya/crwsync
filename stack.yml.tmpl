@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   frontend:
-    image: ghcr.io/JustTunya/crwsync-frontend:${IMAGE_TAG}
+    image: ${FRONTEND_IMAGE}
     ports:
       - "3000:3000"
     networks:
@@ -22,7 +22,7 @@ services:
       retries: 3
 
   backend:
-    image: ghcr.io/JustTunya/crwsync-backend:${IMAGE_TAG}
+    image: ${BACKEND_IMAGE}
     ports:
       - "8080:8080"
     networks:

@@ -35,18 +35,28 @@ jobs:
       - name: Validate repo path
         run: echo "REPOSITORY=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      - name: Build and push Docker image
+      - name: Build & push frontend
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: apps/frontend
+          file: apps/frontend/Dockerfile
           push: true
-          tags: ghcr.io/${{ env.REPOSITORY }}:${{ github.sha }}
+          tags: ghcr.io/${{ env.REPOSITORY }}/frontend:${{ github.sha }}
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v4
+        with:
+          context: apps/backend
+          file: apps/backend/Dockerfile
+          push: true
+          tags: ghcr.io/${{ env.REPOSITORY }}/backend:${{ github.sha }}
 
       - name: Prepare stack file
         env:
-          IMAGE_TAG: ${{ github.sha }}
+          FRONTEND_IMAGE: ghcr.io/${{ env.REPOSITORY }}/frontend:${{ github.sha }}
+          BACKEND_IMAGE: ghcr.io/${{ env.REPOSITORY }}/backend:${{ github.sha }}
         run: |
-          envsubst '${IMAGE_TAG}' < stack.yml.tmpl > stack.yml
+          envsubst '${FRONTEND_IMAGE} ${BACKEND_IMAGE}' < stack.yml.tmpl > stack.yml
 
       - name: Deploy CRWSYNC stack
         run: |
