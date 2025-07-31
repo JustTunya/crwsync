@@ -1,0 +1,73 @@
+import {
+  IsEmail,
+  IsEnum,
+  IsISO8601,
+  IsOptional,
+  IsString,
+  IsArray,
+  ArrayNotEmpty,
+  IsObject,
+  IsBoolean,
+} from 'class-validator';
+import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue } from '@crwsync/types';
+
+export class CreateUserDto {
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  username!: string;
+
+  @IsString()
+  firstname!: string;
+
+  @IsString()
+  lastname!: string;
+
+  @IsEnum(UserGenderValue, { message: 'gender must be one of: ' + Object.values(UserGenderValue).join(', ') })
+  gender!: UserGenderValue;
+
+  @IsISO8601()
+  birthdate!: string;
+
+  @IsOptional()
+  @IsString()
+  avatar_url?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsEnum(UserRole, { each: true })
+  roles?: UserRole[];
+
+  @IsOptional()
+  @IsEnum(UserStatus)
+  status?: UserStatus;
+
+  @IsOptional()
+  @IsObject()
+  preferences?: UserPreference;
+
+  @IsOptional()
+  @IsObject()
+  profile?: UserProfile;
+
+  @IsString()
+  password!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  email_verified?: boolean;
+
+  @IsOptional()
+  @IsString()
+  refresh_token?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  updated_at?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  last_login?: string;
+}
