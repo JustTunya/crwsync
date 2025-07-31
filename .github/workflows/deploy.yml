@@ -1,0 +1,54 @@
+name: 🔗 CRWSYNC deployment
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: [ self-hosted, linux, x64 ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determin current Swarm state
+        id: swarm
+        run: |
+          STATE=$(docker info --format '{{.Swarm.LocalNodeState}}')
+          echo "Swarm local node state: $STATE"
+          echo "::set-output name=state::$STATE"
+
+      - name: Initialize Docker Swarm
+        if: steps.swarm.outputs.state != 'active'
+        run: |
+          echo "Swarm is not active, initializing..."
+          docker swarm init --advertise-addr 127.0.0.1
+
+      - name: Login to the registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+      - name: Prepare stack file
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          envsubst '${IMAGE_TAG}' < stack.yml.tmpl > stack.yml
+
+      - name: Deploy CRWSYNC stack
+        run: |
+          docker stack deploy --with-registry-auth -c stack.yml crwsync
+
+      - name: Verify docker service
+        run: |
+          docker service ls
