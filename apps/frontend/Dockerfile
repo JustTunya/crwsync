@@ -5,9 +5,9 @@ FROM base AS dependencies
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* tsconfig.json ./
 
-RUN npm install --frozen-lockfile
+RUN npm ci
 
 # --- BUILDER STAGE ---
 FROM base AS builder
