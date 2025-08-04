@@ -22,7 +22,7 @@ jobs:
         run: |
           STATE=$(docker info --format '{{.Swarm.LocalNodeState}}')
           echo "Swarm local node state: $STATE"
-          echo "::set-output name=state::$STATE"
+          echo "state=$STATE" >> "$GITHUB_OUTPUT"
 
       - name: Initialize Docker Swarm
         if: steps.swarm.outputs.state != 'active'
