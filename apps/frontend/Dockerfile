@@ -4,8 +4,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-COPY apps/frontend ./apps/frontend/
-COPY packages ./packages/
+COPY apps/frontend apps/frontend/
+COPY packages/ packages/
 
 RUN npm install
 
