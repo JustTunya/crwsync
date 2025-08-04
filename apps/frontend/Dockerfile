@@ -5,9 +5,9 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 COPY apps/frontend ./apps/frontend/
-COPY packages/ ./packages/
+COPY packages ./packages/
 
-RUN npm ci
+RUN npm install
 
 WORKDIR /app/apps/frontend
 RUN npm run build
@@ -24,8 +24,8 @@ ENV NODE_ENV=production
 COPY --from=builder /app/apps/frontend/.next ./.next
 COPY --from=builder /app/apps/frontend/public ./public
 
-COPY --from=builder /app/apps/frontend/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/frontend/package.json ./package.json
 
 EXPOSE 3000
 CMD ["npx", "next", "start", "-p", "3000"]
