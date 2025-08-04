@@ -18,7 +18,7 @@ WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run build --workspace=@crwsync/frontend
+RUN npm run build
 
 # --- RUNNER STAGE ---
 FROM base AS runner
@@ -28,7 +28,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=builder /app/apps/frontend/.next ./apps/frontend/.next
-COPY --from=builder /app/apps/frontend/public ./apps/frontend/public
 COPY --from=builder /app/apps/frontend/next.config.ts ./apps/frontend/next.config.ts
 COPY --from=builder /app/apps/frontend/package.json ./apps/frontend/package.json
 
