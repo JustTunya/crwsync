@@ -15,7 +15,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run build --workspace=apps/frontend
+RUN npm run build --workspace=@crwsync/types && npm run build --workspace=@crwsync/frontend
 
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
