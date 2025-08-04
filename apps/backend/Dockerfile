@@ -19,7 +19,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 RUN npm run build --workspace=apps/backend
-RUN npm prune --omit=dev
 
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
