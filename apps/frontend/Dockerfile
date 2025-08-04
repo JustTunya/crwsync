@@ -5,7 +5,8 @@ FROM base AS dependencies
 
 WORKDIR /app
 
-COPY package.json package-lock.json* tsconfig.json ./
+COPY package.json package-lock.json tsconfig.json tsconfig.base.json ./
+COPY apps/frontend/package.json apps/frontend/tsconfig*.json ./apps/frontend/
 
 RUN npm ci
 
@@ -17,7 +18,7 @@ WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run build
+RUN npm run build --workspace=@crwsync/frontend
 
 # --- RUNNER STAGE ---
 FROM base AS runner
@@ -26,10 +27,11 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/next.config.ts ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/package.json ./
+COPY --from=builder /app/apps/frontend/.next ./.next
+COPY --from=builder /app/apps/frontend/public ./public
+COPY --from=builder /app/apps/frontend/next.config.ts ./next.config.ts
+COPY --from=builder /app/apps/frontend/package.json ./package.json
+
 COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3000
