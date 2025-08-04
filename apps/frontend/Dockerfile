@@ -5,12 +5,11 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 COPY apps/frontend ./apps/frontend/
-COPY packages ./packages/
+COPY packages/ ./packages/
 
-RUN npm install
+RUN npm ci
 
 WORKDIR /app/apps/frontend
-COPY apps/frontend/next.config.ts ./
 RUN npm run build
 
 WORKDIR /app
@@ -19,16 +18,14 @@ RUN npm prune --production
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
 
-ENV NODE_ENV=production
 WORKDIR /app
+ENV NODE_ENV=production
 
 COPY --from=builder /app/apps/frontend/.next ./.next
 COPY --from=builder /app/apps/frontend/public ./public
 
 COPY --from=builder /app/apps/frontend/package.json ./package.json
-COPY --from=builder /app/apps/frontend/next.config.ts ./next.config.ts
-
 COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3000
-CMD ["npx", "next", "start"]
+CMD ["npx", "next", "start", "-p", "3000"]
