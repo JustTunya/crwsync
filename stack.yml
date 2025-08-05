@@ -82,5 +82,4 @@ services:
 
 networks:
   crwsync:
-    driver: overlay
-    attachable: true
+    external: true
