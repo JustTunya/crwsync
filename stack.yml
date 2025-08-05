@@ -21,11 +21,6 @@ x-deploy-settings: &deploy-settings
     reservations:
       cpus: '0.25'
       memory: 256M
-  placement:
-    constraints:
-      - node.role == worker
-    preferences:
-      - spread: node.labels.zone
 
 services:
   frontend:
