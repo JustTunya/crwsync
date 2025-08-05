@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HealthModule } from './health/health.module';
 import { DatabaseModule } from './database/database.module';
 import { AppController } from './app.controller';
 import { UserModule } from './user/user.module';
@@ -8,7 +9,7 @@ import { VerificationModule } from './verification/verification.module';
 import { MailModule } from './mail/mail.module';
 
 @Module({
-  imports: [DatabaseModule, UserModule, AuthModule, VerificationModule, MailModule],
+  imports: [HealthModule, DatabaseModule, UserModule, AuthModule, VerificationModule, MailModule],
   controllers: [AppController],
   providers: [AppService],
 })
