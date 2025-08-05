@@ -34,8 +34,8 @@ services:
       - "3000:3000"
     networks:
       - crwsync
-    env_file:
-      - apps/frontend/.env
+    enviroment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     deploy:
       <<: *deploy-settings
     healthcheck:
@@ -55,8 +55,18 @@ services:
       - "8080:8080"
     networks:
       - crwsync
-    env_file:
-      - apps/backend/.env
+    enviroment:
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USER=${MAIL_USER}
+      - MAIL_PASS=${MAIL_PASS}
+      - JWT_SECRET=${JWT_SECRET}
     deploy:
       <<: *deploy-settings
     healthcheck:

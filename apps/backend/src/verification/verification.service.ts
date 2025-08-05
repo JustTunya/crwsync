@@ -32,7 +32,7 @@ export class VerificationService {
     const token = randomBytes(32).toString('hex');
 
     const exp = new Date();
-    exp.setDate(exp.getDate() + Number(process.env.VERIFICATION_EXPIRATION_DAYS));
+    exp.setDate(exp.getDate() + 30);
 
     const verification = this.vRepo.create({
       email: dto.email,
