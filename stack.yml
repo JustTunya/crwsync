@@ -1,0 +1,76 @@
+version: '3.9'
+
+x-deploy-settings: &deploy-settings
+  replicas: 2
+  update_config:
+    parallelism: 1
+    delay: 10s
+    order: start-first
+  rollback_config:
+    parallelism: 1
+    delay: 10s
+  restart_policy:
+    condition: on-failure
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+  resources:
+    limits:
+      cpus: '0.5'
+      memory: 512M
+    reservations:
+      cpus: '0.25'
+      memory: 256M
+  placement:
+    constraints:
+      - node.role == worker
+    preferences:
+      - spread: node.labels.zone
+
+services:
+  frontend:
+    image: ${FRONTEND_IMAGE}
+    ports:
+      - "3000:3000"
+    networks:
+      - crwsync
+    env_file:
+      - apps/frontend/.env.production
+    deploy:
+      <<: *deploy-settings
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    image: ${BACKEND_IMAGE}
+    ports:
+      - "8080:8080"
+    networks:
+      - crwsync
+    env_file:
+      - apps/backend/.env
+    deploy:
+      <<: *deploy-settings
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  crwsync:
+    driver: overlay
+    attachable: true
