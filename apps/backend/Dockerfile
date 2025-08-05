@@ -3,10 +3,8 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json tsconfig.json tsconfig.base.json ./
-COPY apps/backend/package.json apps/backend/nest-cli.json apps/backend/tsconfig.json apps/backend/tsconfig.build.json ./apps/backend/
-# include your Nest .env for ConfigModule
-COPY apps/backend/.env ./apps/backend/.env
-COPY apps/backend/src ./apps/backend/src
+COPY apps/backend/package.json apps/backend/nest-cli.json apps/backend/tsconfig.json ./apps/backend/
+COPY apps/backend/src ./apps/backend/
 COPY packages ./packages/
 
 RUN npm ci
