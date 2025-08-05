@@ -96,7 +96,7 @@ jobs:
           platforms: linux/amd64
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
-          tags: ghcr.io/${{ env.REPOSITORY }}/frontend:${{ github.sha }}
+          tags: ghcr.io/${{ secrets.GH_REPO }}/frontend:${{ github.sha }}
 
       - name: Build & Push Backend
         uses: docker/build-push-action@v4
@@ -107,7 +107,7 @@ jobs:
           platforms: linux/amd64
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
-          tags: ghcr.io/${{ env.REPOSITORY }}/backend:${{ github.sha }}
+          tags: ghcr.io/${{ secrets.GH_REPO }}/backend:${{ github.sha }}
 
       - name: Rotate cache
         run: |
@@ -120,7 +120,20 @@ jobs:
     needs: build
     environment: ${{ github.event.inputs.environment }}
     timeout-minutes: 20
-
+    env:
+      FRONTEND_IMAGE: ghcr.io/${{ secrets.GH_REPO }}/frontend:${{ github.sha }}
+      BACKEND_IMAGE: ghcr.io/${{ secrets.GH_REPO }}/backend:${{ github.sha }}
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+      JWT_SECRET: ${JWT_SECRET}
     steps:
       - uses: actions/checkout@v4
 
@@ -135,8 +148,8 @@ jobs:
 
       - name: Pull images (warm)
         run: |
-          docker pull ghcr.io/${{ env.REPOSITORY }}/frontend:${{ github.sha }} || true
-          docker pull ghcr.io/${{ env.REPOSITORY }}/backend:${{ github.sha }} || true
+          docker pull ghcr.io/${{ secrets.GH_REPO }}/frontend:${{ github.sha }} || true
+          docker pull ghcr.io/${{ secrets.GH_REPO }}/backend:${{ github.sha }} || true
 
       - name: Deploy stack
         run: |
