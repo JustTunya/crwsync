@@ -38,7 +38,7 @@ export function ForgotPasswordForm() {
       <div className="text-center space-y-2 mb-8 sm:mb-12">
         <h1 className="text-xl sm:text-2xl font-medium">Forgot your password?</h1>
         <p className="text-xs sm:text-sm text-balance text-muted-foreground/75">
-          Enter the email associated with your account and we'll send you a link
+          Enter the email associated with your account and we will send you a link
           to reset your password.
         </p>
       </div>

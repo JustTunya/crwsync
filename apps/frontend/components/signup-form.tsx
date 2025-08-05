@@ -22,7 +22,7 @@ const initState: SignupState = {
 export function SignupForm() {
   const steps = 3;
   const [step, setStep] = useState(1);
-  const [state, dispatch, pending] = useActionState(signup, initState);
+  const [, dispatch, pending] = useActionState(signup, initState);
 
   const [form, setForm] = useState({
     email: "",

@@ -61,32 +61,32 @@ export default function SignupStep2(props: SignupStep2Props) {
   const handleFirstNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setFirstName(e.target.value);
     props.updateForm("firstname", e.target.value);
-  }, []);
+  }, [props]);
 
   const handleLastNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLastName(e.target.value);
     props.updateForm("lastname", e.target.value);
-  }, []);
+  }, [props]);
 
   const handleGenderChange = useCallback((value: string) => {
     setGender(value as UserGenderValue);
     props.updateForm("gender", value as UserGenderValue);
-  }, []);
+  }, [props]);
 
   const handleYearChange = useCallback((value: string) => {
     setBirthYear(value);
     props.updateForm("birthyear", value);
-  }, []);
+  }, [props]);
 
   const handleMonthChange = useCallback((value: string) => {
     setBirthMonth(value);
     props.updateForm("birthmonth", value);
-  }, []);
+  }, [props]);
 
   const handleDayChange = useCallback((value: string) => {
     setBirthDay(value);
     props.updateForm("birthday", value);
-  }, []);
+  }, [props]);
 
   const daysInMonth = useMemo(() => {
     const month = parseInt(birthmonth, 10);

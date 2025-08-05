@@ -1,6 +1,6 @@
 import * as React from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ViewIcon, ViewOffSlashIcon, CheckmarkCircle02Icon, CancelCircleIcon, Calendar04Icon } from "@hugeicons/core-free-icons"
+import { ViewIcon, ViewOffSlashIcon, CheckmarkCircle02Icon, CancelCircleIcon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 
 interface InputProps extends React.ComponentProps<"input"> {
