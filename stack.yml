@@ -34,7 +34,7 @@ services:
     deploy:
       <<: *deploy-settings
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:3000/health || exit 1"]
+      test: ["HEALTHCHECK", "CMD", "curl -sfI http://localhost:3000/ || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
