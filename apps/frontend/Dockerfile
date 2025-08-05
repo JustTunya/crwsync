@@ -15,7 +15,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run build --workspace=@crwsync/types --workspace=@crwsync/frontend
+RUN npm run build --workspace=@crwsync/types \
+    && npm run build --workspace=@crwsync/frontend \
+    && npm prune --production
 
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
@@ -26,6 +28,8 @@ COPY --from=builder /app/apps/frontend/.next ./.next
 COPY --from=builder /app/apps/frontend/next.config.ts ./next.config.ts
 COPY --from=builder /app/apps/frontend/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
+
+COPY apps/frontend/.env ./apps/frontend/.env
 
 EXPOSE 3000
 
