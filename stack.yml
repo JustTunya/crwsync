@@ -61,13 +61,15 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE}
+    depends_on:
+      - database
     ports:
       - "8080:8080"
     networks:
       - crwsync
     environment:
       - NODE_ENV=production
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=database
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
