@@ -7,7 +7,7 @@ COPY apps/backend/package.json apps/backend/nest-cli.json apps/backend/tsconfig.
 COPY apps/backend/src ./apps/backend/
 COPY packages ./packages/
 
-RUN npm ci
+RUN npm ci --workspace=@crwsync/types --workspace=@crwsync/backend
 
 # --- BUILDER STAGE ---
 FROM node:20-alpine AS builder
