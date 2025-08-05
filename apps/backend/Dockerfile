@@ -26,8 +26,6 @@ ENV NODE_ENV=production
 COPY --from=builder /app/apps/backend/dist ./dist
 COPY --from=builder /app/apps/backend/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
-# runtime .env for Nest
-COPY apps/backend/.env .env
 
 EXPOSE 8080
 CMD ["node", "dist/main.js"]
