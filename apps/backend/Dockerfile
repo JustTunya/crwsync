@@ -26,6 +26,11 @@ COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder /app/apps/backend/package.json ./apps/backend/package.json
 COPY --from=builder /app/node_modules ./node_modules
 
+COPY --from=builder /app/packages/types/dist \
+     ./node_modules/@crwsync/types
+COPY --from=builder /app/packages/types/package.json \
+     ./node_modules/@crwsync/types/package.json
+
 EXPOSE 8080
 
 CMD ["node", "apps/backend/dist/main.js"]
