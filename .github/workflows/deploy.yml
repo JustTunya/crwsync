@@ -3,17 +3,9 @@ name: 🔗 CRWSYNC deployment
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Deployment environment'
-        required: true
-        default: 'staging'
-        type: choice
-        options: [ staging, production ]
 
 concurrency:
-  group: 'crwsync-${{ github.ref }}'
+  group: 'crwsync'
   cancel-in-progress: true
 
 permissions:
@@ -115,10 +107,9 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   deploy:
-    name: 🚀 Deploy to ${{ github.event.inputs.environment }}
+    name: 🚀 Deploy CRWSYNC stack
     runs-on: [ self-hosted, linux, x64 ]
     needs: build
-    environment: ${{ github.event.inputs.environment }}
     timeout-minutes: 20
     env:
       FRONTEND_IMAGE: ghcr.io/${{ secrets.GH_REPO }}/frontend:${{ github.sha }}
@@ -152,11 +143,11 @@ jobs:
           docker pull ghcr.io/${{ secrets.GH_REPO }}/backend:${{ github.sha }} || true
 
       - name: Remove old stack if exists
-        run: docker stack rm crwsync-${{ github.event.inputs.environment }} || true
+        run: docker stack rm crwsync || true
 
       - name: Deploy stack
         run: |
-          docker stack deploy --with-registry-auth -c stack.yml crwsync-${{ github.event.inputs.environment }}
+          docker stack deploy --with-registry-auth --detach=false -c stack.yml crwsync
 
       - name: Verify services
         run: docker service ls
