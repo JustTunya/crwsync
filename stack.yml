@@ -98,3 +98,7 @@ services:
 networks:
   crwsync:
     external: true
+
+volumes:
+  crwsync_data:
+    driver: local
