@@ -137,10 +137,16 @@ jobs:
         if: steps.swarm.outputs.state != 'active'
         run: docker swarm init --advertise-addr 127.0.0.1
 
+      - name: Ensure CRWSYNC network exists
+        run: |
+          if ! docker network inspect crwsync >/dev/null 2>&1; then
+            docker network create --driver=overlay --attachable crwsync
+          fi
+
       - name: Pull images (warm)
         run: |
-          docker pull ghcr.io/${{ secrets.GH_REPO }}/frontend:${{ github.sha }} || true
-          docker pull ghcr.io/${{ secrets.GH_REPO }}/backend:${{ github.sha }} || true
+          docker pull ${FRONTEND_IMAGE} || true
+          docker pull ${BACKEND_IMAGE} || true
 
       - name: Remove old stack if exists
         run: docker stack rm crwsync || true
