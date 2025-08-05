@@ -7,8 +7,9 @@ COPY apps/frontend/package.json apps/frontend/tsconfig*.json ./apps/frontend/
 COPY packages ./packages/
 
 RUN npm ci --workspace=@crwsync/types \
-    && npm run build --workspace=@crwsync/types \
-    && npm ci --workspace=@crwsync/frontend
+    && npm run build --workspace=@crwsync/types
+
+RUN npm ci --workspace=@crwsync/frontend
 
 # --- BUILDER STAGE ---
 FROM node:20-alpine AS builder
