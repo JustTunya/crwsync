@@ -6,7 +6,9 @@ COPY package.json package-lock.json tsconfig.json tsconfig.base.json ./
 COPY apps/frontend/package.json apps/frontend/tsconfig*.json ./apps/frontend/
 COPY packages ./packages/
 
-RUN npm ci --workspace=@crwsync/frontend --workspace=@crwsync/types
+RUN npm ci --workspace=@crwsync/types \
+    && npm run build --workspace=@crwsync/types \
+    && npm ci --workspace=@crwsync/frontend
 
 # --- BUILDER STAGE ---
 FROM node:20-alpine AS builder
@@ -15,8 +17,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run build --workspace=@crwsync/types \
-    && npm run build --workspace=@crwsync/frontend \
+RUN npm run build --workspace=@crwsync/frontend \
     && npm prune --production
 
 # --- RUNNER STAGE ---
