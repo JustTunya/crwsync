@@ -43,12 +43,15 @@ jobs:
           npm ci
           npm run lint
 
-      - name: Lint Dockerfiles
+      - name: Lint frontend Dockerfiles
         uses: hadolint/hadolint-action@master
         with:
-          dockerfile: |
-            apps/frontend/Dockerfile
-            apps/backend/Dockerfile
+          dockerfile: apps/frontend/Dockerfile
+
+      - name: Lint backend Dockerfiles
+        uses: hadolint/hadolint-action@master
+        with:
+          dockerfile: apps/backend/Dockerfile
 
       - name: Scan images for vulnerabilities
         uses: aquasecurity/trivy-action@master
