@@ -23,6 +23,26 @@ x-deploy-settings: &deploy-settings
       memory: 256M
 
 services:
+  database:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    networks:
+      - crwsync
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - crwsync_data:/var/lib/postgresql/data
+    deploy:
+      <<: *deploy-settings
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
   frontend:
     image: ${FRONTEND_IMAGE}
     ports:
