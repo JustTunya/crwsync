@@ -12,7 +12,7 @@ RUN npm ci --workspace=@crwsync/frontend --workspace=@crwsync/types
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY --from=deps /node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 RUN npm run build --workspace=@crwsync/types --workspace=@crwsync/frontend
@@ -22,10 +22,10 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY --from=builder /apps/frontend/.next ./.next
-COPY --from=builder /apps/frontend/next.config.ts ./next.config.ts
-COPY --from=builder /apps/frontend/package.json ./package.json
-COPY --from=builder /node_modules ./node_modules
+COPY --from=builder /app/apps/frontend/.next ./apps/frontend/.next
+COPY --from=builder /app/apps/frontend/next.config.ts ./apps/frontend/next.config.ts
+COPY --from=builder /app/apps/frontend/package.json ./apps/frontend/package.json
+COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3000
 
