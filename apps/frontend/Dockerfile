@@ -29,4 +29,4 @@ COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3000
 
-CMD ["node", "apps/frontend/.next/standalone/apps/frontend/server.js"]
+CMD ["node", "apps/frontend/.next/standalone/server.js"]
