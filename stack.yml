@@ -3,17 +3,17 @@ version: '3.9'
 x-deploy-settings: &deploy-settings
   replicas: 2
   update_config:
-    parallelism: 1
-    delay: 10s
+    parallelism: 2
+    delay: 5s
     order: start-first
   rollback_config:
-    parallelism: 1
-    delay: 10s
+    parallelism: 2
+    delay: 5s
   restart_policy:
     condition: on-failure
     delay: 5s
     max_attempts: 3
-    window: 120s
+    window: 60s
   resources:
     limits:
       cpus: '0.5'
@@ -35,18 +35,18 @@ services:
     networks:
       - crwsync
     env_file:
-      - apps/frontend/.env.production
+      - apps/frontend/.env
     deploy:
       <<: *deploy-settings
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
       retries: 3
     logging:
       driver: json-file
       options:
-        max-size: "10m"
+        max-size: "5m"
         max-file: "3"
 
   backend:
@@ -60,14 +60,14 @@ services:
     deploy:
       <<: *deploy-settings
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
       retries: 3
     logging:
       driver: json-file
       options:
-        max-size: "10m"
+        max-size: "5m"
         max-file: "3"
 
 networks:
