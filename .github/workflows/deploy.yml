@@ -76,9 +76,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Validate repository path
-        run: echo "REPOSITORY=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-
       - name: Build & Push Frontend
         uses: docker/build-push-action@v4
         with:
@@ -110,21 +107,21 @@ jobs:
     name: 🚀 Deploy CRWSYNC stack
     runs-on: [ self-hosted, linux, x64 ]
     needs: build
-    timeout-minutes: 20
+    timeout-minutes: 10
     env:
       FRONTEND_IMAGE: ghcr.io/${{ secrets.GH_REPO }}/frontend:${{ github.sha }}
       BACKEND_IMAGE: ghcr.io/${{ secrets.GH_REPO }}/backend:${{ github.sha }}
-      NEXT_PUBLIC_API_URL: http://localhost:8080
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
-      DB_NAME: ${DB_NAME}
-      MAIL_HOST: ${MAIL_HOST}
-      MAIL_PORT: ${MAIL_PORT}
-      MAIL_USER: ${MAIL_USER}
-      MAIL_PASS: ${MAIL_PASS}
-      JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      MAIL_HOST: ${{ secrets.MAIL_HOST }}
+      MAIL_PORT: ${{ secrets.MAIL_PORT }}
+      MAIL_USER: ${{ secrets.MAIL_USER }}
+      MAIL_PASS: ${{ secrets.MAIL_PASS }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - uses: actions/checkout@v4
 
@@ -142,6 +139,13 @@ jobs:
           if ! docker network inspect crwsync >/dev/null 2>&1; then
             docker network create --driver=overlay --attachable crwsync
           fi
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull images (warm)
         run: |
