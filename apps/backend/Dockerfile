@@ -27,7 +27,7 @@ COPY --from=builder /app/apps/backend/dist ./dist
 COPY --from=builder /app/apps/backend/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
-COPY apps/backend/.env ./apps/backend/.env
+COPY apps/backend/.env .env
 
 EXPOSE 8080
 

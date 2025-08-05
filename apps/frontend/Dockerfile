@@ -29,7 +29,7 @@ COPY --from=builder /app/apps/frontend/next.config.ts ./next.config.ts
 COPY --from=builder /app/apps/frontend/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
-COPY apps/frontend/.env ./apps/frontend/.env
+COPY apps/frontend/.env.production .env.production
 
 EXPOSE 3000
 
