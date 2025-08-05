@@ -74,7 +74,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           VERIFICATION_EXP: ${{ secrets.VERIFICATION_EXP }}
         run: |
-          envsubst '${FRONTEND_IMAGE} ${BACKEND_IMAGE} ${DB_HOST} ${DB_PORT} ${DB_USER} ${DB_PASS} ${DB_NAME} ${MAIL_HOST} ${MAIL_PORT} ${MAIL_USER} ${MAIL_PASS} ${VERIFICATION_EXP} ${JWT_SECRET}' < stack.yml.template > stack.yml
+          envsubst '${FRONTEND_IMAGE} ${BACKEND_IMAGE} ${DB_HOST} ${DB_PORT} ${DB_USER} ${DB_PASS} ${DB_NAME} ${MAIL_HOST} ${MAIL_PORT} ${MAIL_USER} ${MAIL_PASS} ${VERIFICATION_EXP} ${JWT_SECRET}' < stack.yml.tmp > stack.yml
 
       - name: Deploy CRWSYNC stack
         run: |
