@@ -5,12 +5,6 @@
   "license": "UNLICENSED",
   "type": "commonjs",
   "main": "dist/index.js",
-  "exports": {
-    ".": {
-      "require": "./dist/index.js",
-      "import": "./dist/index.js"
-    }
-  },
   "types": "dist/index.d.ts",
   "files": [
     "dist"
