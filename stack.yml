@@ -1,13 +1,13 @@
 version: '3.9'
 
 x-deploy-settings: &deploy-settings
-  replicas: 2
+  replicas: 1
   update_config:
-    parallelism: 2
+    parallelism: 1
     delay: 5s
     order: start-first
   rollback_config:
-    parallelism: 2
+    parallelism: 1
     delay: 5s
   restart_policy:
     condition: on-failure
