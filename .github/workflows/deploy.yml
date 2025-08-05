@@ -62,8 +62,19 @@ jobs:
         env:
           FRONTEND_IMAGE: ghcr.io/${{ env.REPOSITORY }}/frontend:${{ github.sha }}
           BACKEND_IMAGE: ghcr.io/${{ env.REPOSITORY }}/backend:${{ github.sha }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          MAIL_USER: ${{ secrets.MAIL_USER }}
+          MAIL_PASS: ${{ secrets.MAIL_PASS }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          VERIFICATION_EXP: ${{ secrets.VERIFICATION_EXP }}
         run: |
-          envsubst '${FRONTEND_IMAGE} ${BACKEND_IMAGE}' < stack.yml.tmpl > stack.yml
+          envsubst '${FRONTEND_IMAGE} ${BACKEND_IMAGE} ${DB_HOST} ${DB_PORT} ${DB_USER} ${DB_PASS} ${DB_NAME} ${MAIL_HOST} ${MAIL_PORT} ${MAIL_USER} ${MAIL_PASS} ${VERIFICATION_EXP} ${JWT_SECRET}' < stack.yml.template > stack.yml
 
       - name: Deploy CRWSYNC stack
         run: |
