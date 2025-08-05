@@ -151,6 +151,9 @@ jobs:
           docker pull ghcr.io/${{ secrets.GH_REPO }}/frontend:${{ github.sha }} || true
           docker pull ghcr.io/${{ secrets.GH_REPO }}/backend:${{ github.sha }} || true
 
+      - name: Remove old stack if exists
+        run: docker stack rm crwsync-${{ github.event.inputs.environment }} || true
+
       - name: Deploy stack
         run: |
           docker stack deploy --with-registry-auth -c stack.yml crwsync-${{ github.event.inputs.environment }}
