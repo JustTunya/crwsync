@@ -1,35 +1,26 @@
-# --- DEPENDENCY STAGE ---
-FROM node:20-alpine AS deps
+# --- BUILDER STAGE ---
+FROM node:20-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json tsconfig.json tsconfig.base.json ./
-COPY apps/backend/package.json apps/backend/nest-cli.json apps/backend/tsconfig.json ./apps/backend/
-COPY apps/backend/src ./apps/backend/
-COPY packages ./packages/
+RUN npm ci
 
-RUN npm ci --workspace=@crwsync/types \
-    && npm run build --workspace=@crwsync/types
+COPY packages ./packages
+COPY apps/backend ./apps/backend
 
-RUN npm ci --workspace=@crwsync/backend
+RUN npm run build --workspace=@crwsync/types \
+ && npm run build --workspace=@crwsync/backend
 
-# --- BUILDER STAGE ---
-FROM node:20-alpine AS builder
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-RUN npm run build --workspace=@crwsync/backend
+RUN npm prune --omit=dev
 
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY --from=builder /app/apps/backend/dist ./dist
-COPY --from=builder /app/apps/backend/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=build /app/apps/backend/dist ./dist
+COPY --from=build /app/apps/backend/package.json ./package.json
+COPY --from=build /app/node_modules ./node_modules
 
 EXPOSE 8080
-
 CMD ["node", "dist/main.js"]
