@@ -3,7 +3,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json tsconfig.json tsconfig.base.json ./
-COPY apps/frontend/package.json apps/frontend/tsconfig*.json ./apps/frontend/\
+COPY apps/frontend/package.json apps/frontend/tsconfig*.json ./apps/frontend/
 COPY packages ./packages/
 
 RUN npm ci --workspace=@crwsync/frontend --workspace=@crwsync/types
