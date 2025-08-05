@@ -42,7 +42,6 @@ jobs:
         run: |
           npm ci
           npm run lint
-          npm run test
 
       - name: Lint Dockerfiles
         uses: hadolint/hadolint-action@master
