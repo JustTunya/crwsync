@@ -151,7 +151,7 @@ jobs:
 
       - name: Deploy stack
         run: |
-          docker stack deploy --with-registry-auth --force -c stack.yml crwsync
+          docker stack deploy --with-registry-auth -c stack.yml crwsync
 
       - name: Verify services
         run: docker service ls
