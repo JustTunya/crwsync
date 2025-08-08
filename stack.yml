@@ -94,8 +94,7 @@ services:
 
 networks:
   net:
-    attachable: true
-    driver: overlay
+    external: true
 
 volumes:
   crwsync_data:
