@@ -95,6 +95,7 @@ services:
 networks:
   net:
     external: true
+    name: crwsync_net
 
 volumes:
   crwsync_data:

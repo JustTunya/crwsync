@@ -149,6 +149,11 @@ jobs:
       - name: Remove old stack if exists
         run: docker stack rm crwsync || true
 
+      - name: Ensure network exists
+        run: |
+          docker network inspect crwsync_net >/dev/null 2>&1 || \
+          docker network create --driver overlay --attachable crwsync_net
+
       - name: Deploy stack
         run: |
           docker stack deploy --with-registry-auth --detach=false -c stack.yml crwsync
