@@ -2,34 +2,45 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
+ENV NODE_ENV=development
+
+RUN corepack enable
+
 COPY package.json package-lock.json tsconfig.json tsconfig.base.json ./
 COPY apps/backend/package.json apps/backend/nest-cli.json apps/backend/tsconfig.json ./apps/backend/
-COPY packages ./packages/
+COPY packages/types/package.json ./packages/types/package.json
 
-RUN npm ci --workspace=@crwsync/types --workspace=@crwsync/backend
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --workspace=@crwsync/types --workspace=@crwsync/backend
+
+COPY packages ./packages
+COPY apps/backend ./apps/backend
 
 # --- BUILDER STAGE ---
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY --from=deps /app ./
 
-RUN npm run build --workspace=@crwsync/types --workspace=@crwsync/backend
+RUN --mount=type=cache,target=/root/.npm \
+    npm run build --workspace=@crwsync/types --workspace=@crwsync/backend
 
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
 WORKDIR /app
+
 ENV NODE_ENV=production
 
-COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
-COPY --from=builder /app/apps/backend/package.json ./apps/backend/package.json
-COPY --from=builder /app/node_modules ./node_modules
+COPY package.json package-lock.json ./
+COPY apps/backend/package.json ./apps/backend/package.json
 
-COPY --from=builder /app/packages/types/dist \
-     ./node_modules/@crwsync/types
-COPY --from=builder /app/packages/types/package.json \
-     ./node_modules/@crwsync/types/package.json
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev --workspace=@crwsync/backend
+
+COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+
+COPY --from=builder /app/packages/types/dist ./node_modules/@crwsync/types
+COPY --from=builder /app/packages/types/package.json ./node_modules/@crwsync/types/package.json
 
 EXPOSE 8080
 
