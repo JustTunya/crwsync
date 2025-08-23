@@ -2,31 +2,42 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
+ENV NODE_ENV=development
+
+RUN corepack enable
+
 COPY package.json package-lock.json tsconfig.json tsconfig.base.json ./
 COPY apps/frontend/package.json apps/frontend/tsconfig*.json ./apps/frontend/
-COPY packages ./packages/
+COPY packages/types/package.json ./packages/types/package.json
 
-RUN npm ci --workspace=@crwsync/frontend --workspace=@crwsync/types
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --workspace=@crwsync/types --workspace=@crwsync/frontend
+
+COPY packages ./packages
+COPY apps/frontend ./apps/frontend
 
 # --- BUILDER STAGE ---
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build --workspace=@crwsync/types --workspace=@crwsync/frontend
+COPY --from=deps /app ./
+
+RUN --mount=type=cache,target=/app/apps/frontend/.next/cache \
+    npm run build --workspace=@crwsync/types --workspace=@crwsync/frontend
 
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV=production
 
-COPY --from=builder /app/apps/frontend/.next ./apps/frontend/.next
-COPY --from=builder /app/apps/frontend/next.config.ts ./apps/frontend/next.config.ts
-COPY --from=builder /app/apps/frontend/package.json ./apps/frontend/package.json
-COPY --from=builder /app/node_modules ./node_modules
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
+
+COPY --from=builder /app/apps/frontend/.next/standalone ./
+COPY --from=builder /app/apps/frontend/.next/static ./apps/frontend/.next/static
+COPY --from=builder /app/apps/frontend/public ./apps/frontend/public
 
 EXPOSE 3000
 
-CMD ["node", "apps/frontend/.next/standalone/apps/frontend/server.js"]
+CMD ["node", "apps/frontend/server.js"]

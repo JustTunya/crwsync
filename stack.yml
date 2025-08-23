@@ -81,11 +81,6 @@ services:
       - JWT_SECRET=${JWT_SECRET}
     deploy:
       <<: *deploy-settings
-    # healthcheck:
-    #   test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
-    #   interval: 15s
-    #   timeout: 5s
-    #   retries: 3
     logging:
       driver: json-file
       options:
