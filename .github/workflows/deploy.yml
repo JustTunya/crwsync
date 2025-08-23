@@ -51,9 +51,7 @@ jobs:
           scan-type: fs
           scan-ref: .
           scanners: vuln
-          skip-dirs: |
-            node_modules
-            apps/frontend/.next
+          skip-dirs: node_modules,apps/frontend/.next
 
   build:
     name: 🛠️ Build & Push Docker Images
