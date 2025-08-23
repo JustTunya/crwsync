@@ -46,7 +46,10 @@ services:
   frontend:
     image: ${FRONTEND_IMAGE}
     ports:
-      - "3000:3000"
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: host
     networks:
       - net
     environment:
