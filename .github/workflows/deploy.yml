@@ -101,11 +101,6 @@ jobs:
           cache-to: type=gha,mode=max
           tags: ghcr.io/${{ secrets.GH_REPO }}/backend:${{ github.sha }}
 
-      - name: Rotate cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
   deploy:
     name: 🚀 Deploy CRWSYNC stack
     runs-on: [ self-hosted, linux, x64 ]
