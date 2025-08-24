@@ -20,8 +20,6 @@ COPY apps/frontend ./apps/frontend
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-ENV NEXT_TELEMETRY_DISABLED=1
-
 COPY --from=deps /app ./
 
 RUN --mount=type=cache,target=/app/apps/frontend/.next/cache \
@@ -32,7 +30,8 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1
+    PORT=3000 \
+    HOST=0.0.0.0
 
 COPY --from=builder /app/apps/frontend/.next/standalone ./
 COPY --from=builder /app/apps/frontend/.next/static ./apps/frontend/.next/static
