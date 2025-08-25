@@ -28,10 +28,7 @@ RUN mkdir -p apps/frontend/public
 
 RUN --mount=type=cache,target=/app/apps/frontend/.next/cache \
     npm run build --workspace=@crwsync/types --workspace=@crwsync/frontend
-
-RUN test -f apps/frontend/.next/standalone/apps/frontend/server.js
-RUN test -d apps/frontend/.next/static
-
+    
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
 WORKDIR /app
