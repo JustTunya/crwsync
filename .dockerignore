@@ -1,21 +1,113 @@
+# VCS
 .git
-.gitignore
-.github/
-.vscode/
-node_modules/
-apps/*/node_modules/
-packages/*/node_modules/
-apps/frontend/.next/
-apps/frontend/out/
-apps/backend/dist/
-packages/*/dist/
-dist/
-build/
+.git/**
+.github/**
+.gitlab/**
+.svn
+.hg
+
+# OS / editors
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.sw?
+*.orig
+*.patch
+.idea/**
+.vscode/**
+*.code-workspace
+
+# Env and secrets
 .env
-.env.*.local
-*.log
-logs/
-.cache/
-coverage/
-*.tsbuildinfo
+.env.*
+!.env.example
+!.env.sample
+!.env.schema
+*.pem
+*.key
+*.crt
+*.pfx
+*.kubeconfig
+
+# Node monorepo
+**/node_modules/**
+**/.pnpm-store/**
+**/.yarn/cache/**
+**/.yarn/unplugged/**
+**/.yarn/build-state.yml
+**/.yarn/install-state.gz
+.pnp.*
+.npmrc
+.yarnrc
+.yarnrc.yml
+
+# Build artifacts
+# Next.js
+**/.next/**
+**/out/**
+**/.vercel/**
+# NestJS / TS
+**/dist/**
+**/build/**
+**/*.tsbuildinfo
+# Tool caches
+**/.turbo/**
+**/.nx/**
+**/.cache/**
+**/.parcel-cache/**
+**/.vite/**
+**/storybook-static/**
+**/coverage/**
+**/.nyc_output/**
+**/playwright-report/**
+**/.playwright/**
+
+# Tests and examples
+**/__tests__/**
+**/__mocks__/**
+**/*.test.*
+**/*.spec.*
+
+# Logs and temp
+**/*.log
+**/*.log.*
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+**/tmp/**
+**/temp/**
+**/.tmp/**
+**/.temp/**
+
+# Local data / DBs
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+**/*.db-journal
+
+# Design sources
+**/*.psd
+**/*.ai
+**/*.sketch
+**/*.fig
+
+# Cloudflared and local tooling
+.cloudflared/**
+.direnv/**
+.envrc
+
+# Archives
+*.tar
+*.tgz
+*.gz
+*.zip
+
+# Keep lockfiles (important for reproducible installs)
+!package-lock.json
+!pnpm-lock.yaml
+!yarn.lock
+
+# Always keep public assets
+!apps/**/public
+!apps/**/public/**
