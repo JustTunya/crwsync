@@ -31,11 +31,11 @@ RUN --mount=type=cache,target=/app/apps/frontend/.next/cache \
 
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
-WORKDIR /app/apps/frontend
+WORKDIR /app
 
 ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000 NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=builder /app/apps/frontend/.next/standalone ./.next/standalone
+COPY --from=builder /app/apps/frontend/.next/standalone ./
 COPY --from=builder /app/apps/frontend/.next/static ./.next/static
 COPY --from=builder /app/apps/frontend/public ./public
 
