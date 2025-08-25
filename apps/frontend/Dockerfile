@@ -22,6 +22,9 @@ WORKDIR /app
 
 COPY --from=deps /app ./
 
+# Making sure public folder exists even if empty
+RUN mkdir -p apps/frontend/public
+
 RUN --mount=type=cache,target=/app/apps/frontend/.next/cache \
     npm run build --workspace=@crwsync/types --workspace=@crwsync/frontend
 
