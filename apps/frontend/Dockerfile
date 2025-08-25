@@ -27,15 +27,15 @@ COPY --from=deps /app ./
 RUN mkdir -p apps/frontend/public
 
 RUN --mount=type=cache,target=/app/apps/frontend/.next/cache \
-    npm run build --workspace=@crwsync/types --workspace=@crwsync/frontend
-    
+    npm run build -w @crwsync/frontend
+
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
-WORKDIR /app
+WORKDIR /app/apps/frontend
 
-ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000
+ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000 NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=builder /app/apps/frontend/.next/standalone ./
+COPY --from=builder /app/apps/frontend/.next/standalone ./.next/standalone
 COPY --from=builder /app/apps/frontend/.next/static ./.next/static
 COPY --from=builder /app/apps/frontend/public ./public
 
