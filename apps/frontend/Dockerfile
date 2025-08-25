@@ -20,13 +20,17 @@ COPY apps/frontend ./apps/frontend
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+ENV NODE_ENV=production
+
 COPY --from=deps /app ./
 
-# Making sure public folder exists even if empty
 RUN mkdir -p apps/frontend/public
 
 RUN --mount=type=cache,target=/app/apps/frontend/.next/cache \
     npm run build --workspace=@crwsync/types --workspace=@crwsync/frontend
+
+RUN test -f apps/frontend/.next/standalone/apps/frontend/server.js
+RUN test -d apps/frontend/.next/static
 
 # --- RUNNER STAGE ---
 FROM node:20-alpine AS runner
@@ -35,12 +39,9 @@ WORKDIR /app
 ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000
 
 COPY --from=builder /app/apps/frontend/.next/standalone ./
-
-WORKDIR /app/apps/frontend
-
 COPY --from=builder /app/apps/frontend/.next/static ./.next/static
 COPY --from=builder /app/apps/frontend/public ./public
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "apps/frontend/server.js"]
