@@ -29,13 +29,15 @@ RUN --mount=type=cache,target=/app/apps/frontend/.next/cache \
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production \
-    PORT=3000 \
-    HOSTNAME=0.0.0.0
+ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000
 
 COPY --from=builder /app/apps/frontend/.next/standalone ./
-COPY --from=builder /app/apps/frontend/.next/static ./apps/frontend/.next/static
+
+WORKDIR /app/apps/frontend
+
+COPY --from=builder /app/apps/frontend/.next/static ./.next/static
+COPY --from=builder /app/apps/frontend/public ./public
 
 EXPOSE 3000
 
-CMD ["node", "apps/frontend/server.js"]
+CMD ["node", "server.js"]
