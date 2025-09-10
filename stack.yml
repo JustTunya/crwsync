@@ -43,28 +43,6 @@ services:
       timeout: 5s
       retries: 3
 
-  migrator:
-    image: ${BACKEND_IMAGE}
-    command: sh -lc "npm run migration:run"
-    networks:
-      - net
-    environment:
-      - NODE_ENV=production
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
-      - DB_NAME=${DB_NAME}
-      - MAIL_HOST=${MAIL_HOST}
-      - MAIL_PORT=${MAIL_PORT}
-      - MAIL_USER=${MAIL_USER}
-      - MAIL_PASS=${MAIL_PASS}
-      - JWT_SECRET=${JWT_SECRET}
-    restart: "no"
-    deploy:
-      restart_policy:
-        condition: none
-
   frontend:
     image: ${FRONTEND_IMAGE}
     ports:
