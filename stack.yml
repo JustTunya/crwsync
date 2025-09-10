@@ -61,7 +61,7 @@ services:
       - MAIL_PASS=${MAIL_PASS}
       - JWT_SECRET=${JWT_SECRET}
     restart: "no"
-    depends_on:
+    deploy:
       restart_policy:
         condition: none
 
