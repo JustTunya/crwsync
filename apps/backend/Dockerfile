@@ -31,7 +31,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN apk add --no-cache postgresql-client
+RUN apk add --no-cache postgresql-client=16.4-r0
 
 COPY package.json package-lock.json ./
 COPY apps/backend/package.json ./apps/backend/package.json
