@@ -17,6 +17,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         database: config.get<string>('DB_NAME'),
         logging: process.env.NODE_ENV !== 'production',
         synchronize: process.env.NODE_ENV !== 'production',
+        migrationsTableName: 'migrations',
         autoLoadEntities: true,
         migrationsRun: false,
       }),
