@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback } from "react";
-import { isEmailValid, isUsernameValid } from "@/lib/validations";
+import { isEmailValid, isPasswordStrong, isUsernameValid } from "@/lib/validations";
 import { useMatch } from "@/hooks/use-match";
 import { useAvailability } from "@/hooks/use-availability";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useValidator } from "@/hooks/use-validator";
 
 interface SignupStep1Props {
   form: {
@@ -29,15 +30,17 @@ export default function SignupStep1(props: SignupStep1Props) {
 
   const validEmail = useAvailability("email", email, isEmailValid);
   const validUsername = useAvailability("username", username, isUsernameValid);
-  const validPassword = useMatch(password, confpassword);
+  const validPassword = useValidator(password, isPasswordStrong);
+  const matchingPasswords = useMatch(password, confpassword);
 
   const validStep = useMemo(() => {
     return (
       validEmail?.available === true &&
       validUsername?.available === true &&
-      validPassword === true
+      validPassword?.value === true &&
+      matchingPasswords === true
     );
-  }, [validEmail, validUsername, validPassword]);
+  }, [validEmail, validUsername, validPassword, matchingPasswords]);
 
   const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -103,8 +106,15 @@ export default function SignupStep1(props: SignupStep1Props) {
           visible={showPass}
           setVisible={() => setShowPass(!showPass)}
           onChange={handlePasswordChange}
-          error={validPassword === false}
+          error={matchingPasswords === false}
         />
+      </div>
+
+      <div className="flex flex-row items-center gap-2">
+        <p className="font-extralight text-xs text-gray-400">{validPassword?.meta?.level}</p>
+        <div className="w-full h-2 rounded-full border border-primary/25">
+          <div className={`h-full rounded-full ${validPassword?.meta?.level === 'weak' ? 'bg-error' : validPassword?.meta?.level === 'medium' ? 'bg-warning' : 'bg-green-400'}`} style={{ width: validPassword?.meta?.strength }} />
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -116,9 +126,9 @@ export default function SignupStep1(props: SignupStep1Props) {
           visible={showConfPass}
           setVisible={() => setShowConfPass(!showConfPass)}
           onChange={handleConfirmPasswordChange}
-          error={validPassword === false}
+          error={matchingPasswords === false}
         />
-        {(validPassword === false) && (
+        {(matchingPasswords === false) && (
           <Label error>Passwords do not match or are too short</Label>
         )}
       </div>

@@ -36,6 +36,19 @@ export function isBirthdateValid(birthdate: string | Date, minAge = 13): boolean
   return age >= minAge;
 }
 
+export function isPasswordStrong(password: string): { level: 'weak' | 'medium' | 'strong' } {
+  const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/; // At least 8 characters, including uppercase, lowercase, numbers, and special characters
+  const mediumRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,}$/; // At least 6 characters, including uppercase, lowercase, and numbers
+
+  if (strongRegex.test(password)) {
+    return { level: 'strong' };
+  }
+  if (mediumRegex.test(password)) {
+    return { level: 'medium' };
+  }
+  return { level: 'weak' };
+}
+
 export function doPasswordsMatch(password: string, confirmPassword: string): boolean {
   return password === confirmPassword;
 }

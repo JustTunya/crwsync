@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 
-export function useValidator(value: string, validator: (value: string) => boolean) {
+export function useValidator(value: string, validator: (value: string) => { level: string } | boolean) : { value: boolean; meta?: any } {
   const [debounced] = useDebounce(value, 500);
   const [isValid, setIsValid] = useState<boolean | undefined>(undefined);
+  const [meta, setMeta] = useState<any>(undefined);
 
   useEffect(() => {
     const term = debounced.trim();
@@ -18,10 +19,15 @@ export function useValidator(value: string, validator: (value: string) => boolea
       try {
         const result = validator(term);
         if (!isCancelled) {
-          setIsValid(result);
+          if (typeof result === 'object' && result !== null) {
+            setIsValid(result.level !== 'weak');
+            setMeta(result);
+          } else {
+            setIsValid(!!result);
+            setMeta(undefined);
+          }
         }
       } catch (error) {
-        // console.error('Validation error:', error);
         if (!isCancelled) {
           setIsValid(undefined);
         }
@@ -35,5 +41,5 @@ export function useValidator(value: string, validator: (value: string) => boolea
     };
   }, [debounced, validator]);
 
-  return isValid;
+  return { value: isValid === true, meta };
 }
