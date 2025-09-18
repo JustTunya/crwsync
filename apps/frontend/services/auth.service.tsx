@@ -115,7 +115,7 @@ export async function resetPassword(_prev: ResetPasswordState, data: ResetPasswo
 
 export async function checkAvailability(field: 'email' | 'username', value: string): Promise<{ available: boolean }> {
   try {
-    const response = await api.get("/auth/check-availability", {
+    const response = await api.get("/users/check-availability", {
       params: { field, value }
     });
     return response.data;
