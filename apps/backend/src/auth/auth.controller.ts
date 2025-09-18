@@ -5,10 +5,7 @@ import { SigninDto } from "./signin.dto";
 
 @Controller("auth")
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly userService: UserService
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post("signin")
   @HttpCode(HttpStatus.OK)
@@ -18,14 +15,5 @@ export class AuthController {
       throw new UnauthorizedException("Invalid credentials");
     }
     return this.authService.signin(user);
-  }
-
-  @Get('check-availability')
-  @HttpCode(HttpStatus.OK)
-  checkAvailability(
-    @Query('field') field: 'email' | 'username',
-    @Query('value') value: string
-  ): Promise<{ available: boolean }> {
-    return this.userService.checkEmailOrUsername(field, value);
   }
 }

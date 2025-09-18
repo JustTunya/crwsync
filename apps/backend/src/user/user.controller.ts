@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, UsePipes, ValidationPipe, Patch, Delete } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, UsePipes, ValidationPipe, Patch, Delete, Query } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UserEntity } from "./user.entity";
@@ -26,6 +26,15 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string): Promise<UserEntity> {
     return this.userService.findOne(id);
+  }
+
+  @Get('check-availability')
+  @HttpCode(HttpStatus.OK)
+  checkAvailability(
+    @Query('field') field: 'email' | 'username',
+    @Query('value') value: string
+  ): Promise<{ available: boolean }> {
+    return this.userService.checkEmailOrUsername(field, value);
   }
 
   @Patch(':id')
