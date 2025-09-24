@@ -40,6 +40,8 @@ export function isPasswordStrong(password: string): { level: 'weak' | 'medium' |
   const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/; // At least 8 characters, including uppercase, lowercase, numbers, and special characters
   const mediumRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,}$/; // At least 6 characters, including uppercase, lowercase, and numbers
 
+  console.log("CHECKING");
+
   if (strongRegex.test(password)) {
     return { level: 'strong' };
   }

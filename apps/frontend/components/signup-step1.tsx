@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useValidator } from "@/hooks/use-validator";
+import { cn } from "@/lib/utils";
 
 interface SignupStep1Props {
   form: {
@@ -106,14 +107,21 @@ export default function SignupStep1(props: SignupStep1Props) {
           visible={showPass}
           setVisible={() => setShowPass(!showPass)}
           onChange={handlePasswordChange}
-          error={matchingPasswords === false}
+          error={matchingPasswords === false && validPassword?.value === true}
         />
       </div>
 
-      <div className="flex flex-row items-center gap-2">
-        <p className="font-extralight text-xs text-gray-400">{validPassword?.meta?.level}</p>
-        <div className="w-full h-2 rounded-full border border-primary/25">
-          <div className={`h-full rounded-full ${validPassword?.meta?.level === 'weak' ? 'bg-error' : validPassword?.meta?.level === 'medium' ? 'bg-warning' : 'bg-green-400'}`} style={{ width: validPassword?.meta?.strength }} />
+      <div className="flex flex-row items-center justify-between">
+        <div className="w-3/4 flex flex-row gap-3">
+          <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-error", validPassword?.meta?.level === "medium" && "bg-warning", validPassword?.meta?.level === "strong" && "bg-success")} />
+          <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-base-400", validPassword?.meta?.level === "medium" && "bg-warning", validPassword?.meta?.level === "strong" && "bg-success")} />
+          <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-base-400", validPassword?.meta?.level === "medium" && "bg-base-400", validPassword?.meta?.level === "strong" && "bg-success")} />
+        </div>
+
+        <div className={cn("px-2 text-center text-xs font-medium", validPassword?.meta?.level === undefined && "text-base-400", validPassword?.meta?.level === "weak" && "text-error", validPassword?.meta?.level === "medium" && "text-warning", validPassword?.meta?.level === "strong" && "text-success")}>
+          {validPassword?.meta?.level === "weak" && "Too Weak"}
+          {validPassword?.meta?.level === "medium" && "Could be stronger"}
+          {validPassword?.meta?.level === "strong" && "Strong password"}
         </div>
       </div>
 
@@ -126,7 +134,7 @@ export default function SignupStep1(props: SignupStep1Props) {
           visible={showConfPass}
           setVisible={() => setShowConfPass(!showConfPass)}
           onChange={handleConfirmPasswordChange}
-          error={matchingPasswords === false}
+          error={matchingPasswords === false && validPassword?.value === true}
         />
         {(matchingPasswords === false) && (
           <Label error>Passwords do not match or are too short</Label>

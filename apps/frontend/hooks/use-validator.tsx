@@ -11,6 +11,7 @@ export function useValidator(value: string, validator: (value: string) => { leve
 
     if (!term) {
       setIsValid(undefined);
+      setMeta(undefined);
       return;
     }
 
@@ -30,6 +31,7 @@ export function useValidator(value: string, validator: (value: string) => { leve
       } catch (error) {
         if (!isCancelled) {
           setIsValid(undefined);
+          setMeta(undefined);
         }
       }
     }
