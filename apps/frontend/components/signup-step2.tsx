@@ -117,7 +117,7 @@ export default function SignupStep2(props: SignupStep2Props) {
               placeholder="John"
               value={firstname}
               onChange={handleFirstNameChange}
-              className={(validFirstName === false) ? "border-error" : ""}
+              className={(validFirstName?.value === false) ? "border-error" : ""}
               autoFocus
             />
           </div>
@@ -130,14 +130,14 @@ export default function SignupStep2(props: SignupStep2Props) {
               placeholder="Doe"
               value={lastname}
               onChange={handleLastNameChange}
-              className={(validLastName === false) ? "border-error" : ""}
+              className={(validLastName?.value === false) ? "border-error" : ""}
             />
           </div>
         </div>
-        {(validFirstName === false) && (
+        {(validFirstName?.value === false) && (
           <Label error>This first name is invalid</Label>
         )}
-        {(validLastName === false) && (
+        {(validLastName?.value === false) && (
           <Label error>This last name is invalid</Label>
         )}
       </div>
