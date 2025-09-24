@@ -112,13 +112,13 @@ export default function SignupStep1(props: SignupStep1Props) {
       </div>
 
       <div className="flex flex-row items-center justify-between">
-        <div className="w-3/4 flex flex-row gap-3">
+        <div className="w-[70%] flex flex-row gap-3">
           <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-error", validPassword?.meta?.level === "medium" && "bg-warning", validPassword?.meta?.level === "strong" && "bg-success")} />
           <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-base-400", validPassword?.meta?.level === "medium" && "bg-warning", validPassword?.meta?.level === "strong" && "bg-success")} />
           <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-base-400", validPassword?.meta?.level === "medium" && "bg-base-400", validPassword?.meta?.level === "strong" && "bg-success")} />
         </div>
 
-        <div className={cn("px-2 text-center text-xs font-medium", validPassword?.meta?.level === undefined && "text-base-400", validPassword?.meta?.level === "weak" && "text-error", validPassword?.meta?.level === "medium" && "text-warning", validPassword?.meta?.level === "strong" && "text-success")}>
+        <div className={cn("text-xs font-medium", validPassword?.meta?.level === undefined && "text-base-400", validPassword?.meta?.level === "weak" && "text-error", validPassword?.meta?.level === "medium" && "text-warning", validPassword?.meta?.level === "strong" && "text-success")}>
           {validPassword?.meta?.level === "weak" && "Too Weak"}
           {validPassword?.meta?.level === "medium" && "Could be stronger"}
           {validPassword?.meta?.level === "strong" && "Strong password"}
