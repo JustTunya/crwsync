@@ -22,12 +22,6 @@ export class UserController {
     return this.userService.findAll();
   }
 
-  @Get(':id')
-  @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string): Promise<UserEntity> {
-    return this.userService.findOne(id);
-  }
-
   @Get('check-availability')
   @HttpCode(HttpStatus.OK)
   checkAvailability(
@@ -35,6 +29,12 @@ export class UserController {
     @Query('value') value: string
   ): Promise<{ available: boolean }> {
     return this.userService.checkEmailOrUsername(field, value);
+  }
+
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  findOne(@Param('id') id: string): Promise<UserEntity> {
+    return this.userService.findOne(id);
   }
 
   @Patch(':id')
