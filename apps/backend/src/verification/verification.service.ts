@@ -19,26 +19,27 @@ export class VerificationService {
   ) {}
 
   async create(dto: CreateVerificationDto): Promise<VerificationEntity> {
-    const existing = await this.vRepo.findOne({ where: { email: dto.email } });
-    if (existing && existing.is_verified) {
-      throw new BadRequestException(`This email address is already verified`);
-    }
-
     const user = await this.uRepo.findOne({ where: { id: dto.user_id } });
     if (!user) {
       throw new NotFoundException(`User with ID ${dto.user_id} not found`);
     }
+    if (user.email_verified) {
+      throw new BadRequestException(`User with ID ${dto.user_id} has already verified their email`);
+    }
 
     const token = randomBytes(32).toString('hex');
+    const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    const exp = new Date();
-    exp.setDate(exp.getDate() + 30);
-
-    const verification = this.vRepo.create({
-      email: dto.email,
-      token,
-      user,
-      expires_at: exp,
+    const verification = await this.vRepo.manager.transaction(async (m) => {
+      await m.delete(VerificationEntity, { email: dto.email, is_verified: false });
+      const entity = m.create(VerificationEntity, {
+        email: dto.email,
+        token,
+        user,
+        expires_at: exp,
+        is_verified: false,
+      });
+      return m.save(entity);
     });
 
     await this.mailService.sendMail({
