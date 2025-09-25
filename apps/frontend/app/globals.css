@@ -96,6 +96,7 @@
   --base-300:             oklch(90% 0.0081 61.42);
   --base-400:             oklch(85% 0.0081 61.42);
   --base-500:             oklch(80% 0.0081 61.42);
+  --base-600:             oklch(75% 0.0081 61.42);
   /* FEEDBACK COLORS */
   --info:                 oklch(80.253% 0.11117 240.181);
   --info-content:         oklch(30.39% 0.1148 241.68);

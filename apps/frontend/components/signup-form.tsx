@@ -142,20 +142,22 @@ export function SignupForm() {
               transition={{ duration: 0.3 }}
               className="w-full space-y-6"
             >
-              <SignupStep3 />
+              <SignupStep3 email={form.email} />
             </motion.div>
           )}
         </AnimatePresence>
       </form>
 
-      <div className="mt-8">
-        <p className="w-full text-center text-xs sm:text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/auth/signin" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
-            Sign In
-          </Link>
-        </p>
-      </div>
+      { step < 3 && (
+        <div className="mt-8">
+          <p className="w-full text-center text-xs sm:text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/auth/signin" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
+              Sign In
+            </Link>
+          </p>
+        </div>
+      )}
     </GlassBox>
   );
 }
