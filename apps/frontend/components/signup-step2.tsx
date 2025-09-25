@@ -34,6 +34,10 @@ interface SignupStep2Props {
 export default function SignupStep2(props: SignupStep2Props) {
   const validFirstName = useValidator(props.form.firstname, isNameValid);
   const validLastName = useValidator(props.form.lastname, isNameValid);
+
+  console.log("validFirstName", validFirstName);
+  console.log("validLastName", validLastName);
+
   const validGender = useMemo(() => {
     return props.form.gender !== undefined && Object.values(UserGender).some(g => g.value === props.form.gender);
   }, [props.form.gender]);
@@ -195,7 +199,7 @@ export default function SignupStep2(props: SignupStep2Props) {
           disabled={props.pending}
           className="w-[calc(25%-0.5rem)]"
         >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={1.5} />
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
           Back
         </Button>
 

@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 
-export function useValidator(value: string, validator: (value: string) => { level: string } | boolean) : { value: boolean; meta?: any } {
+interface ValidatorResult {
+  value: boolean | undefined;
+  meta?: any;
+}
+
+export function useValidator(value: string, validator: (value: string) => boolean | { level: 'weak' | 'medium' | 'strong' }): ValidatorResult {
   const [debounced] = useDebounce(value, 500);
   const [isValid, setIsValid] = useState<boolean | undefined>(undefined);
   const [meta, setMeta] = useState<any>(undefined);
@@ -24,7 +29,7 @@ export function useValidator(value: string, validator: (value: string) => { leve
             setIsValid(result.level !== 'weak');
             setMeta(result);
           } else {
-            setIsValid(!!result);
+            setIsValid(result);
             setMeta(undefined);
           }
         }
@@ -43,5 +48,5 @@ export function useValidator(value: string, validator: (value: string) => { leve
     };
   }, [debounced, validator]);
 
-  return { value: isValid === true, meta };
+  return { value: isValid, meta };
 }
