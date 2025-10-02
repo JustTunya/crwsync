@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="2267.72" height="2267.72"><svg data-name="crwsync" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2267.72 2267.72">
+  <g transform="translate(0 226.775)">
+    <path data-name="icon" fill="#000000" d="m1910.6,0h-549.97l-226.77,453.54H357.12C159.89,453.54,0,613.43,0,810.66v646.39c0,197.23,159.89,357.12,357.12,357.12h549.97l226.77-453.54h776.74c197.23,0,357.12-159.89,357.12-357.12V357.12c0-197.23-159.89-357.12-357.12-357.12Zm-96.42,907.09h-680.31l-226.77,453.54h-453.54v-453.54h680.31l226.77-453.54h453.54v453.54Z"></path>
+  </g>
+</svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: invert(100%); } }
+</style></svg>

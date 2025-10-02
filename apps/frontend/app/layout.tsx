@@ -10,8 +10,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "crwsync",
-  description: "crwsync is a sleek, real-time platform for teams to manage tasks, track progress, and collaborate seamlessly.",
+  title: "crwsync"
 };
 
 export default function RootLayout({
@@ -21,6 +20,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="apple-mobile-web-app-title" content="crwsync" />
+      </head>
       <body className={`${roboto.variable} font-roboto antialiased`}>
         <div className="fixed inset-0 size-full bg-base-300">
           <div className="absolute inset-0 size-full bg-[radial-gradient(var(--color-muted)_1.6px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
