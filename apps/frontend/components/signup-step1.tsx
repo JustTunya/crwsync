@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { isEmailValid, isPasswordStrong, isUsernameValid } from "@/lib/validations";
 import { useMatch } from "@/hooks/use-match";
 import { useAvailability } from "@/hooks/use-availability";

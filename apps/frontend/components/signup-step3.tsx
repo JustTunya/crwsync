@@ -51,7 +51,7 @@ export default function SignupStep3({ email, userId }: SignupStep3Props) {
     <div className="space-y-6">
       <h1 className="text-2xl text-center font-medium">You are ready to go!<br/>Check your email to begin.</h1>
 
-      <p className="text-sm text-center text-muted-foreground font-light">Please check your email '<span className="text-primary font-medium">{email}</span>' and click the link inside to verify your account.</p>
+      <p className="text-sm text-center text-muted-foreground font-light">Please check your email &apos;<span className="text-primary font-medium">{email}</span>&apos; and click the link inside to verify your account.</p>
 
       <Button onClick={openMailbox} variant="outline" type="button" className="w-full">
         <HugeiconsIcon icon={Mail01Icon} size={18} strokeWidth={2} />

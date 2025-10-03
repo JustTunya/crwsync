@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 export function GlassBox({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative sm:w-md max-w-[calc(100vw-4rem)] mx-auto p-6 sm:p-8 bg-base-200/50 backdrop-blur-md border border-base-100 shadow-xl/5 rounded-2xl">
