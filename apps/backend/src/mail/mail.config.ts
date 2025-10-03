@@ -2,8 +2,6 @@ import { MailerOptions } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { resolve } from 'path';
 
-console.log('[LOGGING] ' + resolve(__dirname, '../../../../packages/templates'));
-
 export const mailConfig = (): MailerOptions => ({
   transport: {
     host: process.env.MAIL_HOST,
