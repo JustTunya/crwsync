@@ -11,6 +11,7 @@ export interface SignupState {
     confpassword?: string;
   };
   message?: string;
+  userId?: string;
 }
 
 export interface SignupPayload {
@@ -30,6 +31,7 @@ export interface SigninState {
     password?: string;
   };
   message?: string;
+  userId?: string;
 }
 
 export interface SigninPayload {

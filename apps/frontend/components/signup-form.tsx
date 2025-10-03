@@ -3,7 +3,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useCallback, useActionState } from "react";
+import { useState, useCallback, useActionState, useEffect } from "react";
 import { SignupState, SignupPayload, UserGenderValue } from "@crwsync/types";
 import { GlassBox } from "@/components/ui/glassbox";
 import { signup } from "@/services/auth.service";
@@ -22,7 +22,8 @@ const initState: SignupState = {
 export function SignupForm() {
   const steps = 3;
   const [step, setStep] = useState(1);
-  const [, dispatch, pending] = useActionState(signup, initState);
+  const [state, dispatch, pending] = useActionState(signup, initState);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
 
   const [form, setForm] = useState({
     email: "",
@@ -53,6 +54,13 @@ export function SignupForm() {
     }
     dispatch(payload);
   }
+
+  useEffect(() => {
+    if (state.success && state.userId) {
+      setUserId(state.userId);
+      setStep(3);
+    }
+  }, [state]);
 
   return (
     <GlassBox>
@@ -142,20 +150,22 @@ export function SignupForm() {
               transition={{ duration: 0.3 }}
               className="w-full space-y-6"
             >
-              <SignupStep3 />
+              <SignupStep3 email={form.email} userId={userId!} />
             </motion.div>
           )}
         </AnimatePresence>
       </form>
 
-      <div className="mt-8">
-        <p className="w-full text-center text-xs sm:text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/auth/signin" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
-            Sign In
-          </Link>
-        </p>
-      </div>
+      { step < 3 && (
+        <div className="mt-8">
+          <p className="w-full text-center text-xs sm:text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/auth/signin" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
+              Sign In
+            </Link>
+          </p>
+        </div>
+      )}
     </GlassBox>
   );
 }

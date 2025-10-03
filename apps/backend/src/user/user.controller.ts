@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, UsePipes, ValidationPipe, Patch, Delete } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, UsePipes, ValidationPipe, Patch, Delete, Query, ParseUUIDPipe} from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UserEntity } from "./user.entity";
@@ -12,7 +12,6 @@ export class UserController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() dto: CreateUserDto): Promise<UserEntity> {
-    console.log('Creating user with data:', dto);
     return this.userService.create(dto);
   }
 
@@ -22,21 +21,30 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @Get('check-availability')
+  @HttpCode(HttpStatus.OK)
+  checkAvailability(
+    @Query('field') field: 'email' | 'username',
+    @Query('value') value: string
+  ): Promise<{ available: boolean }> {
+    return this.userService.checkEmailOrUsername(field, value);
+  }
+
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string): Promise<UserEntity> {
+  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<UserEntity> {
     return this.userService.findOne(id);
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  update(@Param('id') id: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
+  update(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
     return this.userService.update(id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<void> {
     await this.userService.remove(id);
   }
 }
