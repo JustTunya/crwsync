@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
-
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils"
 
 interface LabelProps extends React.ComponentProps<typeof LabelPrimitive.Root> {
@@ -13,6 +14,7 @@ interface LabelProps extends React.ComponentProps<typeof LabelPrimitive.Root> {
 function Label({
   className,
   error = false,
+  children,
   ...props
 }: LabelProps) {
   return (
@@ -24,7 +26,10 @@ function Label({
         className
       )}
       {...props}
-    />
+    >
+      {error && (<HugeiconsIcon icon={AlertCircleIcon} size={16} strokeWidth={2} />)}
+      {children}
+    </LabelPrimitive.Root>
   )
 }
 

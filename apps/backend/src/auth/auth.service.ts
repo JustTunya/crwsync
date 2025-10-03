@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { JwtResponse } from "@crwsync/types";
 import { UserService } from "../user/user.service";
+import { MailService } from "../mail/mail.service";
 import { UserEntity } from "../user/user.entity";
 import { SigninDto } from "./signin.dto";
 import { compare } from "bcrypt";
@@ -10,6 +11,7 @@ import { compare } from "bcrypt";
 export class AuthService {
   constructor(
     private readonly userService: UserService,
+    private readonly mailService: MailService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -31,5 +33,25 @@ export class AuthService {
     await this.userService.update(user.id, { refresh_token: refreshToken });
 
     return { accessToken, refreshToken };
+  }
+
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    const user = await this.userService.findByEmailOrUsername(email);
+    if (!user) {
+      return { success: false, message: 'Email not found' };
+    }
+
+    const resetToken = this.jwtService.sign({ id: user.id }, { expiresIn: '1h' });
+
+    await this.mailService.sendMail({ 
+      to: user.email, 
+      subject: 'Reset your password',
+      template: 'reset-password', 
+      context: { 
+        url: `https://crwsync.com/reset-password?token=${resetToken}`
+      } 
+    });
+
+    return { success: true, message: "Password reset email sent" };
   }
 }

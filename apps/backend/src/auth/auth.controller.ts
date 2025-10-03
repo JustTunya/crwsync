@@ -1,5 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UnauthorizedException, Get, Query } from "@nestjs/common"
-import { UserService } from "../user/user.service";
+import { Controller, Post, Body, HttpCode, HttpStatus, UnauthorizedException, Param } from "@nestjs/common"
 import { AuthService } from "./auth.service";
 import { SigninDto } from "./signin.dto";
 
@@ -15,5 +14,10 @@ export class AuthController {
       throw new UnauthorizedException("Invalid credentials");
     }
     return this.authService.signin(user);
+  }
+
+  @Post("forgot-password")
+  async forgotPassword(@Param("email") email: string) {
+    return this.authService.forgotPassword(email);
   }
 }

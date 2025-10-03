@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { checkAvailability } from '@/services/auth.service';
 
-export function useAvailability(field: 'email' | 'username', value: string, validator?: (value: string) => boolean): { available: boolean, message?: string } | undefined {
+export function useAvailability(field: 'email' | 'username', value: string, validator?: (value: string) => boolean): { available: boolean, valid: boolean,message?: string } | undefined {
   const [debounced] = useDebounce(value, 500);
-  const [availability, setAvailability] = useState<{ available: boolean, message?: string } | undefined>(undefined);
+  const [availability, setAvailability] = useState<{ available: boolean, valid: boolean, message?: string } | undefined>(undefined);
 
   const condition = validator ? validator(debounced) : true;
 
@@ -13,7 +13,7 @@ export function useAvailability(field: 'email' | 'username', value: string, vali
     const term = debounced.trim();
 
     if (!condition && term) {
-      setAvailability({ available: false, message: `This ${field} is invalid` });
+      setAvailability({ available: false, valid: condition, message: `This ${field} is invalid` });
       return;
     }
 
@@ -29,15 +29,11 @@ export function useAvailability(field: 'email' | 'username', value: string, vali
         if (!isCancelled) {
           setAvailability({
             available: result.available,
+            valid: condition,
             message: result.available ? undefined : `This ${field} is already taken`
           });
         }
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          // console.error('Error checking availability:', error.response?.data);
-        } else {
-          // console.error('Unexpected error:', error);
-        }
         if (!isCancelled) {
           setAvailability(undefined);
         }

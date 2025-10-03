@@ -71,8 +71,8 @@ export function SignupForm() {
         </p>
       </div>
 
-      <form action={handleSubmit} className="sm:min-w-sm flex flex-col items-center space-y-8">
-          <div className="w-1/2 flex justify-between items-center gap-2 mb-12 sm:mb-16">
+      <form action={handleSubmit} className="sm:min-w-sm flex flex-col items-center">
+          <div className="w-1/2 flex justify-between items-center gap-2 mb-8 sm:mb-12">
             {Array.from({ length: steps }, (_, i) => (
               <div key={i} className={cn(
                 "relative flex items-center",
@@ -157,7 +157,7 @@ export function SignupForm() {
       </form>
 
       { step < 3 && (
-        <div className="mt-8">
+        <div className="mt-6">
           <p className="w-full text-center text-xs sm:text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/auth/signin" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">

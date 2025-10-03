@@ -47,7 +47,7 @@ export class VerificationService {
       subject: 'Welcome to CRWSYNC',
       template: 'email-verification',
       context: {
-        url: `https://crwsync.com/verify-email/${token}`
+        url: `https://crwsync.com/auth/verify-email?token=${token}`
       },
     });
 

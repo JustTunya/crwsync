@@ -89,7 +89,7 @@ export function SigninForm() {
                 Remember Me
               </Label>
             </label>
-            <Link href="/auth/password/forgot" className="text-accent underline underline-offset-2 text-xs sm:text-sm rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
+            <Link href="/auth/forgot-password" className="text-accent underline underline-offset-2 text-xs sm:text-sm rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
               Forgot password?
             </Link>
           </div>

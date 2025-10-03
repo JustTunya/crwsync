@@ -26,11 +26,13 @@ export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const validEmail = useAvailability("email", email, isEmailValid);
 
-  const [state, dispatchReset, pending] = useActionState(forgotPassword, initState);
+  const [state, dispatch, pending] = useActionState(forgotPassword, initState);
 
-  const formAction = () => {
+  const validForm = !!(validEmail && validEmail.available === false && validEmail.valid === true);
+
+  const handleSubmit = () => {
     const payload: ForgotPasswordPayload = { email };
-    dispatchReset(payload);
+    dispatch(payload);
   };
 
   return (
@@ -52,7 +54,7 @@ export function ForgotPasswordForm() {
         transition={{ duration: 0.3 }}
         className="w-full space-y-6"
       >
-        <form action={formAction} className="w-full space-y-6">
+        <form action={handleSubmit} className="w-full space-y-6">
           <div className="space-y-3">
             <Label htmlFor="email">Email Address</Label>
             <Input
@@ -61,30 +63,24 @@ export function ForgotPasswordForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={cn(
-                (validEmail?.available === false || state.errors?.email) && "border-error"
+                (validEmail?.available === true
+                  || validEmail?.valid === false
+                  || state.errors?.email
+                ) && "border-error"
               )}
             />
-            {(validEmail?.available === false && validEmail?.message) && (
+            {(validEmail?.available === true) && (
+              <Label error>This email address is not linked to any account.</Label>
+            )}
+            {(validEmail?.valid === false && validEmail?.message) && (
               <Label error>{validEmail.message}</Label>
             )}
           </div>
 
-          {state.message && (
-            <Label
-              error={!state.success}
-              className={cn(
-                "block text-center",
-                state.success && "text-success"
-              )}
-            >
-              {state.message}
-            </Label>
-          )}
-
           <Button
             type="button"
-            onClick={formAction}
-            disabled={pending || !validEmail}
+            onClick={handleSubmit}
+            disabled={pending || !validForm}
             className="w-full"
           >
             {pending ? "Sending reset link..." : "Send Reset Email"}
