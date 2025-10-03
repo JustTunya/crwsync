@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { UserGender, UserGenderValue } from "@crwsync/types";
@@ -67,7 +67,7 @@ export default function SignupStep2(props: SignupStep2Props) {
     if (day > daysInMonth) {
       props.updateForm("birthday", daysInMonth.toString().padStart(2, '0'));
     }
-  }, [props.form.birthday, daysInMonth]);
+  }, [props, daysInMonth]);
 
   return (
     <>
