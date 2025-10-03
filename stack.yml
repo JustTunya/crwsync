@@ -52,8 +52,6 @@ services:
       - "3000:3000"
     networks:
       - net
-    environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     deploy:
       <<: *deploy-settings
     logging:
