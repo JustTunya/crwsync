@@ -11,7 +11,7 @@ import {
 } from "@crwsync/types";
 
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080",
+  baseURL: process.env.NEXT_PUBLIC_API_URL!,
   withCredentials: true,
 });
 
@@ -28,6 +28,7 @@ export async function signup(_prev: SignupState, data: SignupPayload): Promise<S
       success: true,
       errors: {},
       message: "Signup successful",
+      userId: user.data.id
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -115,7 +116,7 @@ export async function resetPassword(_prev: ResetPasswordState, data: ResetPasswo
 
 export async function checkAvailability(field: 'email' | 'username', value: string): Promise<{ available: boolean }> {
   try {
-    const response = await api.get("/auth/check-availability", {
+    const response = await api.get("/users/check-availability", {
       params: { field, value }
     });
     return response.data;
@@ -127,6 +128,19 @@ export async function checkAvailability(field: 'email' | 'username', value: stri
       }
     }
     return { available: false };
+  }
+}
+
+export async function sendVerificationEmail(email: string, userId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    await api.post("/email_verifications", { email, user_id: userId });
+    return { success: true, message: "Verification email sent successfully" };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp.message || "An unexpected error occurred" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
   }
 }
 

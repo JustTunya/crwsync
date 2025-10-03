@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { UserGender, UserGenderValue } from "@crwsync/types";
@@ -32,22 +32,16 @@ interface SignupStep2Props {
 }
 
 export default function SignupStep2(props: SignupStep2Props) {
-  const [firstname, setFirstName] = useState<string>("");
-  const [lastname, setLastName] = useState<string>("");
-  const [gender, setGender] = useState<UserGenderValue | undefined>(undefined);
-  const [birthyear, setBirthYear] = useState<string>("");
-  const [birthmonth, setBirthMonth] = useState<string>("");
-  const [birthday, setBirthDay] = useState<string>("");
+  const validFirstName = useValidator(props.form.firstname, isNameValid);
+  const validLastName = useValidator(props.form.lastname, isNameValid);
 
-  const validFirstName = useValidator(firstname, isNameValid);
-  const validLastName = useValidator(lastname, isNameValid);
   const validGender = useMemo(() => {
-    return gender !== undefined && Object.values(UserGender).some(g => g.value === gender);
-  }, [gender]);
+    return props.form.gender !== undefined && Object.values(UserGender).some(g => g.value === props.form.gender);
+  }, [props.form.gender]);
   const validBirthdate = useMemo(() => {
-    if (!birthyear || !birthmonth || !birthday) return undefined;
-    return isBirthdateValid(`${birthyear}-${birthmonth}-${birthday}`);
-  }, [birthyear, birthmonth, birthday]);
+    if (!props.form.birthyear || !props.form.birthmonth || !props.form.birthday) return undefined;
+    return isBirthdateValid(`${props.form.birthyear}-${props.form.birthmonth}-${props.form.birthday}`);
+  }, [props.form.birthyear, props.form.birthmonth, props.form.birthday]);
 
   const validForm = useMemo(() => {
     return (
@@ -58,52 +52,22 @@ export default function SignupStep2(props: SignupStep2Props) {
     );
   }, [validFirstName, validLastName, validGender, validBirthdate]);
 
-  const handleFirstNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFirstName(e.target.value);
-    props.updateForm("firstname", e.target.value);
-  }, [props]);
-
-  const handleLastNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setLastName(e.target.value);
-    props.updateForm("lastname", e.target.value);
-  }, [props]);
-
-  const handleGenderChange = useCallback((value: string) => {
-    setGender(value as UserGenderValue);
-    props.updateForm("gender", value as UserGenderValue);
-  }, [props]);
-
-  const handleYearChange = useCallback((value: string) => {
-    setBirthYear(value);
-    props.updateForm("birthyear", value);
-  }, [props]);
-
-  const handleMonthChange = useCallback((value: string) => {
-    setBirthMonth(value);
-    props.updateForm("birthmonth", value);
-  }, [props]);
-
-  const handleDayChange = useCallback((value: string) => {
-    setBirthDay(value);
-    props.updateForm("birthday", value);
-  }, [props]);
-
   const daysInMonth = useMemo(() => {
-    const month = parseInt(birthmonth, 10);
-    const year = parseInt(birthyear, 10);
+    const month = parseInt(props.form.birthmonth, 10);
+    const year = parseInt(props.form.birthyear, 10);
 
     if (!month || !year) return 31;
 
     return new Date(year, month, 0).getDate();
-  }, [birthmonth, birthyear]);
+  }, [props.form.birthmonth, props.form.birthyear]);
 
   useEffect(() => {
-    if (!birthday) return;
-    const day = parseInt(birthday, 10);
+    if (!props.form.birthday) return;
+    const day = parseInt(props.form.birthday, 10);
     if (day > daysInMonth) {
-      setBirthDay(daysInMonth.toString().padStart(2, '0'));
+      props.updateForm("birthday", daysInMonth.toString().padStart(2, '0'));
     }
-  }, [birthday, daysInMonth]);
+  }, [props, daysInMonth]);
 
   return (
     <>
@@ -115,9 +79,9 @@ export default function SignupStep2(props: SignupStep2Props) {
               id="firstname"
               type="text"
               placeholder="John"
-              value={firstname}
-              onChange={handleFirstNameChange}
-              className={(validFirstName === false) ? "border-error" : ""}
+              value={props.form.firstname}
+              onChange={(e) => props.updateForm("firstname", e.target.value)}
+              className={(validFirstName?.value === false) ? "border-error" : ""}
               autoFocus
             />
           </div>
@@ -128,26 +92,26 @@ export default function SignupStep2(props: SignupStep2Props) {
               id="lastname"
               type="text"
               placeholder="Doe"
-              value={lastname}
-              onChange={handleLastNameChange}
-              className={(validLastName === false) ? "border-error" : ""}
+              value={props.form.lastname}
+              onChange={(e) => props.updateForm("lastname", e.target.value)}
+              className={(validLastName?.value === false) ? "border-error" : ""}
             />
           </div>
         </div>
-        {(validFirstName === false) && (
+        {(validFirstName?.value === false) && (
           <Label error>This first name is invalid</Label>
         )}
-        {(validLastName === false) && (
+        {(validLastName?.value === false) && (
           <Label error>This last name is invalid</Label>
         )}
       </div>
     
       <div className="space-y-4">
         <Label htmlFor="lastname">Gender</Label>
-        <Select value={gender} onValueChange={handleGenderChange}>
+        <Select value={props.form.gender} onValueChange={(value) => props.updateForm("gender", value)}>
           <SelectTrigger size="full">
             <SelectValue placeholder="Gender">
-              { Object.values(UserGender).find(g => g.value === gender)?.label || "Select" }
+              { Object.values(UserGender).find(g => g.value === props.form.gender)?.label || "Select" }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -163,10 +127,10 @@ export default function SignupStep2(props: SignupStep2Props) {
       <div className="space-y-4">
         <Label htmlFor="birthdate">Birthdate</Label>
         <div className="flex flex-row justify-center items-center gap-4">
-          <Select value={birthyear} onValueChange={handleYearChange}>
+          <Select value={props.form.birthyear} onValueChange={(value) => props.updateForm("birthyear", value)}>
             <SelectTrigger size="full">
               <SelectValue placeholder="Year">
-                {birthyear}
+                {props.form.birthyear}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -178,10 +142,10 @@ export default function SignupStep2(props: SignupStep2Props) {
             </SelectContent>
           </Select>
 
-          <Select value={birthmonth} onValueChange={handleMonthChange}>
+          <Select value={props.form.birthmonth} onValueChange={(value) => props.updateForm("birthmonth", value)}>
             <SelectTrigger  size="full">
               <SelectValue placeholder="Month">
-                {birthmonth}
+                {props.form.birthmonth}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -193,10 +157,10 @@ export default function SignupStep2(props: SignupStep2Props) {
             </SelectContent>
           </Select>
 
-          <Select value={birthday} onValueChange={handleDayChange}>
+          <Select value={props.form.birthday} onValueChange={(value) => props.updateForm("birthday", value)}>
             <SelectTrigger size="full">
               <SelectValue placeholder="Day">
-                {birthday}
+                {props.form.birthday}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -232,7 +196,7 @@ export default function SignupStep2(props: SignupStep2Props) {
           disabled={props.pending}
           className="w-[calc(25%-0.5rem)]"
         >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={1.5} />
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
           Back
         </Button>
 

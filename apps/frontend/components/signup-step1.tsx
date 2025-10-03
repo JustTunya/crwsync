@@ -1,10 +1,12 @@
-import { useState, useMemo, useCallback } from "react";
-import { isEmailValid, isUsernameValid } from "@/lib/validations";
+import { useState, useMemo } from "react";
+import { isEmailValid, isPasswordStrong, isUsernameValid } from "@/lib/validations";
 import { useMatch } from "@/hooks/use-match";
 import { useAvailability } from "@/hooks/use-availability";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useValidator } from "@/hooks/use-validator";
+import { cn } from "@/lib/utils";
 
 interface SignupStep1Props {
   form: {
@@ -19,45 +21,22 @@ interface SignupStep1Props {
 }
 
 export default function SignupStep1(props: SignupStep1Props) {
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confpassword, setConfirmPassword] = useState("");
-
   const [showPass, setShowPass] = useState(false);
   const [showConfPass, setShowConfPass] = useState(false);
 
-  const validEmail = useAvailability("email", email, isEmailValid);
-  const validUsername = useAvailability("username", username, isUsernameValid);
-  const validPassword = useMatch(password, confpassword);
+  const validEmail = useAvailability("email", props.form.email, isEmailValid);
+  const validUsername = useAvailability("username", props.form.username, isUsernameValid);
+  const validPassword = useValidator(props.form.password, isPasswordStrong);
+  const matchingPasswords = useMatch(props.form.password, props.form.confpassword);
 
   const validStep = useMemo(() => {
     return (
       validEmail?.available === true &&
       validUsername?.available === true &&
-      validPassword === true
+      validPassword?.value === true &&
+      matchingPasswords === true
     );
-  }, [validEmail, validUsername, validPassword]);
-
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    props.updateForm("email", e.target.value);
-  }, [props]);
-
-  const handleUsernameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setUsername(e.target.value);
-    props.updateForm("username", e.target.value);
-  }, [props]);
-
-  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    props.updateForm("password", e.target.value);
-  }, [props]);
-
-  const handleConfirmPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmPassword(e.target.value);
-    props.updateForm("confpassword", e.target.value);
-  }, [props]);
+  }, [validEmail, validUsername, validPassword, matchingPasswords]);
 
   return(
     <>
@@ -66,10 +45,10 @@ export default function SignupStep1(props: SignupStep1Props) {
         <Input
           id="email"
           type="email"
-          value={email}
+          value={props.form.email}
           placeholder="johndoe@example.com"
           validation={validEmail?.available}
-          onChange={handleEmailChange}
+          onChange={(e) => props.updateForm("email", e.target.value)}
           error={validEmail?.available === false}
           autoFocus
         />
@@ -83,10 +62,10 @@ export default function SignupStep1(props: SignupStep1Props) {
         <Input
           id="username"
           type="text"
-          value={username}
+          value={props.form.username}
           placeholder="johndoe"
           validation={validUsername?.available}
-          onChange={handleUsernameChange}
+          onChange={(e) => props.updateForm("username", e.target.value)}
           error={validUsername?.available === false}
         />
         {(validUsername?.available === false && validUsername?.message) && (
@@ -99,12 +78,26 @@ export default function SignupStep1(props: SignupStep1Props) {
         <Input
           id="password"
           type="password"
-          value={password}
+          value={props.form.password}
           visible={showPass}
           setVisible={() => setShowPass(!showPass)}
-          onChange={handlePasswordChange}
-          error={validPassword === false}
+          onChange={(e) => props.updateForm("password", e.target.value)}
+          error={matchingPasswords === false && validPassword?.value === true}
         />
+      </div>
+
+      <div className="flex flex-row items-center justify-between">
+        <div className="w-[70%] flex flex-row gap-3">
+          <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-error", validPassword?.meta?.level === "medium" && "bg-warning", validPassword?.meta?.level === "strong" && "bg-success")} />
+          <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-base-400", validPassword?.meta?.level === "medium" && "bg-warning", validPassword?.meta?.level === "strong" && "bg-success")} />
+          <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-base-400", validPassword?.meta?.level === "medium" && "bg-base-400", validPassword?.meta?.level === "strong" && "bg-success")} />
+        </div>
+
+        <div className={cn("text-xs font-medium", validPassword?.meta?.level === undefined && "text-base-400", validPassword?.meta?.level === "weak" && "text-error", validPassword?.meta?.level === "medium" && "text-warning", validPassword?.meta?.level === "strong" && "text-success")}>
+          {validPassword?.meta?.level === "weak" && "Too Weak"}
+          {validPassword?.meta?.level === "medium" && "Could be stronger"}
+          {validPassword?.meta?.level === "strong" && "Strong password"}
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -112,13 +105,13 @@ export default function SignupStep1(props: SignupStep1Props) {
         <Input
           id="confpassword"
           type="password"
-          value={confpassword}
+          value={props.form.confpassword}
           visible={showConfPass}
           setVisible={() => setShowConfPass(!showConfPass)}
-          onChange={handleConfirmPasswordChange}
-          error={validPassword === false}
+          onChange={(e) => props.updateForm("confpassword", e.target.value)}
+          error={matchingPasswords === false && validPassword?.value === true}
         />
-        {(validPassword === false) && (
+        {(matchingPasswords === false) && (
           <Label error>Passwords do not match or are too short</Label>
         )}
       </div>
