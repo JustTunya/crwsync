@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch, ParseUUIDPipe } from '@nestjs/common';
-import { CreateVerificationDto } from 'src/verification/dto/create-verification.dto';
-import { UpdateVerificationDto } from 'src/verification/dto/update-verification.dto';
-import { VerificationService } from 'src/verification/verification.service';
-import { VerificationEntity } from 'src/verification/verification.entity';
+import { CreateVerificationDto } from 'src/mail-verification/dto/create-verification.dto';
+import { UpdateVerificationDto } from 'src/mail-verification/dto/update-verification.dto';
+import { VerificationService } from 'src/mail-verification/verification.service';
+import { VerificationEntity } from 'src/mail-verification/verification.entity';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('email_verifications')
@@ -37,6 +37,12 @@ export class VerificationController {
   @HttpCode(HttpStatus.OK)
   async findByEmail(@Param('email') email: string): Promise<VerificationEntity> {
     return this.verificationService.findByEmail(email);
+  }
+
+  @Get('token/:token')
+  @HttpCode(HttpStatus.OK)
+  async findByToken(@Param('token') token: string): Promise<VerificationEntity> {
+    return this.verificationService.findByToken(token);
   }
 
   @Patch(':id')

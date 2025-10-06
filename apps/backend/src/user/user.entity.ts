@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, OneToMany } from 'typeorm';
 import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue, UserGender } from '@crwsync/types';
-import { VerificationEntity } from 'src/verification/verification.entity';
+import { VerificationEntity } from 'src/mail-verification/verification.entity';
 
 @Entity({ name: 'users' })
 @Index("idx_user_email", ["email"], { unique: true })

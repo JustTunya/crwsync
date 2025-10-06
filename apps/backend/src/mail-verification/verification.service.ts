@@ -74,6 +74,14 @@ export class VerificationService {
     return verification;
   }
 
+  async findByToken(token: string): Promise<VerificationEntity> {
+    const verification = await this.vRepo.findOne({ where: { token } });
+    if (!verification) {
+      throw new NotFoundException(`Verification for token ${token} not found`);
+    }
+    return verification;
+  }
+
   async update(id: string, dto: UpdateVerificationDto): Promise<VerificationEntity> {
     const verification = await this.findOne(id);
     if (!verification) {

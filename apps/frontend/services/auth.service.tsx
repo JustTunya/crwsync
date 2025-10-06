@@ -7,7 +7,8 @@ import {
   ForgotPasswordState,
   ForgotPasswordPayload,
   ResetPasswordState,
-  ResetPasswordPayload
+  ResetPasswordPayload,
+  MailVerification
 } from "@crwsync/types";
 
 const api: AxiosInstance = axios.create({
@@ -146,7 +147,7 @@ export async function sendVerificationEmail(email: string, userId: string): Prom
 
 export async function verifyEmail(token: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await api.post("/email_verifications/verify", { token });
+    const response = await api.post(`/email_verifications/verify?token=${token}`);
     return { success: response.data.success, message: response.data.message || "Email verified successfully" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -154,5 +155,14 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
       return { success: false, message: resp.message || "An unexpected error occurred" };
     }
     return { success: false, message: "An unexpected error occurred" };
+  }
+}
+  
+export async function getMailToken(token: string): Promise<MailVerification | undefined> {
+  try {
+    const response = await api.get(`/email_verifications/token/${token}`);
+    return response.data;
+  } catch {
+    return undefined;
   }
 }

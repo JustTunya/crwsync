@@ -5,7 +5,7 @@ import { AppController } from './app.controller';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { AppService } from './app.service';
-import { VerificationModule } from './verification/verification.module';
+import { VerificationModule } from './mail-verification/verification.module';
 import { MailModule } from './mail/mail.module';
 
 @Module({
