@@ -1,12 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, OneToMany } from 'typeorm';
-import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue, UserGender } from '@crwsync/types';
-import { VerificationEntity } from 'src/email-verification/email-verification.entity';
+import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue, UserGender } from "@crwsync/types";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, OneToMany } from "typeorm";
+import { VerificationEntity } from "src/email-verification/email-verification.entity";
 
-@Entity({ name: 'users' })
+@Entity({ name: "users" })
 @Index("idx_user_email", ["email"], { unique: true })
 @Index("idx_user_username", ["username"], { unique: true })
 export class UserEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id!: string;
 
   @Column({ unique: true })
@@ -21,25 +21,25 @@ export class UserEntity {
   @Column()
   lastname!: string;
 
-  @Column('jsonb', { default: UserGender.PREFER_NOT_TO_SAY })
+  @Column("jsonb", { default: UserGender.PREFER_NOT_TO_SAY })
   gender!: UserGenderValue;
 
-  @Column({ type: 'date' })
+  @Column({ type: "date" })
   birthdate!: string;
 
   @Column({ nullable: true })
   avatar_url?: string;
 
-  @Column('enum', { enum: UserRole, array: true, default: [UserRole.MEMBER] })
+  @Column("enum", { enum: UserRole, array: true, default: [UserRole.MEMBER] })
   roles!: UserRole[];
 
-  @Column('enum', { enum: UserStatus, default: UserStatus.OFFLINE })
+  @Column("enum", { enum: UserStatus, default: UserStatus.OFFLINE })
   status!: UserStatus;
  
-  @Column({ type: 'jsonb', default: () => `'{"theme":"system","notifications":{"email":false,"push":false}}'` })
+  @Column({ type: "jsonb", default: () => `"{"theme":"system","notifications":{"email":false,"push":false}}"` })
   preferences!: UserPreference;
 
-  @Column({ type: 'jsonb', default: () => `'{}'` })
+  @Column({ type: "jsonb", default: () => `"{}"` })
   profile!: UserProfile;
 
   @Column()
@@ -54,12 +54,12 @@ export class UserEntity {
   @Column({ nullable: true })
   refresh_token?: string;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: "timestamptz" })
   created_at!: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ type: "timestamptz" })
   updated_at!: Date;
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: "timestamptz", nullable: true })
   last_login?: Date;
 }

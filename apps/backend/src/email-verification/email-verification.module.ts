@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { VerificationEntity } from 'src/email-verification/email-verification.entity';
-import { VerificationService } from 'src/email-verification/email-verification.service';
-import { VerificationController } from 'src/email-verification/email-verification.controller';
-import { UserEntity } from 'src/user/user.entity';
-import { EmailModule } from 'src/email/email.module';
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { VerificationEntity } from "src/email-verification/email-verification.entity";
+import { VerificationService } from "src/email-verification/email-verification.service";
+import { VerificationController } from "src/email-verification/email-verification.controller";
+import { UserEntity } from "src/user/user.entity";
+import { EmailModule } from "src/email/email.module";
 
 @Module({
   imports: [

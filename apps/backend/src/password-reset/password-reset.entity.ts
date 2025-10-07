@@ -1,11 +1,11 @@
 import { Entity, Index, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 import { UserEntity } from "src/user/user.entity";
 
-@Entity({ name: 'email_verifications' })
-@Index("idx_verification_email", ["email"], { unique: true })
-@Index("idx_verification_token", ["token"], { unique: true })
-@Index("idx_verification_user_id", ["user_id"], { unique: false })
-export class VerificationEntity {
+@Entity({ name: 'password_resets' })
+@Index("idx_password_reset_email", ["email"], { unique: true })
+@Index("idx_password_reset_token", ["token"], { unique: true })
+@Index("idx_password_reset_user_id", ["user_id"], { unique: false })
+export class PasswordResetEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
@@ -23,7 +23,7 @@ export class VerificationEntity {
   token!: string;
 
   @Column({ default: false })
-  is_verified!: boolean;
+  is_reseted!: boolean;
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at!: Date;
@@ -32,5 +32,5 @@ export class VerificationEntity {
   expires_at!: Date;
 
   @Column({ type: 'timestamptz', nullable: true })
-  verified_at?: Date;
+  reseted_at?: Date;
 }

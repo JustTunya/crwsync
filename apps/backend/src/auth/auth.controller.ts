@@ -1,6 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, UnauthorizedException, Param } from "@nestjs/common"
-import { AuthService } from "./auth.service";
-import { SigninDto } from "./dto/signin.dto";
+import { AuthService } from "src/auth/auth.service";
+import { SigninDto } from "src/auth/dto/signin.dto";
 
 @Controller("auth")
 export class AuthController {
@@ -14,10 +14,5 @@ export class AuthController {
       throw new UnauthorizedException("Invalid credentials");
     }
     return this.authService.signin(user);
-  }
-
-  @Post("forgot-password")
-  async forgotPassword(@Param("email") email: string) {
-    return this.authService.forgotPassword(email);
   }
 }

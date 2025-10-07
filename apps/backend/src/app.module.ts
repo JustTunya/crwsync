@@ -1,15 +1,24 @@
-import { Module } from '@nestjs/common';
-import { HealthModule } from './health/health.module';
-import { DatabaseModule } from './database/database.module';
-import { AppController } from './app.controller';
-import { UserModule } from './user/user.module';
-import { AuthModule } from './auth/auth.module';
-import { AppService } from './app.service';
-import { VerificationModule } from './email-verification/email-verification.module';
-import { EmailModule } from './email/email.module';
+import { Module } from "@nestjs/common";
+import { HealthModule } from "src/health/health.module";
+import { DatabaseModule } from "src/database/database.module";
+import { AppController } from "src/app.controller";
+import { UserModule } from "src/user/user.module";
+import { AuthModule } from "src/auth/auth.module";
+import { AppService } from "src/app.service";
+import { VerificationModule } from "src/email-verification/email-verification.module";
+import { PasswordResetModule } from "src/password-reset/password-reset.module";
+import { EmailModule } from "src/email/email.module";
 
 @Module({
-  imports: [HealthModule, DatabaseModule, UserModule, AuthModule, VerificationModule, EmailModule],
+  imports: [
+    HealthModule, 
+    DatabaseModule, 
+    UserModule, 
+    AuthModule, 
+    EmailModule,
+    VerificationModule,
+    PasswordResetModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

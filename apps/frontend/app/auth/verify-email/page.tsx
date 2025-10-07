@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { EmailVerification } from "@/components/email-verification";
 import { GlassBox } from "@/components/ui/glassbox";
-import { getMailToken } from "@/services/auth.service";
+import { getEmailToken } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 
 export default function VerifyEmailPage() {
@@ -16,7 +16,7 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     if (token) {
-      getMailToken(token).then((resp) => {
+      getEmailToken(token).then((resp) => {
         if (!resp) {
           setValidToken(false);
           return;

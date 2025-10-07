@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthController } from './auth.controller';
-import { UserModule } from '../user/user.module';
-import { AuthService } from './auth.service';
-import { EmailModule } from 'src/email/email.module';
+import { Module } from "@nestjs/common";
+import { JwtModule } from "@nestjs/jwt";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { AuthController } from "src/auth/auth.controller";
+import { UserModule } from "src/user/user.module";
+import { AuthService } from "src/auth/auth.service";
+import { EmailModule } from "src/email/email.module";
 
 @Module({
   imports: [
@@ -15,8 +15,8 @@ import { EmailModule } from 'src/email/email.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: config.get<string | number>('JWT_EXPIRES_IN', '1h') },
+        secret: config.get<string>("JWT_SECRET"),
+        signOptions: { expiresIn: config.get<string | number>("JWT_EXPIRES_IN", "1h") },
       }),
     }),
   ],

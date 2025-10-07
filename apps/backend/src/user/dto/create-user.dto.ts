@@ -8,8 +8,8 @@ import {
   ArrayNotEmpty,
   IsObject,
   IsBoolean,
-} from 'class-validator';
-import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue } from '@crwsync/types';
+} from "class-validator";
+import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue } from "@crwsync/types";
 
 export class CreateUserDto {
   @IsEmail()
@@ -24,7 +24,7 @@ export class CreateUserDto {
   @IsString()
   lastname!: string;
 
-  @IsEnum(UserGenderValue, { message: 'gender must be one of: ' + Object.values(UserGenderValue).join(', ') })
+  @IsEnum(UserGenderValue, { message: "gender must be one of: " + Object.values(UserGenderValue).join(", ") })
   gender!: UserGenderValue;
 
   @IsISO8601()

@@ -78,8 +78,7 @@ export function ForgotPasswordForm() {
           </div>
 
           <Button
-            type="button"
-            onClick={handleSubmit}
+            type="submit"
             disabled={pending || !validForm}
             className="w-full"
           >

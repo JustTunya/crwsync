@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { VerificationEntity } from "./email-verification.entity";
-import { CreateVerificationDto } from "./dto/create-email-verification.dto";
-import { UpdateVerificationDto } from "./dto/update-email-verification.dto";
-import { UserEntity } from "src/user/user.entity";
 import { randomBytes } from "crypto";
+import { VerificationEntity } from "src/email-verification/email-verification.entity";
+import { CreateVerificationDto } from "src/email-verification/dto/create-email-verification.dto";
+import { UpdateVerificationDto } from "src/email-verification/dto/update-email-verification.dto";
+import { UserEntity } from "src/user/user.entity";
 import { EmailService } from "src/email/email.service";
 
 @Injectable()

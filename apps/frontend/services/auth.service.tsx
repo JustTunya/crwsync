@@ -158,7 +158,7 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
   }
 }
   
-export async function getMailToken(token: string): Promise<MailVerification | undefined> {
+export async function getEmailToken(token: string): Promise<MailVerification | undefined> {
   try {
     const response = await api.get(`/email_verifications/token/${token}`);
     return response.data;
