@@ -1,12 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { VerificationEntity } from "./verification.entity";
-import { CreateVerificationDto } from "./dto/create-verification.dto";
-import { UpdateVerificationDto } from "./dto/update-verification.dto";
+import { VerificationEntity } from "./email-verification.entity";
+import { CreateVerificationDto } from "./dto/create-email-verification.dto";
+import { UpdateVerificationDto } from "./dto/update-email-verification.dto";
 import { UserEntity } from "src/user/user.entity";
 import { randomBytes } from "crypto";
-import { MailService } from "src/mail/mail.service";
+import { EmailService } from "src/email/email.service";
 
 @Injectable()
 export class VerificationService {
@@ -15,7 +15,7 @@ export class VerificationService {
     private readonly vRepo: Repository<VerificationEntity>,
     @InjectRepository(UserEntity)
     private readonly uRepo: Repository<UserEntity>,
-    private readonly mailService: MailService
+    private readonly emailService: EmailService
   ) {}
 
   async create(dto: CreateVerificationDto): Promise<VerificationEntity> {
@@ -42,7 +42,7 @@ export class VerificationService {
       return m.save(entity);
     });
 
-    await this.mailService.sendMail({
+    await this.emailService.sendEmail({
       to: dto.email,
       subject: 'Welcome to CRWSYNC',
       template: 'email-verification',

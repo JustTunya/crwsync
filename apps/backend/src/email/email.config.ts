@@ -2,7 +2,7 @@ import { MailerOptions } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { resolve } from 'path';
 
-export const mailConfig = (): MailerOptions => ({
+export const emailConfig = (): MailerOptions => ({
   transport: {
     host: process.env.MAIL_HOST,
     port: parseInt(process.env.MAIL_PORT || '587'), // TODO: Use 465 for secure connections

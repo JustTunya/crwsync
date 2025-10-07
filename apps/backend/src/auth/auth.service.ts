@@ -2,16 +2,16 @@ import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { JwtResponse } from "@crwsync/types";
 import { UserService } from "../user/user.service";
-import { MailService } from "../mail/mail.service";
+import { EmailService } from "../email/email.service";
 import { UserEntity } from "../user/user.entity";
-import { SigninDto } from "./signin.dto";
+import { SigninDto } from "./dto/signin.dto";
 import { compare } from "bcrypt";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private readonly mailService: MailService,
+    private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -43,7 +43,7 @@ export class AuthService {
 
     const resetToken = this.jwtService.sign({ id: user.id }, { expiresIn: '1h' });
 
-    await this.mailService.sendMail({ 
+    await this.emailService.sendEmail({ 
       to: user.email, 
       subject: 'Reset your password',
       template: 'reset-password', 

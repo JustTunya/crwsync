@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch, ParseUUIDPipe } from '@nestjs/common';
-import { CreateVerificationDto } from 'src/mail-verification/dto/create-verification.dto';
-import { UpdateVerificationDto } from 'src/mail-verification/dto/update-verification.dto';
-import { VerificationService } from 'src/mail-verification/verification.service';
-import { VerificationEntity } from 'src/mail-verification/verification.entity';
+import { CreateVerificationDto } from 'src/email-verification/dto/create-email-verification.dto';
+import { UpdateVerificationDto } from 'src/email-verification/dto/update-email-verification.dto';
+import { VerificationService } from 'src/email-verification/email-verification.service';
+import { VerificationEntity } from 'src/email-verification/email-verification.entity';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('email_verifications')

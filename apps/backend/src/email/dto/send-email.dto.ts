@@ -1,4 +1,4 @@
-export class SendMailDto {
+export class SendEmailDto {
   to!: string;
   subject!: string;
   template!: string;
