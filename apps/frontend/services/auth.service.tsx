@@ -19,11 +19,7 @@ const api: AxiosInstance = axios.create({
 export async function signup(_prev: SignupState, data: SignupPayload): Promise<SignupState> {
   try {
     const user = await api.post("/users", data);
-
-    await api.post("/email_verifications", {
-      email: data.email,
-      user_id: user.data.id
-    });
+    sendVerificationEmail(data.email, user.data.id);
 
     return {
       success: true,
