@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getEmailToken, sendVerificationEmail } from "@/services/auth.service";
+import { getEmailToken, sendVerificationEmail, verifyEmail } from "@/services/auth.service";
 import { GlassBox } from "@/components/ui/glassbox";
 import { Button } from "@/components/ui/button";
 
@@ -34,9 +34,11 @@ export function EmailVerification({ token }: { token: string | null }) {
         setUser({ user_id: resp.user_id, email: resp.email });
       } else {
         setStatus("success");
-        setTimeout(() => {
-          router.push('/auth/signin');
-        }, 3000);
+        verifyEmail(token).then(() => {
+          setTimeout(() => {
+            router.push('/auth/signin');
+          }, 3000);
+        });
       }
     });
   }, [token]);
