@@ -27,7 +27,7 @@ export class VerificationService {
       throw new BadRequestException(`User with ID ${dto.user_id} has already verified their email`);
     }
 
-    const token = randomBytes(32).toString('hex');
+    const token = randomBytes(32).toString("hex");
     const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     const verification = await this.vRepo.manager.transaction(async (m) => {
@@ -44,8 +44,8 @@ export class VerificationService {
 
     await this.emailService.sendEmail({
       to: dto.email,
-      subject: 'Welcome to CRWSYNC',
-      template: 'email-verification',
+      subject: "Welcome to CRWSYNC",
+      template: "email-verification",
       context: {
         url: `https://crwsync.com/auth/verify-email?token=${token}`
       },
@@ -99,7 +99,7 @@ export class VerificationService {
   }
 
   async verify(token: string): Promise<VerificationEntity> {
-    const verification = await this.vRepo.findOne({ where: { token }, relations: ['user'] });
+    const verification = await this.vRepo.findOne({ where: { token }, relations: ["user"] });
     if (!verification) {
       throw new NotFoundException(`Verification with token ${token} not found`);
     }

@@ -24,7 +24,7 @@ export class PasswordResetService {
       throw new NotFoundException(`User with ID ${dto.user_id} not found`);
     }
 
-    const token = randomBytes(32).toString('hex');
+    const token = randomBytes(32).toString("hex");
     const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     const passwordReset = await this.prRepo.manager.transaction(async (m) => {
@@ -40,8 +40,8 @@ export class PasswordResetService {
 
     await this.emailService.sendEmail({
       to: dto.email,
-      subject: 'Reset your password',
-      template: 'reset-password',
+      subject: "Reset your password",
+      template: "reset-password",
       context: {
         url: `https://crwsync.com/auth/reset-password?token=${token}`
       },

@@ -4,7 +4,7 @@ import { UpdateUserDto } from "src/user/dto/update-user.dto";
 import { UserService } from "src/user/user.service";
 import { UserEntity } from "src/user/user.entity";
 
-@Controller('users')
+@Controller("users")
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -21,30 +21,30 @@ export class UserController {
     return this.userService.findAll();
   }
 
-  @Get('check-availability')
+  @Get("check-availability")
   @HttpCode(HttpStatus.OK)
   checkAvailability(
-    @Query('field') field: 'email' | 'username',
-    @Query('value') value: string
+    @Query("field") field: "email" | "username",
+    @Query("value") value: string
   ): Promise<{ available: boolean }> {
     return this.userService.checkEmailOrUsername(field, value);
   }
 
-  @Get(':id')
+  @Get(":id")
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<UserEntity> {
+  findOne(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<UserEntity> {
     return this.userService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(":id")
   @HttpCode(HttpStatus.OK)
-  update(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
+  update(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
     return this.userService.update(id, dto);
   }
 
-  @Delete(':id')
+  @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<void> {
+  async remove(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<void> {
     await this.userService.remove(id);
   }
 }

@@ -43,7 +43,7 @@ export class UserService {
     });
   }
 
-  async checkEmailOrUsername(field: 'email' | 'username', value: string): Promise<{ available: boolean }> {
+  async checkEmailOrUsername(field: "email" | "username", value: string): Promise<{ available: boolean }> {
     const exists = await this.repo.findOne({
       where: { [field]: value }
     });

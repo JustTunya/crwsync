@@ -35,11 +35,11 @@ export class UserEntity {
 
   @Column("enum", { enum: UserStatus, default: UserStatus.OFFLINE })
   status!: UserStatus;
- 
-  @Column({ type: "jsonb", default: () => `"{"theme":"system","notifications":{"email":false,"push":false}}"` })
+
+  @Column({ type: "jsonb", default: () => `'{"theme":"system","notifications":{"email":false,"push":false}}'` })
   preferences!: UserPreference;
 
-  @Column({ type: "jsonb", default: () => `"{}"` })
+  @Column({ type: "jsonb", default: () => `'{}'` })
   profile!: UserProfile;
 
   @Column()
