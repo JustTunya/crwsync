@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence, cubicBezier } from "framer-motion";
 import { isEmailValid, isPasswordStrong, isUsernameValid } from "@/lib/validations";
+import { strengthToColor, strengthToCount } from "@/lib/utils";
 import { useMatch } from "@/hooks/use-match";
 import { useAvailability } from "@/hooks/use-availability";
 import { Button } from "@/components/ui/button";
@@ -28,24 +29,6 @@ export default function SignupStep1(props: SignupStep1Props) {
   const validUsername = useAvailability("username", props.form.username, isUsernameValid);
   const validPassword = useValidator(props.form.password, isPasswordStrong);
   const matchingPasswords = useMatch(props.form.password, props.form.confpassword);
-
-  const strengthToCount = (strength?: "weak" | "medium" | "strong") => {
-    switch(strength) {
-      case "weak": return 1;
-      case "medium": return 2;
-      case "strong": return 3;
-      default: return 0;
-    }
-  };
-
-  const strengthToColor = (strength?: "weak" | "medium" | "strong") => {
-    switch(strength) {
-      case "weak": return "var(--color-error)";
-      case "medium": return "var(--color-warning)";
-      case "strong": return "var(--color-success)";
-      default: return "var(--color-base-400)";
-    }
-  };
 
   const activeCount = strengthToCount(validPassword?.meta?.level);
   const barColor = strengthToColor(validPassword?.meta?.level);

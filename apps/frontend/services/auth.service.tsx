@@ -71,7 +71,7 @@ export async function signin(_prev: SigninState, data: SigninPayload): Promise<S
 
 export async function forgotPassword(_prev: ForgotPasswordState, data: ForgotPasswordPayload): Promise<ForgotPasswordState> {
   try {
-    await api.post("/auth/forgot-password", data);
+    await api.post("/password_resets", data);
     return {
       success: true,
       errors: {},
@@ -83,31 +83,6 @@ export async function forgotPassword(_prev: ForgotPasswordState, data: ForgotPas
       return { success: false, errors: resp.errors || {}, message: resp.message || "An unexpected error occurred" };
     }
     return { success: false, errors: {}, message: "An unexpected error occurred" };
-  }
-}
-
-export async function resetPassword(_prev: ResetPasswordState, data: ResetPasswordPayload): Promise<ResetPasswordState> {
-  try {
-    await api.post("/auth/reset-password", data);
-    return {
-      success: true,
-      errors: {},
-      message: "Password updated successfully",
-    };
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const resp = error.response?.data as ResetPasswordState;
-      return {
-        success: false,
-        errors: resp.errors,
-        message: resp.message,
-      };
-    }
-    return {
-      success: false,
-      errors: {},
-      message: "An unexpected error occurred",
-    };
   }
 }
 

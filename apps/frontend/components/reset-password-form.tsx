@@ -1,46 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { useActionState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  ResetPasswordState,
-  ResetPasswordPayload,
-} from "@crwsync/types";
-import { resetPassword } from "@/services/auth.service";
+import { useValidator } from "@/hooks/use-validator";
+import { useMatch } from "@/hooks/use-match";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useMatch } from "@/hooks/use-match";
 import { cn, variants } from "@/lib/utils";
 import { GlassBox } from "@/components/ui/glassbox";
-
-const initState: ResetPasswordState = {
-  success: false,
-  errors: {},
-  message: "",
-};
+import { isPasswordStrong } from "@/lib/validations";
 
 export function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
 
   const [password, setPassword] = useState("");
-  const [confpassword, setConfirmPassword] = useState("");
+  const [confpass, setConfPass] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showConfPass, setShowConfPass] = useState(false);
 
-  const validPassword = useMatch(password, confpassword);
+  const validPassword = useValidator(password, isPasswordStrong);
+  const matchingPasswords = useMatch(password, confpass);
 
-  const [state, dispatchResetPass, pending] = useActionState(
-    resetPassword,
-    initState
-  );
+  const validForm = useMemo(() => {
+    return validPassword?.value === true && matchingPasswords === true;
+  }, [validPassword, matchingPasswords]);
 
-  const formAction = () => {
-    const payload: ResetPasswordPayload = { token, password };
-    dispatchResetPass(payload);
+  const handleReset = () => {
+    // TODO: implement password reset action
   };
 
   return (
@@ -61,7 +50,7 @@ export function ResetPasswordForm() {
         transition={{ duration: 0.3 }}
         className="w-full space-y-6"
       >
-        <form action={formAction} className="sm:min-w-sm space-y-6">
+        <form action={handleReset} className="sm:min-w-sm space-y-6">
           <div className="space-y-3">
             <Label htmlFor="password">Password</Label>
             <Input
@@ -71,7 +60,7 @@ export function ResetPasswordForm() {
               visible={showPass}
               setVisible={() => setShowPass(!showPass)}
               onChange={(e) => setPassword(e.target.value)}
-              className={cn(validPassword === false && "border-error")}
+              error={matchingPasswords === false && validPassword?.value === true}
             />
           </div>
 
@@ -80,36 +69,20 @@ export function ResetPasswordForm() {
             <Input
               id="confpassword"
               type="password"
-              value={confpassword}
+              value={confpass}
               visible={showConfPass}
               setVisible={() => setShowConfPass(!showConfPass)}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className={cn(validPassword === false && "border-error")}
+              onChange={(e) => setConfPass(e.target.value)}
+              error={matchingPasswords === false && validPassword?.value === true}
             />
-            {validPassword === false && (
-              <Label error>Passwords do not match or are too short</Label>
-            )}
           </div>
 
-          {state.message && (
-            <Label
-              error={!state.success}
-              className={cn(
-                "block text-center",
-                state.success && "text-success"
-              )}
-            >
-              {state.message}
-            </Label>
-          )}
-
           <Button
-            type="button"
-            onClick={formAction}
-            disabled={pending || !validPassword}
+            type="submit"
+            disabled={!validForm}
             className="w-full"
           >
-            {pending ? "Updating password..." : "Update Password"}
+            Update Password
           </Button>
         </form>
       </motion.div>
