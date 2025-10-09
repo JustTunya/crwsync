@@ -50,4 +50,10 @@ export class PasswordResetController {
   async remove(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<void> {
     await this.passwordResetService.remove(id);
   }
+
+  @Post("reset")
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body("token") token: string, @Body("newPassword") newPassword: string): Promise<void> {
+    return this.passwordResetService.reset(token, newPassword);
+  }
 }

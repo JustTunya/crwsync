@@ -8,8 +8,10 @@ import {
   ArrayNotEmpty,
   IsObject,
   IsBoolean,
+  IsUUID,
+  IsHash,
 } from "class-validator";
-import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue } from "@crwsync/types";
+import { UserStatus, UserPreference, UserProfile, UserGenderValue } from "@crwsync/types";
 
 export class CreateUserDto {
   @IsEmail()
@@ -24,50 +26,37 @@ export class CreateUserDto {
   @IsString()
   lastname!: string;
 
-  @IsEnum(UserGenderValue, { message: "gender must be one of: " + Object.values(UserGenderValue).join(", ") })
-  gender!: UserGenderValue;
-
   @IsISO8601()
   birthdate!: string;
 
   @IsOptional()
   @IsString()
-  avatar_url?: string;
+  avatar_key?: string;
 
   @IsOptional()
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsEnum(UserRole, { each: true })
-  roles?: UserRole[];
-
-  @IsOptional()
-  @IsEnum(UserStatus)
-  status?: UserStatus;
-
-  @IsOptional()
-  @IsObject()
-  preferences?: UserPreference;
-
-  @IsOptional()
-  @IsObject()
-  profile?: UserProfile;
+  @IsUUID()
+  system_role_id?: string;
 
   @IsString()
   password!: string;
 
   @IsOptional()
-  @IsBoolean()
-  email_verified?: boolean;
-
-  @IsOptional()
-  @IsString()
-  refresh_token?: string;
+  @IsISO8601()
+  last_password_change?: string;
 
   @IsOptional()
   @IsISO8601()
-  updated_at?: string;
+  email_verified_at?: string;
 
   @IsOptional()
   @IsISO8601()
   last_login?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  created_at?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  updated_at?: string;
 }

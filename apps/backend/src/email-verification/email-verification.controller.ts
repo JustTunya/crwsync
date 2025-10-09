@@ -18,7 +18,7 @@ export class VerificationController {
   @Post("verify")
   @HttpCode(HttpStatus.OK)
   async verify(@Body("token") token: string): Promise<VerificationEntity> {
-    return this.verificationService.verify(token);
+    return this.verificationService.verifyEmail(token);
   }
 
   @Get()

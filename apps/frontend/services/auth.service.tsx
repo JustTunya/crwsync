@@ -7,8 +7,9 @@ import {
   ForgotPasswordState,
   ForgotPasswordPayload,
   ResetPasswordState,
-  ResetPasswordPayload,
-  MailVerification
+  MailVerificationType,
+  PasswordResetType,
+  ResetPasswordPayload
 } from "@crwsync/types";
 
 const api: AxiosInstance = axios.create({
@@ -86,6 +87,23 @@ export async function forgotPassword(_prev: ForgotPasswordState, data: ForgotPas
   }
 }
 
+export async function resetPassword(_prev: ResetPasswordState, data: ResetPasswordPayload): Promise<ResetPasswordState> {
+  try {
+    await api.post("/password_resets/reset", data);
+    return {
+      success: true,
+      errors: {},
+      message: "Password reset successful",
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, errors: resp.errors || {}, message: resp.message || "An unexpected error occurred" };
+    }
+    return { success: false, errors: {}, message: "An unexpected error occurred" };
+  }
+}
+
 export async function checkAvailability(field: 'email' | 'username', value: string): Promise<{ available: boolean }> {
   try {
     const response = await api.get("/users/check-availability", {
@@ -129,9 +147,18 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
   }
 }
   
-export async function getEmailToken(token: string): Promise<MailVerification | undefined> {
+export async function getEmailToken(token: string): Promise<MailVerificationType | undefined> {
   try {
     const response = await api.get(`/email_verifications/token/${token}`);
+    return response.data;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function getResetToken(token: string): Promise<PasswordResetType | undefined> {
+  try {
+    const response = await api.get(`/password_resets/token/${token}`);
     return response.data;
   } catch {
     return undefined;

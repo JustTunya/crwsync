@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useCallback, useActionState, useEffect } from "react";
-import { SignupState, SignupPayload, UserGenderValue } from "@crwsync/types";
+import { SignupState, SignupPayload } from "@crwsync/types";
 import { GlassBox } from "@/components/ui/glassbox";
 import { signup } from "@/services/auth.service";
 import { cn, variants } from "@/lib/utils";
@@ -32,13 +32,12 @@ export function SignupForm() {
     confpassword: "",
     firstname: "",
     lastname: "",
-    gender: undefined as UserGenderValue | undefined,
     birthyear: "",
     birthmonth: "",
     birthday: ""
   });
 
-  const updateForm = useCallback((field: keyof typeof form, value: string | UserGenderValue | undefined) => {
+  const updateForm = useCallback((field: keyof typeof form, value: string | undefined) => {
     setForm(prev => ({ ...prev, [field]: value }));
   }, []);
 
@@ -49,7 +48,6 @@ export function SignupForm() {
       password: form.password,
       firstname: form.firstname,
       lastname: form.lastname,
-      gender: form.gender || '',
       birthdate: `${form.birthyear}-${form.birthmonth}-${form.birthday}`,
     }
     dispatch(payload);

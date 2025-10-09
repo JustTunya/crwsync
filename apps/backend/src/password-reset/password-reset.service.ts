@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
+import { hash } from "bcrypt"; 
 import { PasswordResetEntity } from "src/password-reset/password-reset.entity";
 import { CreatePasswordResetDto } from "src/password-reset/dto/create-password-reset.dto";
 import { UpdatePasswordResetDto } from "src/password-reset/dto/update-password-reset.dto";
@@ -19,20 +20,21 @@ export class PasswordResetService {
   ) {}
 
   async create(dto: CreatePasswordResetDto): Promise<PasswordResetEntity> {
-    const user = await this.uRepo.findOne({ where: { id: dto.user_id } });
+    const user = await this.uRepo.findOne({ where: { email: dto.email } });
     if (!user) {
-      throw new NotFoundException(`User with ID ${dto.user_id} not found`);
+      throw new NotFoundException(`User with email ${dto.email} not found`);
     }
 
     const token = randomBytes(32).toString("hex");
+    const hashedToken = createHash('sha256').update(token).digest('hex');
     const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     const passwordReset = await this.prRepo.manager.transaction(async (m) => {
-      await m.delete(PasswordResetEntity, { email: dto.email, is_reseted: false });
+      await m.delete(PasswordResetEntity, { email: dto.email, status: "pending" });
       const entity = m.create(PasswordResetEntity, {
-        email: dto.email,
-        token,
         user,
+        email: dto.email,
+        token_hash: hashedToken,
         expires_at: exp,
       });
       return m.save(entity);
@@ -71,7 +73,8 @@ export class PasswordResetService {
   }
 
   async findByToken(token: string): Promise<PasswordResetEntity> {
-    const passwordReset = await this.prRepo.findOne({ where: { token } });
+    const hashedToken = createHash('sha256').update(token).digest('hex');
+    const passwordReset = await this.prRepo.findOne({ where: { token_hash: hashedToken } });
     if (!passwordReset) {
       throw new NotFoundException(`Password reset for token ${token} not found`);
     }
@@ -92,5 +95,32 @@ export class PasswordResetService {
     if (result.affected === 0) {
       throw new NotFoundException(`Password reset with ID ${id} not found`);
     }
+  }
+
+  async reset(token: string, newPassword: string): Promise<void> {
+    const passwordReset = await this.findByToken(token);
+    if (!passwordReset) {
+      throw new NotFoundException(`Password reset for token ${token} not found`);
+    }
+
+    if (passwordReset.status !== "pending") {
+      throw new NotFoundException(`Password reset for token ${token} is not pending`);
+    }
+    if (passwordReset.expires_at < new Date()) {
+      throw new NotFoundException(`Password reset for token ${token} has expired`);
+    }
+
+    const user = await this.uRepo.findOne({ where: { id: passwordReset.user_id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${passwordReset.user_id} not found`);
+    }
+
+    const hashedPassword = await hash(newPassword, 10);
+    user.password_hash = hashedPassword;
+    await this.uRepo.save(user);
+
+    passwordReset.status = "used";
+    passwordReset.reset_at = new Date();
+    await this.prRepo.save(passwordReset);
   }
 }

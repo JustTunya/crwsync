@@ -3,7 +3,7 @@ import { UserEntity } from "src/user/user.entity";
 
 @Entity({ name: 'password_resets' })
 @Index("idx_password_reset_email", ["email"], { unique: true })
-@Index("idx_password_reset_token", ["token"], { unique: true })
+@Index("idx_password_reset_token", ["token_hash"], { unique: true })
 @Index("idx_password_reset_user_id", ["user_id"], { unique: false })
 export class PasswordResetEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -20,10 +20,10 @@ export class PasswordResetEntity {
   user_id!: string;
 
   @Column()
-  token!: string;
+  token_hash!: string;
 
-  @Column({ default: false })
-  is_reseted!: boolean;
+  @Column({ default: "pending" })
+  status!: "pending" | "used" | "expired" | "revoked";
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at!: Date;
@@ -32,5 +32,5 @@ export class PasswordResetEntity {
   expires_at!: Date;
 
   @Column({ type: 'timestamptz', nullable: true })
-  reseted_at?: Date;
+  reset_at?: Date;
 }

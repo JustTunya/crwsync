@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { randomBytes, createHash } from "crypto";
 import { Repository } from "typeorm";
-import { randomBytes } from "crypto";
 import { VerificationEntity } from "src/email-verification/email-verification.entity";
 import { CreateVerificationDto } from "src/email-verification/dto/create-email-verification.dto";
 import { UpdateVerificationDto } from "src/email-verification/dto/update-email-verification.dto";
@@ -19,25 +19,25 @@ export class VerificationService {
   ) {}
 
   async create(dto: CreateVerificationDto): Promise<VerificationEntity> {
-    const user = await this.uRepo.findOne({ where: { id: dto.user_id } });
+    const user = await this.uRepo.findOne({ where: { email: dto.email } });
     if (!user) {
-      throw new NotFoundException(`User with ID ${dto.user_id} not found`);
+      throw new NotFoundException(`User with email ${dto.email} not found`);
     }
-    if (user.email_verified) {
-      throw new BadRequestException(`User with ID ${dto.user_id} has already verified their email`);
+    if (user.email_verified_at) {
+      throw new BadRequestException(`User with email ${dto.email} has already verified their email`);
     }
 
     const token = randomBytes(32).toString("hex");
+    const hashedToken = createHash('sha256').update(token).digest('hex');
     const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     const verification = await this.vRepo.manager.transaction(async (m) => {
-      await m.delete(VerificationEntity, { email: dto.email, is_verified: false });
+      await m.delete(VerificationEntity, { email: dto.email, status: "pending" });
       const entity = m.create(VerificationEntity, {
-        email: dto.email,
-        token,
         user,
+        email: dto.email,
+        token_hash: hashedToken,
         expires_at: exp,
-        is_verified: false,
       });
       return m.save(entity);
     });
@@ -75,7 +75,8 @@ export class VerificationService {
   }
 
   async findByToken(token: string): Promise<VerificationEntity> {
-    const verification = await this.vRepo.findOne({ where: { token } });
+    const hashedToken = createHash('sha256').update(token).digest('hex');
+    const verification = await this.vRepo.findOne({ where: { token_hash: hashedToken } });
     if (!verification) {
       throw new NotFoundException(`Verification for token ${token} not found`);
     }
@@ -98,8 +99,9 @@ export class VerificationService {
     }
   }
 
-  async verify(token: string): Promise<VerificationEntity> {
-    const verification = await this.vRepo.findOne({ where: { token }, relations: ["user"] });
+  async verifyEmail(token: string): Promise<VerificationEntity> {
+    const hashedToken = createHash('sha256').update(token).digest('hex');
+    const verification = await this.vRepo.findOne({ where: { token_hash: hashedToken }, relations: ["user"] });
     if (!verification) {
       throw new NotFoundException(`Verification with token ${token} not found`);
     }
@@ -109,10 +111,10 @@ export class VerificationService {
       throw new NotFoundException(`User associated with this verification not found`);
     }
 
-    user.email_verified = true;
+    user.email_verified_at = new Date();
     await this.uRepo.save(user);
 
-    verification.is_verified = true;
+    verification.status = "verified";
     verification.verified_at = new Date();
     return this.vRepo.save(verification);
   }

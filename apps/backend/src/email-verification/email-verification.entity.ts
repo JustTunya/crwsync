@@ -3,7 +3,7 @@ import { UserEntity } from "src/user/user.entity";
 
 @Entity({ name: 'email_verifications' })
 @Index("idx_verification_email", ["email"], { unique: true })
-@Index("idx_verification_token", ["token"], { unique: true })
+@Index("idx_verification_token", ["token_hash"], { unique: true })
 @Index("idx_verification_user_id", ["user_id"], { unique: false })
 export class VerificationEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -20,10 +20,10 @@ export class VerificationEntity {
   user_id!: string;
 
   @Column()
-  token!: string;
+  token_hash!: string;
 
-  @Column({ default: false })
-  is_verified!: boolean;
+  @Column({ default: "pending" })
+  status!: "pending" | "verified" | "expired" | "revoked";
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at!: Date;

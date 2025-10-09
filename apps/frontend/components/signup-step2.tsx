@@ -2,7 +2,6 @@ import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
-import { UserGender, UserGenderValue } from "@crwsync/types";
 import { isNameValid, isBirthdateValid } from "@/lib/validations";
 import { useValidator } from "@/hooks/use-validator";
 import { 
@@ -20,12 +19,11 @@ interface SignupStep2Props {
   form: {
     firstname: string;
     lastname: string;
-    gender: UserGenderValue | undefined;
     birthyear: string;
     birthmonth: string;
     birthday: string;
   };
-  updateForm: (field: keyof SignupStep2Props["form"], value: string | UserGenderValue | undefined) => void;
+  updateForm: (field: keyof SignupStep2Props["form"], value: string | undefined) => void;
   onBack: () => void;
   onSubmit: () => void;
   pending: boolean;
@@ -35,9 +33,6 @@ export default function SignupStep2(props: SignupStep2Props) {
   const validFirstName = useValidator(props.form.firstname, isNameValid);
   const validLastName = useValidator(props.form.lastname, isNameValid);
 
-  const validGender = useMemo(() => {
-    return props.form.gender !== undefined && Object.values(UserGender).some(g => g.value === props.form.gender);
-  }, [props.form.gender]);
   const validBirthdate = useMemo(() => {
     if (!props.form.birthyear || !props.form.birthmonth || !props.form.birthday) return undefined;
     return isBirthdateValid(`${props.form.birthyear}-${props.form.birthmonth}-${props.form.birthday}`);
@@ -47,10 +42,9 @@ export default function SignupStep2(props: SignupStep2Props) {
     return (
       validFirstName &&
       validLastName &&
-      validGender &&
       validBirthdate
     );
-  }, [validFirstName, validLastName, validGender, validBirthdate]);
+  }, [validFirstName, validLastName, validBirthdate]);
 
   const daysInMonth = useMemo(() => {
     const month = parseInt(props.form.birthmonth, 10);
@@ -104,24 +98,6 @@ export default function SignupStep2(props: SignupStep2Props) {
         {(validLastName?.value === false) && (
           <Label error>This last name is invalid</Label>
         )}
-      </div>
-    
-      <div className="space-y-4">
-        <Label htmlFor="lastname">Gender</Label>
-        <Select value={props.form.gender} onValueChange={(value) => props.updateForm("gender", value)}>
-          <SelectTrigger size="full">
-            <SelectValue placeholder="Gender">
-              { Object.values(UserGender).find(g => g.value === props.form.gender)?.label || "Select" }
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {Object.values(UserGender).map((gender) => (
-              <SelectItem key={gender.value} value={gender.value}>
-                {gender.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="space-y-4">

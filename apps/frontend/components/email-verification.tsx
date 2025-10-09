@@ -24,7 +24,7 @@ export function EmailVerification({ token }: { token: string | null }) {
         return;
       }
 
-      const isVerified = resp?.is_verified ?? false;
+      const isVerified = resp?.verified_at ?? false;
       const isExpired = new Date(resp?.expires_at ?? '').getTime() < Date.now();
 
       if (isVerified) {
@@ -54,7 +54,9 @@ export function EmailVerification({ token }: { token: string | null }) {
   return (
     <GlassBox>
       <h1 className="text-xl sm:text-2xl font-medium mb-4">Email Verification</h1>
-      {status === "pending" && <p className="text-sm text-foreground/50">Verifying your email...</p>}
+      {status === "pending" && (
+        <p className="text-sm text-foreground/50">Verifying your email...</p>
+      )}
       {status === "success" && (
         <>
           <p className="text-sm text-center text-success">
@@ -66,7 +68,7 @@ export function EmailVerification({ token }: { token: string | null }) {
       {status === "expired" && (
         <>
           <p className="text-sm text-center text-error">
-            This email verification link is invalid or it has expired. 
+            It seems like this email verification link has expired. 
             Please request a new one by pressing the button below.
           </p>
 
@@ -76,10 +78,10 @@ export function EmailVerification({ token }: { token: string | null }) {
       {status === "error" && (
         <>
           <p className="text-sm text-center text-error mb-4">
-            The verification token is invalid and it is not linked to any account.
-            Please check the link again or try creating a new account. 
+            The verification token is invalid or it is not linked to any account.
+            Please check if you entered the link correctly.
           </p>
-          <p className="text-sm text-center text-primary/75 mt-2">
+          <p className="text-sm text-center text-primary/75">
             If you believe this is an error, please contact support at <a className="underline underline-offset-2 text-info" href="mailto:support@crwsync.com">support@crwsync.com</a>
           </p>
         </>

@@ -5,7 +5,6 @@ export interface SignupState {
     username?: string;
     firstname?: string;
     lastname?: string;
-    gender?: string;
     birthdate?: string;
     password?: string;
     confpassword?: string;
@@ -19,7 +18,6 @@ export interface SignupPayload {
   username: string;
   firstname: string;
   lastname: string;
-  gender: string;
   birthdate: string;
   password: string;
 }

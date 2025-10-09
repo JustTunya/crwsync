@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useActionState } from "react";
+import { useState, useActionState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ForgotPasswordState,
@@ -24,10 +24,10 @@ const initState: ForgotPasswordState = {
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
-  const validEmail = useAvailability("email", email, isEmailValid);
 
   const [state, dispatch, pending] = useActionState(forgotPassword, initState);
 
+  const validEmail = useAvailability("email", email, isEmailValid);
   const validForm = !!(validEmail && validEmail.available === false && validEmail.valid === true);
 
   const handleSubmit = () => {
