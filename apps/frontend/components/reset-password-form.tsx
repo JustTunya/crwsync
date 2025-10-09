@@ -5,12 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useValidator } from "@/hooks/use-validator";
 import { useMatch } from "@/hooks/use-match";
+import { StrengthIndicator } from "@/components/ui/strength_indicator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { cn, variants } from "@/lib/utils";
 import { GlassBox } from "@/components/ui/glassbox";
 import { isPasswordStrong } from "@/lib/validations";
+import { variants } from "@/lib/utils";
 
 export function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -23,6 +24,8 @@ export function ResetPasswordForm() {
 
   const validPassword = useValidator(password, isPasswordStrong);
   const matchingPasswords = useMatch(password, confpass);
+
+  const hasPassword = password.length > 0;
 
   const validForm = useMemo(() => {
     return validPassword?.value === true && matchingPasswords === true;
@@ -63,6 +66,8 @@ export function ResetPasswordForm() {
               error={matchingPasswords === false && validPassword?.value === true}
             />
           </div>
+
+          <StrengthIndicator visible={hasPassword} level={validPassword?.meta?.level} />
 
           <div className="space-y-3">
             <Label htmlFor="confpassword">Confirm Password</Label>

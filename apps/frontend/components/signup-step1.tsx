@@ -1,13 +1,12 @@
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence, cubicBezier } from "framer-motion";
 import { isEmailValid, isPasswordStrong, isUsernameValid } from "@/lib/validations";
-import { strengthToColor, strengthToCount } from "@/lib/utils";
 import { useMatch } from "@/hooks/use-match";
 import { useAvailability } from "@/hooks/use-availability";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useValidator } from "@/hooks/use-validator";
+import { StrengthIndicator } from "./ui/strength_indicator";
 
 interface SignupStep1Props {
   form: {
@@ -30,8 +29,6 @@ export default function SignupStep1(props: SignupStep1Props) {
   const validPassword = useValidator(props.form.password, isPasswordStrong);
   const matchingPasswords = useMatch(props.form.password, props.form.confpassword);
 
-  const activeCount = strengthToCount(validPassword?.meta?.level);
-  const barColor = strengthToColor(validPassword?.meta?.level);
   const hasPassword = props.form.password.length > 0;
 
   const validStep = useMemo(() => {
@@ -91,57 +88,7 @@ export default function SignupStep1(props: SignupStep1Props) {
         />
       </div>
 
-      <AnimatePresence initial={false}>
-        {hasPassword && (
-          <motion.div
-            key="pw-indicator"
-            initial={{ height: 0, opacity: 0, y: -8 }}
-            animate={{ height: "auto", opacity: 1, y: 0 }}
-            exit={{ height: 0, opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: cubicBezier(0.22, 1, 0.36, 1) }}
-            className="overflow-hidden"
-            aria-live="polite"
-          >
-            <div className="flex flex-row items-center justify-between">
-              <div className="w-[70%] flex flex-row gap-3">
-                {[1, 2, 3].map((s) => {
-                  const active = s <= activeCount;
-                  return(
-                    <motion.div
-                      key={s}
-                      className="h-2 w-full rounded-full"
-                      initial={false}
-                      animate={{
-                        backgroundColor: active ? barColor : "var(--color-base-400)"
-                      }}
-                      transition={{ type: "spring", stiffness: 260, damping: 28 }}
-                    />
-                  );
-                })}
-              </div>
-
-              <div className="min-w-[9rem] text-right">
-                <AnimatePresence mode="popLayout" initial={false}>
-                  <motion.span
-                    key={validPassword?.meta?.level ?? "none"}
-                    initial={{ y: 6, opacity: 0, filter: "blur(2px)" }}
-                    animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                    exit={{ y: -6, opacity: 0, filter: "blur(2px)" }}
-                    transition={{ duration: 0.18 }}
-                    style={{ color: barColor }}
-                    className="text-xs font-medium inline-block"
-                  >
-                    {!validPassword?.meta?.level && "Enter a password"}
-                    {validPassword?.meta?.level === "weak" && "Too weak"}
-                    {validPassword?.meta?.level === "medium" && "Could be stronger"}
-                    {validPassword?.meta?.level === "strong" && "Strong password"}
-                  </motion.span>
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <StrengthIndicator visible={hasPassword} level={validPassword?.meta?.level} />
 
       <div className="space-y-4">
         <Label htmlFor="confpassword">Confirm Password</Label>
