@@ -1,17 +1,4 @@
-import {
-  IsEmail,
-  IsEnum,
-  IsISO8601,
-  IsOptional,
-  IsString,
-  IsArray,
-  ArrayNotEmpty,
-  IsObject,
-  IsBoolean,
-  IsUUID,
-  IsHash,
-} from "class-validator";
-import { UserStatus, UserPreference, UserProfile, UserGenderValue } from "@crwsync/types";
+import { IsEmail, IsISO8601, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class CreateUserDto {
   @IsEmail()
