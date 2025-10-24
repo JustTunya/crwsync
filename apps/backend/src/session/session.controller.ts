@@ -12,12 +12,15 @@ import {
   UsePipes,
   ValidationPipe,
   ParseUUIDPipe,
+  Req
 } from "@nestjs/common";
+import { Request } from "express";
 import { SessionService } from "src/session/session.service";
 import { UserSessionEntity as SessionEntity } from "src/session/session.entity";
 import { CreateSessionDto } from "src/session/dto/create-session.dto";
 import { UpdateSessionDto } from "src/session/dto/update-session.dto";
 import { RotateSessionDto } from "src/session/dto/rotate-session.dto";
+import { getClientIp, getUserAgent } from "src/session/session.utils";
 
 @Controller("sessions")
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -26,7 +29,9 @@ export class SessionController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() dto: CreateSessionDto): Promise<SessionEntity> {
+  create(@Body() dto: CreateSessionDto, @Req() req: Request): Promise<SessionEntity> {
+    dto.ip = getClientIp(req);
+    dto.ua = getUserAgent(req);
     return this.sessionService.create(dto);
   }
 

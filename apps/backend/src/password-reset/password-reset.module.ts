@@ -8,8 +8,7 @@ import { EmailModule } from "src/email/email.module";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PasswordResetEntity]),
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([PasswordResetEntity, UserEntity]),
     EmailModule
   ],
   providers: [PasswordResetService],

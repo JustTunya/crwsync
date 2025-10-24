@@ -8,6 +8,8 @@ async function bootstrap() {
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   });
+  // Enable trust proxy for correct client IP detection behind proxies
+  (app.getHttpAdapter().getInstance() as any).set("trust proxy", true);
   await app.listen(process.env.PORT ?? 8080);
 }
 bootstrap();
