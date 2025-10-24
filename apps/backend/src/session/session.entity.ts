@@ -1,9 +1,9 @@
 import { Entity, Index, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from "typeorm";
 import { UserEntity } from "src/user/user.entity";
 
-@Entity({ name: "user_sessions" })
-@Index("idx_user_session_user_id", ["user_id"])
-export class UserSessionEntity {
+@Entity({ name: "sessions" })
+@Index("idx_session_user_id", ["user_id"])
+export class SessionEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 

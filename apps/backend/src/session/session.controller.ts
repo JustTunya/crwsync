@@ -16,11 +16,10 @@ import {
 } from "@nestjs/common";
 import { Request } from "express";
 import { SessionService } from "src/session/session.service";
-import { UserSessionEntity as SessionEntity } from "src/session/session.entity";
+import { SessionEntity } from "src/session/session.entity";
 import { CreateSessionDto } from "src/session/dto/create-session.dto";
 import { UpdateSessionDto } from "src/session/dto/update-session.dto";
 import { RotateSessionDto } from "src/session/dto/rotate-session.dto";
-import { getClientIp, getUserAgent } from "src/session/session.utils";
 
 @Controller("sessions")
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -30,9 +29,7 @@ export class SessionController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() dto: CreateSessionDto, @Req() req: Request): Promise<SessionEntity> {
-    dto.ip = getClientIp(req);
-    dto.ua = getUserAgent(req);
-    return this.sessionService.create(dto);
+    return this.sessionService.create(dto, req);
   }
 
   @Get()
@@ -73,8 +70,8 @@ export class SessionController {
 
   @Post("rotate")
   @HttpCode(HttpStatus.OK)
-  rotate(@Body() dto: RotateSessionDto): Promise<SessionEntity> {
-    return this.sessionService.rotate(dto);
+  rotate(@Body() dto: RotateSessionDto, @Req() req: Request): Promise<SessionEntity> {
+    return this.sessionService.rotate(dto, req);
   }
 
   @Post("revoke/:id")

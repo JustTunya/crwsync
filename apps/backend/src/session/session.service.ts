@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { Request } from "express";
 import { randomBytes, createHash } from "crypto";
-import { UserSessionEntity as SessionEntity } from "src/session/session.entity";
+import { SessionEntity } from "src/session/session.entity";
 import { CreateSessionDto } from "src/session/dto/create-session.dto";
+import { UpdateSessionDto } from "src/session/dto/update-session.dto";
+import { RotateSessionDto } from "src/session/dto/rotate-session.dto";
+import { getClientIp, getUserAgent } from "src/session/session.utils";
 import { UserEntity } from "src/user/user.entity";
-import { UpdateSessionDto } from "./dto/update-session.dto";
-import { RotateSessionDto } from "./dto/rotate-session.dto";
 
 @Injectable()
 export class SessionService {
@@ -17,7 +19,7 @@ export class SessionService {
     private readonly uRepo: Repository<UserEntity>,
   ) {}
 
-  async create(dto: CreateSessionDto): Promise<SessionEntity> {
+  async create(dto: CreateSessionDto, req: Request): Promise<SessionEntity> {
     const user = await this.uRepo.findOne({ where: { id: dto.user_id } });
     if (!user) {
       throw new NotFoundException(`User with id ${dto.user_id} not found`);
@@ -30,10 +32,11 @@ export class SessionService {
     const session = await this.sRepo.manager.transaction(async (m) => {
       const entity = m.create(SessionEntity, {
         user_id: dto.user_id,
-        token_hash: hashedToken,
+        refresh_token_hash: hashedToken,
         expires_at: exp,
-        ip: dto.ip,
-        ua: dto.ua,
+        ip: getClientIp(req) || undefined,
+        ua: getUserAgent(req) || undefined,
+        created_at: new Date(),
       });
       return m.save(entity);
     });
@@ -85,7 +88,7 @@ export class SessionService {
     return session;
   }
 
-  async rotate(dto: RotateSessionDto): Promise<SessionEntity> {
+  async rotate(dto: RotateSessionDto, req: Request): Promise<SessionEntity> {
     const oldHashedToken = createHash('sha256').update(dto.old_token).digest('hex');
     const oldSession = await this.sRepo.findOne({ where: { user_id: dto.user_id, refresh_token_hash: oldHashedToken } });
     if (!oldSession) {
@@ -99,10 +102,8 @@ export class SessionService {
     }
 
     const newSession = await this.create({
-      user_id: dto.user_id,
-      ip: dto.ip,
-      ua: dto.ua,
-    });
+      user_id: dto.user_id
+    }, req);
 
     oldSession.revoked_at = new Date();
     await this.sRepo.save(oldSession);

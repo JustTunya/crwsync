@@ -2,8 +2,9 @@ import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { JwtResponse } from "@crwsync/types";
 import { compare } from "bcrypt";
+import { Request } from "express";
+import { SessionService } from "src/session/session.service";
 import { UserService } from "src/user/user.service";
-import { EmailService } from "src/email/email.service";
 import { UserEntity } from "src/user/user.entity";
 import { SigninDto } from "src/auth/dto/signin.dto";
 
@@ -11,7 +12,7 @@ import { SigninDto } from "src/auth/dto/signin.dto";
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private readonly emailService: EmailService,
+    private readonly sessionService: SessionService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -23,13 +24,15 @@ export class AuthService {
     return null;
   }
 
-  async signin(user: UserEntity): Promise<JwtResponse> {
+  async signin(user: UserEntity, req: Request): Promise<JwtResponse> {
     const payload = { id: user.id, email: user.email };
 
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" });
 
     await this.userService.update(user.id, { last_login: new Date().toISOString() });
+
+    await this.sessionService.create({ user_id: user.id }, req);
 
     return { accessToken, refreshToken };
   }

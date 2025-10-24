@@ -5,10 +5,12 @@ import { AuthController } from "src/auth/auth.controller";
 import { UserModule } from "src/user/user.module";
 import { AuthService } from "src/auth/auth.service";
 import { EmailModule } from "src/email/email.module";
+import { SessionModule } from "src/session/session.module";
 
 @Module({
   imports: [
     UserModule,
+    SessionModule,
     ConfigModule,
     EmailModule,
     JwtModule.registerAsync({

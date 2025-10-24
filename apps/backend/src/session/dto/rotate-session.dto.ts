@@ -6,15 +6,4 @@ export class RotateSessionDto {
 
   @IsString()
   old_token!: string;
-
-  @IsOptional()
-  @IsIP()
-  ip?: string;
-
-  @IsOptional()
-  @IsString()
-  @Matches(/^[\w\-./();:@,?=+~%!\s]*$/i, {
-    message: "Invalid user-agent format",
-  })
-  ua?: string;
 }
