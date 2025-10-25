@@ -19,9 +19,9 @@ export class VerificationService {
   ) {}
 
   async create(dto: CreateVerificationDto): Promise<VerificationEntity> {
-    const user = await this.uRepo.findOne({ where: { email: dto.email } });
+    const user = await this.uRepo.findOne({ where: { id: dto.user_id, email: dto.email } });
     if (!user) {
-      throw new NotFoundException(`User with email ${dto.email} not found`);
+      throw new NotFoundException(`User with id ${dto.user_id} and email ${dto.email} not found`);
     }
     if (user.email_verified_at) {
       throw new BadRequestException(`User with email ${dto.email} has already verified their email`);

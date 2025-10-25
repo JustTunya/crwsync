@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from "@nestjs/comm
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Request } from "express";
-import { randomBytes, createHash } from "crypto";
+import { randomBytes, createHash, randomUUID } from "crypto";
 import { SessionEntity } from "src/session/session.entity";
 import { CreateSessionDto } from "src/session/dto/create-session.dto";
 import { UpdateSessionDto } from "src/session/dto/update-session.dto";
@@ -19,7 +19,7 @@ export class SessionService {
     private readonly uRepo: Repository<UserEntity>,
   ) {}
 
-  async create(dto: CreateSessionDto, req: Request): Promise<SessionEntity> {
+  async create(dto: CreateSessionDto, req: Request): Promise<{session: SessionEntity, token: string}> {
     const user = await this.uRepo.findOne({ where: { id: dto.user_id } });
     if (!user) {
       throw new NotFoundException(`User with id ${dto.user_id} not found`);
@@ -31,6 +31,7 @@ export class SessionService {
 
     const session = await this.sRepo.manager.transaction(async (m) => {
       const entity = m.create(SessionEntity, {
+        id: dto.id,
         user_id: dto.user_id,
         refresh_token_hash: hashedToken,
         expires_at: exp,
@@ -41,7 +42,7 @@ export class SessionService {
       return m.save(entity);
     });
 
-    return this.sRepo.save(session);
+    return { session, token };
   }
 
   findAll(): Promise<SessionEntity[]> {
@@ -101,7 +102,8 @@ export class SessionService {
       throw new BadRequestException(`Old session with userId ${dto.user_id} and token ${dto.old_token} has been revoked`);
     }
 
-    const newSession = await this.create({
+    const { session: newSession } = await this.create({
+      id: randomUUID(),
       user_id: dto.user_id
     }, req);
 

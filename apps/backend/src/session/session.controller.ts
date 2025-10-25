@@ -28,7 +28,7 @@ export class SessionController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() dto: CreateSessionDto, @Req() req: Request): Promise<SessionEntity> {
+  create(@Body() dto: CreateSessionDto, @Req() req: Request): Promise<{session: SessionEntity, token: string}> {
     return this.sessionService.create(dto, req);
   }
 

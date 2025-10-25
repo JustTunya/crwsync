@@ -1,10 +1,10 @@
-import { Entity, Index, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, Index, Column, ManyToOne, JoinColumn, PrimaryColumn } from "typeorm";
 import { UserEntity } from "src/user/user.entity";
 
 @Entity({ name: "sessions" })
 @Index("idx_session_user_id", ["user_id"])
 export class SessionEntity {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryColumn({ type: "uuid" })
   id!: string;
 
   @ManyToOne(() => UserEntity, { nullable: true, onDelete: 'CASCADE' })

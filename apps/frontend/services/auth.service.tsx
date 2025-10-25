@@ -19,54 +19,41 @@ const api: AxiosInstance = axios.create({
 
 export async function signup(_prev: SignupState, data: SignupPayload): Promise<SignupState> {
   try {
-    const user = await api.post("/users", data);
-    sendVerificationEmail(data.email, user.data.id);
+    const user = await api.post("/auth/signup", data);
 
-    return {
-      success: true,
-      errors: {},
-      message: "Signup successful",
-      userId: user.data.id
-    };
+    return { success: true, errors: {}, message: "Signup successful", userId: user.data.id };
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const resp = error.response?.data as SignupState;
-      return {
-        success: false,
-        errors: resp.errors,
-        message: resp.message,
-      };
+      return { success: false, errors: resp.errors, message: resp.message };
     }
-    return {
-      success: false,
-      errors: {},
-      message: "An unexpected error occurred",
-    };
+    return { success: false, errors: {}, message: "An unexpected error occurred" };
   }
 }
 
 export async function signin(_prev: SigninState, data: SigninPayload): Promise<SigninState> {
   try {
     await api.post("/auth/signin", data);
-    return {
-      success: true,
-      errors: {},
-      message: "Signin successful",
-    };
+    return { success: true, errors: {}, message: "Signin successful" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const resp = error.response?.data as SigninState;
-      return {
-        success: false,
-        errors: resp.errors,
-        message: resp.message,
-      };
+      return { success: false, errors: resp.errors, message: resp.message };
     }
-    return {
-      success: false,
-      errors: {},
-      message: "An unexpected error occurred",
-    };
+    return { success: false, errors: {}, message: "An unexpected error occurred" };
+  }
+}
+
+export async function signout(): Promise<{ success: boolean; message?: string }> {
+  try {
+    await api.post("/auth/signout");
+    return { success: true, message: "Signout successful" };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp.message || "An unexpected error occurred" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
   }
 }
 
