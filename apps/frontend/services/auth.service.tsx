@@ -123,7 +123,7 @@ export async function sendVerificationEmail(email: string, userId: string): Prom
 
 export async function verifyEmail(token: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await api.post(`/email-verifications/verify?token=${token}`);
+    const response = await api.get(`/email-verifications/verify?token=${token}`);
     return { success: response.data.success, message: response.data.message || "Email verified successfully" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -136,8 +136,8 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
   
 export async function getEmailToken(token: string): Promise<MailVerificationType | undefined> {
   try {
-    const response = await api.get(`/email-verifications/token/${token}`);
-    return response.data;
+    const response = await api.get(`/email-verifications?token=${token}`);
+    return response.data[0];
   } catch {
     return undefined;
   }
@@ -145,8 +145,8 @@ export async function getEmailToken(token: string): Promise<MailVerificationType
 
 export async function getResetToken(token: string): Promise<PasswordResetType | undefined> {
   try {
-    const response = await api.get(`/password-resets/token/${token}`);
-    return response.data;
+    const response = await api.get(`/password-resets?token=${token}`);
+    return response.data[0];
   } catch {
     return undefined;
   }
