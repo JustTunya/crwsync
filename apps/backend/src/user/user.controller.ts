@@ -30,19 +30,19 @@ export class UserController {
     return this.userService.checkEmailOrUsername(field, value);
   }
 
-  @Get(":id")
+  @Get(":userId")
   @HttpCode(HttpStatus.OK)
   findOne(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<UserEntity> {
     return this.userService.findOne(id);
   }
 
-  @Patch(":id")
+  @Patch(":userId")
   @HttpCode(HttpStatus.OK)
   update(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
     return this.userService.update(id, dto);
   }
 
-  @Delete(":id")
+  @Delete(":userId")
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<void> {
     await this.userService.remove(id);
