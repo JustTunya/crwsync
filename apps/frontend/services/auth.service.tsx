@@ -59,7 +59,7 @@ export async function signout(): Promise<{ success: boolean; message?: string }>
 
 export async function forgotPassword(_prev: ForgotPasswordState, data: ForgotPasswordPayload): Promise<ForgotPasswordState> {
   try {
-    await api.post("/password_resets", data);
+    await api.post("/password-resets", data);
     return {
       success: true,
       errors: {},
@@ -76,7 +76,7 @@ export async function forgotPassword(_prev: ForgotPasswordState, data: ForgotPas
 
 export async function resetPassword(_prev: ResetPasswordState, data: ResetPasswordPayload): Promise<ResetPasswordState> {
   try {
-    await api.post("/password_resets/reset", data);
+    await api.post("/password-resets/reset", data);
     return {
       success: true,
       errors: {},
@@ -110,7 +110,7 @@ export async function checkAvailability(field: 'email' | 'username', value: stri
 
 export async function sendVerificationEmail(email: string, userId: string): Promise<{ success: boolean; message?: string }> {
   try {
-    await api.post("/email_verifications", { email, user_id: userId });
+    await api.post("/email-verifications", { email, user_id: userId });
     return { success: true, message: "Verification email sent successfully" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -123,7 +123,7 @@ export async function sendVerificationEmail(email: string, userId: string): Prom
 
 export async function verifyEmail(token: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await api.post(`/email_verifications/verify?token=${token}`);
+    const response = await api.post(`/email-verifications/verify?token=${token}`);
     return { success: response.data.success, message: response.data.message || "Email verified successfully" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -136,7 +136,7 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
   
 export async function getEmailToken(token: string): Promise<MailVerificationType | undefined> {
   try {
-    const response = await api.get(`/email_verifications/token/${token}`);
+    const response = await api.get(`/email-verifications/token/${token}`);
     return response.data;
   } catch {
     return undefined;
@@ -145,7 +145,7 @@ export async function getEmailToken(token: string): Promise<MailVerificationType
 
 export async function getResetToken(token: string): Promise<PasswordResetType | undefined> {
   try {
-    const response = await api.get(`/password_resets/token/${token}`);
+    const response = await api.get(`/password-resets/token/${token}`);
     return response.data;
   } catch {
     return undefined;

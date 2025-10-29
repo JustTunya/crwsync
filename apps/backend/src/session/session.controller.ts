@@ -40,23 +40,23 @@ export class SessionController {
 
   @Get(":sessionId")
   @HttpCode(HttpStatus.OK)
-  findOne(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<SessionEntity> {
-    return this.sessionService.findOne(id);
+  findOne(@Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string): Promise<SessionEntity> {
+    return this.sessionService.findOne(sessionId);
   }
 
   @Patch(":sessionId")
   @HttpCode(HttpStatus.OK)
   update(
-    @Param("id", new ParseUUIDPipe({ version: "4" })) id: string,
+    @Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string,
     @Body() dto: UpdateSessionDto
   ): Promise<SessionEntity> {
-    return this.sessionService.update(id, dto);
+    return this.sessionService.update(sessionId, dto);
   }
 
   @Delete(":sessionId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<void> {
-    await this.sessionService.remove(id);
+  async remove(@Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string): Promise<void> {
+    await this.sessionService.remove(sessionId);
   }
 
   @Post("verify")
@@ -74,10 +74,10 @@ export class SessionController {
     return this.sessionService.rotate(dto, req);
   }
 
-  @Delete("revoke/:id")
+  @Delete("revoke/:sessionId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async revoke(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<void> {
-    await this.sessionService.revoke(id);
+  async revoke(@Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string): Promise<void> {
+    await this.sessionService.revoke(sessionId);
   }
 
   @Delete("revoke-all/:userId")

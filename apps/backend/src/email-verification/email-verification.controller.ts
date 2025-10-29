@@ -1,13 +1,15 @@
-import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch, ParseUUIDPipe } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch, ParseUUIDPipe, Query } from "@nestjs/common";
 import { CreateVerificationDto } from "src/email-verification/dto/create-email-verification.dto";
 import { UpdateVerificationDto } from "src/email-verification/dto/update-email-verification.dto";
 import { VerificationService } from "src/email-verification/email-verification.service";
 import { VerificationEntity } from "src/email-verification/email-verification.entity";
 
 // @UseGuards(AuthGuard("jwt"))
-@Controller("email_verifications")
+@Controller("email-verifications")
 export class VerificationController {
-  constructor(private readonly verificationService: VerificationService) {}
+  constructor(
+    private readonly verificationService: VerificationService
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -23,37 +25,37 @@ export class VerificationController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(): Promise<VerificationEntity[]> {
+  async findAll(
+    @Query("email") email?: string,
+    @Query("token") token?: string
+  ): Promise<VerificationEntity[]> {
+    if (email) {
+      const v = await this.verificationService.findByEmail(email);
+      return v ? [v] : [];
+    }
+    if (token) {
+      const v = await this.verificationService.findByToken(token);
+      return v ? [v] : [];
+    }
+
     return this.verificationService.findAll();
   }
 
-  @Get(":id")
+  @Get(":verificationId")
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<VerificationEntity> {
-    return this.verificationService.findOne(id);
+  async findOne(@Param("verificationId", new ParseUUIDPipe({ version: "4" })) verificationId: string): Promise<VerificationEntity> {
+    return this.verificationService.findOne(verificationId);
   }
 
-  @Get("email/:email")
+  @Patch(":verificationId")
   @HttpCode(HttpStatus.OK)
-  async findByEmail(@Param("email") email: string): Promise<VerificationEntity> {
-    return this.verificationService.findByEmail(email);
+  async update(@Param("verificationId", new ParseUUIDPipe({ version: "4" })) verificationId: string, @Body() dto: UpdateVerificationDto): Promise<VerificationEntity> {
+    return this.verificationService.update(verificationId, dto);
   }
 
-  @Get("token/:token")
-  @HttpCode(HttpStatus.OK)
-  async findByToken(@Param("token") token: string): Promise<VerificationEntity> {
-    return this.verificationService.findByToken(token);
-  }
-
-  @Patch(":id")
-  @HttpCode(HttpStatus.OK)
-  async update(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string, @Body() dto: UpdateVerificationDto): Promise<VerificationEntity> {
-    return this.verificationService.update(id, dto);
-  }
-
-  @Delete(":id")
+  @Delete(":verificationId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<void> {
-    await this.verificationService.remove(id);
+  async remove(@Param("verificationId", new ParseUUIDPipe({ version: "4" })) verificationId: string): Promise<void> {
+    await this.verificationService.remove(verificationId);
   }
 }

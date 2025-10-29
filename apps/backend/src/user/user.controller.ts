@@ -32,19 +32,19 @@ export class UserController {
 
   @Get(":userId")
   @HttpCode(HttpStatus.OK)
-  findOne(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<UserEntity> {
-    return this.userService.findOne(id);
+  findOne(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<UserEntity> {
+    return this.userService.findOne(userId);
   }
 
   @Patch(":userId")
   @HttpCode(HttpStatus.OK)
-  update(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
-    return this.userService.update(id, dto);
+  update(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
+    return this.userService.update(userId, dto);
   }
 
   @Delete(":userId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param("id", new ParseUUIDPipe({ version: "4" })) id: string): Promise<void> {
-    await this.userService.remove(id);
+  async remove(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<void> {
+    await this.userService.remove(userId);
   }
 }
