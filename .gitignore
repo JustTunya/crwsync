@@ -41,3 +41,6 @@ coverage/
 
 # === Miscellaneous ===
 npm-debug.log*
+
+# === Other ===
+*.bat
