@@ -1,3 +1,4 @@
+import { Role } from "@crwsync/types";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from "typeorm";
 
 @Entity({ name: "users" })
@@ -25,8 +26,11 @@ export class UserEntity {
   @Column({ type: "text", nullable: true })
   avatar_key?: string | null;
 
-  @Column({ type: "uuid", nullable: true })
-  system_role_id?: string | null;
+  @Column({ type: "enum", enum: Role, default: Role.MEMBER })
+  role!: Role;
+
+  @Column({ type: "int", default: 1 })
+  role_version!: number;
 
   @Column({ type: "text" })
   password_hash!: string;
@@ -36,6 +40,9 @@ export class UserEntity {
 
   @Column({ type: "timestamptz", nullable: true })
   email_verified_at?: Date | null;
+
+  @Column({ type: "timestamptz", default: () => "now()" })
+  role_changed_at!: Date;
 
   @Column({ type: "timestamptz", nullable: true })
   last_login?: Date | null;
