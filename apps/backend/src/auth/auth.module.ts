@@ -7,6 +7,7 @@ import { AuthService } from "src/auth/auth.service";
 import { EmailModule } from "src/email/email.module";
 import { SessionModule } from "src/session/session.module";
 import { VerificationModule } from "src/email-verification/email-verification.module";
+import { ThrottlerModule } from "@nestjs/throttler";
 
 @Module({
   imports: [
@@ -18,10 +19,15 @@ import { VerificationModule } from "src/email-verification/email-verification.mo
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (config: ConfigService) => ({
-        secret: config.get<string>("JWT_SECRET"),
-        signOptions: { expiresIn: config.get<string | number>("JWT_EXPIRES_IN", "1h") },
-      }),
+      useFactory: async (config: ConfigService) => {
+        const secret = config.get<string>("JWT_SECRET");
+        const expiresIn = config.get<string>("JWT_ACCESS_TOKEN_EXPIRATION");
+
+        return {
+          secret: secret,
+          signOptions: { expiresIn },
+        };
+      },
     }),
   ],
   providers: [AuthService],

@@ -70,7 +70,7 @@ export class SessionController {
 
   @Post("rotate")
   @HttpCode(HttpStatus.OK)
-  rotate(@Body() dto: RotateSessionDto, @Req() req: Request): Promise<SessionEntity> {
+  rotate(@Body() dto: RotateSessionDto, @Req() req: Request): Promise<{ session: SessionEntity, refreshToken: string }> {
     return this.sessionService.rotate(dto, req);
   }
 

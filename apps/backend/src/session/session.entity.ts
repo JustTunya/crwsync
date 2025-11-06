@@ -17,6 +17,9 @@ export class SessionEntity {
   @Column({ type: "text" })
   refresh_token_hash!: string;
 
+  @Column({ type: "boolean", default: false })
+  persistent!: boolean;
+
   @Column({ type: "timestamptz" })
   created_at!: Date;
 

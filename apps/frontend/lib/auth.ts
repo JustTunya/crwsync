@@ -1,47 +1,25 @@
 import { cookies } from "next/headers";
 import { SessionUserType } from "@crwsync/types";
-
-const API = process.env.NEXT_PUBLIC_API_URL!;
+import { getCurrentUser, verifySession } from "@/services/auth.service";
 
 export async function getSession(): Promise<SessionUserType | undefined> {
   try {
-    const cookie = (await cookies()).toString();
-
-    const res = await fetch(`${API}/sessions/verify`, {
-      method: "POST",
-      headers: { cookie },
-      cache: "no-store",
-      credentials: "include",
-    });
-    if (!res.ok) {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
+    const refreshToken = cookieStore.get("refresh_token")?.value;
+    
+    if (!accessToken || !refreshToken) {
       return undefined;
     }
-    const data = await res.json();
 
-    if (data && data.email && data.username) {
-      return data as SessionUserType;
-    }
+    const res = await verifySession(refreshToken);
 
-    if (data?.userId) {
-      const userRes = await fetch(`${API}/users/${data.userId}`, {
-        headers: { cookie },
-        cache: "no-store",
-        credentials: "include",
-      });
-      if (!userRes.ok) {
+    if (res && res.user_id) {
+      const user = await getCurrentUser(res.user_id);
+      if (!user) {
         return undefined;
       }
-      const user = await userRes.json();
-      const sessionUser: SessionUserType = {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        avatar_key: user.avatar_key,
-        role: user.role,
-      };
-      return sessionUser;
+      return user;
     }
 
     return undefined;

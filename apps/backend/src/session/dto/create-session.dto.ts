@@ -1,4 +1,4 @@
-import { IsUUID } from "class-validator";
+import { IsBoolean, IsOptional, IsUUID } from "class-validator";
 
 
 export class CreateSessionDto {
@@ -7,4 +7,8 @@ export class CreateSessionDto {
 
   @IsUUID()
   user_id!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  persistent?: boolean;
 }

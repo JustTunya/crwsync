@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Request } from "express";
@@ -28,13 +28,16 @@ export class SessionService {
 
     const token = randomBytes(32).toString("hex");
     const hashedToken = createHash('sha256').update(token).digest('hex');
-    const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const exp = dto.persistent
+      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     const session = await this.sRepo.manager.transaction(async (m) => {
       const entity = m.create(SessionEntity, {
         id: dto.id,
         user_id: dto.user_id,
         refresh_token_hash: hashedToken,
+        persistent: dto.persistent,
         expires_at: exp,
         ip: getClientIp(req) || undefined,
         ua: getUserAgent(req) || undefined,
@@ -77,20 +80,20 @@ export class SessionService {
 
   async verify(dto: VerifySessionDto): Promise<SessionEntity> {
     const hashedToken = createHash('sha256').update(dto.token).digest('hex');
-    const session = await this.sRepo.findOne({ where: { user_id: dto.user_id, refresh_token_hash: hashedToken } });
+    const session = await this.sRepo.findOne({ where: { refresh_token_hash: hashedToken } });
     if (!session) {
-      throw new NotFoundException(`Session with userId ${dto.user_id} and token ${dto.token} not found`);
+      throw new UnauthorizedException(`Invalid session token ${dto.token}`);
     }
     if (session.expires_at && session.expires_at < new Date()) {
-      throw new BadRequestException(`Session with userId ${dto.user_id} and token ${dto.token} has expired`);
+      throw new UnauthorizedException(`Session with token ${dto.token} has expired`);
     }
     if (session.revoked_at) {
-      throw new BadRequestException(`Session with userId ${dto.user_id} and token ${dto.token} has been revoked`);
+      throw new UnauthorizedException(`Session with token ${dto.token} has been revoked`);
     }
     return session;
   }
 
-  async rotate(dto: RotateSessionDto, req: Request): Promise<SessionEntity> {
+  async rotate(dto: RotateSessionDto, req: Request): Promise<{ session: SessionEntity, refreshToken: string }> {
     const oldHashedToken = createHash('sha256').update(dto.old_token).digest('hex');
     const oldSession = await this.sRepo.findOne({ where: { user_id: dto.user_id, refresh_token_hash: oldHashedToken } });
     if (!oldSession) {
@@ -103,15 +106,15 @@ export class SessionService {
       throw new BadRequestException(`Old session with userId ${dto.user_id} and token ${dto.old_token} has been revoked`);
     }
 
-    const { session: newSession } = await this.create({
+    const { session: newSession, token: refreshToken } = await this.create({
       id: randomUUID(),
-      user_id: dto.user_id
+      user_id: dto.user_id,
+      persistent: dto.persistent,
     }, req);
 
-    oldSession.revoked_at = new Date();
-    await this.sRepo.save(oldSession);
+    await this.revoke(oldSession.id);
 
-    return newSession;
+    return { session: newSession, refreshToken };
   }
 
   async revoke(id: string): Promise<void> {
@@ -132,6 +135,14 @@ export class SessionService {
       .delete()
       .from(SessionEntity)
       .where("expires_at IS NOT NULL AND expires_at < NOW()")
+      .execute();
+  }
+
+  async purgeRevoked(cutoff: Date): Promise<void> {
+    await this.sRepo.createQueryBuilder()
+      .delete()
+      .from(SessionEntity)
+      .where("revoked_at IS NOT NULL AND revoked_at < :cutoff", { cutoff })
       .execute();
   }
 }

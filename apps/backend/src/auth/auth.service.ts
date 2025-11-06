@@ -43,15 +43,19 @@ export class AuthService {
     return user;
   }
 
-  async signin(user: UserEntity, req: Request): Promise<JwtResponse> {
+  async signin(user: UserEntity, req: Request, rememberMe?: boolean): Promise<JwtResponse> {
+    const verification = await this.verificationService.findByEmail(user.email);
+
+    if (verification && verification.status !== "verified") {
+      throw new BadRequestException(`Email ${user.email} is not verified`);
+    }
+
     const jti = randomUUID();
     const payload = { jti, sub: user.id, email: user.email };
 
-    const accessToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_ACCESS_TOKEN_SECRET!,
-      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION!,
-    });
-    const { token: refreshToken } = await this.sessionService.create({ id: jti, user_id: user.id }, req);
+    const accessToken = this.jwtService.sign(payload);
+
+    const { token: refreshToken } = await this.sessionService.create({ id: jti, user_id: user.id, persistent: !!rememberMe }, req);
 
     await this.userService.update(user.id, { last_login: new Date().toISOString() });
 
@@ -69,5 +73,29 @@ export class AuthService {
     }
 
     await this.sessionService.revoke(dto.sessionId);
+  }
+
+  async refresh(req: Request): Promise<{ accessToken: string, refreshToken: string, persistent?: boolean }> {
+    const oldRefreshToken = req.cookies["refresh_token"];
+
+    if (!oldRefreshToken) {
+      throw new BadRequestException("Refresh token not found");
+    }
+
+    const session = await this.sessionService.verify({ token: oldRefreshToken });
+
+    const { session: newSession, refreshToken } = await this.sessionService.rotate({
+      user_id: session.user_id,
+      old_token: oldRefreshToken,
+      persistent: session.persistent,
+    }, req);
+
+    const user = await this.userService.findOne(session.user_id);
+
+    const accessToken = this.jwtService.sign(
+      { jti: newSession.id, sub: user.id, email: user.email }
+    );
+
+    return { accessToken, refreshToken, persistent: newSession.persistent };
   }
 }

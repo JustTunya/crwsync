@@ -8,6 +8,7 @@ import { CreatePasswordResetDto } from "src/password-reset/dto/create-password-r
 import { UpdatePasswordResetDto } from "src/password-reset/dto/update-password-reset.dto";
 import { UserEntity } from "src/user/user.entity";
 import { EmailService } from "src/email/email.service";
+import { SessionService } from "src/session/session.service";
 
 @Injectable()
 export class PasswordResetService {
@@ -16,7 +17,8 @@ export class PasswordResetService {
     private readonly prRepo: Repository<PasswordResetEntity>,
     @InjectRepository(UserEntity)
     private readonly uRepo: Repository<UserEntity>,
-    private readonly emailService: EmailService
+    private readonly emailService: EmailService,
+    private readonly sessionService: SessionService
   ) {}
 
   async create(dto: CreatePasswordResetDto): Promise<PasswordResetEntity> {
@@ -122,5 +124,7 @@ export class PasswordResetService {
     passwordReset.status = "used";
     passwordReset.reset_at = new Date();
     await this.prRepo.save(passwordReset);
+
+    await this.sessionService.revokeAll(user.id);
   }
 }

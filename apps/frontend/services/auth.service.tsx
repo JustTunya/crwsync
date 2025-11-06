@@ -36,7 +36,7 @@ export async function signup(_prev: SignupState, data: SignupPayload): Promise<S
 
 export async function signin(_prev: SigninState, data: SigninPayload): Promise<SigninState> {
   try {
-    await api.post("/auth/signin", data);
+    await api.post("/auth/signin", data, { withCredentials: true });
     return { success: true, errors: {}, message: "Signin successful" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -155,9 +155,18 @@ export async function getResetToken(token: string): Promise<PasswordResetType | 
   }
 }
 
-export async function verifySession(): Promise<SessionType | undefined> {
+export async function verifySession(token: string): Promise<SessionType | undefined> {
   try {
-    const response = await api.get("/sessions/verify");
+    const response = await api.post("/sessions/verify", { token }, { withCredentials: true });
+    return response.data;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function getCurrentUser(userId: string): Promise<SessionUserType | undefined> {
+  try {
+    const response = await api.get(`/users/${userId}`);
     return response.data;
   } catch {
     return undefined;
