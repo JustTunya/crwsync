@@ -9,6 +9,7 @@ import { UpdateSessionDto } from "src/session/dto/update-session.dto";
 import { RotateSessionDto } from "src/session/dto/rotate-session.dto";
 import { getClientIp, getUserAgent } from "src/session/session.utils";
 import { UserEntity } from "src/user/user.entity";
+import { VerifySessionDto } from "./dto/verify-session.dto";
 
 @Injectable()
 export class SessionService {
@@ -74,17 +75,17 @@ export class SessionService {
     }
   }
 
-  async verify(userId: string, token: string): Promise<SessionEntity> {
-    const hashedToken = createHash('sha256').update(token).digest('hex');
-    const session = await this.sRepo.findOne({ where: { user_id: userId, refresh_token_hash: hashedToken } });
+  async verify(dto: VerifySessionDto): Promise<SessionEntity> {
+    const hashedToken = createHash('sha256').update(dto.token).digest('hex');
+    const session = await this.sRepo.findOne({ where: { user_id: dto.user_id, refresh_token_hash: hashedToken } });
     if (!session) {
-      throw new NotFoundException(`Session with userId ${userId} and token ${token} not found`);
+      throw new NotFoundException(`Session with userId ${dto.user_id} and token ${dto.token} not found`);
     }
     if (session.expires_at && session.expires_at < new Date()) {
-      throw new BadRequestException(`Session with userId ${userId} and token ${token} has expired`);
+      throw new BadRequestException(`Session with userId ${dto.user_id} and token ${dto.token} has expired`);
     }
     if (session.revoked_at) {
-      throw new BadRequestException(`Session with userId ${userId} and token ${token} has been revoked`);
+      throw new BadRequestException(`Session with userId ${dto.user_id} and token ${dto.token} has been revoked`);
     }
     return session;
   }

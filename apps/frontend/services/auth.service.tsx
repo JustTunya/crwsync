@@ -9,8 +9,11 @@ import {
   ResetPasswordState,
   MailVerificationType,
   PasswordResetType,
-  ResetPasswordPayload
+  ResetPasswordPayload,
+  SessionUserType,
+  SessionType
 } from "@crwsync/types";
+import { u } from "framer-motion/client";
 
 const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL!,
@@ -147,6 +150,15 @@ export async function getResetToken(token: string): Promise<PasswordResetType | 
   try {
     const response = await api.get(`/password-resets?token=${token}`);
     return response.data[0];
+  } catch {
+    return undefined;
+  }
+}
+
+export async function verifySession(): Promise<SessionType | undefined> {
+  try {
+    const response = await api.get("/sessions/verify");
+    return response.data;
   } catch {
     return undefined;
   }

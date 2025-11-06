@@ -1,4 +1,4 @@
-import { IsUUID, IsIP, IsOptional, IsString, Matches } from "class-validator";
+import { IsUUID } from "class-validator";
 
 
 export class CreateSessionDto {

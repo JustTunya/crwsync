@@ -20,6 +20,7 @@ import { SessionEntity } from "src/session/session.entity";
 import { CreateSessionDto } from "src/session/dto/create-session.dto";
 import { UpdateSessionDto } from "src/session/dto/update-session.dto";
 import { RotateSessionDto } from "src/session/dto/rotate-session.dto";
+import { VerifySessionDto } from "./dto/verify-session.dto";
 
 @Controller("sessions")
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -62,10 +63,9 @@ export class SessionController {
   @Post("verify")
   @HttpCode(HttpStatus.OK)
   verify(
-    @Query("userId", new ParseUUIDPipe({ version: "4" })) userId: string,
-    @Query("token") token: string
+    @Body() dto: VerifySessionDto
   ): Promise<SessionEntity> {
-    return this.sessionService.verify(userId, token);
+    return this.sessionService.verify(dto);
   }
 
   @Post("rotate")

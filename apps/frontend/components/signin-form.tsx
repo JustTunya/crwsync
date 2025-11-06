@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useActionState, startTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useActionState, startTransition, use } from "react";
 import { motion } from "framer-motion";
 import { SigninState, SigninPayload } from "@crwsync/types";
 import { signin } from "@/services/auth.service";
@@ -20,6 +20,9 @@ const initState: SigninState = {
 };
 
 export function SigninForm() {
+  const router = useRouter();
+  const params = useSearchParams();
+
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -33,6 +36,13 @@ export function SigninForm() {
       dispatch(payload);
     });
   };
+
+  useEffect(() => {
+    if (state.success) {
+      const next = params.get("next");
+      router.replace(next ?? "/dash");
+    }
+  }, [state.success, router, params]);
 
   return (
     <GlassBox>
