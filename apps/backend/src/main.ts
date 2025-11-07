@@ -1,4 +1,5 @@
 import { NestFactory } from "@nestjs/core";
+import cookieParser from "cookie-parser";
 import { AppModule } from "src/app.module";
 
 async function bootstrap() {
@@ -12,6 +13,7 @@ async function bootstrap() {
   });
   // Enable trust proxy for correct client IP detection behind proxies
   (app.getHttpAdapter().getInstance() as any).set("trust proxy", true);
+  app.use(cookieParser());
   await app.listen(process.env.PORT ?? 8080);
 }
 bootstrap();

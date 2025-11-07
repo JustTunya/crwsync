@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { JwtService } from "@nestjs/jwt";
 import { JwtResponse } from "@crwsync/types";
 import { compare } from "bcrypt";
-import { Request } from "express";
+import { Request, Response } from "express";
 import { randomUUID } from "crypto";
 import { VerificationService } from "src/email-verification/email-verification.service";
 import { SessionService } from "src/session/session.service";
@@ -62,17 +62,24 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async signout(dto: SignoutDto): Promise<void> {
-    const session = await this.sessionService.findOne(dto.sessionId);
+  async signout(req: Request, res: Response): Promise<void> {
+    const accessToken = req.cookies["access_token"];
+    const refreshToken = req.cookies["refresh_token"];
 
-    if (!session) {
-      throw new NotFoundException(`Session with id ${dto.sessionId} not found`);
+    try {
+      if (refreshToken) {
+        const session = await this.sessionService.verify({ token: refreshToken });
+        await this.sessionService.revoke(session.id);
+      } else if (accessToken) {
+        const payload = this.jwtService.verify<{ jti: string, sub: string, email: string }>(accessToken);
+        await this.sessionService.revoke(payload.jti);
+      }
+    } catch (error) {
+      // Handle error (e.g., log it)
+    } finally {
+      res.clearCookie("access_token", { path: "/" });
+      res.clearCookie("refresh_token", { path: "/" });
     }
-    if (session.user_id !== dto.userId) {
-      throw new BadRequestException(`Session with id ${dto.sessionId} does not belong to user with id ${dto.userId}`);
-    }
-
-    await this.sessionService.revoke(dto.sessionId);
   }
 
   async refresh(req: Request): Promise<{ accessToken: string, refreshToken: string, persistent?: boolean }> {

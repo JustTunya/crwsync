@@ -43,14 +43,16 @@ export class AuthController {
     res.cookie("access_token", accessToken, {
       httpOnly: true,
       secure: this.config.get<string>("NODE_ENV") === "production",
-      sameSite: "strict",
+      sameSite: "lax",
+      path: "/",
       maxAge: accessMaxAge,
     });
 
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       secure: this.config.get<string>("NODE_ENV") === "production",
-      sameSite: "strict",
+      sameSite: "lax",
+      path: "/",
       maxAge: refreshMaxAge,
     });
 
@@ -59,11 +61,8 @@ export class AuthController {
 
   @Post("signout")
   @HttpCode(HttpStatus.OK)
-  async signout(@Body() dto: SignoutDto, @Res() res: Response) {
-    res.clearCookie("access_token");
-    res.clearCookie("refresh_token");
-    
-    return this.authService.signout(dto);
+  async signout(@Req() req: Request, @Res() res: Response) {
+    return this.authService.signout(req, res);
   }
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
@@ -83,14 +82,16 @@ export class AuthController {
     res.cookie("access_token", accessToken, {
       httpOnly: true,
       secure: this.config.get<string>("NODE_ENV") === "production",
-      sameSite: "strict",
+      sameSite: "lax",
+      path: "/",
       maxAge: accessMaxAge,
     });
 
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       secure: this.config.get<string>("NODE_ENV") === "production",
-      sameSite: "strict",
+      sameSite: "lax",
+      path: "/",
       maxAge: refreshMaxAge,
     });
 
