@@ -35,18 +35,9 @@ export class AuthController {
 
     const { accessToken, refreshToken } = await this.authService.signin(user, req, dto.rememberMe);
 
-    const accessMaxAge = 15 * 60 * 1000; // 15 minutes
     const refreshMaxAge = dto.rememberMe
       ? 30 * 24 * 60 * 60 * 1000 // 30 days
       : 7 * 24 * 60 * 60 * 1000; // 7 days
-
-    res.cookie("access_token", accessToken, {
-      httpOnly: true,
-      secure: this.config.get<string>("NODE_ENV") === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: accessMaxAge,
-    });
 
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
@@ -56,7 +47,7 @@ export class AuthController {
       maxAge: refreshMaxAge,
     });
 
-    return { message: "Signin successful" };
+    return { accessToken, message: "Signin successful" };
   }
 
   @Post("signout")
@@ -74,18 +65,9 @@ export class AuthController {
   ) {
     const { accessToken, refreshToken, persistent } = await this.authService.refresh(req);
 
-    const accessMaxAge = 15 * 60 * 1000; // 15 minutes
     const refreshMaxAge = persistent
       ? 30 * 24 * 60 * 60 * 1000 // 30 days
       : 7 * 24 * 60 * 60 * 1000; // 7 days
-
-    res.cookie("access_token", accessToken, {
-      httpOnly: true,
-      secure: this.config.get<string>("NODE_ENV") === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: accessMaxAge,
-    });
 
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
@@ -95,6 +77,6 @@ export class AuthController {
       maxAge: refreshMaxAge,
     });
 
-    return { message: "Tokens refreshed" };
+    return { accessToken, message: "Tokens refreshed" };
   }
 }

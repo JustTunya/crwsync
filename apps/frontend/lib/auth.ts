@@ -1,28 +1,34 @@
 import { cookies } from "next/headers";
+import { jwtDecode } from "jwt-decode";
 import { SessionUserType } from "@crwsync/types";
-import { getCurrentUser, verifySession } from "@/services/auth.service";
+import axios, { AxiosInstance } from "axios";
+
+const api: AxiosInstance = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL!,
+  withCredentials: true,
+});
 
 export async function getSession(): Promise<SessionUserType | undefined> {
   try {
     const cookieStore = await cookies();
-    const accessToken = cookieStore.get("access_token")?.value;
     const refreshToken = cookieStore.get("refresh_token")?.value;
-    
-    if (!accessToken || !refreshToken) {
+
+    if (!refreshToken) {
       return undefined;
     }
 
-    const res = await verifySession(refreshToken);
+    const res = await api.post("/auth/refresh");
+    const accessToken = res.data.accessToken as string;
 
-    if (res && res.user_id) {
-      const user = await getCurrentUser(res.user_id);
-      if (!user) {
-        return undefined;
-      }
-      return user;
-    }
+    const { sub } = jwtDecode<{ sub: string }>(accessToken);
 
-    return undefined;
+    const userRes = await api.get(`/users/${sub}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return userRes.data as SessionUserType;
   } catch {
     return undefined;
   }

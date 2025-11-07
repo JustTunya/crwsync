@@ -13,11 +13,54 @@ import {
   SessionUserType,
   SessionType
 } from "@crwsync/types";
-import { u } from "framer-motion/client";
+import { setAccessToken, getAccessToken } from "@/services/token.store";
+import { s } from "framer-motion/client";
 
 const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL!,
   withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+  const token = getAccessToken();
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers["Authorization"] = `Bearer ${token}`;
+  }
+  return config;
+});
+
+let isRefreshing = false;
+let pending: Array<(t: string) => void> = [];
+
+api.interceptors.response.use((resp) => resp, async (error) => {
+  const originalRequest = error.config;
+  if (error.response?.status === 401 && !originalRequest._retry) {
+    if (isRefreshing) {
+      return new Promise((resolve) => {
+        pending.push((token: string) => {
+          originalRequest.headers["Authorization"] = `Bearer ${token}`;
+          resolve(api(originalRequest));
+        });
+      });
+    }
+  }
+  originalRequest._retry = true;
+  isRefreshing = true;
+  try {
+    const response = await api.post("/auth/refresh");
+    const newToken = response.data.accessToken;
+    setAccessToken(newToken);
+    api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+    originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+    pending.forEach((callback) => callback(newToken));
+    pending = [];
+    return api(originalRequest);
+  } catch (err) {
+    return Promise.reject(err);
+  } finally {
+    isRefreshing = false;
+  }
 });
 
 export async function signup(_prev: SignupState, data: SignupPayload): Promise<SignupState> {
@@ -36,7 +79,9 @@ export async function signup(_prev: SignupState, data: SignupPayload): Promise<S
 
 export async function signin(_prev: SigninState, data: SigninPayload): Promise<SigninState> {
   try {
-    await api.post("/auth/signin", data, { withCredentials: true });
+    const resp = await api.post("/auth/signin", data, { withCredentials: true });
+    const token = resp.data.accessToken;
+    setAccessToken(token);
     return { success: true, errors: {}, message: "Signin successful" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -49,6 +94,7 @@ export async function signin(_prev: SigninState, data: SigninPayload): Promise<S
 
 export async function signout(): Promise<{ success: boolean; message?: string }> {
   try {
+    setAccessToken(null);
     await api.post("/auth/signout");
     return { success: true, message: "Signout successful" };
   } catch (error) {
