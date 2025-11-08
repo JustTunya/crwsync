@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import { AuthService } from "src/auth/auth.service";
 import { SignupDto } from "src/auth/dto/signup.dto";
 import { SigninDto } from "src/auth/dto/signin.dto";
-import { SignoutDto } from "src/auth/dto/signout.dto";
 import { Throttle } from "@nestjs/throttler";
 import { ConfigService } from "@nestjs/config";
 
@@ -42,7 +41,7 @@ export class AuthController {
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       secure: this.config.get<string>("NODE_ENV") === "production",
-      sameSite: "lax",
+      sameSite: this.config.get<string>("NODE_ENV") === "production" ? "none" : "lax",
       path: "/",
       maxAge: refreshMaxAge,
     });
@@ -56,7 +55,7 @@ export class AuthController {
     return this.authService.signout(req, res);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  // @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
   async refresh(
@@ -72,7 +71,7 @@ export class AuthController {
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       secure: this.config.get<string>("NODE_ENV") === "production",
-      sameSite: "lax",
+      sameSite: this.config.get<string>("NODE_ENV") === "production" ? "none" : "lax",
       path: "/",
       maxAge: refreshMaxAge,
     });

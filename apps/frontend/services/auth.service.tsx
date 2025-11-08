@@ -1,4 +1,5 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import { jwtDecode }  from "jwt-decode";
 import { 
   SignupState, 
   SignupPayload, 
@@ -14,53 +15,78 @@ import {
   SessionType
 } from "@crwsync/types";
 import { setAccessToken, getAccessToken } from "@/services/token.store";
-import { s } from "framer-motion/client";
 
 const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL!,
   withCredentials: true,
 });
 
+let refreshPromise: Promise<{ accessToken: string } | undefined> | undefined = undefined;
+
+const isJwtExpired = (token: string): boolean => {
+  try {
+    const [, payload] = token.split(".");
+    const decoded: { exp: number } = jwtDecode(payload);
+    const currentTime = Math.floor(Date.now() / 1000);
+    return decoded.exp < currentTime;
+  } catch {
+    return true;
+  }
+};
+
 api.interceptors.request.use((config) => {
   const token = getAccessToken();
-  if (token) {
+
+  if (token && !isJwtExpired(token)) {
     config.headers = config.headers || {};
-    config.headers["Authorization"] = `Bearer ${token}`;
+    (config.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+    return config;
   }
+
+  if (!refreshPromise) {
+    refreshPromise = refreshTokens();
+  }
+
+  const newToken = refreshPromise.finally(() => {
+    refreshPromise = undefined;
+  });
+
+  if (newToken) {
+    config.headers = config.headers || {};
+    (config.headers as Record<string, string>)["Authorization"] = `Bearer ${newToken}`;
+  }
+
   return config;
 });
 
-let isRefreshing = false;
-let pending: Array<(t: string) => void> = [];
-
 api.interceptors.response.use((resp) => resp, async (error) => {
-  const originalRequest = error.config;
-  if (error.response?.status === 401 && !originalRequest._retry) {
-    if (isRefreshing) {
-      return new Promise((resolve) => {
-        pending.push((token: string) => {
-          originalRequest.headers["Authorization"] = `Bearer ${token}`;
-          resolve(api(originalRequest));
-        });
-      });
+  const status  = error?.response?.status as number | undefined;
+  const ogRequest: (AxiosRequestConfig & { _retry?: boolean }) | undefined = error?.config;
+
+  const url = ogRequest?.url || "";
+  if (!ogRequest || url.includes("/auth/refresh")) {
+    return Promise.reject(error);
+  }
+
+  if (status === 401 && !ogRequest._retry) {
+    ogRequest._retry = true;
+
+    if (!refreshPromise) {
+      refreshPromise = refreshTokens();
+    }
+
+    const newTokens = await refreshPromise.finally(() => {
+      refreshPromise = undefined;
+    });
+
+    if (newTokens?.accessToken) {
+      ogRequest.headers = ogRequest.headers || {};
+      (ogRequest.headers as Record<string, string>)["Authorization"] = `Bearer ${newTokens.accessToken}`;
+      return api(ogRequest);
     }
   }
-  originalRequest._retry = true;
-  isRefreshing = true;
-  try {
-    const response = await api.post("/auth/refresh");
-    const newToken = response.data.accessToken;
-    setAccessToken(newToken);
-    api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
-    originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-    pending.forEach((callback) => callback(newToken));
-    pending = [];
-    return api(originalRequest);
-  } catch (err) {
-    return Promise.reject(err);
-  } finally {
-    isRefreshing = false;
-  }
+
+  return Promise.reject(error);
 });
 
 export async function signup(_prev: SignupState, data: SignupPayload): Promise<SignupState> {
@@ -214,6 +240,17 @@ export async function getCurrentUser(userId: string): Promise<SessionUserType | 
   try {
     const response = await api.get(`/users/${userId}`);
     return response.data;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function refreshTokens(): Promise<{ accessToken: string } | undefined> {
+  try {
+    const response = await api.post("/auth/refresh", {});
+    const newToken = response.data.accessToken;
+    setAccessToken(newToken);
+    return { accessToken: newToken };
   } catch {
     return undefined;
   }

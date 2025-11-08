@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { JwtResponse } from "@crwsync/types";
 import { compare } from "bcrypt";
@@ -9,8 +9,7 @@ import { SessionService } from "src/session/session.service";
 import { UserService } from "src/user/user.service";
 import { UserEntity } from "src/user/user.entity";
 import { SigninDto } from "src/auth/dto/signin.dto";
-import { SignupDto } from "./dto/signup.dto";
-import { SignoutDto } from "./dto/signout.dto";
+import { SignupDto } from "src/auth/dto/signup.dto";
 
 @Injectable()
 export class AuthService {
@@ -90,6 +89,10 @@ export class AuthService {
     }
 
     const session = await this.sessionService.verify({ token: oldRefreshToken });
+
+    if (!session) {
+      throw new BadRequestException("Invalid refresh token");
+    }
 
     const { session: newSession, refreshToken } = await this.sessionService.rotate({
       user_id: session.user_id,
