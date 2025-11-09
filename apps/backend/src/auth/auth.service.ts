@@ -10,6 +10,8 @@ import { UserService } from "src/user/user.service";
 import { UserEntity } from "src/user/user.entity";
 import { SigninDto } from "src/auth/dto/signin.dto";
 import { SignupDto } from "src/auth/dto/signup.dto";
+import { SessionUserDto } from "./dto/session-user.dto";
+import { RefreshDto } from "./dto/refresh.dto";
 
 // --- COOKIE SETTINGS ---
 const isProduction = process.env.NODE_ENV === "production";
@@ -96,7 +98,7 @@ export class AuthService {
     }
   }
 
-  async refresh(req: Request): Promise<{ accessToken: string, refreshToken: string, persistent?: boolean }> {
+  async refresh(req: Request): Promise<RefreshDto> {
     const oldRefreshToken = req.cookies["crw-rt"];
 
     if (!oldRefreshToken) {
@@ -124,7 +126,7 @@ export class AuthService {
     return { accessToken, refreshToken, persistent: newSession.persistent };
   }
 
-  async me(req: Request): Promise<UserEntity> {
+  async me(req: Request): Promise<SessionUserDto> {
     const refreshToken = req.cookies["crw-rt"];
 
     if (!refreshToken) {
@@ -133,7 +135,15 @@ export class AuthService {
 
     const session = await this.sessionService.verify({ token: refreshToken });
 
-    const user = await this.userService.findOne(session.user_id);
+    if (!session) {
+      throw new BadRequestException("Invalid refresh token");
+    }
+
+    const user = await this.userService.findOne(session.user_id) as SessionUserDto;
+
+    if (!user) {
+      throw new BadRequestException("User not found");
+    }
 
     return user;
   }

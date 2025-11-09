@@ -1,5 +1,5 @@
-import { Role } from "@crwsync/types";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from "typeorm";
+import { RoleEnum } from "@crwsync/types";
 
 @Entity({ name: "users" })
 @Index("idx_user_email", ["email"], { unique: true })
@@ -26,8 +26,8 @@ export class UserEntity {
   @Column({ type: "text", nullable: true })
   avatar_key?: string | null;
 
-  @Column({ type: "enum", enum: Role, default: Role.MEMBER })
-  role!: Role;
+  @Column({ type: "enum", enum: RoleEnum, default: RoleEnum.MEMBER })
+  role!: RoleEnum;
 
   @Column({ type: "int", default: 1 })
   role_version!: number;

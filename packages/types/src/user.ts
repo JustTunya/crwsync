@@ -1,4 +1,4 @@
-import { Role } from "./role";
+import { RoleEnum } from "./role";
 
 export interface UserType {
   id: string;
@@ -8,7 +8,7 @@ export interface UserType {
   lastName: string;
   birthdate: string;
   avatar_key?: string;
-  role: Role;
+  role: RoleEnum;
   role_version: number;
   password_hash: string;
   last_password_change?: string;
@@ -26,5 +26,5 @@ export interface SessionUserType {
   firstName: string;
   lastName: string;
   avatar_key?: string;
-  role: Role;
+  role: RoleEnum;
 }
