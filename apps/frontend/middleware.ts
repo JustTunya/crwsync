@@ -5,7 +5,7 @@ const PROTECTED = ["/dash"];
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  const hasSession = req.cookies.get("refresh_token") !== undefined;
+  const hasSession = req.cookies.get("crw-rt") !== undefined;
 
   const isProtected = PROTECTED.some((path) => pathname.startsWith(path));
   const isAuthPage = pathname.startsWith("/auth");

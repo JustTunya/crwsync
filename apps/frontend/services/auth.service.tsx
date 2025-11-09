@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
-import { jwtDecode }  from "jwt-decode";
 import { 
   SignupState, 
   SignupPayload, 
@@ -14,75 +13,45 @@ import {
   SessionUserType,
   SessionType
 } from "@crwsync/types";
-import { setAccessToken, getAccessToken } from "@/services/token.store";
 
 const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL!,
   withCredentials: true,
 });
 
-let refreshPromise: Promise<{ accessToken: string } | undefined> | undefined = undefined;
-
-const isJwtExpired = (token: string): boolean => {
-  try {
-    const [, payload] = token.split(".");
-    const decoded: { exp: number } = jwtDecode(payload);
-    const currentTime = Math.floor(Date.now() / 1000);
-    return decoded.exp < currentTime;
-  } catch {
-    return true;
-  }
-};
-
-api.interceptors.request.use((config) => {
-  const token = getAccessToken();
-
-  if (token && !isJwtExpired(token)) {
-    config.headers = config.headers || {};
-    (config.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-    return config;
-  }
-
-  if (!refreshPromise) {
-    refreshPromise = refreshTokens();
-  }
-
-  const newToken = refreshPromise.finally(() => {
-    refreshPromise = undefined;
-  });
-
-  if (newToken) {
-    config.headers = config.headers || {};
-    (config.headers as Record<string, string>)["Authorization"] = `Bearer ${newToken}`;
-  }
-
-  return config;
-});
+let refreshPromise: Promise<void> | undefined = undefined;
 
 api.interceptors.response.use((resp) => resp, async (error) => {
-  const status  = error?.response?.status as number | undefined;
+  const status = error?.response?.status as number | undefined;
   const ogRequest: (AxiosRequestConfig & { _retry?: boolean }) | undefined = error?.config;
 
-  const url = ogRequest?.url || "";
-  if (!ogRequest || url.includes("/auth/refresh")) {
+  if (!ogRequest) {
     return Promise.reject(error);
   }
 
-  if (status === 401 && !ogRequest._retry) {
+  const url = ogRequest.url || "";
+  const excludedPaths = ["/auth/refresh", "/auth/signin"];
+
+  if (status === 401 && !ogRequest._retry && !excludedPaths.includes(url)) {
     ogRequest._retry = true;
 
-    if (!refreshPromise) {
-      refreshPromise = refreshTokens();
-    }
-
-    const newTokens = await refreshPromise.finally(() => {
-      refreshPromise = undefined;
-    });
-
-    if (newTokens?.accessToken) {
-      ogRequest.headers = ogRequest.headers || {};
-      (ogRequest.headers as Record<string, string>)["Authorization"] = `Bearer ${newTokens.accessToken}`;
+    try {
+      if (!refreshPromise) {
+        const cookieHeader = (ogRequest.headers as Record<string, any> | undefined)?.["cookie"];
+        refreshPromise = api
+          .post("/auth/refresh", {}, cookieHeader
+            ? { headers: { cookie: cookieHeader } }
+            : undefined
+          )
+          .then(() => undefined)
+          .finally(() => {
+            refreshPromise = undefined;
+          });
+      }
+      await refreshPromise;
       return api(ogRequest);
+    } catch {
+      return Promise.reject(error);
     }
   }
 
@@ -105,9 +74,7 @@ export async function signup(_prev: SignupState, data: SignupPayload): Promise<S
 
 export async function signin(_prev: SigninState, data: SigninPayload): Promise<SigninState> {
   try {
-    const resp = await api.post("/auth/signin", data, { withCredentials: true });
-    const token = resp.data.accessToken;
-    setAccessToken(token);
+    await api.post("/auth/signin", data);
     return { success: true, errors: {}, message: "Signin successful" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -120,7 +87,6 @@ export async function signin(_prev: SigninState, data: SigninPayload): Promise<S
 
 export async function signout(): Promise<{ success: boolean; message?: string }> {
   try {
-    setAccessToken(null);
     await api.post("/auth/signout");
     return { success: true, message: "Signout successful" };
   } catch (error) {
@@ -249,7 +215,6 @@ export async function refreshTokens(): Promise<{ accessToken: string } | undefin
   try {
     const response = await api.post("/auth/refresh", {});
     const newToken = response.data.accessToken;
-    setAccessToken(newToken);
     return { accessToken: newToken };
   } catch {
     return undefined;

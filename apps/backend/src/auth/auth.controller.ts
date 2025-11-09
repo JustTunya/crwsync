@@ -1,10 +1,19 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UnauthorizedException, Req, Res } from "@nestjs/common"
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, UnauthorizedException, Req, Res } from "@nestjs/common"
 import { Request, Response } from "express";
 import { AuthService } from "src/auth/auth.service";
 import { SignupDto } from "src/auth/dto/signup.dto";
 import { SigninDto } from "src/auth/dto/signin.dto";
 import { Throttle } from "@nestjs/throttler";
 import { ConfigService } from "@nestjs/config";
+
+// --- COOKIE SETTINGS ---
+const isProduction = process.env.NODE_ENV === "production";
+const accessCookieDomain = isProduction ? process.env.ACCESS_COOKIE_DOMAIN : undefined;
+const refreshCookieDomain = isProduction ? process.env.REFRESH_COOKIE_DOMAIN : undefined;
+const accessMaxAge = 15 * 60 * 1000; // 15 minutes
+const refreshMaxAge = (persistent: boolean | undefined) => persistent
+  ? 30 * 24 * 60 * 60 * 1000 // 30 days
+  : 7 * 24 * 60 * 60 * 1000; // 7 days
 
 @Controller("auth")
 export class AuthController {
@@ -19,7 +28,7 @@ export class AuthController {
     return this.authService.signup(dto);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post("signin")
   @HttpCode(HttpStatus.OK)
   async signin(
@@ -34,19 +43,25 @@ export class AuthController {
 
     const { accessToken, refreshToken } = await this.authService.signin(user, req, dto.rememberMe);
 
-    const refreshMaxAge = dto.rememberMe
-      ? 30 * 24 * 60 * 60 * 1000 // 30 days
-      : 7 * 24 * 60 * 60 * 1000; // 7 days
-
-    res.cookie("refresh_token", refreshToken, {
+    res.cookie("crw-at", accessToken, {
       httpOnly: true,
-      secure: this.config.get<string>("NODE_ENV") === "production",
-      sameSite: this.config.get<string>("NODE_ENV") === "production" ? "none" : "lax",
+      secure: isProduction,
+      sameSite: "lax",
       path: "/",
-      maxAge: refreshMaxAge,
+      maxAge: accessMaxAge,
+      domain: accessCookieDomain,
     });
 
-    return { accessToken, message: "Signin successful" };
+    res.cookie("crw-rt", refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: refreshMaxAge(dto.rememberMe),
+      domain: refreshCookieDomain,
+    });
+
+    return { message: "Signin successful" };
   }
 
   @Post("signout")
@@ -55,7 +70,7 @@ export class AuthController {
     return this.authService.signout(req, res);
   }
 
-  // @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
   async refresh(
@@ -64,18 +79,49 @@ export class AuthController {
   ) {
     const { accessToken, refreshToken, persistent } = await this.authService.refresh(req);
 
+    const accessMaxAge = 15 * 60 * 1000; // 15 minutes
     const refreshMaxAge = persistent
       ? 30 * 24 * 60 * 60 * 1000 // 30 days
       : 7 * 24 * 60 * 60 * 1000; // 7 days
 
-    res.cookie("refresh_token", refreshToken, {
+    res.clearCookie("crw-at", {
       httpOnly: true,
-      secure: this.config.get<string>("NODE_ENV") === "production",
-      sameSite: this.config.get<string>("NODE_ENV") === "production" ? "none" : "lax",
+      secure: isProduction,
+      sameSite: "lax",
       path: "/",
-      maxAge: refreshMaxAge,
+      domain: accessCookieDomain,
+    });
+    res.clearCookie("crw-rt", {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      domain: refreshCookieDomain,
     });
 
-    return { accessToken, message: "Tokens refreshed" };
+    res.cookie("crw-at", accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: accessMaxAge,
+      domain: accessCookieDomain,
+    });
+
+    res.cookie("crw-rt", refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: refreshMaxAge,
+      domain: refreshCookieDomain,
+    });
+
+    return { message: "Tokens refreshed" };
+  }
+
+  @Get("me")
+  async me(@Req() req: Request) {
+    return this.authService.me(req);
   }
 }

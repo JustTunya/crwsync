@@ -11,7 +11,7 @@ const api: AxiosInstance = axios.create({
 export async function getSession(): Promise<SessionUserType | undefined> {
   try {
     const jar = await cookies();
-    const refreshToken = jar.get("refresh_token")?.value;
+    const refreshToken = jar.get("crw-rt")?.value;
 
     if (!refreshToken) {
       return undefined;
@@ -20,13 +20,16 @@ export async function getSession(): Promise<SessionUserType | undefined> {
     const verifyRes = await verifySession(refreshToken);
 
     if (verifyRes && verifyRes.expires_at > new Date().toISOString() && !verifyRes.revoked_at) {
-      const userRes = await api.get<SessionUserType>(`/users/${verifyRes.user_id}`);
+      const userRes = await api.get<SessionUserType>("/auth/me", {
+        headers: {
+          cookie: `crw-rt=${refreshToken}`,
+        },
+      });
       return userRes.data;
     }
 
     return undefined;
   } catch {
-    console.log("Failed to get session");
     return undefined;
   }
 }

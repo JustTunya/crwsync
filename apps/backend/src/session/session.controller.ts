@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Delete,
-  Query,
   UsePipes,
   ValidationPipe,
   ParseUUIDPipe,
@@ -90,5 +89,11 @@ export class SessionController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async purgeExpired(): Promise<void> {
     await this.sessionService.purgeExpired();
+  }
+
+  @Post("purge-all")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async purgeAll(): Promise<void> {
+    await this.sessionService.purgeAll();
   }
 }

@@ -11,6 +11,11 @@ import { UserEntity } from "src/user/user.entity";
 import { SigninDto } from "src/auth/dto/signin.dto";
 import { SignupDto } from "src/auth/dto/signup.dto";
 
+// --- COOKIE SETTINGS ---
+const isProduction = process.env.NODE_ENV === "production";
+const accessCookieDomain = isProduction ? process.env.ACCESS_COOKIE_DOMAIN : undefined;
+const refreshCookieDomain = isProduction ? process.env.REFRESH_COOKIE_DOMAIN : undefined;
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -62,8 +67,8 @@ export class AuthService {
   }
 
   async signout(req: Request, res: Response): Promise<void> {
-    const accessToken = req.cookies["access_token"];
-    const refreshToken = req.cookies["refresh_token"];
+    const accessToken = req.cookies["crw-at"];
+    const refreshToken = req.cookies["crw-rt"];
 
     try {
       if (refreshToken) {
@@ -73,16 +78,26 @@ export class AuthService {
         const payload = this.jwtService.verify<{ jti: string, sub: string, email: string }>(accessToken);
         await this.sessionService.revoke(payload.jti);
       }
-    } catch (error) {
-      // Handle error (e.g., log it)
     } finally {
-      res.clearCookie("access_token", { path: "/" });
-      res.clearCookie("refresh_token", { path: "/" });
+      res.clearCookie("crw-at", {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      domain: accessCookieDomain,
+    });
+    res.clearCookie("crw-rt", {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      domain: refreshCookieDomain,
+    });
     }
   }
 
   async refresh(req: Request): Promise<{ accessToken: string, refreshToken: string, persistent?: boolean }> {
-    const oldRefreshToken = req.cookies["refresh_token"];
+    const oldRefreshToken = req.cookies["crw-rt"];
 
     if (!oldRefreshToken) {
       throw new BadRequestException("Refresh token not found");
@@ -107,5 +122,19 @@ export class AuthService {
     );
 
     return { accessToken, refreshToken, persistent: newSession.persistent };
+  }
+
+  async me(req: Request): Promise<UserEntity> {
+    const refreshToken = req.cookies["crw-rt"];
+
+    if (!refreshToken) {
+      throw new BadRequestException("Refresh token not found");
+    }
+
+    const session = await this.sessionService.verify({ token: refreshToken });
+
+    const user = await this.userService.findOne(session.user_id);
+
+    return user;
   }
 }

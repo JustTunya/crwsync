@@ -145,4 +145,11 @@ export class SessionService {
       .where("revoked_at IS NOT NULL AND revoked_at < :cutoff", { cutoff })
       .execute();
   }
+
+  async purgeAll(): Promise<void> {
+    await this.sRepo.createQueryBuilder()
+      .delete()
+      .from(SessionEntity)
+      .execute();
+  }
 }

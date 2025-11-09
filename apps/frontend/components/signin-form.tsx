@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useActionState, startTransition, use } from "react";
 import { motion } from "framer-motion";
 import { SigninState, SigninPayload } from "@crwsync/types";
@@ -20,7 +20,6 @@ const initState: SigninState = {
 };
 
 export function SigninForm() {
-  const router = useRouter();
   const params = useSearchParams();
 
   const [identifier, setIdentifier] = useState("");
@@ -40,9 +39,9 @@ export function SigninForm() {
   useEffect(() => {
     if (state.success) {
       const next = params.get("next");
-      router.replace(next ?? "/dash");
+      window.location.assign(next ?? "/dash");
     }
-  }, [state.success, router, params]);
+  }, [state.success, params]);
 
   return (
     <GlassBox>
