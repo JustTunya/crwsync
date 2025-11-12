@@ -1,4 +1,5 @@
 import { Entity, Index, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
+import { Exclude } from "class-transformer";
 import { UserEntity } from "src/user/user.entity";
 
 @Entity({ name: 'email_verifications' })
@@ -19,6 +20,7 @@ export class VerificationEntity {
   @Column({ nullable: true })
   user_id!: string;
 
+  @Exclude()
   @Column()
   token_hash!: string;
 

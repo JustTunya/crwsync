@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from "typeorm";
+import { Exclude } from "class-transformer";
 import { RoleEnum } from "@crwsync/types";
 
 @Entity({ name: "users" })
@@ -32,6 +33,7 @@ export class UserEntity {
   @Column({ type: "int", default: 1 })
   role_version!: number;
 
+  @Exclude()
   @Column({ type: "text" })
   password_hash!: string;
 

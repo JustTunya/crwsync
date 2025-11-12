@@ -1,4 +1,5 @@
 import { Entity, Index, Column, ManyToOne, JoinColumn, PrimaryColumn } from "typeorm";
+import { Exclude } from "class-transformer";
 import { UserEntity } from "src/user/user.entity";
 
 @Entity({ name: "sessions" })
@@ -14,6 +15,7 @@ export class SessionEntity {
   @Column({ type: "uuid" })
   user_id!: string;
 
+  @Exclude()
   @Column({ type: "text" })
   refresh_token_hash!: string;
 

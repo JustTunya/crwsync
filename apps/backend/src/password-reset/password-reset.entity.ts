@@ -1,4 +1,5 @@
 import { Entity, Index, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
+import { Exclude } from "class-transformer";
 import { UserEntity } from "src/user/user.entity";
 
 @Entity({ name: 'password_resets' })
@@ -19,6 +20,7 @@ export class PasswordResetEntity {
   @Column({ nullable: true })
   user_id!: string;
 
+  @Exclude()
   @Column()
   token_hash!: string;
 
