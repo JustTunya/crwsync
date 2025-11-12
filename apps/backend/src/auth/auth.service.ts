@@ -57,7 +57,7 @@ export class AuthService {
     }
 
     const jti = randomUUID();
-    const payload = { jti, sub: user.id, email: user.email };
+    const payload = { jti, sub: user.id, email: user.email, role: user.role, rver: user.role_version };
 
     const accessToken = this.jwtService.sign(payload);
 
@@ -126,25 +126,13 @@ export class AuthService {
     return { accessToken, refreshToken, persistent: newSession.persistent };
   }
 
-  async me(req: Request): Promise<SessionUserDto> {
-    const refreshToken = req.cookies["crw-rt"];
-
-    if (!refreshToken) {
-      throw new BadRequestException("Refresh token not found");
-    }
-
-    const session = await this.sessionService.verify({ token: refreshToken });
-
-    if (!session) {
-      throw new BadRequestException("Invalid refresh token");
-    }
-
-    const user = await this.userService.findOne(session.user_id) as SessionUserDto;
+  async me(active: { userId: string }) {
+    const user = await this.userService.findOne(active.userId) as SessionUserDto;
 
     if (!user) {
       throw new BadRequestException("User not found");
     }
-
+    
     return user;
   }
 }

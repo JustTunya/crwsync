@@ -7,6 +7,8 @@ import { SigninDto } from "src/auth/dto/signin.dto";
 import { ConfigService } from "@nestjs/config";
 import { Public } from "src/common/decorators/public.decorator";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
+import { ActiveUserParam } from "src/common/decorators/active-user.decorator";
+import { ActiveUser } from "src/common/types/active-user.type";
 
 // --- COOKIE SETTINGS ---
 const isProduction = process.env.NODE_ENV === "production";
@@ -128,7 +130,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get("me")
-  async me(@Req() req: Request) {
-    return this.authService.me(req);
+  async me(@ActiveUserParam() user: ActiveUser) {
+    return this.authService.me({ userId: user.userId });
   }
 }

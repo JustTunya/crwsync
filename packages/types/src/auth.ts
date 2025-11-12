@@ -64,6 +64,14 @@ export interface ResetPasswordPayload {
   password: string;
 }
 
+export interface JwtPayload {
+  sub: string;
+  email: string;
+  jti: string;
+  role: string;
+  rver: number;
+}
+
 export interface JwtResponse {
   accessToken: string;
   refreshToken: string;
