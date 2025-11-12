@@ -1,10 +1,12 @@
-import { Controller, Post, Get, Body, HttpCode, HttpStatus, UnauthorizedException, Req, Res } from "@nestjs/common"
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, UnauthorizedException, Req, Res, UseGuards } from "@nestjs/common"
+import { Throttle } from "@nestjs/throttler";
 import { Request, Response } from "express";
 import { AuthService } from "src/auth/auth.service";
 import { SignupDto } from "src/auth/dto/signup.dto";
 import { SigninDto } from "src/auth/dto/signin.dto";
-import { Throttle } from "@nestjs/throttler";
 import { ConfigService } from "@nestjs/config";
+import { Public } from "src/common/decorators/public.decorator";
+import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 
 // --- COOKIE SETTINGS ---
 const isProduction = process.env.NODE_ENV === "production";
@@ -22,13 +24,15 @@ export class AuthController {
     private readonly config: ConfigService
   ) {}
 
+  @Public()
   @Post("signup")
   @HttpCode(HttpStatus.CREATED)
   async signup(@Body() dto: SignupDto) {
     return this.authService.signup(dto);
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post("signin")
   @HttpCode(HttpStatus.OK)
   async signin(
@@ -64,13 +68,15 @@ export class AuthController {
     return { message: "Signin successful" };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post("signout")
   @HttpCode(HttpStatus.OK)
   async signout(@Req() req: Request, @Res() res: Response) {
     return this.authService.signout(req, res);
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
   async refresh(
@@ -120,6 +126,7 @@ export class AuthController {
     return { message: "Tokens refreshed" };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get("me")
   async me(@Req() req: Request) {
     return this.authService.me(req);

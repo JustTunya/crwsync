@@ -1,28 +1,22 @@
 import {
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Post,
-  Get,
-  Param,
-  Patch,
-  Delete,
-  UsePipes,
-  ValidationPipe,
-  ParseUUIDPipe,
-  Req
+  Body, Controller, HttpCode, HttpStatus, Post, Get, Param, Patch, Delete, UsePipes, ValidationPipe, ParseUUIDPipe, Req,
+  UseGuards
 } from "@nestjs/common";
+import { RoleEnum } from "@crwsync/types";
 import { Request } from "express";
 import { SessionService } from "src/session/session.service";
 import { SessionEntity } from "src/session/session.entity";
 import { CreateSessionDto } from "src/session/dto/create-session.dto";
 import { UpdateSessionDto } from "src/session/dto/update-session.dto";
 import { RotateSessionDto } from "src/session/dto/rotate-session.dto";
-import { VerifySessionDto } from "./dto/verify-session.dto";
+import { VerifySessionDto } from "src/session/dto/verify-session.dto";
+import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
+import { Roles } from "src/common/decorators/roles.decorator";
 
 @Controller("sessions")
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+@UseGuards(JwtAuthGuard)
+@Roles(RoleEnum.ADMIN)
 export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
