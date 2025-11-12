@@ -45,7 +45,7 @@ export function ResetPasswordForm() {
   }, [validPassword, matchingPasswords]);
 
   const handleReset = () => {
-    const payload: ResetPasswordPayload = { token, password };
+    const payload: ResetPasswordPayload = { token, newPassword: password };
     dispatch(payload);
   };
 

@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getEmailToken, sendVerificationEmail, verifyEmail } from "@/services/auth.service";
+import { getEmailVerificationStatus, sendVerificationEmail, verifyEmail } from "@/services/auth.service";
 import { GlassBox } from "@/components/ui/glassbox";
 import { Button } from "@/components/ui/button";
+import { MailVerificationStatus } from "@crwsync/types";
 
 export function EmailVerification({ token }: { token: string | null }) {
   const router = useRouter();
   const [status, setStatus] = useState<"pending" | "success" | "expired" | "error">("pending");
-  const [user, setUser] = useState<{user_id: string, email: string} | undefined>(undefined);
 
   useEffect(() => {
     setStatus("pending");
@@ -18,38 +18,34 @@ export function EmailVerification({ token }: { token: string | null }) {
       return;
     }
 
-    getEmailToken(token).then((resp) => {
+    getEmailVerificationStatus(token).then(async (resp) => {
       if (!resp) {
         setStatus("error");
         return;
       }
 
-      const isVerified = resp?.verified_at ?? false;
-      const isExpired = new Date(resp?.expires_at ?? '').getTime() < Date.now();
-
-      if (isVerified) {
-        router.push('/auth/signin');
-      } else if (isExpired) {
+      if (resp.status === "verified") {
+        router.push("/auth/signin");
+        return;
+      }
+      if (resp.status === "expired") {
         setStatus("expired");
-        setUser({ user_id: resp.user_id, email: resp.email });
-      } else {
+        return;
+      }
+      if (resp.status !== "pending") {
+        setStatus("error");
+        return;
+      }
+
+      const { success } = await verifyEmail(token);
+      if (success) {
         setStatus("success");
-        verifyEmail(token).then(() => {
-          setTimeout(() => {
-            router.push('/auth/signin');
-          }, 3000);
-        });
+        setTimeout(() => router.push("/auth/signin"), 3000);
+      } else {
+        setStatus("error");
       }
     });
-  }, [token]);
-
-  const handleResend = () => {
-    if (!user) {
-      return;
-    }
-
-    sendVerificationEmail(user.email, user.user_id);
-  };
+  }, [token, router]);
 
   return (
     <GlassBox>
@@ -72,7 +68,7 @@ export function EmailVerification({ token }: { token: string | null }) {
             Please request a new one by pressing the button below.
           </p>
 
-          <Button className="mt-4" variant="outline" onClick={handleResend}>Request New Email</Button>
+          <Button className="mt-4" variant="outline" onClick={() => {}}>Request New Email</Button>
         </>
       )}
       {status === "error" && (

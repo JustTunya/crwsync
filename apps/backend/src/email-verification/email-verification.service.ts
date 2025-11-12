@@ -103,12 +103,19 @@ export class VerificationService {
     const hashedToken = createHash('sha256').update(token).digest('hex');
     const verification = await this.vRepo.findOne({ where: { token_hash: hashedToken }, relations: ["user"] });
     if (!verification) {
-      throw new NotFoundException(`Verification with token ${token} not found`);
+      throw new NotFoundException("Verification not found");
+    }
+
+    if (verification.status !== "pending") {
+      throw new NotFoundException("Verification not found");
+    }
+    if (verification.expires_at && verification.expires_at < new Date()) {
+      throw new NotFoundException("Verification not found");
     }
 
     const user = verification.user;
     if (!user) {
-      throw new NotFoundException(`User associated with this verification not found`);
+      throw new NotFoundException("User not found");
     }
 
     user.email_verified_at = new Date();

@@ -9,6 +9,7 @@ import { UpdatePasswordResetDto } from "src/password-reset/dto/update-password-r
 import { UserEntity } from "src/user/user.entity";
 import { EmailService } from "src/email/email.service";
 import { SessionService } from "src/session/session.service";
+import { PasswordResetStatus } from "@crwsync/types";
 
 @Injectable()
 export class PasswordResetService {
@@ -126,5 +127,20 @@ export class PasswordResetService {
     await this.prRepo.save(passwordReset);
 
     await this.sessionService.revokeAll(user.id);
+  }
+
+  async getTokenStatus(token: string): Promise<{ status: PasswordResetStatus }> {
+    const passwordReset = await this.findByToken(token);
+
+    if (!passwordReset) {
+      throw new NotFoundException(`Password reset for token ${token} not found`);
+    }
+
+    if (passwordReset.expires_at < new Date()) {
+      await this.update(passwordReset.id, { status: PasswordResetStatus.EXPIRED });
+      return { status: PasswordResetStatus.EXPIRED };
+    }
+
+    return { status: passwordReset.status as PasswordResetStatus };
   }
 }

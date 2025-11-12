@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch, ParseUUIDPipe, Query, UseGuards } from "@nestjs/common";
-import { RoleEnum } from "@crwsync/types";
+import { PasswordResetStatus, RoleEnum } from "@crwsync/types";
 import { CreatePasswordResetDto } from "src/password-reset/dto/create-password-reset.dto";
 import { UpdatePasswordResetDto } from "src/password-reset/dto/update-password-reset.dto";
 import { PasswordResetService } from "src/password-reset/password-reset.service";
@@ -37,6 +37,13 @@ export class PasswordResetController {
     }
 
     return this.passwordResetService.findAll();
+  }
+
+  @Public()
+  @Get("token-status")
+  @HttpCode(HttpStatus.OK)
+  async getTokenStatus(@Query("token") token: string): Promise<{ status: PasswordResetStatus }> {
+    return this.passwordResetService.getTokenStatus(token);
   }
 
   @Roles(RoleEnum.ADMIN)

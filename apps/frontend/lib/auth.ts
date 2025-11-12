@@ -1,34 +1,13 @@
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { SessionUserType } from "@crwsync/types";
-import axios, { AxiosInstance } from "axios";
-import { verifySession } from "@/services/auth.service";
-
-const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL!,
-  withCredentials: true,
-});
+import { getMyself } from "@/services/auth.service";
 
 export async function getSession(): Promise<SessionUserType | undefined> {
   try {
-    const jar = await cookies();
-    const refreshToken = jar.get("crw-rt")?.value;
-
-    if (!refreshToken) {
-      return undefined;
-    }
-
-    const verifyRes = await verifySession(refreshToken);
-
-    if (verifyRes && verifyRes.expires_at > new Date().toISOString() && !verifyRes.revoked_at) {
-      const userRes = await api.get<SessionUserType>("/auth/me", {
-        headers: {
-          cookie: `crw-rt=${refreshToken}`,
-        },
-      });
-      return userRes.data;
-    }
-
-    return undefined;
+    const hdrs = await headers();
+    const cookie = hdrs.get("cookie") || undefined;
+    
+    return await getMyself(cookie);
   } catch {
     return undefined;
   }

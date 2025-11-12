@@ -1,62 +1,63 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import { 
-  SignupState, 
-  SignupPayload, 
-  SigninState, 
-  SigninPayload,
-  ForgotPasswordState,
-  ForgotPasswordPayload,
-  ResetPasswordState,
-  MailVerificationType,
-  PasswordResetType,
-  ResetPasswordPayload,
-  SessionUserType,
-  SessionType
+  SignupState, SignupPayload, SigninState, SigninPayload, ForgotPasswordState, ForgotPasswordPayload, ResetPasswordState, ResetPasswordPayload, SessionUserType,
+  MailVerificationStatus
 } from "@crwsync/types";
-
-const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL!,
-  withCredentials: true,
-});
 
 let refreshPromise: Promise<void> | undefined = undefined;
 
-api.interceptors.response.use((resp) => resp, async (error) => {
-  const status = error?.response?.status as number | undefined;
-  const ogRequest: (AxiosRequestConfig & { _retry?: boolean }) | undefined = error?.config;
+function addInterceptors(client: AxiosInstance): AxiosInstance {
+  client.interceptors.response.use((resp) => resp, async (error) => {
+    const status = error?.response?.status as number | undefined;
+    const request: (AxiosRequestConfig & { _retry?: boolean }) | undefined = error?.config;
 
-  if (!ogRequest) {
-    return Promise.reject(error);
-  }
-
-  const url = ogRequest.url || "";
-  const excludedPaths = ["/auth/refresh", "/auth/signin"];
-
-  if (status === 401 && !ogRequest._retry && !excludedPaths.includes(url)) {
-    ogRequest._retry = true;
-
-    try {
-      if (!refreshPromise) {
-        const cookieHeader = (ogRequest.headers as Record<string, any> | undefined)?.["cookie"];
-        refreshPromise = api
-          .post("/auth/refresh", {}, cookieHeader
-            ? { headers: { cookie: cookieHeader } }
-            : undefined
-          )
-          .then(() => undefined)
-          .finally(() => {
-            refreshPromise = undefined;
-          });
-      }
-      await refreshPromise;
-      return api(ogRequest);
-    } catch {
+    if (!request) {
       return Promise.reject(error);
     }
-  }
 
-  return Promise.reject(error);
-});
+    const url = request.url || "";
+    const excludedPaths = ["/auth/refresh", "/auth/signin", "/auth/signout"];
+
+    if (status === 401 && !request._retry && !excludedPaths.includes(url)) {
+      request._retry = true;
+
+      try {
+        if (!refreshPromise) {
+          const cookieHeader = (request.headers as Record<string, any> | undefined)?.["cookie"];
+          refreshPromise = api
+            .post("/auth/refresh", {}, cookieHeader ? { headers: { cookie: cookieHeader } } : undefined)
+            .then(() => undefined)
+            .finally(() => { refreshPromise = undefined;});
+        }
+        await refreshPromise;
+        return api(request);
+      } catch {
+        return Promise.reject(error);
+      }
+    }
+
+    return Promise.reject(error);
+  });
+
+  return client;
+}
+
+const api: AxiosInstance = addInterceptors(
+  axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL!,
+    withCredentials: true,
+  })
+);
+
+export function getApiClient(cookie?: string): AxiosInstance {
+  const instance = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL!,
+    withCredentials: true,
+    headers: cookie ? { cookie } : undefined,
+  });
+
+  return addInterceptors(instance);
+}
 
 export async function signup(_prev: SignupState, data: SignupPayload): Promise<SignupState> {
   try {
@@ -90,6 +91,9 @@ export async function signout(): Promise<{ success: boolean; message?: string }>
     await api.post("/auth/signout");
     return { success: true, message: "Signout successful" };
   } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      return { success: true, message: "Already signed out" };
+    }
     if (axios.isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, message: resp.message || "An unexpected error occurred" };
@@ -132,6 +136,17 @@ export async function resetPassword(_prev: ResetPasswordState, data: ResetPasswo
   }
 }
 
+export async function getResetToken(token: string): Promise<{ status: "pending" | "used" | "expired" | "revoked" } | undefined> {
+  try {
+    const response = await api.get("/password-resets/token-status", {
+      params: { token }
+    });
+    return response.data as { status: "pending" | "used" | "expired" | "revoked" };
+  } catch {
+    return undefined;
+  }
+}
+
 export async function checkAvailability(field: 'email' | 'username', value: string): Promise<{ available: boolean }> {
   try {
     const response = await api.get("/users/check-availability", {
@@ -162,9 +177,22 @@ export async function sendVerificationEmail(email: string, userId: string): Prom
   }
 }
 
+export async function getEmailVerificationStatus(token: string): Promise<{ status: MailVerificationStatus } | undefined> {
+  try {
+    const response = await api.get("/email-verifications/token-status", {
+      params: { token }
+    });
+    return response.data as { status: MailVerificationStatus };
+  } catch {
+    return undefined;
+  }
+}
+
 export async function verifyEmail(token: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await api.get(`/email-verifications/verify?token=${token}`);
+    const response = await api.get("/email-verifications/verify", {
+      params: { token }
+    });
     return { success: response.data.success, message: response.data.message || "Email verified successfully" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -174,48 +202,13 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
     return { success: false, message: "An unexpected error occurred" };
   }
 }
+
+export async function getMyself(cookie?: string): Promise<SessionUserType | undefined> {
+  const client = cookie ? getApiClient(cookie) : api;
   
-export async function getEmailToken(token: string): Promise<MailVerificationType | undefined> {
   try {
-    const response = await api.get(`/email-verifications?token=${token}`);
-    return response.data[0];
-  } catch {
-    return undefined;
-  }
-}
-
-export async function getResetToken(token: string): Promise<PasswordResetType | undefined> {
-  try {
-    const response = await api.get(`/password-resets?token=${token}`);
-    return response.data[0];
-  } catch {
-    return undefined;
-  }
-}
-
-export async function verifySession(token: string): Promise<SessionType | undefined> {
-  try {
-    const response = await api.post("/sessions/verify", { token }, { withCredentials: true });
-    return response.data;
-  } catch {
-    return undefined;
-  }
-}
-
-export async function getCurrentUser(userId: string): Promise<SessionUserType | undefined> {
-  try {
-    const response = await api.get(`/users/${userId}`);
-    return response.data;
-  } catch {
-    return undefined;
-  }
-}
-
-export async function refreshTokens(): Promise<{ accessToken: string } | undefined> {
-  try {
-    const response = await api.post("/auth/refresh", {});
-    const newToken = response.data.accessToken;
-    return { accessToken: newToken };
+    const response = await client.get("/auth/me");
+    return response.data as SessionUserType;
   } catch {
     return undefined;
   }

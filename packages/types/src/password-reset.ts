@@ -3,8 +3,15 @@ export interface PasswordResetType {
   email: string;
   user_id: string;
   token_hash: string;
-  status: "pending" | "used" | "expired" | "revoked";
+  status: PasswordResetStatus;
   created_at: string;
   expires_at: string;
   reset_at: string;
+}
+
+export enum PasswordResetStatus {
+  PENDING = "pending",
+  USED = "used",
+  EXPIRED = "expired",
+  REVOKED = "revoked",
 }

@@ -53,7 +53,7 @@ export interface ForgotPasswordPayload {
 export interface ResetPasswordState {
   success?: boolean;
   errors?: {
-    password?: string;
+    newPassword?: string;
     token?: string;
   };
   message?: string;
@@ -61,7 +61,7 @@ export interface ResetPasswordState {
 
 export interface ResetPasswordPayload {
   token: string;
-  password: string;
+  newPassword: string;
 }
 
 export interface JwtPayload {
