@@ -30,7 +30,7 @@ export class PasswordResetService {
 
     const token = randomBytes(32).toString("hex");
     const hashedToken = createHash('sha256').update(token).digest('hex');
-    const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const exp = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     const passwordReset = await this.prRepo.manager.transaction(async (m) => {
       await m.delete(PasswordResetEntity, { email: dto.email, status: "pending" });
