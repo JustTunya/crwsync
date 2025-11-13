@@ -24,11 +24,15 @@ async function bootstrap() {
   (app.getHttpAdapter().getInstance() as any).set("trust proxy", true);
 
   const origin = (config.get<string>("CORS_ORIGIN") || "")
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean);
+    .split(",").map((o) => o.trim()).filter(Boolean);
+  if (!origin.length) {
+    return new Error("CORS_ORIGIN must be set");
+  }
   app.enableCors({
-    origin: origin.length ? origin : true,
+    origin: (reqo: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!reqo) return callback(null, true); // allow same-origin & tools
+      callback(null, origin.includes(reqo));
+    },
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   });
@@ -58,4 +62,5 @@ async function bootstrap() {
   await app.listen(config.get<number>("PORT") || 3000);
   logger.log(`Application is running on: ${await app.getUrl()}`);
 }
+
 bootstrap();
