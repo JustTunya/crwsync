@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch, ParseUUIDPipe, Query, UseGuards, NotFoundException } from "@nestjs/common";
-import { RoleEnum } from "@crwsync/types";
+import { MailVerificationStatus, RoleEnum } from "@crwsync/types";
 import { CreateVerificationDto } from "src/email-verification/dto/create-email-verification.dto";
 import { UpdateVerificationDto } from "src/email-verification/dto/update-email-verification.dto";
 import { VerificationService } from "src/email-verification/email-verification.service";
@@ -34,14 +34,8 @@ export class VerificationController {
   @HttpCode(HttpStatus.OK)
   async getTokenStatus(
     @Query("token") token: string
-  ): Promise<{ status: "pending" | "verified" | "expired" | "revoked" }> {
-    const v = await this.verificationService.findByToken(token).catch(() => undefined);
-    if (!v) {
-      throw new NotFoundException("Invalid token");
-    }
-
-    const status = v.expires_at && v.expires_at < new Date() ? "expired" : v.status;
-    return { status };
+  ): Promise<{ status: MailVerificationStatus }> {
+    return this.verificationService.getTokenStatus(token);
   }
 
   @Roles(RoleEnum.ADMIN)

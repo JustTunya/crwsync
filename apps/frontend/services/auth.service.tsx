@@ -177,17 +177,6 @@ export async function sendVerificationEmail(email: string, userId: string): Prom
   }
 }
 
-export async function getEmailVerificationStatus(token: string): Promise<{ status: MailVerificationStatus } | undefined> {
-  try {
-    const response = await api.get("/email-verifications/token-status", {
-      params: { token }
-    });
-    return response.data as { status: MailVerificationStatus };
-  } catch {
-    return undefined;
-  }
-}
-
 export async function verifyEmail(token: string): Promise<{ success: boolean; message?: string }> {
   try {
     const response = await api.get("/email-verifications/verify", {
@@ -200,6 +189,17 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
       return { success: false, message: resp.message || "An unexpected error occurred" };
     }
     return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function getEmailVerificationStatus(token: string): Promise<{ status: MailVerificationStatus } | undefined> {
+  try {
+    const response = await api.get("/email-verifications/token-status", {
+      params: { token }
+    });
+    return response.data as { status: MailVerificationStatus };
+  } catch {
+    return undefined;
   }
 }
 

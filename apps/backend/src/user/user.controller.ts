@@ -6,6 +6,7 @@ import { UserService } from "src/user/user.service";
 import { UserEntity } from "src/user/user.entity";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { OwnershipGuard } from "src/common/guards/ownership.guard";
+import { Public } from "src/common/decorators/public.decorator";
 
 @Controller("users")
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -26,6 +27,7 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @Public()
   @Get("check-availability")
   @HttpCode(HttpStatus.OK)
   checkAvailability(

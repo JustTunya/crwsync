@@ -7,6 +7,7 @@ import { CreateVerificationDto } from "src/email-verification/dto/create-email-v
 import { UpdateVerificationDto } from "src/email-verification/dto/update-email-verification.dto";
 import { UserEntity } from "src/user/user.entity";
 import { EmailService } from "src/email/email.service";
+import { MailVerificationStatus } from "@crwsync/types";
 
 @Injectable()
 export class VerificationService {
@@ -109,7 +110,11 @@ export class VerificationService {
     if (verification.status !== "pending") {
       throw new NotFoundException("Verification not found");
     }
+
     if (verification.expires_at && verification.expires_at < new Date()) {
+      verification.status = MailVerificationStatus.EXPIRED;
+      await this.vRepo.save(verification);
+
       throw new NotFoundException("Verification not found");
     }
 
@@ -121,8 +126,18 @@ export class VerificationService {
     user.email_verified_at = new Date();
     await this.uRepo.save(user);
 
-    verification.status = "verified";
+    verification.status = MailVerificationStatus.VERIFIED;
     verification.verified_at = new Date();
     return this.vRepo.save(verification);
+  }
+
+  async getTokenStatus(token: string): Promise<{ status: MailVerificationStatus }> {
+    const verification = await this.findByToken(token).catch(() => undefined);
+    if (!verification) {
+      throw new NotFoundException("Invalid token");
+    }
+
+    const status = verification.expires_at && verification.expires_at < new Date() ? MailVerificationStatus.EXPIRED : verification.status as MailVerificationStatus;
+    return { status };
   }
 }

@@ -73,6 +73,12 @@ export function ResetPasswordForm() {
     });
   }, [token]);
 
+  useEffect(() => {
+    if (state.success) {
+      router.push("/auth/signin");
+    }
+  }, [state.success, router]);
+
   if (status === "success") {
     return (
       <GlassBox>
@@ -129,7 +135,7 @@ export function ResetPasswordForm() {
               Update Password
             </Button>
 
-            {state.message && state.errors && (
+            {state.message && state.errors && !state.success && (
               <p className="text-sm text-center text-error">
                 {state.message}
               </p>
