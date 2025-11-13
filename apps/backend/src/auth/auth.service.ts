@@ -27,6 +27,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  private payload(user: UserEntity, jti: string) {
+    return { jti, sub: user.id, email: user.email, role: user.role, rver: user.role_version };
+  }
+
   async validateUser(dto: SigninDto): Promise<UserEntity | null> {
     const user = await this.userService.findByEmailOrUsername(dto.identifier);
     if (user && await compare(dto.password, user.password_hash)) {
@@ -57,9 +61,7 @@ export class AuthService {
     }
 
     const jti = randomUUID();
-    const payload = { jti, sub: user.id, email: user.email, role: user.role, rver: user.role_version };
-
-    const accessToken = this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(this.payload(user, jti));
 
     const { token: refreshToken } = await this.sessionService.create({ id: jti, user_id: user.id, persistent: !!rememberMe }, req);
 
@@ -119,9 +121,7 @@ export class AuthService {
 
     const user = await this.userService.findOne(session.user_id);
 
-    const accessToken = this.jwtService.sign(
-      { jti: newSession.id, sub: user.id, email: user.email }
-    );
+    const accessToken = this.jwtService.sign(this.payload(user, newSession.id));
 
     return { accessToken, refreshToken, persistent: newSession.persistent };
   }
