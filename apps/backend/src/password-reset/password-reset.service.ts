@@ -10,6 +10,7 @@ import { UserEntity } from "src/user/user.entity";
 import { EmailService } from "src/email/email.service";
 import { SessionService } from "src/session/session.service";
 import { PasswordResetStatus } from "@crwsync/types";
+import { ResetPasswordDto } from "./dto/reset-password.dto";
 
 @Injectable()
 export class PasswordResetService {
@@ -100,17 +101,17 @@ export class PasswordResetService {
     }
   }
 
-  async reset(token: string, newPassword: string): Promise<void> {
-    const passwordReset = await this.findByToken(token);
+  async reset(dto: ResetPasswordDto): Promise<void> {
+    const passwordReset = await this.findByToken(dto.token);
     if (!passwordReset) {
-      throw new NotFoundException(`Password reset for token ${token} not found`);
+      throw new NotFoundException(`Password reset for token ${dto.token} not found`);
     }
 
     if (passwordReset.status !== "pending") {
-      throw new NotFoundException(`Password reset for token ${token} is not pending`);
+      throw new NotFoundException(`Password reset for token ${dto.token} is not pending`);
     }
     if (passwordReset.expires_at < new Date()) {
-      throw new NotFoundException(`Password reset for token ${token} has expired`);
+      throw new NotFoundException(`Password reset for token ${dto.token} has expired`);
     }
 
     const user = await this.uRepo.findOne({ where: { id: passwordReset.user_id } });
@@ -118,7 +119,7 @@ export class PasswordResetService {
       throw new NotFoundException(`User with ID ${passwordReset.user_id} not found`);
     }
 
-    const hashedPassword = await hash(newPassword, 10);
+    const hashedPassword = await hash(dto.newPassword, 10);
     user.password_hash = hashedPassword;
     await this.uRepo.save(user);
 

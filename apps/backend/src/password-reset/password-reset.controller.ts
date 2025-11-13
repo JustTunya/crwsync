@@ -7,6 +7,7 @@ import { PasswordResetEntity } from "src/password-reset/password-reset.entity";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { Public } from "src/common/decorators/public.decorator";
 import { Roles } from "src/common/decorators/roles.decorator";
+import { ResetPasswordDto } from "./dto/reset-password.dto";
 
 @Controller("password-resets")
 @UseGuards(JwtAuthGuard)
@@ -70,7 +71,7 @@ export class PasswordResetController {
   @Public()
   @Post("reset")
   @HttpCode(HttpStatus.OK)
-  async resetPassword(@Body("token") token: string, @Body("newPassword") newPassword: string): Promise<void> {
-    return this.passwordResetService.reset(token, newPassword);
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
+    return this.passwordResetService.reset(dto);
   }
 }
