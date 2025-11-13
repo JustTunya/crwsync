@@ -8,6 +8,7 @@ import { UpdateVerificationDto } from "src/email-verification/dto/update-email-v
 import { UserEntity } from "src/user/user.entity";
 import { EmailService } from "src/email/email.service";
 import { MailVerificationStatus } from "@crwsync/types";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class VerificationService {
@@ -16,7 +17,8 @@ export class VerificationService {
     private readonly vRepo: Repository<VerificationEntity>,
     @InjectRepository(UserEntity)
     private readonly uRepo: Repository<UserEntity>,
-    private readonly emailService: EmailService
+    private readonly emailService: EmailService,
+    private readonly config: ConfigService
   ) {}
 
   async create(dto: CreateVerificationDto): Promise<VerificationEntity> {
@@ -43,13 +45,15 @@ export class VerificationService {
       return m.save(entity);
     });
 
+    const appUrl = this.config.get<string>("APP_URL");
+    const url = new URL("/auth/verify-email", appUrl);
+    url.searchParams.set("token", token);
+
     await this.emailService.sendEmail({
       to: dto.email,
       subject: "Welcome to CRWSYNC",
       template: "email-verification",
-      context: {
-        url: `https://crwsync.com/auth/verify-email?token=${token}`
-      },
+      context: { url: url.toString() }
     });
 
     return this.vRepo.save(verification);

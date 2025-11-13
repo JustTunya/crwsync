@@ -11,6 +11,7 @@ import { EmailService } from "src/email/email.service";
 import { SessionService } from "src/session/session.service";
 import { PasswordResetStatus } from "@crwsync/types";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class PasswordResetService {
@@ -20,7 +21,8 @@ export class PasswordResetService {
     @InjectRepository(UserEntity)
     private readonly uRepo: Repository<UserEntity>,
     private readonly emailService: EmailService,
-    private readonly sessionService: SessionService
+    private readonly sessionService: SessionService,
+    private readonly config: ConfigService
   ) {}
 
   async create(dto: CreatePasswordResetDto): Promise<PasswordResetEntity> {
@@ -44,13 +46,15 @@ export class PasswordResetService {
       return m.save(entity);
     });
 
+    const appUrl = this.config.get<string>("APP_URL");
+    const url = new URL("/auth/reset-password", appUrl);
+    url.searchParams.set("token", token);
+
     await this.emailService.sendEmail({
       to: dto.email,
       subject: "Reset your password",
       template: "reset-password",
-      context: {
-        url: `https://crwsync.com/auth/reset-password?token=${token}`
-      },
+      context: { url: url.toString() }
     });
 
     return this.prRepo.save(passwordReset);
