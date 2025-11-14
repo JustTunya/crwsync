@@ -40,9 +40,9 @@ export default function SignupStep2(props: SignupStep2Props) {
 
   const validForm = useMemo(() => {
     return (
-      validFirstName &&
-      validLastName &&
-      validBirthdate
+      validFirstName.value === true &&
+      validLastName.value === true &&
+      validBirthdate === true
     );
   }, [validFirstName, validLastName, validBirthdate]);
 
