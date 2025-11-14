@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsString, IsUUID } from "class-validator";
+import { IsEmail, IsEnum, IsNumber, IsString, IsUUID } from "class-validator";
 import { RoleEnum } from "@crwsync/types";
 
 export class SessionUserDto {
@@ -22,4 +22,7 @@ export class SessionUserDto {
 
   @IsEnum(RoleEnum)
   role!: RoleEnum;
+
+  @IsNumber()
+  role_version!: number;
 }

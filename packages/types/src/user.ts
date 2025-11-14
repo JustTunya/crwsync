@@ -23,8 +23,9 @@ export interface SessionUserType {
   id: string;
   email: string;
   username: string;
-  firstName: string;
-  lastName: string;
+  firstname: string;
+  lastname: string;
   avatar_key?: string;
   role: RoleEnum;
+  role_version: number;
 }
