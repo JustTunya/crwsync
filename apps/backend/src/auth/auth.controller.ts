@@ -73,7 +73,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post("signout")
   @HttpCode(HttpStatus.OK)
-  async signout(@Req() req: Request, @Res() res: Response) {
+  async signout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
     return this.authService.signout(req, res);
   }
 

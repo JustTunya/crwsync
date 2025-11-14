@@ -182,7 +182,7 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
     const response = await api.get("/email-verifications/verify", {
       params: { token }
     });
-    return { success: response.data.success, message: response.data.message || "Email verified successfully" };
+    return { success: response.data.success ?? true, message: response.data.message ?? "Email verified successfully" };
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const resp = error.response?.data;

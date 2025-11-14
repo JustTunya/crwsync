@@ -104,7 +104,7 @@ export class VerificationService {
     }
   }
 
-  async verifyEmail(token: string): Promise<VerificationEntity> {
+  async verifyEmail(token: string): Promise<{ success: boolean; message?: string }> {
     const hashedToken = createHash('sha256').update(token).digest('hex');
     const verification = await this.vRepo.findOne({ where: { token_hash: hashedToken }, relations: ["user"] });
     if (!verification) {
@@ -132,7 +132,9 @@ export class VerificationService {
 
     verification.status = MailVerificationStatus.VERIFIED;
     verification.verified_at = new Date();
-    return this.vRepo.save(verification);
+    await this.vRepo.save(verification);
+
+    return { success: true, message: "Email verified successfully" };
   }
 
   async getTokenStatus(token: string): Promise<{ status: MailVerificationStatus }> {
