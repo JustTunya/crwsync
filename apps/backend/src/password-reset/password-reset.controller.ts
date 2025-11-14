@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch, ParseUUIDPipe, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch, ParseUUIDPipe, Query, UseGuards, NotFoundException } from "@nestjs/common";
 import { PasswordResetStatus, RoleEnum } from "@crwsync/types";
 import { CreatePasswordResetDto } from "src/password-reset/dto/create-password-reset.dto";
 import { UpdatePasswordResetDto } from "src/password-reset/dto/update-password-reset.dto";
@@ -28,13 +28,20 @@ export class PasswordResetController {
     @Query("email") email?: string,
     @Query("token") token?: string
   ): Promise<PasswordResetEntity[]> {
-    if (email) {
-      const v = await this.passwordResetService.findByEmail(email);
-      return v ? [v] : [];
-    }
-    if (token) {
-      const v = await this.passwordResetService.findByToken(token);
-      return v ? [v] : [];
+    try {
+      if (email) {
+        const v = await this.passwordResetService.findByEmail(email);
+        return [v];
+      }
+      if (token) {
+        const v = await this.passwordResetService.findByToken(token);
+        return [v];
+      }
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        return [];
+      }
+      throw err;
     }
 
     return this.passwordResetService.findAll();

@@ -45,13 +45,20 @@ export class VerificationController {
     @Query("email") email?: string,
     @Query("token") token?: string
   ): Promise<VerificationEntity[]> {
-    if (email) {
-      const v = await this.verificationService.findByEmail(email);
-      return v ? [v] : [];
-    }
-    if (token) {
-      const v = await this.verificationService.findByToken(token);
-      return v ? [v] : [];
+    try {
+      if (email) {
+        const v = await this.verificationService.findByEmail(email);
+        return [v];
+      }
+      if (token) {
+        const v = await this.verificationService.findByToken(token);
+        return [v];
+      }
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        return [];
+      }
+      throw err;
     }
 
     return this.verificationService.findAll();
