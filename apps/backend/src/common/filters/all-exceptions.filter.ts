@@ -1,4 +1,5 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from "@nestjs/common";
+import type { Request } from "express";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -19,13 +20,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getResponse()
         : "Internal server error";
 
-    this.logger.error(
-      `[${req.method}] ${req.url} -> ${status} ${JSON.stringify(message)}`
-    );
+    const rawUrl = req.originalUrl || req.url || "";
+    const path = req.path || rawUrl.split("?")[0] || rawUrl;
+
+    this.logger.error(`[${req.method}] ${path} -> ${status}`);
 
     res.status(status).json({
       statusCode: status,
-      path: (req as any).url,
+      path,
       timestamp: new Date().toISOString(),
       error: message,
     });

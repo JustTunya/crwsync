@@ -24,10 +24,10 @@ export class VerificationService {
   async create(dto: CreateVerificationDto): Promise<VerificationEntity> {
     const user = await this.uRepo.findOne({ where: { id: dto.user_id, email: dto.email } });
     if (!user) {
-      throw new NotFoundException(`User with id ${dto.user_id} and email ${dto.email} not found`);
+      throw new NotFoundException("User not found");
     }
     if (user.email_verified_at) {
-      throw new BadRequestException(`User with email ${dto.email} has already verified their email`);
+      throw new BadRequestException("User has already verified their email");
     }
 
     const token = randomBytes(32).toString("hex");
@@ -66,7 +66,7 @@ export class VerificationService {
   async findOne(id: string): Promise<VerificationEntity> {
     const verification = await this.vRepo.findOne({ where: { id } });
     if (!verification) {
-      throw new NotFoundException(`Verification with ID ${id} not found`);
+      throw new NotFoundException("Verification not found");
     }
     return verification;
   }
@@ -74,7 +74,7 @@ export class VerificationService {
   async findByEmail(email: string): Promise<VerificationEntity> {
     const verification = await this.vRepo.findOne({ where: { email } });
     if (!verification) {
-      throw new NotFoundException(`Verification for email ${email} not found`);
+      throw new NotFoundException("Verification not found");
     }
     return verification;
   }
@@ -83,7 +83,7 @@ export class VerificationService {
     const hashedToken = createHash('sha256').update(token).digest('hex');
     const verification = await this.vRepo.findOne({ where: { token_hash: hashedToken } });
     if (!verification) {
-      throw new NotFoundException(`Verification for token ${token} not found`);
+      throw new NotFoundException("Verification not found");
     }
     return verification;
   }
@@ -91,7 +91,7 @@ export class VerificationService {
   async update(id: string, dto: UpdateVerificationDto): Promise<VerificationEntity> {
     const verification = await this.findOne(id);
     if (!verification) {
-      throw new NotFoundException(`Verification with ID ${id} not found`);
+      throw new NotFoundException("Verification not found");
     }
     Object.assign(verification, dto);
     return this.vRepo.save(verification);
@@ -100,7 +100,7 @@ export class VerificationService {
   async remove(id: string): Promise<void> {
     const result = await this.vRepo.delete(id);
     if (result.affected === 0) {
-      throw new NotFoundException(`Verification with ID ${id} not found`);
+      throw new NotFoundException("Verification not found");
     }
   }
 

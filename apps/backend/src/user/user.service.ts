@@ -29,7 +29,7 @@ export class UserService {
   async findOne(id: string): Promise<UserEntity> {
     const user = await this.repo.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException("User not found");
     }
     return user;
   }
@@ -62,7 +62,7 @@ export class UserService {
   async remove(id: string): Promise<void> {
     const result = await this.repo.delete(id);
     if (result.affected === 0) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException("User not found");
     }
   }
 }

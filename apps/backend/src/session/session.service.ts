@@ -23,7 +23,7 @@ export class SessionService {
   async create(dto: CreateSessionDto, req: Request): Promise<{session: SessionEntity, token: string}> {
     const user = await this.uRepo.findOne({ where: { id: dto.user_id } });
     if (!user) {
-      throw new NotFoundException(`User with id ${dto.user_id} not found`);
+      throw new NotFoundException("User not found");
     }
 
     const token = randomBytes(32).toString("hex");
@@ -56,7 +56,7 @@ export class SessionService {
   async findOne(id: string): Promise<SessionEntity> {
     const session = await this.sRepo.findOne({ where: { id } });
     if (!session) {
-      throw new NotFoundException(`Session with id ${id} not found`);
+      throw new NotFoundException("Session not found");
     }
     return session;
   }
@@ -64,7 +64,7 @@ export class SessionService {
   async update(id: string, dto: UpdateSessionDto): Promise<SessionEntity> {
     const session = await this.sRepo.findOne({ where: { id } });
     if (!session) {
-      throw new NotFoundException(`Session with id ${id} not found`);
+      throw new NotFoundException("Session not found");
     }
 
     Object.assign(session, dto);
@@ -74,7 +74,7 @@ export class SessionService {
   async remove(id: string): Promise<void> {
     const result = await this.sRepo.delete(id);
     if (result.affected === 0) {
-      throw new NotFoundException(`Session with id ${id} not found`);
+      throw new NotFoundException("Session not found");
     }
   }
 
@@ -82,13 +82,13 @@ export class SessionService {
     const hashedToken = createHash('sha256').update(dto.token).digest('hex');
     const session = await this.sRepo.findOne({ where: { refresh_token_hash: hashedToken } });
     if (!session) {
-      throw new UnauthorizedException(`Invalid session token ${dto.token}`);
+      throw new UnauthorizedException("Invalid session token");
     }
     if (session.expires_at && session.expires_at < new Date()) {
-      throw new UnauthorizedException(`Session with token ${dto.token} has expired`);
+      throw new UnauthorizedException("Session has expired");
     }
     if (session.revoked_at) {
-      throw new UnauthorizedException(`Session with token ${dto.token} has been revoked`);
+      throw new UnauthorizedException("Session has been revoked");
     }
     return session;
   }
@@ -97,13 +97,13 @@ export class SessionService {
     const oldHashedToken = createHash('sha256').update(dto.old_token).digest('hex');
     const oldSession = await this.sRepo.findOne({ where: { user_id: dto.user_id, refresh_token_hash: oldHashedToken } });
     if (!oldSession) {
-      throw new NotFoundException(`Old session with userId ${dto.user_id} and token ${dto.old_token} not found`);
+      throw new NotFoundException("Old session not found");
     }
     if (oldSession.expires_at && oldSession.expires_at < new Date()) {
-      throw new BadRequestException(`Old session with userId ${dto.user_id} and token ${dto.old_token} has expired`);
+      throw new BadRequestException("Old session has expired");
     }
     if (oldSession.revoked_at) {
-      throw new BadRequestException(`Old session with userId ${dto.user_id} and token ${dto.old_token} has been revoked`);
+      throw new BadRequestException("Old session has been revoked");
     }
 
     const { session: newSession, token: refreshToken } = await this.create({
