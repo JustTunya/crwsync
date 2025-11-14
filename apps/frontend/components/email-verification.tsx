@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getEmailVerificationStatus, sendVerificationEmail, verifyEmail } from "@/services/auth.service";
+import { getEmailVerificationStatus, resendVerificationEmail, sendVerificationEmail, verifyEmail } from "@/services/auth.service";
 import { GlassBox } from "@/components/ui/glassbox";
 import { Button } from "@/components/ui/button";
 
@@ -46,6 +46,18 @@ export function EmailVerification({ token }: { token: string | null }) {
     });
   }, [token, router]);
 
+  const handleResend = async () => {
+    if (!token) return;
+
+    const { success, message } = await resendVerificationEmail(token);
+    
+    if (success) {
+      alert(message || "Verification email resent successfully");
+    } else {
+      alert(message || "Failed to resend verification email");
+    }
+  };
+
   return (
     <GlassBox>
       <h1 className="text-xl sm:text-2xl font-medium mb-4">Email Verification</h1>
@@ -67,7 +79,7 @@ export function EmailVerification({ token }: { token: string | null }) {
             Please request a new one by pressing the button below.
           </p>
 
-          <Button className="mt-4" variant="outline" onClick={() => {}}>Request New Email</Button>
+          <Button className="mt-4" variant="outline" onClick={handleResend}>Request New Email</Button>
         </>
       )}
       {status === "error" && (

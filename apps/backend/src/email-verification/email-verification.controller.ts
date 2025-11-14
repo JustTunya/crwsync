@@ -23,6 +23,13 @@ export class VerificationController {
   }
 
   @Public()
+  @Post("resend-token")
+  @HttpCode(HttpStatus.OK)
+  async resendToken(@Body("token") token: string): Promise<{ success: boolean; message?: string }> {
+    return this.verificationService.resendToken(token);
+  }
+
+  @Public()
   @Get("verify")
   @HttpCode(HttpStatus.OK)
   async verify(@Query("token") token: string): Promise<{ success: boolean; message?: string }> {

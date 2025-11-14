@@ -111,7 +111,7 @@ export class VerificationService {
       throw new NotFoundException("Verification not found");
     }
 
-    if (verification.status !== "pending") {
+    if (verification.status !== MailVerificationStatus.PENDING) {
       throw new NotFoundException("Verification not found");
     }
 
@@ -145,5 +145,33 @@ export class VerificationService {
 
     const status = verification.expires_at && verification.expires_at < new Date() ? MailVerificationStatus.EXPIRED : verification.status as MailVerificationStatus;
     return { status };
+  }
+
+  async resendToken(token: string): Promise<{ success: boolean; message?: string }> {
+    const hashedToken = createHash('sha256').update(token).digest('hex');
+
+    const verification = await this.vRepo.findOne({ where: { token_hash: hashedToken }, relations: ["user"] });
+
+    if (!verification) {
+      throw new NotFoundException("Verification not found");
+    }
+
+    if (verification.status === MailVerificationStatus.VERIFIED) {
+      throw new BadRequestException("Email is already verified");
+    }
+
+    if (!verification.user_id || !verification.email) {
+      throw new NotFoundException("User not found for this verification");
+    }
+
+    verification.status = MailVerificationStatus.REVOKED;
+    await this.vRepo.save(verification);
+
+    await this.create({
+      user_id: verification.user_id,
+      email: verification.email
+    });
+
+    return { success: true, message: "Verification token resent successfully" };
   }
 }

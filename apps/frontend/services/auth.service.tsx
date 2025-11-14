@@ -177,6 +177,19 @@ export async function sendVerificationEmail(email: string, userId: string): Prom
   }
 }
 
+export async function resendVerificationEmail(token: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const response = await api.post("/email-verifications/resend-token", { token });
+    return { success: response.data.success ?? true, message: response.data.message ?? "Verification token resent successfully" };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp.message || "An unexpected error occurred" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
 export async function verifyEmail(token: string): Promise<{ success: boolean; message?: string }> {
   try {
     const response = await api.get("/email-verifications/verify", {

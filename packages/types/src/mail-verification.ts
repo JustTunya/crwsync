@@ -13,4 +13,5 @@ export enum MailVerificationStatus {
   PENDING = "pending",
   VERIFIED = "verified",
   EXPIRED = "expired",
+  REVOKED = "revoked",
 }
