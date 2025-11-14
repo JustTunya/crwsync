@@ -56,7 +56,7 @@ export class VerificationService {
       context: { url: url.toString() }
     });
 
-    return this.vRepo.save(verification);
+    return verification;
   }
 
   findAll(): Promise<VerificationEntity[]> {

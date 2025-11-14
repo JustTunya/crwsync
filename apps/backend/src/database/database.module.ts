@@ -6,7 +6,6 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: "postgres",

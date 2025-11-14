@@ -14,7 +14,7 @@ export function isPhoneNumberValid(phone: string): boolean {
 }
 
 export function isNameValid(name: string): boolean {
-  const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]{2,50}$/; // Allows letters, spaces, apostrophes, and hyphens
+  const nameRegex = /^[\p{L}\s'-]{2,50}$/u; // Allows letters, spaces, apostrophes, and hyphens
   return nameRegex.test(name);
 }
 

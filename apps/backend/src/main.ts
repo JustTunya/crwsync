@@ -26,7 +26,8 @@ async function bootstrap() {
   const origin = (config.get<string>("CORS_ORIGIN") || "")
     .split(",").map((o) => o.trim()).filter(Boolean);
   if (!origin.length) {
-    return new Error("CORS_ORIGIN must be set");
+    logger.error("CORS_ORIGIN must be set");
+    process.exit(1);
   }
   app.enableCors({
     origin: (reqo: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {

@@ -57,7 +57,7 @@ export class PasswordResetService {
       context: { url: url.toString() }
     });
 
-    return this.prRepo.save(passwordReset);
+    return passwordReset;
   }
 
   findAll(): Promise<PasswordResetEntity[]> {

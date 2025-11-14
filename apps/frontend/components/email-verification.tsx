@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { getEmailVerificationStatus, sendVerificationEmail, verifyEmail } from "@/services/auth.service";
 import { GlassBox } from "@/components/ui/glassbox";
 import { Button } from "@/components/ui/button";
-import { MailVerificationStatus } from "@crwsync/types";
 
 export function EmailVerification({ token }: { token: string | null }) {
   const router = useRouter();
