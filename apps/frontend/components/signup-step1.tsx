@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useValidator } from "@/hooks/use-validator";
-import { cn } from "@/lib/utils";
+import { StrengthIndicator } from "./ui/strength_indicator";
 
 interface SignupStep1Props {
   form: {
@@ -28,6 +28,8 @@ export default function SignupStep1(props: SignupStep1Props) {
   const validUsername = useAvailability("username", props.form.username, isUsernameValid);
   const validPassword = useValidator(props.form.password, isPasswordStrong);
   const matchingPasswords = useMatch(props.form.password, props.form.confpassword);
+
+  const hasPassword = props.form.password.length > 0;
 
   const validStep = useMemo(() => {
     return (
@@ -86,19 +88,7 @@ export default function SignupStep1(props: SignupStep1Props) {
         />
       </div>
 
-      <div className="flex flex-row items-center justify-between">
-        <div className="w-[70%] flex flex-row gap-3">
-          <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-error", validPassword?.meta?.level === "medium" && "bg-warning", validPassword?.meta?.level === "strong" && "bg-success")} />
-          <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-base-400", validPassword?.meta?.level === "medium" && "bg-warning", validPassword?.meta?.level === "strong" && "bg-success")} />
-          <div className={cn("w-full h-2 rounded-full", validPassword?.meta?.level === undefined && "bg-base-400", validPassword?.meta?.level === "weak" && "bg-base-400", validPassword?.meta?.level === "medium" && "bg-base-400", validPassword?.meta?.level === "strong" && "bg-success")} />
-        </div>
-
-        <div className={cn("text-xs font-medium", validPassword?.meta?.level === undefined && "text-base-400", validPassword?.meta?.level === "weak" && "text-error", validPassword?.meta?.level === "medium" && "text-warning", validPassword?.meta?.level === "strong" && "text-success")}>
-          {validPassword?.meta?.level === "weak" && "Too Weak"}
-          {validPassword?.meta?.level === "medium" && "Could be stronger"}
-          {validPassword?.meta?.level === "strong" && "Strong password"}
-        </div>
-      </div>
+      <StrengthIndicator visible={hasPassword} level={validPassword?.meta?.level} />
 
       <div className="space-y-4">
         <Label htmlFor="confpassword">Confirm Password</Label>
@@ -112,7 +102,7 @@ export default function SignupStep1(props: SignupStep1Props) {
           error={matchingPasswords === false && validPassword?.value === true}
         />
         {(matchingPasswords === false) && (
-          <Label error>Passwords do not match or are too short</Label>
+          <Label error>Passwords do not match</Label>
         )}
       </div>
 

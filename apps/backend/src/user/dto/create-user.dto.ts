@@ -1,15 +1,4 @@
-import {
-  IsEmail,
-  IsEnum,
-  IsISO8601,
-  IsOptional,
-  IsString,
-  IsArray,
-  ArrayNotEmpty,
-  IsObject,
-  IsBoolean,
-} from 'class-validator';
-import { UserRole, UserStatus, UserPreference, UserProfile, UserGenderValue } from '@crwsync/types';
+import { IsEmail, IsISO8601, IsOptional, IsString, IsUUID, Matches, MinLength } from "class-validator";
 
 export class CreateUserDto {
   @IsEmail()
@@ -24,50 +13,41 @@ export class CreateUserDto {
   @IsString()
   lastname!: string;
 
-  @IsEnum(UserGenderValue, { message: 'gender must be one of: ' + Object.values(UserGenderValue).join(', ') })
-  gender!: UserGenderValue;
-
   @IsISO8601()
   birthdate!: string;
 
   @IsOptional()
   @IsString()
-  avatar_url?: string;
+  avatar_key?: string;
 
   @IsOptional()
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsEnum(UserRole, { each: true })
-  roles?: UserRole[];
-
-  @IsOptional()
-  @IsEnum(UserStatus)
-  status?: UserStatus;
-
-  @IsOptional()
-  @IsObject()
-  preferences?: UserPreference;
-
-  @IsOptional()
-  @IsObject()
-  profile?: UserProfile;
+  @IsUUID()
+  system_role_id?: string;
 
   @IsString()
+  @MinLength(8)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/, 
+    { message: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character." }
+  )
   password!: string;
 
   @IsOptional()
-  @IsBoolean()
-  email_verified?: boolean;
-
-  @IsOptional()
-  @IsString()
-  refresh_token?: string;
+  @IsISO8601()
+  last_password_change?: string;
 
   @IsOptional()
   @IsISO8601()
-  updated_at?: string;
+  email_verified_at?: string;
 
   @IsOptional()
   @IsISO8601()
   last_login?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  created_at?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  updated_at?: string;
 }

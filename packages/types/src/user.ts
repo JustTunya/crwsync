@@ -1,63 +1,31 @@
-export enum UserRole {
-  ADMIN = 'admin',
-  MEMBER = 'member',
-}
+import { RoleEnum } from "./role";
 
-export enum UserStatus {
-  AVAILABLE = 'available',
-  AWAY = 'away',
-  BUSY = 'busy',
-  DO_NOT_DISTURB = 'do_not_disturb',
-  OFFLINE = 'offline',
-}
-
-export enum UserGenderValue {
-  FEMALE = 'female',
-  MALE = 'male',
-  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
-}
-
-export const UserGender = {
-  FEMALE: { value: UserGenderValue.FEMALE, label: 'Female' },
-  MALE: { value: UserGenderValue.MALE, label: 'Male' },
-  PREFER_NOT_TO_SAY: { value: UserGenderValue.PREFER_NOT_TO_SAY, label: 'Prefer not to say' },
-} as const;
-
-export interface UserPreference {
-  theme: 'light' | 'dark' | 'system';
-  notifications: {
-    email: boolean;
-    push: boolean;
-  };
-}
-
-export interface UserProfile {
-  bio?: string;
-  location?: string;
-  website?: string;
-  socials?: Record<string, string>;
-}
-
-export interface User {
+export interface UserType {
   id: string;
   email: string;
   username: string;
   firstName: string;
   lastName: string;
-  gender: UserGenderValue;
   birthdate: string;
-  avatarUrl?: string;
-  roles: UserRole[];
-  status: UserStatus;
-  preferences: UserPreference;
-  profile?: UserProfile;
-  createdAt: string;
-  updatedAt: string;
-  lastLogin?: string;
+  avatar_key?: string;
+  role: RoleEnum;
+  role_version: number;
+  password_hash: string;
+  last_password_change?: string;
+  last_role_change?: string;
+  email_verified_at?: string;
+  last_login?: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface UserEntity extends User {
-  passwordHash: string;
-  emailVerified: boolean;
-  refreshToken?: string;
+export interface SessionUserType {
+  id: string;
+  email: string;
+  username: string;
+  firstname: string;
+  lastname: string;
+  avatar_key?: string;
+  role: RoleEnum;
+  role_version: number;
 }

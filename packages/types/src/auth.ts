@@ -5,7 +5,6 @@ export interface SignupState {
     username?: string;
     firstname?: string;
     lastname?: string;
-    gender?: string;
     birthdate?: string;
     password?: string;
     confpassword?: string;
@@ -19,7 +18,6 @@ export interface SignupPayload {
   username: string;
   firstname: string;
   lastname: string;
-  gender: string;
   birthdate: string;
   password: string;
 }
@@ -55,7 +53,7 @@ export interface ForgotPasswordPayload {
 export interface ResetPasswordState {
   success?: boolean;
   errors?: {
-    password?: string;
+    newPassword?: string;
     token?: string;
   };
   message?: string;
@@ -63,7 +61,15 @@ export interface ResetPasswordState {
 
 export interface ResetPasswordPayload {
   token: string;
-  password: string;
+  newPassword: string;
+}
+
+export interface JwtPayload {
+  sub: string;
+  email: string;
+  jti: string;
+  role: string;
+  rver: number;
 }
 
 export interface JwtResponse {

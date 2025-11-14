@@ -1,12 +1,10 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { randomBytes } from "crypto";
 import { hash } from "bcrypt";
 import { UserEntity } from "src/user/user.entity";
 import { CreateUserDto } from "src/user/dto/create-user.dto";
 import { UpdateUserDto } from "src/user/dto/update-user.dto";
-import { VerificationService } from "src/verification/verification.service";
 
 @Injectable()
 export class UserService {
@@ -31,7 +29,7 @@ export class UserService {
   async findOne(id: string): Promise<UserEntity> {
     const user = await this.repo.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException("User not found");
     }
     return user;
   }
@@ -45,7 +43,7 @@ export class UserService {
     });
   }
 
-  async checkEmailOrUsername(field: 'email' | 'username', value: string): Promise<{ available: boolean }> {
+  async checkEmailOrUsername(field: "email" | "username", value: string): Promise<{ available: boolean }> {
     const exists = await this.repo.findOne({
       where: { [field]: value }
     });
@@ -64,7 +62,7 @@ export class UserService {
   async remove(id: string): Promise<void> {
     const result = await this.repo.delete(id);
     if (result.affected === 0) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException("User not found");
     }
   }
 }

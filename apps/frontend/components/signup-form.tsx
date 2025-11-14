@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useCallback, useActionState, useEffect } from "react";
-import { SignupState, SignupPayload, UserGenderValue } from "@crwsync/types";
+import { SignupState, SignupPayload } from "@crwsync/types";
 import { GlassBox } from "@/components/ui/glassbox";
 import { signup } from "@/services/auth.service";
 import { cn, variants } from "@/lib/utils";
@@ -32,13 +32,12 @@ export function SignupForm() {
     confpassword: "",
     firstname: "",
     lastname: "",
-    gender: undefined as UserGenderValue | undefined,
     birthyear: "",
     birthmonth: "",
     birthday: ""
   });
 
-  const updateForm = useCallback((field: keyof typeof form, value: string | UserGenderValue | undefined) => {
+  const updateForm = useCallback((field: keyof typeof form, value: string | undefined) => {
     setForm(prev => ({ ...prev, [field]: value }));
   }, []);
 
@@ -49,7 +48,6 @@ export function SignupForm() {
       password: form.password,
       firstname: form.firstname,
       lastname: form.lastname,
-      gender: form.gender || '',
       birthdate: `${form.birthyear}-${form.birthmonth}-${form.birthday}`,
     }
     dispatch(payload);
@@ -71,8 +69,8 @@ export function SignupForm() {
         </p>
       </div>
 
-      <form action={handleSubmit} className="sm:min-w-sm flex flex-col items-center space-y-8">
-          <div className="w-1/2 flex justify-between items-center gap-2 mb-12 sm:mb-16">
+      <form action={handleSubmit} className="sm:min-w-sm flex flex-col items-center">
+          <div className="w-1/2 flex justify-between items-center gap-2 mb-8 sm:mb-12">
             {Array.from({ length: steps }, (_, i) => (
               <div key={i} className={cn(
                 "relative flex items-center",
@@ -157,7 +155,7 @@ export function SignupForm() {
       </form>
 
       { step < 3 && (
-        <div className="mt-8">
+        <div className="mt-6">
           <p className="w-full text-center text-xs sm:text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/auth/signin" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">

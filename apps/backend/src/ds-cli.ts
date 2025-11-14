@@ -1,1 +1,1 @@
-export { AppDataSource as default } from './data-source';
+export { AppDataSource as default } from "src/data-source";

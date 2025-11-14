@@ -1,5 +1,5 @@
-import 'reflect-metadata';
-import { AppDataSource } from './data-source';
+import "reflect-metadata";
+import { AppDataSource } from "src/data-source";
 
 (async () => {
   try {

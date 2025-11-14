@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useActionState, startTransition } from "react";
+import { useState, useEffect, useActionState, startTransition } from "react";
 import { motion } from "framer-motion";
 import { SigninState, SigninPayload } from "@crwsync/types";
 import { signin } from "@/services/auth.service";
@@ -19,7 +18,7 @@ const initState: SigninState = {
   message: "",
 };
 
-export function SigninForm() {
+export function SigninForm({ next } : { next: string | null }) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -33,6 +32,12 @@ export function SigninForm() {
       dispatch(payload);
     });
   };
+
+  useEffect(() => {
+    if (state.success) {
+      window.location.assign(next ?? "/dash");
+    }
+  }, [state.success, next]);
 
   return (
     <GlassBox>
@@ -89,7 +94,7 @@ export function SigninForm() {
                 Remember Me
               </Label>
             </label>
-            <Link href="/auth/password/forgot" className="text-accent underline underline-offset-2 text-xs sm:text-sm rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
+            <Link href="/auth/forgot-password" className="text-accent underline underline-offset-2 text-xs sm:text-sm rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
               Forgot password?
             </Link>
           </div>

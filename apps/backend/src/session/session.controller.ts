@@ -1,0 +1,93 @@
+import {
+  Body, Controller, HttpCode, HttpStatus, Post, Get, Param, Patch, Delete, UsePipes, ValidationPipe, ParseUUIDPipe, Req,
+  UseGuards
+} from "@nestjs/common";
+import { RoleEnum } from "@crwsync/types";
+import { Request } from "express";
+import { SessionService } from "src/session/session.service";
+import { SessionEntity } from "src/session/session.entity";
+import { CreateSessionDto } from "src/session/dto/create-session.dto";
+import { UpdateSessionDto } from "src/session/dto/update-session.dto";
+import { RotateSessionDto } from "src/session/dto/rotate-session.dto";
+import { VerifySessionDto } from "src/session/dto/verify-session.dto";
+import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
+import { Roles } from "src/common/decorators/roles.decorator";
+
+@Controller("sessions")
+@UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+@UseGuards(JwtAuthGuard)
+@Roles(RoleEnum.ADMIN)
+export class SessionController {
+  constructor(private readonly sessionService: SessionService) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() dto: CreateSessionDto, @Req() req: Request): Promise<{session: SessionEntity, token: string}> {
+    return this.sessionService.create(dto, req);
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  findAll(): Promise<SessionEntity[]> {
+    return this.sessionService.findAll();
+  }
+
+  @Get(":sessionId")
+  @HttpCode(HttpStatus.OK)
+  findOne(@Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string): Promise<SessionEntity> {
+    return this.sessionService.findOne(sessionId);
+  }
+
+  @Patch(":sessionId")
+  @HttpCode(HttpStatus.OK)
+  update(
+    @Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string,
+    @Body() dto: UpdateSessionDto
+  ): Promise<SessionEntity> {
+    return this.sessionService.update(sessionId, dto);
+  }
+
+  @Delete(":sessionId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string): Promise<void> {
+    await this.sessionService.remove(sessionId);
+  }
+
+  @Post("verify")
+  @HttpCode(HttpStatus.OK)
+  verify(
+    @Body() dto: VerifySessionDto
+  ): Promise<SessionEntity> {
+    return this.sessionService.verify(dto);
+  }
+
+  @Post("rotate")
+  @HttpCode(HttpStatus.OK)
+  rotate(@Body() dto: RotateSessionDto, @Req() req: Request): Promise<{ session: SessionEntity, refreshToken: string }> {
+    return this.sessionService.rotate(dto, req);
+  }
+
+  @Delete("revoke/:sessionId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async revoke(@Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string): Promise<void> {
+    await this.sessionService.revoke(sessionId);
+  }
+
+  @Delete("revoke-all/:userId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async revokeAll(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<void> {
+    await this.sessionService.revokeAll(userId);
+  }
+
+  @Post("purge-expired")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async purgeExpired(): Promise<void> {
+    await this.sessionService.purgeExpired();
+  }
+
+  @Post("purge-all")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async purgeAll(): Promise<void> {
+    await this.sessionService.purgeAll();
+  }
+}

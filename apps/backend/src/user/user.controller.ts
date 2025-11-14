@@ -1,50 +1,60 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, UsePipes, ValidationPipe, Patch, Delete, Query, ParseUUIDPipe} from "@nestjs/common";
-import { UserService } from "./user.service";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UserEntity } from "./user.entity";
-import { UpdateUserDto } from "./dto/update-user.dto";
+import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, UsePipes, ValidationPipe, Patch, Delete, Query, ParseUUIDPipe, UseGuards} from "@nestjs/common";
+import { RoleEnum } from "@crwsync/types";
+import { CreateUserDto } from "src/user/dto/create-user.dto";
+import { UpdateUserDto } from "src/user/dto/update-user.dto";
+import { UserService } from "src/user/user.service";
+import { UserEntity } from "src/user/user.entity";
+import { Roles } from "src/common/decorators/roles.decorator";
+import { OwnershipGuard } from "src/common/guards/ownership.guard";
+import { Public } from "src/common/decorators/public.decorator";
 
-@Controller('users')
+@Controller("users")
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Roles(RoleEnum.ADMIN)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() dto: CreateUserDto): Promise<UserEntity> {
     return this.userService.create(dto);
   }
 
+  @Roles(RoleEnum.ADMIN)
   @Get()
   @HttpCode(HttpStatus.OK)
   findAll(): Promise<UserEntity[]> {
     return this.userService.findAll();
   }
 
-  @Get('check-availability')
+  @Public()
+  @Get("check-availability")
   @HttpCode(HttpStatus.OK)
   checkAvailability(
-    @Query('field') field: 'email' | 'username',
-    @Query('value') value: string
+    @Query("field") field: "email" | "username",
+    @Query("value") value: string
   ): Promise<{ available: boolean }> {
     return this.userService.checkEmailOrUsername(field, value);
   }
 
-  @Get(':id')
+  @UseGuards(new OwnershipGuard("userId"))
+  @Get(":userId")
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<UserEntity> {
-    return this.userService.findOne(id);
+  findOne(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<UserEntity> {
+    return this.userService.findOne(userId);
   }
 
-  @Patch(':id')
+  @UseGuards(new OwnershipGuard("userId"))
+  @Patch(":userId")
   @HttpCode(HttpStatus.OK)
-  update(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
-    return this.userService.update(id, dto);
+  update(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
+    return this.userService.update(userId, dto);
   }
 
-  @Delete(':id')
+  @Roles(RoleEnum.ADMIN)
+  @Delete(":userId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<void> {
-    await this.userService.remove(id);
+  async remove(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<void> {
+    await this.userService.remove(userId);
   }
 }
