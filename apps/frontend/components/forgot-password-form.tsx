@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useActionState, useEffect } from "react";
+import { useState, useActionState } from "react";
 import { motion } from "framer-motion";
 import {
   ForgotPasswordState,

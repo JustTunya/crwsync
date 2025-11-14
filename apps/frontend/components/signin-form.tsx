@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useState, useEffect, useActionState, startTransition, use } from "react";
+import { useState, useEffect, useActionState, startTransition } from "react";
 import { motion } from "framer-motion";
 import { SigninState, SigninPayload } from "@crwsync/types";
 import { signin } from "@/services/auth.service";
@@ -19,9 +18,7 @@ const initState: SigninState = {
   message: "",
 };
 
-export function SigninForm() {
-  const params = useSearchParams();
-
+export function SigninForm({ next } : { next: string | null }) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -38,10 +35,9 @@ export function SigninForm() {
 
   useEffect(() => {
     if (state.success) {
-      const next = params.get("next");
       window.location.assign(next ?? "/dash");
     }
-  }, [state.success, params]);
+  }, [state.success, next]);
 
   return (
     <GlassBox>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useActionState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useValidator } from "@/hooks/use-validator";
 import { useMatch } from "@/hooks/use-match";
@@ -21,10 +21,7 @@ const initState: ResetPasswordState = {
   message: "",
 };
 
-export function ResetPasswordForm() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token") ?? "";
-
+export function ResetPasswordForm({ token } : { token: string | null }) {
   const router = useRouter();
 
   const [password, setPassword] = useState("");
@@ -45,6 +42,7 @@ export function ResetPasswordForm() {
   }, [validPassword, matchingPasswords]);
 
   const handleReset = () => {
+    if (!token) return;
     const payload: ResetPasswordPayload = { token, newPassword: password };
     dispatch(payload);
   };

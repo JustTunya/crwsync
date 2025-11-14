@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getEmailVerificationStatus, resendVerificationEmail, sendVerificationEmail, verifyEmail } from "@/services/auth.service";
+import { getEmailVerificationStatus, resendVerificationEmail, verifyEmail } from "@/services/auth.service";
 import { GlassBox } from "@/components/ui/glassbox";
 import { Button } from "@/components/ui/button";
 
