@@ -155,11 +155,11 @@ export default function SignupStep2(props: SignupStep2Props) {
 
       <div className="mx-auto max-w-xs text-xs text-center text-muted-foreground text-pretty">
         By creating an account, you agree to our{" "}
-        <Link href="/legal/terms" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
+        <Link href="/legal/terms" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50 focus-visible:outline-none">
           Terms of Service
         </Link>{" "}
         and{" "}
-        <Link href="/legal/privacy" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
+        <Link href="/legal/privacy" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50 focus-visible:outline-none">
           Privacy Policy
         </Link>.
       </div>
@@ -170,9 +170,9 @@ export default function SignupStep2(props: SignupStep2Props) {
           variant="outline"
           onClick={props.onBack}
           disabled={props.pending}
-          className="w-[calc(25%-0.5rem)]"
+          className="w-[calc(25%-0.5rem)] text-xs sm:text-sm"
         >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
+          <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2.5} className="size-3 sm:size-4"/>
           Back
         </Button>
 

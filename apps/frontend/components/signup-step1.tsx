@@ -114,7 +114,7 @@ export default function SignupStep1(props: SignupStep1Props) {
       <Button
         type="button"
         onClick={props.onNext}
-        disabled={props.pending || !validStep}
+        // disabled={props.pending || !validStep}
       >
         Continue
       </Button>

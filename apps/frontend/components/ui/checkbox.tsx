@@ -38,7 +38,7 @@ export function Checkbox({ id, checked, onChange }: CheckboxProps) {
       aria-labelledby={id}
       aria-label="Checkbox"
       className={cn(
-        "size-4 border-1 rounded-sm shadow-sm/5 flex items-center justify-center cursor-pointer transition-colors backdrop-blur-xl",
+        "size-4 border-1 rounded-sm shadow-sm/5 flex items-center justify-center cursor-pointer transition-colors backdrop-blur-md",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary",
         checked ? "bg-primary/40 border-primary" : "bg-base-input/50 border-border"
       )}
