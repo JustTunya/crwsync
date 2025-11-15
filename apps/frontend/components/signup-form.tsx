@@ -69,8 +69,8 @@ export function SignupForm() {
         </p>
       </div>
 
-      <form action={handleSubmit} className="sm:min-w-sm flex flex-col items-center">
-          <div className="w-1/2 flex justify-between items-center gap-2 mb-8 sm:mb-12">
+      <form action={handleSubmit} className="w-full flex flex-col items-center">
+          <div className="w-3/4 sm:w-1/2 flex justify-between items-center gap-2 mb-8 sm:mb-12">
             {Array.from({ length: steps }, (_, i) => (
               <div key={i} className={cn(
                 "relative flex items-center",

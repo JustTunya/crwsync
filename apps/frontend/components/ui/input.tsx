@@ -16,7 +16,7 @@ function Input({ className, type, visible, setVisible, validation, error, ...pro
   const hasValidationIcon = validation !== undefined;
 
   const iconSize = 18;
-  const iconWidth = 1.5;
+  const iconWidth = 1;
 
   return (
     <div className={cn(
