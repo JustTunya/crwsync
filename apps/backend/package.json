@@ -15,7 +15,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "typeorm": "typeorm-ts-node-commonjs -d src/ds-cli.ts",
+    "typeorm": "npx typeorm -d dist/ds-cli.js",
     "migration:generate": "npm run typeorm -- migration:generate src/migrations/Init",
     "migration:run:ts": "npm run typeorm -- migration:run",
     "migration:run:js": "node dist/migrate.js"
