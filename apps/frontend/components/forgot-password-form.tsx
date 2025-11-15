@@ -15,6 +15,7 @@ import { isEmailValid } from "@/lib/validations";
 import { useAvailability } from "@/hooks/use-availability";
 import { cn, variants } from "@/lib/utils";
 import { GlassBox } from "@/components/ui/glassbox";
+import { Header } from "./ui/header";
 
 const initState: ForgotPasswordState = {
   success: false,
@@ -37,13 +38,7 @@ export function ForgotPasswordForm() {
 
   return (
     <GlassBox>
-      <div className="text-center space-y-2 mb-8 sm:mb-12">
-        <h1 className="text-xl sm:text-2xl font-medium">Forgot your password?</h1>
-        <p className="text-xs sm:text-sm text-balance text-muted-foreground/75">
-          Enter the email associated with your account and we will send you a link
-          to reset your password.
-        </p>
-      </div>
+      <Header title="Forgot your password?" description="Enter the email associated with your account and we will send you a link to reset your password." />
 
       <motion.div
         key="form"
@@ -61,6 +56,7 @@ export function ForgotPasswordForm() {
               id="email"
               type="email"
               value={email}
+              placeholder="johndoe@example.com"
               onChange={(e) => setEmail(e.target.value)}
               className={cn(
                 (validEmail?.available === true
@@ -91,7 +87,7 @@ export function ForgotPasswordForm() {
         Remembered your password?{' '}
         <Link
           href="/auth/signin"
-          className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none"
+          className="text-primary underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50 focus-visible:outline-none"
         >
           Sign In
         </Link>

@@ -16,11 +16,11 @@ function Input({ className, type, visible, setVisible, validation, error, ...pro
   const hasValidationIcon = validation !== undefined;
 
   const iconSize = 18;
-  const iconWidth =2;
+  const iconWidth =1.5;
 
   return (
     <div className={cn(
-      "w-full flex bg-input backdrop-blur-md border shadow-md/5 rounded-md transition-all", 
+      "w-full flex bg-input/50 backdrop-blur-xl border shadow-md/5 rounded-md transition-all", 
       "focus-within:ring-3 focus-within:ring-primary/50 focus-within:border-primary",
       error ? "border-error" : "border-border",
       className

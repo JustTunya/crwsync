@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import Background from "@/components/ui/background";
 
 export default function RootLayout({
   children,
@@ -20,6 +21,7 @@ export default function RootLayout({
           />
         </Link>
       </div>
+      <Background />
       {children}
     </>
   );

@@ -105,7 +105,9 @@ export default function SignupStep1(props: SignupStep1Props) {
           error={matchingPasswords === false && validPassword?.value === true}
         />
         {(matchingPasswords === false) && (
-          <Label error>Passwords do not match</Label>
+          <div className="w-full flex justify-center">
+            <Label error>Passwords do not match</Label>
+          </div>
         )}
       </div>
 

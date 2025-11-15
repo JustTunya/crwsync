@@ -4,10 +4,13 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useCallback, useActionState, useEffect } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Tick02Icon } from "@hugeicons/core-free-icons";
 import { SignupState, SignupPayload } from "@crwsync/types";
 import { GlassBox } from "@/components/ui/glassbox";
 import { signup } from "@/services/auth.service";
 import { cn, variants } from "@/lib/utils";
+import { Header } from "./ui/header";
 
 const SignupStep1 = dynamic(() => import("@/components/signup-step1"), { ssr: false });
 const SignupStep2 = dynamic(() => import("@/components/signup-step2"), { ssr: false });
@@ -62,12 +65,7 @@ export function SignupForm() {
 
   return (
     <GlassBox>
-      <div className="text-center space-y-2 mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-semibold">Create Your Account</h1>
-        <p className="text-xs sm:text-sm text-balance text-muted-foreground font-light">
-          Please fill in the details below to create your account.
-        </p>
-      </div>
+      <Header title="Create Your Account" description="Please fill in the details below to create your account." />
 
       <form action={handleSubmit} className="w-full flex flex-col items-center">
           <div className="w-2/3 sm:w-1/2 flex justify-between items-center gap-1 sm:gap-2 mb-8 sm:mb-12">
@@ -77,12 +75,16 @@ export function SignupForm() {
                 (i + 1 < steps) && "w-full"
               )}>
                 <div key={i} className="flex items-center justify-center bg-primary text-primary-foreground text-xs sm:text-sm size-5 sm:size-6 rounded-full">
-                  {(step > i) ? (
+                  {(step === i + 1) ? (
                     <>
                       <div className="size-2 sm:size-3 rounded-full bg-primary-foreground shadow-[0_0_4px_2px_rgba(255,255,255,0.2)]" />
-                      {(step === i+1) && <div className={cn("absolute inline-0 opacity-50 size-2 sm:size-3 rounded-full bg-primary-foreground shadow-[0_0_4px_2px_rgba(255,255,255,0.2)]", (step === i+1) && "animate-ping")}/>}
+                      <div className={cn("absolute inline-0 opacity-50 size-2 sm:size-3 rounded-full bg-primary-foreground shadow-[0_0_4px_2px_rgba(255,255,255,0.2)] animate-ping")}/>
                     </>
-                  ) : (i+1)}
+                  ) : (i + 1 < step) ? (
+                    <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.5} className="size-4 sm:size-5 text-primary-foreground" />
+                  ) : (
+                    <span>{i + 1}</span>
+                  )}
                 </div>
 
                 {(i + 1 < steps) && (<div className="bg-primary h-[0.15rem] sm:h-[0.2rem] w-[calc(100%-2rem)] ml-2 rounded-full" />)}
