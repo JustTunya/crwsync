@@ -25,16 +25,16 @@ export function StrengthIndicator({ visible, level }: StrengthIndicatorProps) {
           aria-live="polite"
         >
           <div className="flex flex-row items-center justify-between">
-            <div className="w-[70%] flex flex-row gap-3">
+            <div className="w-[70%] flex flex-row gap-2 sm:gap-3">
               {[1, 2, 3].map((s) => {
                 const active = s <= count;
                 return(
                   <motion.div
                     key={s}
-                    className="h-2 w-full rounded-full"
+                    className="h-[0.3rem] sm:h-[0.4rem] w-full rounded-full"
                     initial={false}
                     animate={{
-                      backgroundColor: active ? color : "var(--color-base-400)"
+                      backgroundColor: active ? color : "var(--color-base-200)"
                     }}
                     transition={{ type: "spring", stiffness: 260, damping: 28 }}
                   />
@@ -42,16 +42,15 @@ export function StrengthIndicator({ visible, level }: StrengthIndicatorProps) {
               })}
             </div>
 
-            <div className="min-w-[9rem] text-right">
+            <div className="min-w-[7rem] text-right">
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
                   key={level ?? "none"}
                   initial={{ y: 6, opacity: 0, filter: "blur(2px)" }}
-                  animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                  animate={{ y: 0, opacity: 1, filter: "blur(0px)", color: color }}
                   exit={{ y: -6, opacity: 0, filter: "blur(2px)" }}
                   transition={{ duration: 0.18 }}
-                  style={{ color: color }}
-                  className="text-xs font-medium inline-block"
+                  className="text-xs font-medium inline-block text-shadow-xs text-shadow-foreground/10"
                 >
                   {!level && "Enter a password"}
                   {level === "weak" && "Too weak"}

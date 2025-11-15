@@ -42,7 +42,7 @@ export default function SignupStep1(props: SignupStep1Props) {
 
   return(
     <>
-      <div className="space-y-4">
+      <div className="space-y-2 sm:space-y-3">
         <Label htmlFor="email">Email Address</Label>
         <Input
           id="email"
@@ -55,11 +55,13 @@ export default function SignupStep1(props: SignupStep1Props) {
           autoFocus
         />
         {(validEmail?.available === false && validEmail?.message) && (
-          <Label error>{validEmail.message}</Label>
+          <div className="w-full flex justify-center">
+            <Label error>{validEmail.message}</Label>
+          </div>
         )}
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2 sm:space-y-3">
         <Label htmlFor="username">Username</Label>
         <Input
           id="username"
@@ -71,11 +73,13 @@ export default function SignupStep1(props: SignupStep1Props) {
           error={validUsername?.available === false}
         />
         {(validUsername?.available === false && validUsername?.message) && (
-          <Label error>{validUsername.message}</Label>
+          <div className="w-full flex justify-center">
+            <Label error>{validUsername.message}</Label>
+          </div>
         )}
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2 sm:space-y-3">
         <Label htmlFor="password">Password</Label>
         <Input
           id="password"
@@ -86,11 +90,10 @@ export default function SignupStep1(props: SignupStep1Props) {
           onChange={(e) => props.updateForm("password", e.target.value)}
           error={matchingPasswords === false && validPassword?.value === true}
         />
+        <StrengthIndicator visible={hasPassword} level={validPassword?.meta?.level} />
       </div>
 
-      <StrengthIndicator visible={hasPassword} level={validPassword?.meta?.level} />
-
-      <div className="space-y-4">
+      <div className="space-y-2 sm:space-y-3">
         <Label htmlFor="confpassword">Confirm Password</Label>
         <Input
           id="confpassword"

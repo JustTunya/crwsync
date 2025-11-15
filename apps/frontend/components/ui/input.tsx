@@ -16,25 +16,28 @@ function Input({ className, type, visible, setVisible, validation, error, ...pro
   const hasValidationIcon = validation !== undefined;
 
   const iconSize = 18;
-  const iconWidth = 1;
+  const iconWidth =2;
 
   return (
     <div className={cn(
-      "w-full flex bg-base-100/50 backdrop-blur-md border shadow-lg/5 rounded-md", 
-      "focus-within:ring-3 focus-within:ring-accent/20",
-      error ? "border-error" : "border-base-100",
+      "w-full flex bg-input backdrop-blur-md border shadow-md/5 rounded-md transition-all", 
+      "focus-within:ring-3 focus-within:ring-primary/50 focus-within:border-primary",
+      error ? "border-error" : "border-border",
       className
       )}>
       <input
         type={type === "password" && visible ? "text" : type}
         data-slot="input"
         className={cn(
-          "file:text-foreground placeholder:text-muted-foreground/50 selection:text-primary selection:bg-accent/20 dark:bg-input/30 flex h-9 w-full min-w-0 px-3 py-1 text-sm sm:text-base transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+          "flex h-9 w-full px-3 py-1 text-xs sm:text-sm rounded-md",
+          "placeholder:text-placeholder selection:bg-primary/25 outline-none",
+          "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+          "file:text-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
+          "aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
         )}
         {...props}
       />
-      <div className={cn("h-9 flex justify-center items-center", (hasVisibilityIcon || hasValidationIcon) && "pr-3")}>
+      <div className={cn("h-9 flex justify-center items-center", (hasVisibilityIcon || hasValidationIcon) && "px-3")}>
         {hasVisibilityIcon && <HugeiconsIcon icon={visible ? ViewOffSlashIcon : ViewIcon} size={iconSize} strokeWidth={iconWidth} onClick={setVisible} className="cursor-pointer text-primary" />}
         {hasValidationIcon && <HugeiconsIcon icon={validation ? CheckmarkCircle02Icon : CancelCircleIcon} size={iconSize} strokeWidth={iconWidth} className={cn(validation ? "text-success" : "text-error")} />}
       </div>
