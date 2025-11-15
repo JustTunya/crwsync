@@ -64,6 +64,7 @@ export function ForgotPasswordForm() {
                   || state.errors?.email
                 ) && "border-error"
               )}
+              autoFocus
             />
             {(validEmail?.available === true) && (
               <Label error>This email address is not linked to any account.</Label>
