@@ -13,14 +13,12 @@ export default function Hero() {
       </p>
 
       <div className="flex items-center justify-center gap-4">
+        <Link href="https://youtu.be/dQw4w9WgXcQ?list=RDdQw4w9WgXcQ" className="text-muted-foreground hover:text-foreground transition-colors">
+          Learn More
+        </Link>
         <Link href="/auth/signup" className="bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
           Get Started
           <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} className="inline-block size-5 ml-1" />
-        </Link>
-
-        <Link href="https://youtu.be/dQw4w9WgXcQ?list=RDdQw4w9WgXcQ" className="border border-border text-sm text-muted-foreground px-4 py-2 rounded-lg hover:text-foreground transition-colors">
-          <HugeiconsIcon icon={PlayIcon} strokeWidth={2} className="inline-block size-5 mr-1" />
-          Watch Demo
         </Link>
       </div>
     </section>

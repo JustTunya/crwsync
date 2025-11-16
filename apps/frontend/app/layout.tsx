@@ -3,6 +3,7 @@ import { Figtree } from "next/font/google";
 import { UserProvider } from "@/providers/user.provider";
 import { getSession } from "@/lib/auth";
 import "@/app/globals.css";
+import Background from "@/components/ui/background";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -30,6 +31,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${figtree.variable} font-figtree antialiased`}>
+        <Background />
         <UserProvider user={user}>
           {children}
         </UserProvider>

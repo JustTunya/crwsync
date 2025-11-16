@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import Background from "@/components/ui/background";
 
 export default function RootLayout({
   children,
@@ -14,7 +13,6 @@ export default function RootLayout({
           <Image src="/logo.svg" alt="crwsync" width={3250} height={512} className="h-8 sm:w-auto" priority />
         </Link>
       </div>
-      <Background />
 
       <div className="my-24 sm:my-32">{children}</div>
     </>
