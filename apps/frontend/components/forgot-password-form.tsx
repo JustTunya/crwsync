@@ -15,7 +15,7 @@ import { isEmailValid } from "@/lib/validations";
 import { useAvailability } from "@/hooks/use-availability";
 import { cn, variants } from "@/lib/utils";
 import { GlassBox } from "@/components/ui/glassbox";
-import { Header } from "./ui/header";
+import { Lead } from "./ui/lead";
 
 const initState: ForgotPasswordState = {
   success: false,
@@ -38,7 +38,7 @@ export function ForgotPasswordForm() {
 
   return (
     <GlassBox>
-      <Header title="Forgot your password?" description="Enter the email associated with your account and we will send you a link to reset your password." />
+      <Lead title="Forgot your password?" description="Enter the email associated with your account and we will send you a link to reset your password." />
 
       <motion.div
         key="form"

@@ -1,9 +1,9 @@
-interface HeaderProps {
+interface LeadProps {
   title: string;
   description: string;
 }
 
-export function Header({ title, description }: HeaderProps) {
+export function Lead({ title, description }: LeadProps) {
   return (
     <div className="text-center space-y-2 mb-6 sm:mb-8">
       <h1 className="text-xl sm:text-2xl font-semibold">{title}</h1>
