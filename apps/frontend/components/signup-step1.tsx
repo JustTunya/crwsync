@@ -29,6 +29,8 @@ export default function SignupStep1(props: SignupStep1Props) {
   const validPassword = useValidator(props.form.password, isPasswordStrong);
   const matchingPasswords = useMatch(props.form.password, props.form.confpassword);
 
+  console.log(validPassword);
+
   const hasPassword = props.form.password.length > 0;
 
   const validStep = useMemo(() => {
@@ -36,6 +38,7 @@ export default function SignupStep1(props: SignupStep1Props) {
       validEmail?.available === true &&
       validUsername?.available === true &&
       validPassword?.value === true &&
+      validPassword?.legit === true &&
       matchingPasswords === true
     );
   }, [validEmail, validUsername, validPassword, matchingPasswords]);
@@ -90,7 +93,14 @@ export default function SignupStep1(props: SignupStep1Props) {
           onChange={(e) => props.updateForm("password", e.target.value)}
           error={matchingPasswords === false && validPassword?.value === true}
         />
-        <StrengthIndicator visible={hasPassword} level={validPassword?.meta?.level} />
+        {(validPassword?.legit ? (
+          <StrengthIndicator visible={hasPassword} level={validPassword?.meta?.level} />
+        ) : (
+          <div className="w-full flex justify-center">
+            <Label error>The password contains invalid characters.</Label>
+          </div>
+        ))}
+
       </div>
 
       <div className="space-y-2 sm:space-y-3">
@@ -114,7 +124,7 @@ export default function SignupStep1(props: SignupStep1Props) {
       <Button
         type="button"
         onClick={props.onNext}
-        // disabled={props.pending || !validStep}
+        disabled={props.pending || !validStep}
       >
         Continue
       </Button>

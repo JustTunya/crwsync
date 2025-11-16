@@ -3,12 +3,14 @@ import { useDebounce } from 'use-debounce';
 
 interface ValidatorResult {
   value: boolean | undefined;
+  legit: boolean | undefined;
   meta?: any;
 }
 
-export function useValidator(value: string, validator: (value: string) => boolean | { level: 'weak' | 'medium' | 'strong' }): ValidatorResult {
+export function useValidator(value: string, validator: (value: string) => boolean | { legit: boolean, level: 'weak' | 'medium' | 'strong' }): ValidatorResult {
   const [debounced] = useDebounce(value, 500);
   const [isValid, setIsValid] = useState<boolean | undefined>(undefined);
+  const [legit, setLegit] = useState<boolean | undefined>(undefined);
   const [meta, setMeta] = useState<any>(undefined);
 
   useEffect(() => {
@@ -16,6 +18,7 @@ export function useValidator(value: string, validator: (value: string) => boolea
 
     if (!term) {
       setIsValid(undefined);
+      setLegit(undefined);
       setMeta(undefined);
       return;
     }
@@ -27,15 +30,18 @@ export function useValidator(value: string, validator: (value: string) => boolea
         if (!isCancelled) {
           if (typeof result === 'object' && result !== null) {
             setIsValid(result.level !== 'weak');
+            setLegit(result.legit);
             setMeta(result);
           } else {
             setIsValid(result);
+            setLegit(undefined);
             setMeta(undefined);
           }
         }
       } catch (error) {
         if (!isCancelled) {
           setIsValid(undefined);
+          setLegit(undefined);
           setMeta(undefined);
         }
       }
@@ -48,5 +54,5 @@ export function useValidator(value: string, validator: (value: string) => boolea
     };
   }, [debounced, validator]);
 
-  return { value: isValid, meta };
+  return { value: isValid, legit, meta };
 }
