@@ -29,8 +29,6 @@ export default function SignupStep1(props: SignupStep1Props) {
   const validPassword = useValidator(props.form.password, isPasswordStrong);
   const matchingPasswords = useMatch(props.form.password, props.form.confpassword);
 
-  console.log(validPassword);
-
   const hasPassword = props.form.password.length > 0;
 
   const validStep = useMemo(() => {
@@ -95,7 +93,7 @@ export default function SignupStep1(props: SignupStep1Props) {
         />
         {(validPassword?.legit ? (
           <StrengthIndicator visible={hasPassword} level={validPassword?.meta?.level} />
-        ) : (
+        ) : validPassword?.legit === false && (
           <div className="w-full flex justify-center">
             <Label error>The password contains invalid characters.</Label>
           </div>
