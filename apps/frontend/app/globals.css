@@ -64,9 +64,9 @@
   --popover:  oklch(1 0 0);
   --popover-foreground:  oklch(0.145 0 0);
   --destructive:  oklch(0.577 0.245 27.325);
-  --border:  oklch(0.800 0.005 55.00);
-  --input:  oklch(0.980 0.005 55.00);
-  --placeholder: oklch(0.552 0.016 55.00);
+  --border:  oklch(0.800 0.008 49.76);
+  --input:  oklch(0.980 0.008 49.76);
+  --placeholder: oklch(0.522 0.016 49.76);
   --ring:  oklch(0.702 0.183 293.541);
   --chart-1:  oklch(0.811 0.111 293.571);
   --chart-2:  oklch(0.606 0.25 292.717);
@@ -82,25 +82,25 @@
   --sidebar-border:  oklch(0.92 0.004 286.32);
   --sidebar-ring:  oklch(0.702 0.183 293.541);
   /* SEMANTIC COLORS */
-  --primary:              oklch(0.740 0.160 55.00); /* #f68c36 */
-  --primary-foreground:   oklch(0.960 0.020 55.00);
-  --secondary:            oklch(0.966 0.003 55.00);
-  --secondary-foreground: oklch(0.210 0.006 55.00);
-  --muted:                oklch(0.966 0.003 55.00);
-  --muted-foreground:     oklch(0.552 0.016 55.00);
+  --primary:              oklch(0.720 0.191 49.76); /* #ff7800 */
+  --primary-foreground:   oklch(1.000 0.000 0.000);
+  --secondary:            oklch(0.966 0.003 49.76);
+  --secondary-foreground: oklch(0.210 0.006 49.76);
+  --muted:                oklch(0.966 0.003 49.76);
+  --muted-foreground:     oklch(0.522 0.016 49.76);
   /* SURFACE & SHADES */
-  --base-100:             oklch(0.950 0.001 55.00);
-  --base-200:             oklch(0.900 0.001 55.00);
-  --base-300:             oklch(0.850 0.001 55.00);
+  --base-100:             oklch(0.950 0.014 64.35);
+  --base-200:             oklch(0.900 0.014 64.35);
+  --base-300:             oklch(0.850 0.014 64.35);
   /* FEEDBACK COLORS */
-  --info:                 oklch(0.640 0.240 220.0);
-  --info-foreground:      oklch(0.975 0.000 0.000);
-  --success:              oklch(0.680 0.320 120.0);
-  --success-foreground:   oklch(0.975 0.000 0.000);
-  --warning:              oklch(0.840 0.320 93.00);
-  --warning-foreground:   oklch(0.975 0.000 0.000);
-  --error:                rgb(255, 81, 60);
-  --error-foreground:     oklch(0.975 0.000 0.000);
+  --info:                 oklch(0.700 0.191 252.0);
+  --info-foreground:      oklch(1.000 0.000 0.000);
+  --success:              oklch(0.640 0.191 140.0);
+  --success-foreground:   oklch(1.000 0.000 0.000);
+  --warning:              oklch(0.850 0.191 85.00);
+  --warning-foreground:   oklch(1.000 0.000 0.000);
+  --error:                oklch(0.620 0.191 30.00);
+  --error-foreground:     oklch(1.000 0.000 0.000);
 }
 
 .dark {
