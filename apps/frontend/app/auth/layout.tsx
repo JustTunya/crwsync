@@ -14,9 +14,9 @@ export default function RootLayout({
           <Image
             src="/logo.svg"
             alt="crwsync"
-            width={4321}
-            height={576}
-            className="h-6 sm:w-auto"
+            width={3250}
+            height={512}
+            className="h-8 sm:w-auto"
             priority
           />
         </Link>
