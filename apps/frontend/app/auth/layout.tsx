@@ -10,7 +10,7 @@ export default function RootLayout({
     <>
       <div className="absolute inset-0 h-min w-full p-8">
         <Link href="/" className="inline-block">
-          <Image src="/logo.svg" alt="crwsync" width={3250} height={512} className="h-8 sm:w-auto" priority />
+          <Image src="/logo@orange.svg" alt="crwsync" width={3250} height={512} className="h-8 sm:w-auto" priority />
         </Link>
       </div>
 

@@ -6,7 +6,7 @@ export default function Header() {
     <header className="flex items-center justify-between px-8 py-4">
       <div className="flex items-center gap-16">
         <Link href="/" className="inline-block">
-          <Image src="/logo.svg" alt="crwsync" width={3250} height={512} className="h-6 sm:w-auto" priority />
+          <Image src="/logo@orange.svg" alt="crwsync" width={3250} height={512} className="h-6 sm:w-auto" priority />
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-muted-foreground">
           <Link href="#" className="hover:text-primary transition-colors">Features</Link>
