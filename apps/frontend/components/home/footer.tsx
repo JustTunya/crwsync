@@ -1,8 +1,5 @@
 import Image from "next/image";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Mail01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
-import { s } from "framer-motion/client";
 
 const socials = [
   {
@@ -55,6 +52,33 @@ const socials = [
   }
 ];
 
+const categories = [
+  {
+    title: "Getting Started",
+    links: [
+      { name: "About Us", href: "#" },
+      { name: "Introduction", href: "#" },
+      { name: "Documentation", href: "#" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { name: "Community", href: "#" },
+      { name: "Tutorials", href: "#" },
+      { name: "Templates", href: "#" },
+    ],
+  },
+  {
+    title: "Terms & Policies",
+    links: [
+      { name: "Terms of Service", href: "#" },
+      { name: "Privacy Policy", href: "#" },
+      { name: "Other policies", href: "#" },
+    ],
+  },
+];
+
 function Icon({ svg, className, children }: { svg: string; className?: string; children?: React.ReactNode }) {
   return (
     <div
@@ -77,47 +101,39 @@ function Icon({ svg, className, children }: { svg: string; className?: string; c
 
 export default function Footer() {
   return (
-    <footer className="bg-foreground flex items-center justify-between px-12 py-16">
-      <div className="flex items-center gap-6">
-        <Image src="/logo@white.svg" alt="crwsync" width={3250} height={512} className="h-6 sm:w-auto" priority />
-        <div className="w-0 h-8 border-l border-muted-foreground"/>
-        <p className="text-muted-foreground">&copy; 2025 crwsync. All rights reserved.</p>
-      </div>
+    <footer className="flex flex-col md:flex-row items-center sm:justify-between gap-x-32 gap-y-16 bg-foreground border-t border-muted-foreground px-8 sm:px-24 lg:px-32 py-16">
+      <a href="/">
+        <Image src="/logo@white.svg" alt="crwsync" width={3250} height={512} className="h-7 xl:h-8 md:w-auto" priority />
+      </a>
 
-      <div className="flex justify-between gap-32">
-        <div className="flex flex-col gap-3">
-          <p className="text-background font-semibold">Getting Started</p>
-          <a href="#" className="text-muted-foreground font-light hover:text-background transition-colors">About Us</a>
-          <a href="#" className="text-muted-foreground font-light hover:text-background transition-colors">Introduction</a>
-          <a href="#" className="text-muted-foreground font-light hover:text-background transition-colors">Documentation</a>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-16 sm:gap-x-32 lg:gap-32">
+        {categories.map((category) => (
+          <div key={category.title} className="flex flex-col gap-3 min-w-26 text-sm sm:text-base whitespace-nowrap">
+            <p className="text-background font-semibold mb-2 sm:mb-4">{category.title}</p>
+            {category.links.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-muted-foreground font-light hover:text-background transition-colors"
+              >
+                {link.name}
+              </a>
+            ))}
+          </div>
+        ))}
 
-        <div className="flex flex-col gap-3">
-          <p className="text-background font-semibold">Resources</p>
-          <a href="#" className="text-muted-foreground font-light hover:text-background transition-colors">Community</a>
-          <a href="#" className="text-muted-foreground font-light hover:text-background transition-colors">Tutorials</a>
-          <a href="#" className="text-muted-foreground font-light hover:text-background transition-colors">Templates</a>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <p className="text-background font-semibold">Terms & Policies</p>
-          <a href="#" className="text-muted-foreground font-light hover:text-background transition-colors">Terms of Service</a>
-          <a href="#" className="text-muted-foreground font-light hover:text-background transition-colors">Privacy Policy</a>
-          <a href="#" className="text-muted-foreground font-light hover:text-background transition-colors">Other policies</a>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <p className="text-background font-semibold">Socials</p>
+        <div className="flex flex-col gap-3 min-w-26 text-sm sm:text-base whitespace-nowrap">
+          <p className="text-background font-semibold mb-2 sm:mb-4">Socials</p>
           {socials.map((social) => (
             <a
               key={social.name}
               href={social.href}
-              className="flex items-center gap-2 text-muted-foreground font-light hover:text-background transition-colors"
+              className="group flex items-center gap-2 transition-colors"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Icon svg={social.svg} className="size-5 bg-muted-foreground" />
-              {social.name}
+              <Icon svg={social.svg} className="size-4 sm:size-5 bg-muted-foreground group-hover:bg-background" />
+              <span className="text-muted-foreground font-light group-hover:text-background">{social.name}</span>
             </a>
           ))}
         </div>
