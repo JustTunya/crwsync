@@ -36,7 +36,7 @@ const cardVariants = {
 
 export default function Hero() {
   return (
-    <section className="mx-auto flex min-h-[80vh] max-w-6xl flex-col gap-12 px-6 pb-24 pt-24 md:min-h-[88vh] md:flex-row md:items-center md:justify-between lg:gap-20">
+    <section className="flex flex-col lg:flex-row gap-12 px-12 py-24 md:items-center md:justify-between max-w-7xl mx-auto">
       <motion.div
         className="max-w-xl space-y-8"
         variants={containerVariants}
@@ -45,7 +45,7 @@ export default function Hero() {
       >
         <motion.h1
           variants={itemVariants}
-          className="text-balance text-center sm:text-left text-4xl sm:text-5xl md:text-6xl text-foreground font-bold tracking-tight"
+          className="text-balance text-center lg:text-left text-4xl lg:text-6xl md:text-6xl text-foreground font-bold tracking-tight"
         >
           Teamwork,
           <span className="block text-primary">
@@ -55,16 +55,18 @@ export default function Hero() {
 
         <motion.p
           variants={itemVariants}
-          className="text-pretty text-center sm:text-left text-sm sm:text-base text-muted-foreground font-medium"
+          className="text-pretty text-center lg:text-left text-sm lg:text-base text-muted-foreground font-medium"
         >
           One place for your crew to stay organized and in sync, blending tasks, schedules, and updates into a simple workspace built for clarity.
         </motion.p>
 
         <motion.div
           variants={itemVariants}
-          className="flex justify-center sm:justify-start gap-3 sm:gap-6 w-full"
+          className="flex justify-center lg:justify-start gap-3 lg:gap-6 w-full"
         >
-          <Button className="w-min">Get started</Button>
+          <Button className="w-min">
+            Join Now
+          </Button>
           <Button variant="outline" className="w-min">
             <HugeiconsIcon icon={PlayIcon} strokeWidth={2} className="size-5" />
             Watch demo
@@ -78,6 +80,7 @@ export default function Hero() {
         initial="hidden"
         animate="visible"
       >
+        {/* PLACEHOLDER FOR DEMO CARD */}
       </motion.div>
     </section>
   );
