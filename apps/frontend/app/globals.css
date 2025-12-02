@@ -82,7 +82,7 @@
   --sidebar-border:  oklch(0.92 0.004 286.32);
   --sidebar-ring:  oklch(0.702 0.183 293.541);
   /* SEMANTIC COLORS */
-  --primary:              oklch(0.720 0.191 49.76); /* #ff7800 */
+  --primary:              oklch(0.7026 0.1879 36.91); /* #ff7800 */
   --primary-foreground:   oklch(1.000 0.000 0.000);
   --secondary:            oklch(0.966 0.003 49.76);
   --secondary-foreground: oklch(0.210 0.006 49.76);
