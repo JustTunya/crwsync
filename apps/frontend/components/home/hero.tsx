@@ -36,7 +36,7 @@ const cardVariants = {
 
 export default function Hero() {
   return (
-    <section className="flex flex-col lg:flex-row gap-12 px-12 py-24 md:items-center md:justify-between max-w-7xl mx-auto">
+    <section className="flex flex-col lg:flex-row gap-12 px-12 py-24 md:items-center md:justify-between max-w-7xl mx-auto mt-26">
       <motion.div
         className="max-w-xl space-y-8"
         variants={containerVariants}
