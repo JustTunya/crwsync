@@ -14,12 +14,12 @@ export function isPhoneNumberValid(phone: string): boolean {
 }
 
 export function isNameValid(name: string): boolean {
-  const nameRegex = /^[\p{L}\s'-]{2,50}$/u; // Allows letters, spaces, apostrophes, and hyphens
+  const nameRegex = /^[\p{L}\s"-]{2,50}$/u; // Allows letters, spaces, apostrophes, and hyphens
   return nameRegex.test(name);
 }
 
 export function isBirthdateValid(birthdate: string | Date, minAge = 13): boolean {
-  const birth = typeof birthdate === 'string' ? new Date(birthdate) : birthdate;
+  const birth = typeof birthdate === "string" ? new Date(birthdate) : birthdate;
 
   if (isNaN(birth.getTime())) {
     return false; // Invalid date
@@ -36,17 +36,21 @@ export function isBirthdateValid(birthdate: string | Date, minAge = 13): boolean
   return age >= minAge;
 }
 
-export function isPasswordStrong(password: string): { level: 'weak' | 'medium' | 'strong' } {
+export function isPasswordStrong(password: string): { legit: boolean, level: "weak" | "medium" | "strong" } {
+  const allowedRegex = /^[A-Za-z\d@$!%*?&]+$/; // Only allows letters, numbers, and specified special characters
   const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/; // At least 8 characters, including uppercase, lowercase, numbers, and special characters
   const mediumRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,}$/; // At least 6 characters, including uppercase, lowercase, and numbers
 
+  if (!allowedRegex.test(password)) {
+    return { legit: false, level: "weak" };
+  }
   if (strongRegex.test(password)) {
-    return { level: 'strong' };
+    return { legit: true, level: "strong" };
   }
   if (mediumRegex.test(password)) {
-    return { level: 'medium' };
+    return { legit: true, level: "medium" };
   }
-  return { level: 'weak' };
+  return { legit: true, level: "weak" };
 }
 
 export function doPasswordsMatch(password: string, confirmPassword: string): boolean {

@@ -14,6 +14,7 @@ import { isPasswordStrong } from "@/lib/validations";
 import { variants } from "@/lib/utils";
 import { getResetToken, resetPassword } from "@/services/auth.service";
 import { ResetPasswordPayload, ResetPasswordState } from "@crwsync/types";
+import { Header } from "./ui/header";
 
 const initState: ResetPasswordState = {
   success: false,
@@ -80,12 +81,7 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
   if (status === "success") {
     return (
       <GlassBox>
-        <div className="text-center space-y-2 mb-8 sm:mb-12">
-          <h1 className="text-xl sm:text-2xl font-medium">Reset your password</h1>
-          <p className="text-xs sm:text-sm text-balance text-muted-foreground/75">
-            Enter a new password for your account.
-          </p>
-        </div>
+        <Header title="Reset your password" description="Enter a new password for your account." />
 
         <motion.div
           key="form"

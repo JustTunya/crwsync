@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import Background from "@/components/ui/background";
 
 export default function RootLayout({
   children,
@@ -10,17 +11,12 @@ export default function RootLayout({
     <>
       <div className="absolute inset-0 h-min w-full p-8">
         <Link href="/" className="inline-block">
-          <Image
-            src="/logo.svg"
-            alt="crwsync"
-            width={4321}
-            height={576}
-            className="h-6 sm:w-auto"
-            priority
-          />
+          <Image src="/logo.svg" alt="crwsync" width={3250} height={512} className="h-7 sm:w-auto" priority />
         </Link>
       </div>
-      {children}
+      <Background />
+
+      <div className="my-24 sm:my-32">{children}</div>
     </>
   );
 }

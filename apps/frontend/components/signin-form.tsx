@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GlassBox } from "@/components/ui/glassbox";
+import { Header } from "@/components/ui/header";
 import { cn, variants } from "@/lib/utils";
 
 const initState: SigninState = {
@@ -41,12 +42,7 @@ export function SigninForm({ next } : { next: string | null }) {
 
   return (
     <GlassBox>
-      <div className="text-center space-y-2 mb-8 sm:mb-12">
-        <h1 className="text-xl sm:text-2xl font-medium">Welcome back</h1>
-        <p className="text-xs sm:text-sm text-balance text-muted-foreground/75">
-          Please enter your credentials to access your account.
-        </p>
-      </div>
+      <Header title="Welcome back" description="Please enter your credentials to access your account." />
 
       <motion.div 
         key="signin"
@@ -58,7 +54,7 @@ export function SigninForm({ next } : { next: string | null }) {
         className="w-full space-y-6"
       >
         <form action={handleSignin} className="w-full space-y-6">
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <Label htmlFor="identifier">Username or Email</Label>
             <Input
               id="identifier"
@@ -70,7 +66,7 @@ export function SigninForm({ next } : { next: string | null }) {
             />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
@@ -94,7 +90,7 @@ export function SigninForm({ next } : { next: string | null }) {
                 Remember Me
               </Label>
             </label>
-            <Link href="/auth/forgot-password" className="text-accent underline underline-offset-2 text-xs sm:text-sm rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
+            <Link href="/auth/forgot-password" className="text-primary text-xs sm:text-sm underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50 focus-visible:outline-none">
               Forgot password?
             </Link>
           </div>
@@ -115,7 +111,7 @@ export function SigninForm({ next } : { next: string | null }) {
 
       <p className="mt-6 text-center text-xs sm:text-sm text-muted-foreground">
         Don&apos;t have an account yet?{' '}
-        <Link href="/auth/signup" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none">
+        <Link href="/auth/signup" className="text-primary underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50 focus-visible:outline-none">
           Sign Up
         </Link>
       </p>

@@ -38,12 +38,12 @@ export function Checkbox({ id, checked, onChange }: CheckboxProps) {
       aria-labelledby={id}
       aria-label="Checkbox"
       className={cn(
-        "size-4 border rounded-sm shadow-md/10 flex items-center justify-center cursor-pointer transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20",
-        checked ? "bg-accent/50 border-accent" : "bg-base-100/50 hover:bg-base-100/75 border-base-100"
+        "size-4 border-1 rounded-sm shadow-sm/5 flex items-center justify-center cursor-pointer transition-colors backdrop-blur-md",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary",
+        checked ? "bg-primary/40 border-primary" : "bg-base-input/50 border-border"
       )}
     >
-      { checked && (<HugeiconsIcon icon={Tick02Icon} size={12} strokeWidth={3} className="text-accent" />) }
+      { checked && (<HugeiconsIcon icon={Tick02Icon} size={12} strokeWidth={3} className="text-primary" />) }
     </div>
   );
 }

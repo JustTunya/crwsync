@@ -9,9 +9,5 @@ export default async function ResetPasswordPage({
   const params = await searchParams;
   const token = params.token ?? null;
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen space-y-6">
-      <ResetPasswordForm token={token} />
-    </div>
-  );
+  return (<ResetPasswordForm token={token} />);
 }

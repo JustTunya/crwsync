@@ -8,7 +8,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        roboto: ["var(--font-roboto)", "ui-sans-serif", "system-ui"],
+        figtree: ["var(--font-figtree)", "ui-sans-serif", "system-ui"],
       },
     },
   },
