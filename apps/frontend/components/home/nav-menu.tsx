@@ -23,30 +23,18 @@ export function NavMenu() {
         <NavigationMenuItem>
           <NavigationMenuTrigger>Product</NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid gap-2 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
-              <li className="row-span-3">
-                <NavigationMenuLink asChild>
-                  <a
-                    className="from-muted/50 to-muted flex h-full w-full flex-col justify-end rounded-md bg-linear-to-b p-4 no-underline outline-hidden transition-all duration-200 select-none focus:shadow-md md:p-6"
-                    href="/"
-                  >
-                    <div className="mb-2 text-lg font-medium sm:mt-4">
-                      shadcn/ui
-                    </div>
-                    <p className="text-muted-foreground text-sm leading-tight">
-                      Beautifully designed components built with Tailwind CSS.
-                    </p>
-                  </a>
-                </NavigationMenuLink>
-              </li>
-              <ListItem href="/" title="Overview">
-                Learn about crwsync&apos;s features and offerings.
+            <ul className="flex flex-col gap-2">
+              {/* <li className="row-span-3">
+                <NavigationMenuLink asChild></NavigationMenuLink>
+              </li> */}
+              <ListItem href="/" title="Overview" className="whitespace-nowrap rounded-md hover:bg-primary/15">
+                What is crwsync?
               </ListItem>
-              <ListItem href="/docs/installation" title="Modules">
-                Extendable modules to customize your workflow.
+              <ListItem href="/modules" title="Modules" className="whitespace-nowrap rounded-md hover:bg-primary/15">
+                What does crwsync include?
               </ListItem>
-              <ListItem href="/docs/primitives/typography" title="Why crwsync?">
-                Discover the benefits of using crwsync for your team.
+              <ListItem href="/solutions" title="Solutions" className="whitespace-nowrap rounded-md hover:bg-primary/15">
+                Who is crwsync for?
               </ListItem>
             </ul>
           </NavigationMenuContent>

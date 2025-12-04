@@ -4,7 +4,7 @@ import { NavMenu } from "./nav-menu";
 
 export default function Header() {
   return (
-    <header className="fixed inset-x-0 top-0 flex items-center justify-between m-4 px-4 sm:px-8 py-4 bg-background/50 border-[2px] border-background backdrop-blur-md inset-shadow-sm inset-shadow-background shadow-xl shadow-background/15 rounded-xl">
+    <header className="fixed inset-x-0 top-0 flex items-center justify-between m-4 px-4 sm:px-8 py-4 bg-background/50 border-[2px] border-background backdrop-blur-md inset-shadow-sm inset-shadow-background shadow-xl shadow-background/30 rounded-xl">
       <div className="absolute left-0 bottom-0 w-full h-1/2 bg-gradient-to-t from-background/50 to-background/0 rounded-xl" />
       
       <div className="flex items-center justify-center gap-4">
