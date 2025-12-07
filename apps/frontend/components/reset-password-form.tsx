@@ -14,7 +14,7 @@ import { isPasswordStrong } from "@/lib/validations";
 import { variants } from "@/lib/utils";
 import { getResetToken, resetPassword } from "@/services/auth.service";
 import { ResetPasswordPayload, ResetPasswordState } from "@crwsync/types";
-import { Header } from "./ui/header";
+import { Lead } from "./ui/lead";
 
 const initState: ResetPasswordState = {
   success: false,
@@ -81,7 +81,7 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
   if (status === "success") {
     return (
       <GlassBox>
-        <Header title="Reset your password" description="Enter a new password for your account." />
+        <Lead title="Reset your password" description="Enter a new password for your account." />
 
         <motion.div
           key="form"

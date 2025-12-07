@@ -10,15 +10,15 @@ export default function Background() {
           `,
           backgroundSize: "4rem 4rem",
           WebkitMaskImage:
-            "radial-gradient(ellipse 70% 70% at 50% 50%, #000 30%, transparent 70%)",
+            "radial-gradient(ellipse 70% 70% at 50% 50%, #000 30%, transparent 60%)",
           maskImage:
-            "radial-gradient(ellipse 70% 70% at 50% 50%, #000 30%, transparent 70%)",
+            "radial-gradient(ellipse 70% 70% at 50% 50%, #000 30%, transparent 60%)",
         }}
       />
       <div aria-hidden="true" className="fixed top-0 left-1/2 -z-10 -translate-x-1/2 blur-3xl xl:-top-6">
         <div 
-          style={{clipPath: "polygon(74.1% 44.1%, 90% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)", transform: "scale(0.8)" }}
-          className="aspect-video w-288.75 bg-linear-to-tr from-[#fec59a] via-[#fd6c41] to-[#fc2a0d] opacity-20"
+          style={{clipPath: "polygon(74.1% 44.1%, 90% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)", transform: "scale(0.75)" }}
+          className="aspect-video w-screen bg-linear-to-tl from-primary to-secondary opacity-60"
         />
       </div>
     </div>

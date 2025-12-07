@@ -14,7 +14,7 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "text-muted-foreground border border-muted-foreground hover:text-primary hover:border-primary",
+          "text-muted-foreground border border-muted-foreground hover:text-foreground hover:border-foreground",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
@@ -59,7 +59,7 @@ function Button({
       className={cn(
         buttonVariants({ variant, size, className }),
         "focus-visible:ring-3 focus-visible:ring-primary/50 focus-visible:border-primary",
-        "cursor-pointer shadow-lg/5"
+        "cursor-pointer"
       )}
       {...props}
     />

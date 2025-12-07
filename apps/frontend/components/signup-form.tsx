@@ -10,7 +10,7 @@ import { SignupState, SignupPayload } from "@crwsync/types";
 import { GlassBox } from "@/components/ui/glassbox";
 import { signup } from "@/services/auth.service";
 import { cn, variants } from "@/lib/utils";
-import { Header } from "./ui/header";
+import { Lead } from "./ui/lead";
 
 const SignupStep1 = dynamic(() => import("@/components/signup-step1"), { ssr: false });
 const SignupStep2 = dynamic(() => import("@/components/signup-step2"), { ssr: false });
@@ -65,7 +65,7 @@ export function SignupForm() {
 
   return (
     <GlassBox>
-      <Header title="Create Your Account" description="Please fill in the details below to create your account." />
+      <Lead title="Create Your Account" description="Please fill in the details below to create your account." />
 
       <form action={handleSubmit} className="w-full flex flex-col items-center">
           <div className="w-2/3 sm:w-1/2 flex justify-between items-center gap-1 sm:gap-2 mb-8 sm:mb-12">

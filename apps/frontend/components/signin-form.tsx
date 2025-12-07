@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GlassBox } from "@/components/ui/glassbox";
-import { Header } from "@/components/ui/header";
+import { Lead } from "@/components/ui/lead";
 import { cn, variants } from "@/lib/utils";
 
 const initState: SigninState = {
@@ -42,7 +42,7 @@ export function SigninForm({ next } : { next: string | null }) {
 
   return (
     <GlassBox>
-      <Header title="Welcome back" description="Please enter your credentials to access your account." />
+      <Lead title="Welcome back" description="Please enter your credentials to access your account." />
 
       <motion.div 
         key="signin"
