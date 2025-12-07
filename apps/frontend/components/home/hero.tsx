@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { PlayIcon } from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 
 const containerVariants = {
@@ -36,7 +36,7 @@ const cardVariants = {
 
 export default function Hero() {
   return (
-    <section className="flex flex-col lg:flex-row gap-12 px-12 py-24 md:items-center md:justify-between max-w-7xl mx-auto mt-26">
+    <section className="flex flex-col lg:flex-row gap-12 px-12 py-24 md:items-center md:justify-between min-h-screen max-w-7xl mx-auto">
       <motion.div
         className="max-w-xl space-y-8"
         variants={containerVariants}
@@ -48,7 +48,15 @@ export default function Hero() {
           className="text-balance text-center lg:text-left text-4xl lg:text-6xl md:text-6xl text-foreground font-bold tracking-tight"
         >
           Teamwork,
-          <span className="block text-primary">
+          <span
+            className="
+              block
+              text-transparent
+              bg-clip-text
+              bg-gradient-to-tr from-primary to-primary/50
+              text-shadow-lg text-shadow-primary/15
+            "
+          >
             synchronized and simplified.
           </span>
         </motion.h1>
@@ -68,8 +76,8 @@ export default function Hero() {
             Join Now
           </Button>
           <Button variant="outline" className="w-min">
-            <HugeiconsIcon icon={PlayIcon} strokeWidth={2} className="size-5" />
-            Watch demo
+            Learn More
+            <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2.5} className="size-4" />
           </Button>
         </motion.div>
       </motion.div>

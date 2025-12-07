@@ -17,16 +17,17 @@ import {
 export function NavMenu() {
   const isMobile = useMobile()
 
+  if (isMobile) {
+    return null
+  }
+
   return (
-    <NavigationMenu viewport={isMobile}>
+    <NavigationMenu>
       <NavigationMenuList className="flex-wrap gap-3 sm:gap-6">
         <NavigationMenuItem>
           <NavigationMenuTrigger>Product</NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="flex flex-col gap-2">
-              {/* <li className="row-span-3">
-                <NavigationMenuLink asChild></NavigationMenuLink>
-              </li> */}
               <ListItem href="/" title="Overview" className="whitespace-nowrap rounded-md hover:bg-primary/15">
                 What is crwsync?
               </ListItem>
