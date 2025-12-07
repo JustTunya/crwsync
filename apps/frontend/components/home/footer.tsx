@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 const socials = [
   {
@@ -102,9 +103,9 @@ function Icon({ svg, className, children }: { svg: string; className?: string; c
 export default function Footer() {
   return (
     <footer className="flex flex-col md:flex-row items-center sm:justify-between gap-x-32 gap-y-16 bg-foreground border-t border-muted-foreground px-8 sm:px-24 lg:px-32 py-16">
-      <a href="/">
+      <Link href="/">
         <Image src="/logo@white.svg" alt="crwsync" width={3250} height={512} className="h-7 xl:h-8 md:w-auto" priority />
-      </a>
+      </Link>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-16 sm:gap-x-32 lg:gap-32">
         {categories.map((category) => (
