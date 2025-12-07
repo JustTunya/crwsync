@@ -32,6 +32,8 @@
   --color-primary: var(--primary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
+  --color-tertiary-foreground: var(--tertiary-foreground);
+  --color-tertiary: var(--tertiary);
   --color-info-foreground: var(--info-foreground);
   --color-info: var(--info);
   --color-success-foreground: var(--success-foreground);
@@ -59,7 +61,7 @@
 :root {
   /* SHADCN DEPENDENCIES – ADAPTED TO ORANGE THEME */
   --radius:                     0.65rem;
-  --background:                 oklch(0.95 0.014 64.35);
+  --background:                 oklch(1.00 0.014 64.35);
   --foreground:                 oklch(0.16 0.020 64.35);
   --card:                       oklch(0.98 0.008 64.35);
   --card-foreground:            oklch(0.16 0.020 64.35);
@@ -92,9 +94,9 @@
   --muted:                      oklch(0.966 0.003 49.76);
   --muted-foreground:           oklch(0.492 0.016 49.76);
   /* SURFACE & SHADES */
-  --base-100:                   oklch(0.900 0.014 64.35);
-  --base-200:                   oklch(0.850 0.014 64.35);
-  --base-300:                   oklch(0.800 0.014 64.35);
+  --base-100:                   oklch(0.950 0.014 64.35);
+  --base-200:                   oklch(0.900 0.014 64.35);
+  --base-300:                   oklch(0.850 0.014 64.35);
   /* FEEDBACK COLORS */
   --info:                       oklch(0.72 0.18 245);
   --info-foreground:            oklch(0.98 0.01 250);
@@ -137,8 +139,10 @@
   /* SEMANTIC COLORS */
   --primary:                    oklch(0.72 0.1879 36.91);
   --primary-foreground:         oklch(1.00 0.000 0.000);
-  --secondary:                  oklch(0.24 0.010 64.35);
-  --secondary-foreground:       oklch(0.92 0.020 64.35);
+  --secondary:                  oklch(0.63 0.2426 30.89);
+  --secondary-foreground:       oklch(1.00 0.000 0.000);
+  --tertiary:                   oklch(0.86 0.0863 58.30);
+  --tertiary-foreground:        oklch(1.00 0.000 0.000);
   --muted:                      oklch(0.22 0.010 64.35);
   --muted-foreground:           oklch(0.74 0.018 64.35);
   /* SURFACE & SHADES */

@@ -13,6 +13,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
+import { cn } from "@/lib/utils"
 
 export function NavMenu() {
   const isMobile = useMobile()
@@ -23,18 +24,18 @@ export function NavMenu() {
 
   return (
     <NavigationMenu>
-      <NavigationMenuList className="flex-wrap gap-3 sm:gap-6">
+      <NavigationMenuList className="flex items-center justify-center lg:gap-6">
         <NavigationMenuItem>
           <NavigationMenuTrigger>Product</NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="flex flex-col gap-2">
-              <ListItem href="/" title="Overview" className="whitespace-nowrap rounded-md hover:bg-primary/15">
+              <ListItem href="#overview" title="Overview">
                 What is crwsync?
               </ListItem>
-              <ListItem href="/modules" title="Modules" className="whitespace-nowrap rounded-md hover:bg-primary/15">
+              <ListItem href="/modules" title="Modules">
                 What does crwsync include?
               </ListItem>
-              <ListItem href="/solutions" title="Solutions" className="whitespace-nowrap rounded-md hover:bg-primary/15">
+              <ListItem href="/solutions" title="Solutions">
                 Who is crwsync for?
               </ListItem>
             </ul>
@@ -51,7 +52,7 @@ export function NavMenu() {
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+          <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "hidden lg:inline-flex")}>
             <Link href="/founder">Founder</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
@@ -68,10 +69,10 @@ function ListItem({
 }: React.ComponentPropsWithoutRef<"li"> & { href: string }) {
   return (
     <li {...props}>
-      <NavigationMenuLink asChild>
+      <NavigationMenuLink asChild className="group block p-3 rounded-md whitespace-nowrap hover:bg-primary/15 transition-colors">
         <Link href={href}>
-          <div className="text-sm leading-none font-medium">{title}</div>
-          <p className="text-muted-foreground line-clamp-2 text-sm leading-snug">
+          <div className="text-sm leading-none font-medium group-hover:text-primary">{title}</div>
+          <p className="text-muted-foreground line-clamp-2 text-sm leading-snug group-hover:text-primary/60">
             {children}
           </p>
         </Link>
