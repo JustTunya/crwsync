@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from "react";
 
+// Delay background rendering to prioritize critical content (improves FCP)
+const BACKGROUND_RENDER_DELAY = 100; // milliseconds
+
 export default function Background() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Defer rendering complex background to improve FCP
-    const timer = setTimeout(() => setMounted(true), 100);
+    // Defer rendering complex background gradients and patterns
+    // This allows the main content to paint first, improving perceived performance
+    const timer = setTimeout(() => setMounted(true), BACKGROUND_RENDER_DELAY);
     return () => clearTimeout(timer);
   }, []);
 

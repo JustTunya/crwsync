@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   }
 };
 
+// Separate async component for user session to enable Suspense boundary
+// This allows the page shell to render immediately while auth check happens in parallel
 async function UserSession({ children }: { children: React.ReactNode }) {
   const user = await getSession();
   return <UserProvider user={user}>{children}</UserProvider>;
@@ -39,6 +41,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${figtree.variable} font-figtree antialiased`}>
         <Background />
+        {/* Suspense enables streaming: page shell renders first, auth loads async */}
         <Suspense fallback={<div className="min-h-screen bg-background" />}>
           <UserSession>{children}</UserSession>
         </Suspense>

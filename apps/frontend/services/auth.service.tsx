@@ -60,7 +60,10 @@ export function getApiClient(cookie?: string): AxiosInstance {
     baseURL: process.env.NEXT_PUBLIC_API_URL!,
     withCredentials: true,
     timeout: 10000,
-    headers: cookie ? { cookie, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(cookie && { cookie }),
+    },
     maxRedirects: 5,
     validateStatus: (status) => status < 500,
   });

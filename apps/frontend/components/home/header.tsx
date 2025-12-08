@@ -39,8 +39,10 @@ export default function Header() {
           <div className="flex items-center justify-center gap-4">
             <Link href="/" className="inline-block z-10">
               {isMobile ? (
+                // Icon: 28x28px matches Tailwind's size-7 (1.75rem = 28px)
                 <Image src="/icon@orange.svg" alt="crwsync" width={28} height={28} className="size-7" priority quality={90} />
               ) : (
+                // Logo: Proportionally sized for 24px height, matches Tailwind's h-6 (1.5rem = 24px)
                 <Image src="/logo@orange.svg" alt="crwsync" width={162} height={24} className="h-6 w-min" priority quality={90} />
               )}
             </Link>

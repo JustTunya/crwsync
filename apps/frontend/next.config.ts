@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 
+// Cache static assets for 1 year (best practice for immutable files with content hashing)
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
+
 const nextConfig: NextConfig = {
   output: "standalone",
   eslint: { ignoreDuringBuilds: false },
@@ -13,7 +16,7 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year
+    minimumCacheTTL: ONE_YEAR_SECONDS,
   },
   
   // Add caching headers for static assets
@@ -24,7 +27,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: `public, max-age=${ONE_YEAR_SECONDS}, immutable`,
           },
         ],
       },
@@ -33,7 +36,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: `public, max-age=${ONE_YEAR_SECONDS}, immutable`,
           },
         ],
       },
@@ -42,7 +45,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: `public, max-age=${ONE_YEAR_SECONDS}, immutable`,
           },
         ],
       },
