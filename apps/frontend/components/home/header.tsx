@@ -2,14 +2,19 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Menu01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { NavMenu } from "@/components/home/nav-menu";
-import MobileMenu from "@/components/home/mobile-menu";
 import { useMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+
+const MobileMenu = dynamic(() => import("@/components/home/mobile-menu"), {
+  loading: () => null,
+  ssr: false,
+});
 
 export default function Header() {
   const isMobile = useMobile();
@@ -33,9 +38,9 @@ export default function Header() {
           <div className="flex items-center justify-center gap-4">
             <Link href="/" className="inline-block z-10">
               {isMobile ? (
-                <Image src="/icon@orange.svg" alt="crwsync" width={512} height={512} className="size-7" priority />
+                <Image src="/icon@orange.svg" alt="crwsync" width={28} height={28} className="size-7" priority quality={90} />
               ) : (
-                <Image src="/logo@orange.svg" alt="crwsync" width={3250} height={512} className="h-6 w-min" priority />
+                <Image src="/logo@orange.svg" alt="crwsync" width={162} height={24} className="h-6 w-min" priority quality={90} />
               )}
             </Link>
           </div>

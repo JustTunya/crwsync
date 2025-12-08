@@ -1,6 +1,11 @@
+import dynamic from "next/dynamic";
 import Header from "@/components/home/header";
 import Hero from "@/components/home/hero";
-import Footer from "@/components/home/footer";
+
+const Footer = dynamic(() => import("@/components/home/footer"), {
+  loading: () => <div className="h-32 bg-base-200/50 animate-pulse" />,
+  ssr: true,
+});
 
 export default function Home() {
   return (
