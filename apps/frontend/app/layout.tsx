@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import { Figtree } from "next/font/google";
+import { Suspense } from "react";
+import Background from "@/components/ui/background";
 import { UserProvider } from "@/providers/user.provider";
 import { getSession } from "@/lib/auth";
 import "@/app/globals.css";
-import Background from "@/components/ui/background";
 
 const figtree = Figtree({
   variable: "--font-figtree",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "800"],
-  display: "swap"
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "arial"],
+  adjustFontFallback: true
 });
 
 export const metadata: Metadata = {
@@ -21,20 +25,23 @@ export const metadata: Metadata = {
   }
 };
 
+async function UserSession({ children }: { children: React.ReactNode }) {
+  const user = await getSession();
+  return <UserProvider user={user}>{children}</UserProvider>;
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await getSession();
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${figtree.variable} font-figtree antialiased`}>
         <Background />
-        <UserProvider user={user}>
-          {children}
-        </UserProvider>
+        <Suspense fallback={<div className="min-h-screen bg-background" />}>
+          <UserSession>{children}</UserSession>
+        </Suspense>
       </body>
     </html>
   );
