@@ -74,6 +74,7 @@ export default function Hero() {
         >
           <Link
             href="/auth/signup"
+            prefetch={true}
             className="
               bg-primary p-2 sm:px-3 sm:py-2 rounded-md
               text-sm sm:text-base text-primary-foreground font-semibold whitespace-nowrap
@@ -83,6 +84,7 @@ export default function Hero() {
           </Link>
           <Link
             href="#overview"
+            prefetch={false}
             className="
               inline-flex items-center gap-1 border border-muted-foreground p-2 sm:px-3 sm:py-2 rounded-md
               text-sm sm:text-base text-muted-foreground font-medium whitespace-nowrap
