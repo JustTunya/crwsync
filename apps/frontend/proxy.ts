@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 
 const PROTECTED = ["/dash"];
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const hasSession = req.cookies.get("crw-rt") !== undefined;
