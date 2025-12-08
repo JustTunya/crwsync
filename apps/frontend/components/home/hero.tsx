@@ -45,9 +45,9 @@ export default function Hero() {
       >
         <motion.h1
           variants={itemVariants}
-          className="text-balance text-center lg:text-left text-5xl md:text-6xl text-foreground font-bold tracking-tight"
+          className="text-balance text-center lg:text-left text-4xl sm:text-5xl md:text-6xl text-foreground font-bold tracking-tight"
         >
-          Teamwork,
+          Teamwork,<br/>
           <span
             className="
               block
