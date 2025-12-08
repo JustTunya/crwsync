@@ -46,6 +46,12 @@ const api: AxiosInstance = addInterceptors(
   axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL!,
     withCredentials: true,
+    timeout: 10000,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    maxRedirects: 5,
+    validateStatus: (status) => status < 500,
   })
 );
 
@@ -53,7 +59,10 @@ export function getApiClient(cookie?: string): AxiosInstance {
   const instance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL!,
     withCredentials: true,
-    headers: cookie ? { cookie } : undefined,
+    timeout: 10000,
+    headers: cookie ? { cookie, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' },
+    maxRedirects: 5,
+    validateStatus: (status) => status < 500,
   });
 
   return addInterceptors(instance);
