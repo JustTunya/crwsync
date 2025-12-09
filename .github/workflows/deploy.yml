@@ -29,11 +29,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install deps & run tests
-        working-directory: ./apps/frontend
-        run: |
-          npm ci
-          npm run lint
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint frontend
+        run: npm run lint --workspace @crwsync/frontend
 
       - name: Lint frontend Dockerfiles
         uses: hadolint/hadolint-action@master
