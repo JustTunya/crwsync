@@ -23,7 +23,9 @@ import { JwtStrategy } from "./jwt.strategy";
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => {
         const secret = config.get<string>("JWT_ACCESS_TOKEN_SECRET");
-        const expiresIn = config.get<string>("JWT_ACCESS_TOKEN_EXPIRATION");
+        const expiresInString = config.get<string>("JWT_ACCESS_TOKEN_EXPIRATION");
+
+        const expiresIn = expiresInString ? Number(expiresInString) : undefined;
 
         return {
           secret: secret,
