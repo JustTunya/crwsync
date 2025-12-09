@@ -1,0 +1,44 @@
+import { defineConfig, globalIgnores } from "eslint/config"
+import eslintNextPlugin from "@next/eslint-plugin-next"
+import nextPlugin from "@next/eslint-plugin-next"
+import eslintConfigPrettier from "eslint-config-prettier/flat"
+import nextVitals from "eslint-config-next/core-web-vitals"
+import nextTs from "eslint-config-next/typescript"
+import importPlugin from "eslint-plugin-import"
+ 
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    plugins: {
+      next: eslintNextPlugin,
+      import: importPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...importPlugin.configs.recommended.rules,
+      ...(importPlugin.configs.typescript?.rules ?? {}),
+      "@next/next/no-html-link-for-pages": "off",
+    },
+    settings: {
+      next: {
+        rootDir: ["./apps/frontend"],
+      },
+      "import/resolver": {
+        node: true
+      },
+    },
+  },
+  eslintConfigPrettier,
+  globalIgnores([
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/out/**",
+    "**/build/**",
+    "**/.next/**",
+    "**/next-env.d.ts"
+  ])
+])
+ 
+export default eslintConfig

@@ -1,58 +1,49 @@
-import { useState, useEffect } from 'react';
-import { useDebounce } from 'use-debounce';
+import { useDebounce } from "use-debounce";
+
+type StrengthLevel = "weak" | "medium" | "strong";
+
+export interface ValidatorMeta {
+  legit: boolean;
+  level: StrengthLevel;
+}
 
 interface ValidatorResult {
   value: boolean | undefined;
   legit: boolean | undefined;
-  meta?: any;
+  meta?: ValidatorMeta;
 }
 
-export function useValidator(value: string, validator: (value: string) => boolean | { legit: boolean, level: 'weak' | 'medium' | 'strong' }): ValidatorResult {
+export function useValidator(value: string, validator: (value: string) => boolean | ValidatorMeta): ValidatorResult {
   const [debounced] = useDebounce(value, 500);
-  const [isValid, setIsValid] = useState<boolean | undefined>(undefined);
-  const [legit, setLegit] = useState<boolean | undefined>(undefined);
-  const [meta, setMeta] = useState<any>(undefined);
 
-  useEffect(() => {
-    const term = debounced.trim();
+  const term = debounced.trim();
 
-    if (!term) {
-      setIsValid(undefined);
-      setLegit(undefined);
-      setMeta(undefined);
-      return;
+  if (!term) {
+    return { value: undefined, legit: undefined, meta: undefined };
+  }
+
+  try {
+    const result = validator(term);
+
+    if (typeof result === "object" && result !== null) {
+      const meta: ValidatorMeta = result;
+      return {
+        value: meta.level !== "weak",
+        legit: meta.legit,
+        meta,
+      };
     }
 
-    let isCancelled = false;
-    const validate = () => {
-      try {
-        const result = validator(term);
-        if (!isCancelled) {
-          if (typeof result === 'object' && result !== null) {
-            setIsValid(result.level !== 'weak');
-            setLegit(result.legit);
-            setMeta(result);
-          } else {
-            setIsValid(result);
-            setLegit(undefined);
-            setMeta(undefined);
-          }
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          setIsValid(undefined);
-          setLegit(undefined);
-          setMeta(undefined);
-        }
-      }
-    }
-
-    validate();
-
-    return () => {
-      isCancelled = true;
+    return {
+      value: result,
+      legit: undefined,
+      meta: undefined,
     };
-  }, [debounced, validator]);
-
-  return { value: isValid, legit, meta };
+  } catch {
+    return {
+      value: undefined,
+      legit: undefined,
+      meta: undefined,
+    };
+  }
 }

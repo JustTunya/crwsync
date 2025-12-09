@@ -1,41 +1,28 @@
-import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { checkAvailability } from '@/services/auth.service';
 
 export function useAvailability(field: 'email' | 'username', value: string, validator?: (value: string) => boolean): { available: boolean, valid: boolean,message?: string } | undefined {
   const [debounced] = useDebounce(value, 500);
-  const [availability, setAvailability] = useState<{ available: boolean, valid: boolean, message?: string } | undefined>(undefined);
+  const [available, setAvailable] = useState<boolean | undefined>(undefined);
 
-  const condition = validator ? validator(debounced) : true;
+  const term = debounced.trim();
+  const valid = validator ? validator(term) : true;
 
   useEffect(() => {
-    const term = debounced.trim();
-
-    if (!condition && term) {
-      setAvailability({ available: false, valid: condition, message: `This ${field} is invalid` });
-      return;
-    }
-
-    if (!term) {
-      setAvailability(undefined);
-      return;
-    }
+    if (!term || !valid) return;
 
     let isCancelled = false;
+
     const check = async () => {
       try {
-        const result = await checkAvailability(field, debounced);
+        const result = await checkAvailability(field, term);
         if (!isCancelled) {
-          setAvailability({
-            available: result.available,
-            valid: condition,
-            message: result.available ? undefined : `This ${field} is already taken`
-          });
+          setAvailable(result.available);
         }
-      } catch (error) {
+      } catch {
         if (!isCancelled) {
-          setAvailability(undefined);
+          setAvailable(undefined);
         }
       }
     };
@@ -45,7 +32,23 @@ export function useAvailability(field: 'email' | 'username', value: string, vali
     return () => {
       isCancelled = true;
     };
-  }, [debounced, field]);
+  }, [term, field, valid]);
 
-  return availability;
+  if (!term) {
+    return undefined;
+  }
+
+  if (!valid) {
+    return { available: false, valid: false, message: `This ${field} is not valid.` };
+  }
+
+  if (available === undefined) {
+    return { available: false, valid: true, message: `Checking ${field} availability...` };
+  }
+
+  return {
+    available,
+    valid: true,
+    message: available ? `This ${field} is available.` : `This ${field} is already taken.`,
+  };
 }
