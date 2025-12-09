@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext } from "react";
 import { SessionUserType } from "@crwsync/types";
 
 export const UserContext = createContext<SessionUserType | undefined>(undefined);

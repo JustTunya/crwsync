@@ -29,7 +29,9 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
   const [confpass, setConfPass] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showConfPass, setShowConfPass] = useState(false);
-  const [status, setStatus] = useState<"pending" | "success" | "expired" | "error">("pending");
+  const [status, setStatus] = useState<"pending" | "success" | "expired" | "error">(
+    () => (token ? "pending" : "error")
+  );
 
   const [state, dispatch, pending] = useActionState(resetPassword, initState);
 
@@ -49,12 +51,7 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
   };
 
   useEffect(() => {
-    setStatus("pending");
-
-    if (!token) {
-      setStatus("error");
-      return;
-    }
+    if (!token) return;
 
     getResetToken(token).then((resp) => {
       if (!resp) {
@@ -152,7 +149,9 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
               Please request a new one by pressing the button below.
             </p>
 
-            <Button className="mt-4" variant="outline" onClick={() => router.push("/auth/forgot-password")}>Request New Email</Button>
+            <Button className="mt-4" variant="outline" onClick={() => router.push("/auth/forgot-password")}>
+              Request New Email
+            </Button>
           </>
         )}
         {status === "error" && (
@@ -162,7 +161,10 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
               Please check if you entered the link correctly.
             </p>
             <p className="text-sm text-center text-primary/75">
-              If you believe this is an error, please contact support at <a className="underline underline-offset-2 text-info" href="mailto:support@crwsync.com">support@crwsync.com</a>
+              If you believe this is an error, please contact support at{" "}
+              <a className="underline underline-offset-2 text-info" href="mailto:support@crwsync.com">
+                support@crwsync.com
+              </a>
             </p>
           </>
         )}

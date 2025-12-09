@@ -51,11 +51,10 @@ const item: Variants = {
 };
 
 interface MobileMenuProps {
-  open: boolean;
   setOpen: (open: boolean) => void
 }
 
-export default function MobileMenu({ open, setOpen }: MobileMenuProps) {
+export default function MobileMenu({ setOpen }: MobileMenuProps) {
   return (
     <motion.nav
       className="flex flex-col gap-3 w-full"

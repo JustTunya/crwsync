@@ -6,44 +6,67 @@ import { getEmailVerificationStatus, resendVerificationEmail, verifyEmail } from
 import { GlassBox } from "@/components/ui/glassbox";
 import { Button } from "@/components/ui/button";
 
+type Status = "pending" | "success" | "expired" | "error";
+
 export function EmailVerification({ token }: { token: string | null }) {
   const router = useRouter();
-  const [status, setStatus] = useState<"pending" | "success" | "expired" | "error">("pending");
+  const [status, setStatus] = useState<Status>(token ? "pending" : "error");
 
   useEffect(() => {
-    setStatus("pending");
-    if (!token) {
-      setStatus("error");
-      return;
-    }
+    if (!token) return;
 
-    getEmailVerificationStatus(token).then(async (resp) => {
-      if (!resp) {
-        setStatus("error");
-        return;
-      }
+    let isCancelled = false;
 
-      if (resp.status === "verified") {
-        router.push("/auth/signin");
-        return;
-      }
-      if (resp.status === "expired") {
-        setStatus("expired");
-        return;
-      }
-      if (resp.status !== "pending") {
-        setStatus("error");
-        return;
-      }
+    const run = async () => {
+      try {
+        const resp = await getEmailVerificationStatus(token);
+        if (isCancelled) return;
 
-      const { success } = await verifyEmail(token);
-      if (success) {
-        setStatus("success");
-        setTimeout(() => router.push("/auth/signin"), 3000);
-      } else {
-        setStatus("error");
+        if (!resp) {
+          setStatus("error");
+          return;
+        }
+
+        if (resp.status === "verified") {
+          router.push("/auth/signin");
+          return;
+        }
+
+        if (resp.status === "expired") {
+          setStatus("expired");
+          return;
+        }
+
+        if (resp.status !== "pending") {
+          setStatus("error");
+          return;
+        }
+
+        const { success } = await verifyEmail(token);
+        if (isCancelled) return;
+
+        if (success) {
+          setStatus("success");
+          const timeoutId = setTimeout(() => {
+            router.push("/auth/signin");
+          }, 3000);
+
+          return () => clearTimeout(timeoutId);
+        } else {
+          setStatus("error");
+        }
+      } catch {
+        if (!isCancelled) {
+          setStatus("error");
+        }
       }
-    });
+    };
+
+    run();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [token, router]);
 
   const handleResend = async () => {

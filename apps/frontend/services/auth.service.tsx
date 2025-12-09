@@ -1,14 +1,16 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosRequestHeaders, isAxiosError } from "axios";
 import { 
   SignupState, SignupPayload, SigninState, SigninPayload, ForgotPasswordState, ForgotPasswordPayload, ResetPasswordState, ResetPasswordPayload, SessionUserType, MailVerificationStatus
 } from "@crwsync/types";
 
 let refreshPromise: Promise<void> | undefined = undefined;
 
+type RetriableRequestConfig = AxiosRequestConfig & { _retry?: boolean };
+
 function addInterceptors(client: AxiosInstance): AxiosInstance {
-  client.interceptors.response.use((resp) => resp, async (error) => {
-    const status = error?.response?.status as number | undefined;
-    const request: (AxiosRequestConfig & { _retry?: boolean }) | undefined = error?.config;
+  client.interceptors.response.use((resp) => resp, async (error: AxiosError) => {
+    const status = error?.response?.status;
+    const request = error.config as RetriableRequestConfig | undefined;
 
     if (!request) {
       return Promise.reject(error);
@@ -22,14 +24,19 @@ function addInterceptors(client: AxiosInstance): AxiosInstance {
 
       try {
         if (!refreshPromise) {
-          const cookieHeader = (request.headers as Record<string, any> | undefined)?.["cookie"];
-          refreshPromise = api
+          const headers = request.headers as AxiosRequestHeaders | undefined;
+          const cookieHeader =
+            (headers?.cookie as string | undefined) ??
+            (headers?.Cookie as string | undefined);
+            
+          refreshPromise = client
             .post("/auth/refresh", {}, cookieHeader ? { headers: { cookie: cookieHeader } } : undefined)
             .then(() => undefined)
             .finally(() => { refreshPromise = undefined;});
         }
+
         await refreshPromise;
-        return api(request);
+        return client(request);
       } catch {
         return Promise.reject(error);
       }
@@ -76,7 +83,7 @@ export async function signup(_prev: SignupState, data: SignupPayload): Promise<S
 
     return { success: true, errors: {}, message: "Signup successful", userId: user.data.id };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       const resp = error.response?.data as SignupState;
       return { success: false, errors: resp.errors, message: resp.message };
     }
@@ -89,7 +96,7 @@ export async function signin(_prev: SigninState, data: SigninPayload): Promise<S
     await api.post("/auth/signin", data);
     return { success: true, errors: {}, message: "Signin successful" };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       const resp = error.response?.data as SigninState;
       return { success: false, errors: resp.errors, message: resp.message };
     }
@@ -102,10 +109,10 @@ export async function signout(): Promise<{ success: boolean; message?: string }>
     await api.post("/auth/signout");
     return { success: true, message: "Signout successful" };
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
+    if (isAxiosError(error) && error.response?.status === 401) {
       return { success: true, message: "Already signed out" };
     }
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, message: resp.message || "An unexpected error occurred" };
     }
@@ -122,7 +129,7 @@ export async function forgotPassword(_prev: ForgotPasswordState, data: ForgotPas
       message: "Password reset link sent to your email",
     };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, errors: resp.errors || {}, message: resp.message || "An unexpected error occurred" };
     }
@@ -139,7 +146,7 @@ export async function resetPassword(_prev: ResetPasswordState, data: ResetPasswo
       message: "Password reset successful",
     };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, errors: resp.errors || {}, message: resp.message || "An unexpected error occurred" };
     }
@@ -165,7 +172,7 @@ export async function checkAvailability(field: 'email' | 'username', value: stri
     });
     return response.data;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       const resp = error.response?.data;
       if (resp && resp.available !== undefined) {
         return { available: resp.available };
@@ -180,7 +187,7 @@ export async function sendVerificationEmail(email: string, userId: string): Prom
     await api.post("/email-verifications", { email, user_id: userId });
     return { success: true, message: "Verification email sent successfully" };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, message: resp.message || "An unexpected error occurred" };
     }
@@ -193,7 +200,7 @@ export async function resendVerificationEmail(token: string): Promise<{ success:
     const response = await api.post("/email-verifications/resend-token", { token });
     return { success: response.data.success ?? true, message: response.data.message ?? "Verification token resent successfully" };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, message: resp.message || "An unexpected error occurred" };
     }
@@ -208,7 +215,7 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; me
     });
     return { success: response.data.success ?? true, message: response.data.message ?? "Email verified successfully" };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, message: resp.message || "An unexpected error occurred" };
     }
