@@ -46,10 +46,24 @@ services:
       timeout: 3s
       retries: 10
 
-  frontend:
-    image: ${FRONTEND_IMAGE}
+  web:
+    image: ${WEB_IMAGE}
     ports:
       - "3000:3000"
+    networks:
+      - net
+    deploy:
+      <<: *deploy-settings
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  dash:
+    image: ${DASH_IMAGE}
+    ports:
+      - "3001:3000"
     networks:
       - net
     deploy:

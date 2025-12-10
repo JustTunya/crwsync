@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024"><svg id="SvgjsSvg1124" data-name="CRWSYNC" xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <g id="SvgjsG1123" data-name="CRWSYNC">
+    <g id="SvgjsG1122" data-name="icon">
+      <path fill="#ff7800" d="m842.98,330.98c-48.35,48.35-74.98,112.64-74.98,181.02,0,.06,0,.12,0,.18l-256,.18c0-.12,0-.23,0-.35C512,229.23,741.23,0,1024,0v256c-68.38,0-132.67,26.63-181.02,74.98Z"></path>
+      <path fill="#ff7800" d="m768,512.18c-.05,68.31-26.67,132.53-74.98,180.84-48.35,48.35-112.64,74.98-181.02,74.98s-132.67-26.63-181.02-74.98c-48.35-48.35-74.98-112.64-74.98-181.02s26.63-132.67,74.98-181.02c48.35-48.35,112.64-74.98,181.02-74.98V0C229.23,0,0,229.23,0,512s229.23,512,512,512,511.81-229.04,512-511.65l-256-.18Z"></path>
+    </g>
+  </g>
+</svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: none; } }
+</style></svg>
