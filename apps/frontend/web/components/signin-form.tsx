@@ -27,6 +27,8 @@ export function SigninForm({ next } : { next: string | null }) {
 
   const [state, dispatch, pending] = useActionState(signin, initState);
 
+  const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL!;
+
   const handleSignin = () => {
     const payload: SigninPayload = { identifier, password, rememberMe };
     startTransition(() => {
@@ -35,10 +37,19 @@ export function SigninForm({ next } : { next: string | null }) {
   };
 
   useEffect(() => {
-    if (state.success) {
-      window.location.assign(next ?? "/dash");
+    if (!state.success) return;
+
+    let target = DASH_URL;
+    if (next) {
+      try {
+        target = new URL(next, DASH_URL).toString();
+      } catch {
+        target = DASH_URL;
+      }
     }
-  }, [state.success, next]);
+
+    window.location.assign(target);
+  }, [state.success, next, DASH_URL]);
 
   return (
     <GlassBox>

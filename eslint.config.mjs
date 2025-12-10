@@ -26,7 +26,10 @@ const eslintConfig = defineConfig([
         rootDir: ["./apps/frontend/web", "./apps/frontend/dash"],
       },
       "import/resolver": {
-        node: true
+        node: true,
+        typescript: {
+          project: ["./apps/frontend/web/tsconfig.json", "./apps/frontend/dash/tsconfig.json"],
+        }
       },
     },
   },
