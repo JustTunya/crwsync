@@ -1,4 +1,4 @@
-import { IsBoolean, IsIP, IsOptional, IsString, IsUUID, Matches } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class RotateSessionDto {
   @IsUUID()
