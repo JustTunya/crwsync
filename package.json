@@ -4,7 +4,7 @@
   "private": true,
   "license": "UNLICENSED",
   "workspaces": [
-    "apps/frontend",
+    "apps/frontend/*",
     "apps/backend",
     "packages/*"
   ],

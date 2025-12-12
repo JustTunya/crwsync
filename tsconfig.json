@@ -2,7 +2,8 @@
   "files": [],
   "references": [
     { "path": "apps/backend" },
-    { "path": "apps/frontend" },
+    { "path": "apps/frontend/web" },
+    { "path": "apps/frontend/dash" },
     { "path": "packages/types" }
   ],
 }

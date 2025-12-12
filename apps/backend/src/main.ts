@@ -21,7 +21,7 @@ async function bootstrap() {
   app.use(json({ limit : "10mb" }));
   app.use(urlencoded({ extended: true, limit: "10mb" }));
 
-  (app.getHttpAdapter().getInstance() as any).set("trust proxy", true);
+  app.getHttpAdapter().getInstance().set("trust proxy", true);
 
   const origin = (config.get<string>("CORS_ORIGIN") || "")
     .split(",").map((o) => o.trim()).filter(Boolean);

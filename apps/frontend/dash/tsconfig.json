@@ -1,16 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2022",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "types": [
-      "next",
-      "react",
-      "react-dom"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["next", "react", "react-dom"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -22,18 +14,11 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
+    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@crwsync/types": [
-        "../../packages/types/src/index.ts"
-      ]
+      "@/*": ["./*"],
+      "@crwsync/types": ["../../../packages/types/src/index.ts"]
     }
   },
   "include": [
@@ -41,10 +26,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
     "next.config.ts",
-    ".next/dev/types/**/*.ts"
-, "eslint.config.mjs"  ],
-  "exclude": [
-    "node_modules"
-  ]
+    "**/*.mjs"
+  ],
+  "exclude": ["node_modules"]
 }
