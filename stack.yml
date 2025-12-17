@@ -84,6 +84,7 @@ services:
       - net
     environment:
       - NODE_ENV=production
+      - PORT=8080
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
