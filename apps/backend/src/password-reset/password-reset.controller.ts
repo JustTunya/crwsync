@@ -2,12 +2,12 @@ import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch
 import { PasswordResetStatus, RoleEnum } from "@crwsync/types";
 import { CreatePasswordResetDto } from "src/password-reset/dto/create-password-reset.dto";
 import { UpdatePasswordResetDto } from "src/password-reset/dto/update-password-reset.dto";
+import { ResetPasswordDto } from "src/password-reset/dto/reset-password.dto";
 import { PasswordResetService } from "src/password-reset/password-reset.service";
 import { PasswordResetEntity } from "src/password-reset/password-reset.entity";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { Public } from "src/common/decorators/public.decorator";
 import { Roles } from "src/common/decorators/roles.decorator";
-import { ResetPasswordDto } from "./dto/reset-password.dto";
 
 @Controller("password-resets")
 @UseGuards(JwtAuthGuard)
