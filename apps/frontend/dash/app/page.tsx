@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { LogOut, ShieldCheck } from "lucide-react";
 import { signout } from "@/services/auth.service";
 import { useUser } from "@/providers/user.provider";
 
@@ -31,7 +30,6 @@ export default function DashboardPage() {
             disabled={pending}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition hover:translate-y-px hover:shadow-lg hover:shadow-primary/25 disabled:opacity-70"
           >
-            <LogOut size={16} />
             Sign out
           </button>
         </header>
@@ -39,7 +37,6 @@ export default function DashboardPage() {
         <section className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-border bg-card px-5 py-4 shadow-lg shadow-primary/5">
             <div className="flex items-center gap-3">
-              <ShieldCheck className="text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <p className="text-lg font-semibold text-foreground">Authenticated</p>
