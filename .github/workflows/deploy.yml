@@ -32,21 +32,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint web
-        run: npm run lint --workspace @crwsync/web
+      - name: Lint project
+        run: npm run lint
 
-      - name: Lint dash
-        run: npm run lint --workspace @crwsync/dash
-
-      - name: Lint backend
-        run: npm run lint --workspace @crwsync/backend
-
-      - name: Lint web Dockerfiles
+      - name: Lint web (frontend) Dockerfiles
         uses: hadolint/hadolint-action@master
         with:
           dockerfile: apps/frontend/web/Dockerfile
 
-      - name: Lint dash Dockerfiles
+      - name: Lint dash (frontend) Dockerfiles
         uses: hadolint/hadolint-action@master
         with:
           dockerfile: apps/frontend/dash/Dockerfile
