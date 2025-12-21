@@ -57,7 +57,7 @@ const api: AxiosInstance = addInterceptors(
       'Content-Type': 'application/json',
     },
     maxRedirects: 5,
-    validateStatus: (status) => status < 500,
+    validateStatus: (status) => status >= 200 && status < 300,
   })
 );
 
@@ -71,7 +71,7 @@ export function getApiClient(cookie?: string): AxiosInstance {
       ...(cookie && { cookie }),
     },
     maxRedirects: 5,
-    validateStatus: (status) => status < 500,
+    validateStatus: (status) => status >= 200 && status < 300,
   });
 
   return addInterceptors(instance);
@@ -93,8 +93,8 @@ export async function signup(_prev: SignupState, data: SignupPayload): Promise<S
 
 export async function signin(_prev: SigninState, data: SigninPayload): Promise<SigninState> {
   try {
-    await api.post("/auth/signin", data);
-    return { success: true, errors: {}, message: "Signin successful" };
+    const res = await api.post("/auth/signin", data);
+    return { success: true, errors: {}, message: res.data.message || "Signin successful" };
   } catch (error) {
     if (isAxiosError(error)) {
       const resp = error.response?.data as SigninState;
