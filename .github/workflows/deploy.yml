@@ -38,13 +38,20 @@ jobs:
       - name: Lint project
         run: npm run lint
 
-      - name: Lint Dockerfiles
+      - name: Lint web (frontend) Dockerfiles
         uses: hadolint/hadolint-action@master
         with:
-          dockerfile: |
-            apps/frontend/web/Dockerfile
-            apps/frontend/dash/Dockerfile
-            apps/backend/Dockerfile
+          dockerfile: apps/frontend/web/Dockerfile
+
+      - name: Lint dash (frontend) Dockerfiles
+        uses: hadolint/hadolint-action@master
+        with:
+          dockerfile: apps/frontend/dash/Dockerfile
+
+      - name: Lint backend Dockerfiles
+        uses: hadolint/hadolint-action@master
+        with:
+          dockerfile: apps/backend/Dockerfile
 
       - name: Scan images for vulnerabilities
         uses: aquasecurity/trivy-action@master
