@@ -10,7 +10,7 @@ export function proxy(req: NextRequest) {
 
   if (!hasSession) {
     const target = new URL("/auth/signin", WEB_URL);
-    target.searchParams.set("next", `${WEB_URL}${pathname}${search}`);
+    target.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(target);
   }
 

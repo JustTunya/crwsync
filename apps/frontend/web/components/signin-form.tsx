@@ -39,12 +39,28 @@ export function SigninForm({ next } : { next: string | null }) {
   useEffect(() => {
     if (!state.success) return;
 
+    const dashOrigin = new URL(DASH_URL).origin;
     let target = DASH_URL;
-    if (next) {
+
+    if (!next) {
+      window.location.assign(target);
+      return;
+    }
+
+    const parser = (value: string) => {
       try {
-        target = new URL(next, DASH_URL).toString();
+        return new URL(value);
       } catch {
-        target = DASH_URL;
+        return null;
+      }
+    };
+
+    if (next.startsWith("/")) {
+      target = new URL(next, dashOrigin).toString();
+    } else {
+      const parsed = parser(next);
+      if (parsed && parsed.origin === dashOrigin) {
+        target = parsed.toString();
       }
     }
 
