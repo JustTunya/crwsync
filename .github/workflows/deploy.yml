@@ -38,20 +38,13 @@ jobs:
       - name: Lint project
         run: npm run lint
 
-      - name: Lint web (frontend) Dockerfiles
+      - name: Lint Dockerfiles
         uses: hadolint/hadolint-action@master
         with:
-          dockerfile: apps/frontend/web/Dockerfile
-
-      - name: Lint dash (frontend) Dockerfiles
-        uses: hadolint/hadolint-action@master
-        with:
-          dockerfile: apps/frontend/dash/Dockerfile
-
-      - name: Lint backend Dockerfiles
-        uses: hadolint/hadolint-action@master
-        with:
-          dockerfile: apps/backend/Dockerfile
+          dockerfile: |
+            apps/frontend/web/Dockerfile
+            apps/frontend/dash/Dockerfile
+            apps/backend/Dockerfile
 
       - name: Scan images for vulnerabilities
         uses: aquasecurity/trivy-action@master
@@ -138,6 +131,8 @@ jobs:
       DASH_IMAGE: ghcr.io/${{ secrets.GH_REPO }}/dash:${{ github.sha }}
       BACKEND_IMAGE: ghcr.io/${{ secrets.GH_REPO }}/backend:${{ github.sha }}
       NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      NEXT_PUBLIC_WEB_URL: ${{ secrets.NEXT_PUBLIC_WEB_URL }}
+      NEXT_PUBLIC_DASH_URL: ${{ secrets.NEXT_PUBLIC_DASH_URL }}
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
       DB_USER: ${{ secrets.DB_USER }}
