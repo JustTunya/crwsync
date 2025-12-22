@@ -1,17 +1,25 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosRequestHeaders, isAxiosError } from "axios";
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, isAxiosError } from "axios";
 import { 
   SignupState, SignupPayload, SigninState, SigninPayload, ForgotPasswordState, ForgotPasswordPayload, ResetPasswordState, ResetPasswordPayload, SessionUserType, MailVerificationStatus
 } from "@crwsync/types";
 
 type RetriableRequestConfig = AxiosRequestConfig & { _retry?: boolean };
 
-function getCookieHeader(config?: AxiosRequestConfig): string | undefined {
-  const headers = (config?.headers ?? {}) as AxiosRequestHeaders;
-  return (headers.cookie as string | undefined) ?? (headers.Cookie as string | undefined);
-}
+export const refreshInflight = new WeakMap<AxiosInstance, Promise<void>>();
 
-function isUnauthorized(err: unknown): err is AxiosError {
-  return isAxiosError(err) && err.response?.status === 401;
+export async function refreshSession(client: AxiosInstance): Promise<void> {
+  const existing = refreshInflight.get(client);
+  if (existing) return existing;
+
+  const promise = client
+    .post("/auth/refresh")
+    .then(() => undefined)
+    .finally(() => {
+      refreshInflight.delete(client);
+    });
+
+  refreshInflight.set(client, promise);
+  return promise;
 }
 
 function getPathName(reqUrl: string | undefined, baseUrl: string): string {
@@ -24,52 +32,26 @@ function getPathName(reqUrl: string | undefined, baseUrl: string): string {
   }
 }
 
-async function withAuthRetry<T>(client: AxiosInstance, req: () => Promise<T>, opts?: { cookie?: string }): Promise<T> {
-  try {
-    return await req();
-  } catch (error) {
-    if (isUnauthorized(error)) throw error;
-
-    const refreshConfig: AxiosRequestConfig | undefined = opts?.cookie
-      ? { headers: { cookie: opts.cookie } }
-      : undefined;
-
-    await client.post("/auth/refresh", {}, refreshConfig);
-
-    return req();
-  }
-}
-
-function addInterceptors(client: AxiosInstance): AxiosInstance {
-  let refreshPromise: Promise<void> | undefined = undefined;
-
+export function addInterceptors(client: AxiosInstance): AxiosInstance {
   client.interceptors.response.use((resp) => resp, async (error: AxiosError) => {
     const request = error.config as RetriableRequestConfig | undefined;
     if (!request) return Promise.reject(error);
 
     const status = error?.response?.status;
-    if (status && status !== 401) return Promise.reject(error);
+    if (status !== 401) return Promise.reject(error);
+
 
     const baseUrl = client.defaults.baseURL || "";
     const pathname = getPathName(request.url, baseUrl);
 
-    const excluded = new Set(["/auth/refresh", "/auth/signin", "/auth/signout"]);
+    const excluded = new Set(["/auth/refresh", "/auth/me", "/auth/signin", "/auth/signout"]);
     if (excluded.has(pathname)) return Promise.reject(error);
 
     if (request._retry) return Promise.reject(error);
     request._retry = true;
 
     try {
-      if (!refreshPromise) {
-        const cookieHeader = getCookieHeader(request);
-          
-        refreshPromise = client
-          .post("/auth/refresh", {}, cookieHeader ? { headers: { cookie: cookieHeader } } : undefined)
-          .then(() => undefined)
-          .finally(() => { refreshPromise = undefined;});
-      }
-
-      await refreshPromise;
+      await refreshSession(client);
       return client(request);
     } catch {
       return Promise.reject(error);
@@ -91,22 +73,6 @@ const api: AxiosInstance = addInterceptors(
     validateStatus: (status) => status >= 200 && status < 300,
   })
 );
-
-export function getApiClient(cookie?: string): AxiosInstance {
-  const instance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL!,
-    withCredentials: true,
-    timeout: 10000,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(cookie && { cookie }),
-    },
-    maxRedirects: 5,
-    validateStatus: (status) => status >= 200 && status < 300,
-  });
-
-  return addInterceptors(instance);
-}
 
 export async function signup(_prev: SignupState, data: SignupPayload): Promise<SignupState> {
   try {
@@ -265,13 +231,23 @@ export async function getEmailVerificationStatus(token: string): Promise<{ statu
   }
 }
 
-export async function getMyself(cookie?: string): Promise<SessionUserType | undefined> {
-  const client = cookie ? getApiClient(cookie) : api;
-  
+export async function bootstrapSession(): Promise<SessionUserType | undefined> {
   try {
-    const resp = await client.get("/auth/me");
+    const resp = await api.post("/auth/session");
     return resp.data as SessionUserType;
   } catch (err) {
-    return undefined;
+    if (isAxiosError(err) && err.response?.status === 401) return undefined;
+    throw err;
+  }
+}
+
+export async function getMyself(): Promise<SessionUserType | undefined> {
+  try {
+    const resp = await api.get("/auth/me");
+    return resp.data as SessionUserType;
+  } catch (err) {
+    console.log(err);
+    if (isAxiosError(err) && err.response?.status === 401) return undefined;
+    throw err;
   }
 }
