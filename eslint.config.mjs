@@ -20,6 +20,9 @@ const eslintConfig = defineConfig([
       ...importPlugin.configs.recommended.rules,
       ...(importPlugin.configs.typescript?.rules ?? {}),
       "@next/next/no-html-link-for-pages": "off",
+      "import/no-unresolved": ["error", {
+        ignore: ["server-only"]
+      }],
     },
     settings: {
       next: {

@@ -1,17 +1,17 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { JwtResponse } from "@crwsync/types";
 import { compare } from "bcrypt";
 import { Request, Response } from "express";
 import { randomUUID } from "crypto";
+import type { JwtPayload, JwtResponse } from "@crwsync/types";
 import { VerificationService } from "src/email-verification/email-verification.service";
 import { SessionService } from "src/session/session.service";
 import { UserService } from "src/user/user.service";
 import { UserEntity } from "src/user/user.entity";
 import { SigninDto } from "src/auth/dto/signin.dto";
 import { SignupDto } from "src/auth/dto/signup.dto";
-import { SessionUserDto } from "./dto/session-user.dto";
-import { RefreshDto } from "./dto/refresh.dto";
+import { SessionUserDto } from "src/auth/dto/session-user.dto";
+import { RefreshDto } from "src/auth/dto/refresh.dto";
 
 // --- COOKIE SETTINGS ---
 const isProduction = process.env.NODE_ENV === "production";
@@ -126,11 +126,37 @@ export class AuthService {
     return { accessToken, refreshToken, persistent: newSession.persistent };
   }
 
+  async sessionBootstrap(req: Request): Promise<{
+    user: SessionUserDto;
+    refresh?: RefreshDto;
+  }> {
+    const accessToken = req.cookies?.["crw-at"] as string | undefined;
+
+    if (accessToken) {
+      try {
+        const payload = this.jwtService.verify<JwtPayload>(accessToken);
+        const user = await this.me({ userId: payload.sub });
+        return { user };
+      } catch {
+      }
+    }
+
+    try {
+      const refresh = await this.refresh(req);
+      const payload = this.jwtService.verify<JwtPayload>(refresh.accessToken);
+      const user = await this.me({ userId: payload.sub });
+
+      return { user, refresh };
+    } catch {
+      throw new UnauthorizedException();
+    }
+  }
+
   async me(active: { userId: string }) {
     const user = await this.userService.findOne(active.userId) as SessionUserDto;
 
     if (!user) {
-      throw new BadRequestException("User not found");
+      throw new UnauthorizedException();
     }
     
     return user;

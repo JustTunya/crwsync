@@ -8,7 +8,7 @@ import { EmailModule } from "src/email/email.module";
 import { SessionModule } from "src/session/session.module";
 import { VerificationModule } from "src/email-verification/email-verification.module";
 import { PassportModule } from "@nestjs/passport";
-import { JwtStrategy } from "./jwt.strategy";
+import { JwtStrategy } from "src/auth/jwt.strategy";
 
 @Module({
   imports: [
