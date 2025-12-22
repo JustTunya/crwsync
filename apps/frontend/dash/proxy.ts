@@ -1,21 +1,18 @@
 import { NextResponse, NextRequest } from "next/server";
 
-export async function proxy(req: NextRequest) {
-  const hasSession = req.cookies.has("crw-rt") || req.cookies.has("crw-at");
-  if (!hasSession) return NextResponse.next();
+export function proxy(req: NextRequest) {
+  const { pathname, search } = req.nextUrl;
+  const hasSession = req.cookies.get("crw-rt") !== undefined;
 
-  const api = process.env.NEXT_PUBLIC_API_URL!;
-  const res = await fetch(`${api}/auth/session`, {
-    method: "POST",
-    headers: { cookie: req.headers.get("cookie") || "" },
-    credentials: "include",
-  });
+  const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL!;
 
-  if (!res.ok) return NextResponse.next();
+  if (!hasSession) {
+    const target = new URL("/auth/signin", WEB_URL);
+    target.searchParams.set("next", `${pathname}${search}`);
+    return NextResponse.redirect(target);
+  }
 
-  const target = new URL("/auth/signin", process.env.NEXT_PUBLIC_WEB_URL!);
-  target.searchParams.set("next", `${req.nextUrl.pathname}${req.nextUrl.search}`);
-  return NextResponse.redirect(target);
+  return NextResponse.next();
 }
 
 export const config = {
