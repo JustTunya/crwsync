@@ -6,8 +6,6 @@ export function proxy(req: NextRequest) {
 
   const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL!;
 
-  console.log("Proxy middleware:", { pathname, hasSession, WEB_URL });
-
   if (!hasSession) {
     const target = new URL("/auth/signin", WEB_URL);
     target.searchParams.set("next", `${pathname}${search}`);

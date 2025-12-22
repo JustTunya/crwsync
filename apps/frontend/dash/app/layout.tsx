@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Figtree } from "next/font/google";
 import { Suspense } from "react";
 import { UserProvider } from "@/providers/user.provider";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth.server";
 import "@/app/globals.css";
 
 const figtree = Figtree({
