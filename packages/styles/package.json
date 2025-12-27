@@ -1,13 +1,14 @@
 {
-  "name": "@crwsync/types",
+  "name": "@crwsync/styles",
   "version": "0.1.0",
   "private": true,
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "exports": {
+    ".": "./index.ts",
+    "./globals.css": "./src/globals.css"
+  },
   "scripts": {
     "build": "tsc -b",
     "lint": "eslint \"src/**/*.ts\"",

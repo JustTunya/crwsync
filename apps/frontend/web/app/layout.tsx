@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import Background from "@/components/ui/background";
 import { UserProvider } from "@/providers/user.provider";
 import { getSession } from "@/lib/auth.server";
-import "@/app/globals.css";
+import "@crwsync/styles";
 
 const figtree = Figtree({
   variable: "--font-figtree",
