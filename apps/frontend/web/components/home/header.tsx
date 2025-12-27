@@ -30,7 +30,7 @@ export default function Header() {
     <>
       <header
         className={cn(
-          "fixed inset-x-0 z-40 flex flex-col items-start gap-12 m-4 px-4 sm:px-8 py-4 bg-background/50 border-2 border-background backdrop-saturate-100 inset-shadow-sm inset-shadow-background shadow-xl shadow-background/30 rounded-xl",
+          "fixed inset-x-0 z-40 flex flex-col items-start gap-12 m-4 px-4 sm:px-8 py-4 bg-background/60 border-2 border-background backdrop-saturate-100 inset-shadow-sm inset-shadow-background shadow-xl shadow-background/20 rounded-xl",
           open ? "backdrop-blur-md h-[calc(100vh-2rem)]" : "backdrop-blur-sm h-18",
           "transition-[height, backdrop-filter] duration-500 ease-in-out"
         )}

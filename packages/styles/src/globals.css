@@ -94,9 +94,9 @@
   --muted:                      oklch(0.966 0.003 49.76);
   --muted-foreground:           oklch(0.492 0.016 49.76);
   /* SURFACE & SHADES */
-  --base-100:                   oklch(0.950 0.014 64.35);
-  --base-200:                   oklch(0.900 0.014 64.35);
-  --base-300:                   oklch(0.850 0.014 64.35);
+  --base-100:                   oklch(0.930 0.014 64.35);
+  --base-200:                   oklch(0.880 0.014 64.35);
+  --base-300:                   oklch(0.830 0.014 64.35);
   /* FEEDBACK COLORS */
   --info:                       oklch(0.72 0.18 245);
   --info-foreground:            oklch(0.98 0.01 250);

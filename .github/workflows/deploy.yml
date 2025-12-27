@@ -32,8 +32,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build types package
-        run: npm run build -w @crwsync/types
+      - name: Build common package
+        run: npm run build -w @crwsync/types -w @crwsync/styles
 
       - name: Lint project
         run: npm run lint
