@@ -5,13 +5,13 @@ import {
 import { RoleEnum } from "@crwsync/types";
 import { Request } from "express";
 import { SessionService } from "src/session/session.service";
-import { SessionEntity } from "src/session/session.entity";
 import { CreateSessionDto } from "src/session/dto/create-session.dto";
 import { UpdateSessionDto } from "src/session/dto/update-session.dto";
 import { RotateSessionDto } from "src/session/dto/rotate-session.dto";
 import { VerifySessionDto } from "src/session/dto/verify-session.dto";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { Roles } from "src/common/decorators/roles.decorator";
+import { SessionPublic } from "src/prisma/selects";
 
 @Controller("sessions")
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -22,19 +22,19 @@ export class SessionController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() dto: CreateSessionDto, @Req() req: Request): Promise<{session: SessionEntity, token: string}> {
+  create(@Body() dto: CreateSessionDto, @Req() req: Request): Promise<{session: SessionPublic, token: string}> {
     return this.sessionService.create(dto, req);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  findAll(): Promise<SessionEntity[]> {
+  findAll(): Promise<SessionPublic[]> {
     return this.sessionService.findAll();
   }
 
   @Get(":sessionId")
   @HttpCode(HttpStatus.OK)
-  findOne(@Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string): Promise<SessionEntity> {
+  findOne(@Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string): Promise<SessionPublic> {
     return this.sessionService.findOne(sessionId);
   }
 
@@ -43,7 +43,7 @@ export class SessionController {
   update(
     @Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string,
     @Body() dto: UpdateSessionDto
-  ): Promise<SessionEntity> {
+  ): Promise<SessionPublic> {
     return this.sessionService.update(sessionId, dto);
   }
 
@@ -57,13 +57,13 @@ export class SessionController {
   @HttpCode(HttpStatus.OK)
   verify(
     @Body() dto: VerifySessionDto
-  ): Promise<SessionEntity> {
+  ): Promise<SessionPublic> {
     return this.sessionService.verify(dto);
   }
 
   @Post("rotate")
   @HttpCode(HttpStatus.OK)
-  rotate(@Body() dto: RotateSessionDto, @Req() req: Request): Promise<{ session: SessionEntity, refreshToken: string }> {
+  rotate(@Body() dto: RotateSessionDto, @Req() req: Request): Promise<{ session: SessionPublic, refreshToken: string }> {
     return this.sessionService.rotate(dto, req);
   }
 

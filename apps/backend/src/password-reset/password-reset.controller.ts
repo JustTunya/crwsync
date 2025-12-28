@@ -4,10 +4,10 @@ import { CreatePasswordResetDto } from "src/password-reset/dto/create-password-r
 import { UpdatePasswordResetDto } from "src/password-reset/dto/update-password-reset.dto";
 import { ResetPasswordDto } from "src/password-reset/dto/reset-password.dto";
 import { PasswordResetService } from "src/password-reset/password-reset.service";
-import { PasswordResetEntity } from "src/password-reset/password-reset.entity";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { Public } from "src/common/decorators/public.decorator";
 import { Roles } from "src/common/decorators/roles.decorator";
+import { PasswordResetPublic } from "src/prisma/selects";
 
 @Controller("password-resets")
 @UseGuards(JwtAuthGuard)
@@ -17,7 +17,7 @@ export class PasswordResetController {
   @Public()
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() dto: CreatePasswordResetDto): Promise<PasswordResetEntity> {
+  async create(@Body() dto: CreatePasswordResetDto): Promise<PasswordResetPublic> {
     return this.passwordResetService.create(dto);
   }
 
@@ -27,7 +27,7 @@ export class PasswordResetController {
   async findAll(
     @Query("email") email?: string,
     @Query("token") token?: string
-  ): Promise<PasswordResetEntity[]> {
+  ): Promise<PasswordResetPublic[]> {
     try {
       if (email) {
         const v = await this.passwordResetService.findByEmail(email);
@@ -57,14 +57,14 @@ export class PasswordResetController {
   @Roles(RoleEnum.ADMIN)
   @Get(":passwordResetId")
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param("passwordResetId", new ParseUUIDPipe({ version: "4" })) passwordResetId: string): Promise<PasswordResetEntity> {
+  async findOne(@Param("passwordResetId", new ParseUUIDPipe({ version: "4" })) passwordResetId: string): Promise<PasswordResetPublic> {
     return this.passwordResetService.findOne(passwordResetId);
   }
 
   @Roles(RoleEnum.ADMIN)
   @Patch(":passwordResetId")
   @HttpCode(HttpStatus.OK)
-  async update(@Param("passwordResetId", new ParseUUIDPipe({ version: "4" })) passwordResetId: string, @Body() dto: UpdatePasswordResetDto): Promise<PasswordResetEntity> {
+  async update(@Param("passwordResetId", new ParseUUIDPipe({ version: "4" })) passwordResetId: string, @Body() dto: UpdatePasswordResetDto): Promise<PasswordResetPublic> {
     return this.passwordResetService.update(passwordResetId, dto);
   }
 
