@@ -11,7 +11,7 @@ import { SigninDto } from "src/auth/dto/signin.dto";
 import { SignupDto } from "src/auth/dto/signup.dto";
 import { SessionUserDto } from "src/auth/dto/session-user.dto";
 import { RefreshDto } from "src/auth/dto/refresh.dto";
-import { UserAuth, UserPublic } from "src/prisma/selects";
+import { UserPublic } from "src/prisma/selects";
 
 // --- COOKIE SETTINGS ---
 const isProduction = process.env.NODE_ENV === "production";
@@ -31,10 +31,10 @@ export class AuthService {
     return { jti, sub: user.id, email: user.email, role: user.role, rver: user.role_version };
   }
 
-  async validateUser(dto: SigninDto): Promise<UserAuth | null> {
+  async validateUser(dto: SigninDto): Promise<UserPublic | null> {
     const user = await this.userService.findByEmailOrUsername(dto.identifier);
     if (user && (await compare(dto.password, user.password_hash))) {
-      return user;
+      return await this.userService.findOne(user.id);
     }
     return null;
   }

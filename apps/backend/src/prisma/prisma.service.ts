@@ -1,4 +1,5 @@
-import { INestApplication, Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient } from "@prisma/client";
 
 type PrismaEvent = Prisma.LogLevel | "beforeExit";
@@ -14,7 +15,16 @@ export class PrismaService
     const isProd = process.env.NODE_ENV === "production";
     const logQueries = !isProd && process.env.PRISMA_LOG_QUERY === "true";
 
+    const connectionString = process.env.DATABASE_URL;
+
+    if (!connectionString) {
+      throw new Error("The connection string is missing.");
+    }
+
+    const adapter = new PrismaPg({ connectionString });
+
     super({
+      adapter,
       log: [
         ...(logQueries ? [{ emit: "event" as const, level: "query" as const }] : []),
         { emit: "event" as const, level: "warn" as const },
@@ -41,22 +51,7 @@ export class PrismaService
     await this.$connect();
   }
 
-  enableShutdownHooks(app: INestApplication) {
-    this.$on("beforeExit", async () => {
-      this.logger.log("Prisma beforeExit received; closing Nest application...");
-      await app.close();
-    });
-
-    const shutdown = async (signal: NodeJS.Signals) => {
-      try {
-        this.logger.log(`${signal} received; disconnecting Prisma...`);
-        await this.$disconnect();
-      } finally {
-        await app.close();
-      }
-    };
-
-    process.once("SIGTERM", () => void shutdown("SIGTERM"));
-    process.once("SIGINT", () => void shutdown("SIGINT"));
+  async onModuleDestroy() {
+    await this.$disconnect();
   }
 }
