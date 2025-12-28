@@ -1,28 +1,26 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
+import { ConfigService } from "@nestjs/config";
 import { randomBytes, createHash } from "crypto";
-import { Repository } from "typeorm";
-import { VerificationEntity } from "src/email-verification/email-verification.entity";
+import { MailVerificationStatus } from "@crwsync/types";
+import { VerificationPublic, verificationPublicSelect } from "src/prisma/selects";
 import { CreateVerificationDto } from "src/email-verification/dto/create-email-verification.dto";
 import { UpdateVerificationDto } from "src/email-verification/dto/update-email-verification.dto";
-import { UserEntity } from "src/user/user.entity";
 import { EmailService } from "src/email/email.service";
-import { MailVerificationStatus } from "@crwsync/types";
-import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
 export class VerificationService {
   constructor(
-    @InjectRepository(VerificationEntity)
-    private readonly vRepo: Repository<VerificationEntity>,
-    @InjectRepository(UserEntity)
-    private readonly uRepo: Repository<UserEntity>,
+    private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
   ) {}
 
-  async create(dto: CreateVerificationDto): Promise<VerificationEntity> {
-    const user = await this.uRepo.findOne({ where: { id: dto.user_id, email: dto.email } });
+  async create(dto: CreateVerificationDto): Promise<VerificationPublic> {
+    const user = await this.prisma.user.findFirst({
+      where: { id: dto.user_id, email: dto.email },
+      select: { id: true, email_verified_at: true },
+    });
     if (!user) {
       throw new NotFoundException("User not found");
     }
@@ -31,18 +29,23 @@ export class VerificationService {
     }
 
     const token = randomBytes(32).toString("hex");
-    const hashedToken = createHash('sha256').update(token).digest('hex');
-    const exp = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const hashedToken = createHash("sha256").update(token).digest("hex");
+    const exp = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    const verification = await this.vRepo.manager.transaction(async (m) => {
-      await m.delete(VerificationEntity, { email: dto.email, status: "pending" });
-      const entity = m.create(VerificationEntity, {
-        user,
-        email: dto.email,
-        token_hash: hashedToken,
-        expires_at: exp,
+    const verification = await this.prisma.$transaction(async (tx) => {
+      await tx.emailVerification.deleteMany({
+        where: { email: dto.email, status: MailVerificationStatus.PENDING },
       });
-      return m.save(entity);
+
+      return tx.emailVerification.create({
+        data: {
+          user: { connect: { id: user.id } },
+          email: dto.email,
+          token_hash: hashedToken,
+          expires_at: exp,
+        },
+        select: verificationPublicSelect,
+      });
     });
 
     const appUrl = this.config.get<string>("APP_URL");
@@ -53,60 +56,82 @@ export class VerificationService {
       to: dto.email,
       subject: "Welcome to CRWSYNC",
       template: "email-verification",
-      context: { url: url.toString() }
+      context: { url: url.toString() },
     });
 
     return verification;
   }
 
-  findAll(): Promise<VerificationEntity[]> {
-    return this.vRepo.find();
+  findAll(): Promise<VerificationPublic[]> {
+    return this.prisma.emailVerification.findMany({ select: verificationPublicSelect });
   }
 
-  async findOne(id: string): Promise<VerificationEntity> {
-    const verification = await this.vRepo.findOne({ where: { id } });
+  async findOne(id: string): Promise<VerificationPublic> {
+    const verification = await this.prisma.emailVerification.findUnique({
+      where: { id },
+      select: verificationPublicSelect,
+    });
     if (!verification) {
       throw new NotFoundException("Verification not found");
     }
     return verification;
   }
 
-  async findByEmail(email: string): Promise<VerificationEntity> {
-    const verification = await this.vRepo.findOne({ where: { email } });
+  async findByEmail(email: string): Promise<VerificationPublic> {
+    const verification = await this.prisma.emailVerification.findUnique({
+      where: { email },
+      select: verificationPublicSelect,
+    });
     if (!verification) {
       throw new NotFoundException("Verification not found");
     }
     return verification;
   }
 
-  async findByToken(token: string): Promise<VerificationEntity> {
-    const hashedToken = createHash('sha256').update(token).digest('hex');
-    const verification = await this.vRepo.findOne({ where: { token_hash: hashedToken } });
+  async findByToken(token: string): Promise<VerificationPublic> {
+    const hashedToken = createHash("sha256").update(token).digest("hex");
+    const verification = await this.prisma.emailVerification.findUnique({
+      where: { token_hash: hashedToken },
+      select: verificationPublicSelect,
+    });
     if (!verification) {
       throw new NotFoundException("Verification not found");
     }
     return verification;
   }
 
-  async update(id: string, dto: UpdateVerificationDto): Promise<VerificationEntity> {
-    const verification = await this.findOne(id);
-    if (!verification) {
+  async update(id: string, dto: UpdateVerificationDto): Promise<VerificationPublic> {
+    const exists = await this.prisma.emailVerification.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) {
       throw new NotFoundException("Verification not found");
     }
-    Object.assign(verification, dto);
-    return this.vRepo.save(verification);
+
+    const data = {
+      email: dto.email,
+      ...(dto.user_id ? { user: { connect: { id: dto.user_id } } } : {}),
+    };
+
+    return this.prisma.emailVerification.update({
+      where: { id },
+      data,
+      select: verificationPublicSelect,
+    });
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.vRepo.delete(id);
-    if (result.affected === 0) {
+    const exists = await this.prisma.emailVerification.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) {
       throw new NotFoundException("Verification not found");
     }
+    await this.prisma.emailVerification.delete({ where: { id } });
   }
 
   async verifyEmail(token: string): Promise<{ success: boolean; message?: string }> {
-    const hashedToken = createHash('sha256').update(token).digest('hex');
-    const verification = await this.vRepo.findOne({ where: { token_hash: hashedToken }, relations: ["user"] });
+    const hashedToken = createHash("sha256").update(token).digest("hex");
+    const verification = await this.prisma.emailVerification.findUnique({
+      where: { token_hash: hashedToken },
+      include: { user: true },
+    });
     if (!verification) {
       throw new NotFoundException("Verification not found");
     }
@@ -116,23 +141,28 @@ export class VerificationService {
     }
 
     if (verification.expires_at && verification.expires_at < new Date()) {
-      verification.status = MailVerificationStatus.EXPIRED;
-      await this.vRepo.save(verification);
+      await this.prisma.emailVerification.update({
+        where: { id: verification.id },
+        data: { status: MailVerificationStatus.EXPIRED },
+      });
 
       throw new NotFoundException("Verification not found");
     }
 
-    const user = verification.user;
-    if (!user) {
+    if (!verification.user_id) {
       throw new NotFoundException("User not found");
     }
 
-    user.email_verified_at = new Date();
-    await this.uRepo.save(user);
-
-    verification.status = MailVerificationStatus.VERIFIED;
-    verification.verified_at = new Date();
-    await this.vRepo.save(verification);
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: verification.user_id },
+        data: { email_verified_at: new Date() },
+      }),
+      this.prisma.emailVerification.update({
+        where: { id: verification.id },
+        data: { status: MailVerificationStatus.VERIFIED, verified_at: new Date() },
+      }),
+    ]);
 
     return { success: true, message: "Email verified successfully" };
   }
@@ -143,14 +173,21 @@ export class VerificationService {
       throw new NotFoundException("Invalid token");
     }
 
-    const status = verification.expires_at && verification.expires_at < new Date() ? MailVerificationStatus.EXPIRED : verification.status as MailVerificationStatus;
+    const status =
+      verification.expires_at && verification.expires_at < new Date()
+        ? MailVerificationStatus.EXPIRED
+        : (verification.status as MailVerificationStatus);
+
     return { status };
   }
 
   async resendToken(token: string): Promise<{ success: boolean; message?: string }> {
-    const hashedToken = createHash('sha256').update(token).digest('hex');
+    const hashedToken = createHash("sha256").update(token).digest("hex");
 
-    const verification = await this.vRepo.findOne({ where: { token_hash: hashedToken }, relations: ["user"] });
+    const verification = await this.prisma.emailVerification.findUnique({
+      where: { token_hash: hashedToken },
+      select: { id: true, status: true, user_id: true, email: true },
+    });
 
     if (!verification) {
       throw new NotFoundException("Verification not found");
@@ -164,12 +201,14 @@ export class VerificationService {
       throw new NotFoundException("User not found for this verification");
     }
 
-    verification.status = MailVerificationStatus.REVOKED;
-    await this.vRepo.save(verification);
+    await this.prisma.emailVerification.update({
+      where: { id: verification.id },
+      data: { status: MailVerificationStatus.REVOKED },
+    });
 
     await this.create({
       user_id: verification.user_id,
-      email: verification.email
+      email: verification.email,
     });
 
     return { success: true, message: "Verification token resent successfully" };
