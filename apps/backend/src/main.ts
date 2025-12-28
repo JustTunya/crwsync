@@ -9,12 +9,15 @@ import { AppModule } from "src/app.module";
 import { AllExceptionsFilter } from "src/common/filters/all-exceptions.filter";
 import { LoggingInterceptor } from "src/common/interceptors/logging.interceptor";
 import { TimeoutInterceptor } from "src/common/interceptors/timeout.interceptor";
+import { PrismaService } from "src/prisma/prisma.service";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const logger = new Logger("Bootstrap");
   const config = app.get(ConfigService);
   const reflector = app.get(Reflector);
+  const prisma = app.get(PrismaService);
+  prisma.enableShutdownHooks(app);
 
   app.use(helmet());
   app.use(compression());
