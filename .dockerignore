@@ -111,3 +111,6 @@ pnpm-debug.log*
 # Always keep public assets
 !apps/**/public
 !apps/**/public/**
+
+# Prisma migrations
+!apps/**/prisma/migrations

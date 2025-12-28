@@ -5,6 +5,6 @@ for i in $(seq 1 120); do
     echo "Migrations applied successfully!"
     exec node apps/backend/dist/main.js
   fi
-  echo "Migrations failed, retrying in 2s ($i/120)..."
-  sleep 2
+  echo "Migrations failed, retrying in 3s ($i/120)..."
+  sleep 3
 done

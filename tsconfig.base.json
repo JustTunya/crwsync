@@ -12,6 +12,7 @@
     "baseUrl": ".",
     "paths": {
       "@crwsync/types": ["packages/types/src"],
+      "@crwsync/styles": ["packages/styles/src"],
     },
   },
   "exclude": ["node_modules", "dist"],
