@@ -15,6 +15,8 @@ async function bootstrap() {
   const logger = new Logger("Bootstrap");
   const config = app.get(ConfigService);
   const reflector = app.get(Reflector);
+  
+  app.enableShutdownHooks(["SIGINT", "SIGTERM"]);
 
   app.use(helmet());
   app.use(compression());
@@ -46,9 +48,7 @@ async function bootstrap() {
       whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
+      transformOptions: { enableImplicitConversion: true },
     }),
   );
 
@@ -60,7 +60,8 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  await app.listen(config.get<number>("PORT") || 3000);
+  const port = config.get<number>("PORT") ?? 8080;
+  await app.listen(port);
   logger.log(`Application is running on: ${await app.getUrl()}`);
 }
 

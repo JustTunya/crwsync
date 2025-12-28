@@ -6,7 +6,7 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 // MODULES
 import { VerificationModule } from "src/email-verification/email-verification.module";
 import { PasswordResetModule } from "src/password-reset/password-reset.module";
-import { DatabaseModule } from "src/database/database.module";
+import { PrismaModule } from "src/prisma/prisma.module";
 import { SessionModule } from "src/session/session.module";
 import { HealthModule } from "src/health/health.module";
 import { EmailModule } from "src/email/email.module";
@@ -27,7 +27,7 @@ import { RolesGuard } from "src/common/guards/roles.guard";
       { name: "auth", ttl: 60_000, limit: 10 }  // 10 requests per minute
     ]),
     HealthModule, 
-    DatabaseModule, 
+    PrismaModule, 
     UserModule,
     SessionModule,
     AuthModule, 

@@ -1,86 +1,87 @@
 import { Injectable, NotFoundException, BadRequestException, UnauthorizedException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
 import { Request } from "express";
 import { randomBytes, createHash, randomUUID } from "crypto";
-import { SessionEntity } from "src/session/session.entity";
 import { CreateSessionDto } from "src/session/dto/create-session.dto";
 import { UpdateSessionDto } from "src/session/dto/update-session.dto";
 import { RotateSessionDto } from "src/session/dto/rotate-session.dto";
 import { getClientIp, getUserAgent } from "src/session/session.utils";
-import { UserEntity } from "src/user/user.entity";
-import { VerifySessionDto } from "./dto/verify-session.dto";
+import { VerifySessionDto } from "src/session/dto/verify-session.dto";
+import { PrismaService } from "src/prisma/prisma.service";
+import { SessionPublic, sessionPublicSelect } from "src/prisma/selects";
 
 @Injectable()
 export class SessionService {
-  constructor(
-    @InjectRepository(SessionEntity)
-    private readonly sRepo: Repository<SessionEntity>,
-    @InjectRepository(UserEntity)
-    private readonly uRepo: Repository<UserEntity>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateSessionDto, req: Request): Promise<{session: SessionEntity, token: string}> {
-    const user = await this.uRepo.findOne({ where: { id: dto.user_id } });
+  async create(dto: CreateSessionDto, req: Request): Promise<{ session: SessionPublic; token: string }> {
+    const user = await this.prisma.user.findUnique({ where: { id: dto.user_id }, select: { id: true } });
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
     const token = randomBytes(32).toString("hex");
-    const hashedToken = createHash('sha256').update(token).digest('hex');
+    const hashedToken = createHash("sha256").update(token).digest("hex");
     const exp = dto.persistent
-      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    const session = await this.sRepo.manager.transaction(async (m) => {
-      const entity = m.create(SessionEntity, {
+    const session = await this.prisma.session.create({
+      data: {
         id: dto.id,
-        user_id: dto.user_id,
+        user: { connect: { id: dto.user_id } },
         refresh_token_hash: hashedToken,
-        persistent: dto.persistent,
+        persistent: dto.persistent ?? false,
         expires_at: exp,
-        ip: getClientIp(req) || undefined,
-        ua: getUserAgent(req) || undefined,
+        ip: getClientIp(req) || null,
+        ua: getUserAgent(req) || null,
         created_at: new Date(),
-      });
-      return m.save(entity);
+      },
+      select: sessionPublicSelect,
     });
 
     return { session, token };
   }
 
-  findAll(): Promise<SessionEntity[]> {
-    return this.sRepo.find();
+  findAll(): Promise<SessionPublic[]> {
+    return this.prisma.session.findMany({ select: sessionPublicSelect });
   }
 
-  async findOne(id: string): Promise<SessionEntity> {
-    const session = await this.sRepo.findOne({ where: { id } });
+  async findOne(id: string): Promise<SessionPublic> {
+    const session = await this.prisma.session.findUnique({ where: { id }, select: sessionPublicSelect });
     if (!session) {
       throw new NotFoundException("Session not found");
     }
     return session;
   }
 
-  async update(id: string, dto: UpdateSessionDto): Promise<SessionEntity> {
-    const session = await this.sRepo.findOne({ where: { id } });
+  async update(id: string, dto: UpdateSessionDto): Promise<SessionPublic> {
+    const session = await this.prisma.session.findUnique({ where: { id }, select: { id: true } });
     if (!session) {
       throw new NotFoundException("Session not found");
     }
 
-    Object.assign(session, dto);
-    return this.sRepo.save(session);
+    const data = {
+      persistent: dto.persistent,
+      ...(dto.user_id ? { user: { connect: { id: dto.user_id } } } : {}),
+    };
+
+    return this.prisma.session.update({ where: { id }, data, select: sessionPublicSelect });
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.sRepo.delete(id);
-    if (result.affected === 0) {
+    const session = await this.prisma.session.findUnique({ where: { id }, select: { id: true } });
+    if (!session) {
       throw new NotFoundException("Session not found");
     }
+    await this.prisma.session.delete({ where: { id } });
   }
 
-  async verify(dto: VerifySessionDto): Promise<SessionEntity> {
-    const hashedToken = createHash('sha256').update(dto.token).digest('hex');
-    const session = await this.sRepo.findOne({ where: { refresh_token_hash: hashedToken } });
+  async verify(dto: VerifySessionDto): Promise<SessionPublic> {
+    const hashedToken = createHash("sha256").update(dto.token).digest("hex");
+    const session = await this.prisma.session.findFirst({
+      where: { refresh_token_hash: hashedToken },
+      select: sessionPublicSelect,
+    });
     if (!session) {
       throw new UnauthorizedException("Invalid session token");
     }
@@ -93,9 +94,12 @@ export class SessionService {
     return session;
   }
 
-  async rotate(dto: RotateSessionDto, req: Request): Promise<{ session: SessionEntity, refreshToken: string }> {
-    const oldHashedToken = createHash('sha256').update(dto.old_token).digest('hex');
-    const oldSession = await this.sRepo.findOne({ where: { user_id: dto.user_id, refresh_token_hash: oldHashedToken } });
+  async rotate(dto: RotateSessionDto, req: Request): Promise<{ session: SessionPublic; refreshToken: string }> {
+    const oldHashedToken = createHash("sha256").update(dto.old_token).digest("hex");
+    const oldSession = await this.prisma.session.findFirst({
+      where: { user_id: dto.user_id, refresh_token_hash: oldHashedToken },
+      select: { id: true, expires_at: true, revoked_at: true },
+    });
     if (!oldSession) {
       throw new NotFoundException("Old session not found");
     }
@@ -106,11 +110,10 @@ export class SessionService {
       throw new BadRequestException("Old session has been revoked");
     }
 
-    const { session: newSession, token: refreshToken } = await this.create({
-      id: randomUUID(),
-      user_id: dto.user_id,
-      persistent: dto.persistent,
-    }, req);
+    const { session: newSession, token: refreshToken } = await this.create(
+      { id: randomUUID(), user_id: dto.user_id, persistent: dto.persistent },
+      req,
+    );
 
     await this.revoke(oldSession.id);
 
@@ -118,38 +121,25 @@ export class SessionService {
   }
 
   async revoke(id: string): Promise<void> {
-    await this.sRepo.update(id, { revoked_at: new Date() });
+    await this.prisma.session.updateMany({ where: { id }, data: { revoked_at: new Date() } });
   }
 
   async revokeAll(userId: string): Promise<void> {
-    await this.sRepo.createQueryBuilder()
-      .update(SessionEntity)
-      .set({ revoked_at: new Date() })
-      .where("user_id = :userId", { userId })
-      .andWhere("revoked_at IS NULL")
-      .execute();
+    await this.prisma.session.updateMany({
+      where: { user_id: userId, revoked_at: null },
+      data: { revoked_at: new Date() },
+    });
   }
 
   async purgeExpired(): Promise<void> {
-    await this.sRepo.createQueryBuilder()
-      .delete()
-      .from(SessionEntity)
-      .where("expires_at IS NOT NULL AND expires_at < NOW()")
-      .execute();
+    await this.prisma.session.deleteMany({ where: { expires_at: { lt: new Date() } } });
   }
 
   async purgeRevoked(cutoff: Date): Promise<void> {
-    await this.sRepo.createQueryBuilder()
-      .delete()
-      .from(SessionEntity)
-      .where("revoked_at IS NOT NULL AND revoked_at < :cutoff", { cutoff })
-      .execute();
+    await this.prisma.session.deleteMany({ where: { revoked_at: { lt: cutoff } } });
   }
 
   async purgeAll(): Promise<void> {
-    await this.sRepo.createQueryBuilder()
-      .delete()
-      .from(SessionEntity)
-      .execute();
+    await this.prisma.session.deleteMany({});
   }
 }

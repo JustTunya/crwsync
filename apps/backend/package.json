@@ -16,10 +16,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "typeorm": "npx typeorm -d dist/ds-cli.js",
-    "migration:generate": "npm run typeorm -- migration:generate src/migrations/Init",
-    "migration:run:ts": "npm run typeorm -- migration:run",
-    "migration:run:js": "node dist/migrate.js"
+    "prisma:generate": "prisma generate --config=prisma.config.ts",
+    "prisma:migrate:dev": "prisma migrate dev --config=prisma.config.ts",
+    "prisma:migrate:deploy": "prisma migrate deploy --config=prisma.config.ts",
+    "prisma:studio": "prisma studio --config=prisma.config.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
@@ -32,7 +32,8 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.0.1",
     "@nestjs/throttler": "^6.4.0",
-    "@nestjs/typeorm": "^11.0.0",
+    "@prisma/adapter-pg": "^7.2.0",
+    "@prisma/client": "^7.2.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
@@ -47,6 +48,7 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "pg": "^8.16.3",
+    "prisma": "^7.2.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -78,7 +80,6 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typeorm": "^0.3.26",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },

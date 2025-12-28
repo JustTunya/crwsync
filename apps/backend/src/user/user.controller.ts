@@ -3,10 +3,10 @@ import { RoleEnum } from "@crwsync/types";
 import { CreateUserDto } from "src/user/dto/create-user.dto";
 import { UpdateUserDto } from "src/user/dto/update-user.dto";
 import { UserService } from "src/user/user.service";
-import { UserEntity } from "src/user/user.entity";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { OwnershipGuard } from "src/common/guards/ownership.guard";
 import { Public } from "src/common/decorators/public.decorator";
+import { UserPublic } from "src/prisma/selects";
 
 @Controller("users")
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -16,14 +16,14 @@ export class UserController {
   @Roles(RoleEnum.ADMIN)
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() dto: CreateUserDto): Promise<UserEntity> {
+  create(@Body() dto: CreateUserDto): Promise<UserPublic> {
     return this.userService.create(dto);
   }
 
   @Roles(RoleEnum.ADMIN)
   @Get()
   @HttpCode(HttpStatus.OK)
-  findAll(): Promise<UserEntity[]> {
+  findAll(): Promise<UserPublic[]> {
     return this.userService.findAll();
   }
 
@@ -40,14 +40,14 @@ export class UserController {
   @UseGuards(new OwnershipGuard("userId"))
   @Get(":userId")
   @HttpCode(HttpStatus.OK)
-  findOne(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<UserEntity> {
+  findOne(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<UserPublic> {
     return this.userService.findOne(userId);
   }
 
   @UseGuards(new OwnershipGuard("userId"))
   @Patch(":userId")
   @HttpCode(HttpStatus.OK)
-  update(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string, @Body() dto: UpdateUserDto): Promise<UserEntity> {
+  update(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string, @Body() dto: UpdateUserDto): Promise<UserPublic> {
     return this.userService.update(userId, dto);
   }
 

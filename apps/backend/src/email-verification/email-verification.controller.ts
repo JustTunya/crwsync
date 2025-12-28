@@ -3,10 +3,10 @@ import { MailVerificationStatus, RoleEnum } from "@crwsync/types";
 import { CreateVerificationDto } from "src/email-verification/dto/create-email-verification.dto";
 import { UpdateVerificationDto } from "src/email-verification/dto/update-email-verification.dto";
 import { VerificationService } from "src/email-verification/email-verification.service";
-import { VerificationEntity } from "src/email-verification/email-verification.entity";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { Public } from "src/common/decorators/public.decorator";
 import { Roles } from "src/common/decorators/roles.decorator";
+import { VerificationPublic } from "src/prisma/selects";
 
 @Controller("email-verifications")
 @UseGuards(JwtAuthGuard)
@@ -18,7 +18,7 @@ export class VerificationController {
   @Public()
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() dto: CreateVerificationDto): Promise<VerificationEntity> {
+  async create(@Body() dto: CreateVerificationDto): Promise<VerificationPublic> {
     return this.verificationService.create(dto);
   }
 
@@ -51,7 +51,7 @@ export class VerificationController {
   async findAll(
     @Query("email") email?: string,
     @Query("token") token?: string
-  ): Promise<VerificationEntity[]> {
+  ): Promise<VerificationPublic[]> {
     try {
       if (email) {
         const v = await this.verificationService.findByEmail(email);
@@ -74,14 +74,14 @@ export class VerificationController {
   @Roles(RoleEnum.ADMIN)
   @Get(":verificationId")
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param("verificationId", new ParseUUIDPipe({ version: "4" })) verificationId: string): Promise<VerificationEntity> {
+  async findOne(@Param("verificationId", new ParseUUIDPipe({ version: "4" })) verificationId: string): Promise<VerificationPublic> {
     return this.verificationService.findOne(verificationId);
   }
 
   @Roles(RoleEnum.ADMIN)
   @Patch(":verificationId")
   @HttpCode(HttpStatus.OK)
-  async update(@Param("verificationId", new ParseUUIDPipe({ version: "4" })) verificationId: string, @Body() dto: UpdateVerificationDto): Promise<VerificationEntity> {
+  async update(@Param("verificationId", new ParseUUIDPipe({ version: "4" })) verificationId: string, @Body() dto: UpdateVerificationDto): Promise<VerificationPublic> {
     return this.verificationService.update(verificationId, dto);
   }
 

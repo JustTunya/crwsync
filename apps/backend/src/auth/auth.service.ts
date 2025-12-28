@@ -7,11 +7,11 @@ import type { JwtPayload, JwtResponse } from "@crwsync/types";
 import { VerificationService } from "src/email-verification/email-verification.service";
 import { SessionService } from "src/session/session.service";
 import { UserService } from "src/user/user.service";
-import { UserEntity } from "src/user/user.entity";
 import { SigninDto } from "src/auth/dto/signin.dto";
 import { SignupDto } from "src/auth/dto/signup.dto";
 import { SessionUserDto } from "src/auth/dto/session-user.dto";
 import { RefreshDto } from "src/auth/dto/refresh.dto";
+import { UserPublic } from "src/prisma/selects";
 
 // --- COOKIE SETTINGS ---
 const isProduction = process.env.NODE_ENV === "production";
@@ -27,19 +27,19 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  private payload(user: UserEntity, jti: string) {
+  private payload(user: UserPublic, jti: string) {
     return { jti, sub: user.id, email: user.email, role: user.role, rver: user.role_version };
   }
 
-  async validateUser(dto: SigninDto): Promise<UserEntity | null> {
+  async validateUser(dto: SigninDto): Promise<UserPublic | null> {
     const user = await this.userService.findByEmailOrUsername(dto.identifier);
-    if (user && await compare(dto.password, user.password_hash)) {
-      return user;
+    if (user && (await compare(dto.password, user.password_hash))) {
+      return await this.userService.findOne(user.id);
     }
     return null;
   }
 
-  async signup(dto: SignupDto): Promise<UserEntity> {
+  async signup(dto: SignupDto): Promise<UserPublic> {
     const existingUser = await this.userService.findByEmailOrUsername(dto.email);
 
     if (existingUser) {
@@ -53,7 +53,7 @@ export class AuthService {
     return user;
   }
 
-  async signin(user: UserEntity, req: Request, rememberMe?: boolean): Promise<JwtResponse> {
+  async signin(user: UserPublic, req: Request, rememberMe?: boolean): Promise<JwtResponse> {
     const verification = await this.verificationService.findByEmail(user.email);
 
     if (verification && verification.status !== "verified") {
@@ -63,7 +63,10 @@ export class AuthService {
     const jti = randomUUID();
     const accessToken = this.jwtService.sign(this.payload(user, jti));
 
-    const { token: refreshToken } = await this.sessionService.create({ id: jti, user_id: user.id, persistent: !!rememberMe }, req);
+    const { token: refreshToken } = await this.sessionService.create(
+      { id: jti, user_id: user.id, persistent: !!rememberMe },
+      req,
+    );
 
     await this.userService.update(user.id, { last_login: new Date().toISOString() });
 
@@ -79,24 +82,24 @@ export class AuthService {
         const session = await this.sessionService.verify({ token: refreshToken });
         await this.sessionService.revoke(session.id);
       } else if (accessToken) {
-        const payload = this.jwtService.verify<{ jti: string, sub: string, email: string }>(accessToken);
+        const payload = this.jwtService.verify<{ jti: string; sub: string; email: string }>(accessToken);
         await this.sessionService.revoke(payload.jti);
       }
     } finally {
       res.clearCookie("crw-at", {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "lax",
-      path: "/",
-      domain: accessCookieDomain,
-    });
-    res.clearCookie("crw-rt", {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "lax",
-      path: "/",
-      domain: refreshCookieDomain,
-    });
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "lax",
+        path: "/",
+        domain: accessCookieDomain,
+      });
+      res.clearCookie("crw-rt", {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "lax",
+        path: "/",
+        domain: refreshCookieDomain,
+      });
     }
   }
 
@@ -113,11 +116,14 @@ export class AuthService {
       throw new BadRequestException("Invalid refresh token");
     }
 
-    const { session: newSession, refreshToken } = await this.sessionService.rotate({
-      user_id: session.user_id,
-      old_token: oldRefreshToken,
-      persistent: session.persistent,
-    }, req);
+    const { session: newSession, refreshToken } = await this.sessionService.rotate(
+      {
+        user_id: session.user_id,
+        old_token: oldRefreshToken,
+        persistent: session.persistent,
+      },
+      req,
+    );
 
     const user = await this.userService.findOne(session.user_id);
 
@@ -126,10 +132,7 @@ export class AuthService {
     return { accessToken, refreshToken, persistent: newSession.persistent };
   }
 
-  async sessionBootstrap(req: Request): Promise<{
-    user: SessionUserDto;
-    refresh?: RefreshDto;
-  }> {
+  async sessionBootstrap(req: Request): Promise<{ user: SessionUserDto; refresh?: RefreshDto }> {
     const accessToken = req.cookies?.["crw-at"] as string | undefined;
 
     if (accessToken) {
@@ -153,12 +156,12 @@ export class AuthService {
   }
 
   async me(active: { userId: string }) {
-    const user = await this.userService.findOne(active.userId) as SessionUserDto;
+    const user = (await this.userService.findOne(active.userId)) as SessionUserDto;
 
     if (!user) {
       throw new UnauthorizedException();
     }
-    
+
     return user;
   }
 }
