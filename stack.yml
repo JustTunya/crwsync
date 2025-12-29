@@ -59,8 +59,6 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE}
-    depends_on:
-      - database
     ports:
       - "8080:8080"
     networks:
@@ -68,6 +66,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8080
+      - APP_URL=${NEXT_PUBLIC_WEB_URL}
       - DATABASE_URL=${DATABASE_URL}
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_PORT=${MAIL_PORT}
