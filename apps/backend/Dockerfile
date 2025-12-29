@@ -47,6 +47,7 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder /app/packages/types/dist ./node_modules/@crwsync/types
 COPY --from=builder /app/packages/types/package.json ./node_modules/@crwsync/types/package.json
+COPY --from=builder /app/packages/templates ./packages/templates
 
 COPY apps/backend/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
