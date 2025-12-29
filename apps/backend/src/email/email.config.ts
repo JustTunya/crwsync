@@ -6,14 +6,14 @@ export const emailConfig = (): MailerOptions => ({
   transport: {
     host: process.env.MAIL_HOST,
     port: parseInt(process.env.MAIL_PORT || "587"), // TODO: Use 465 for secure connections
-    secure: false, // TODO: Set to true if using port 465
+    secure: process.env.MAIL_PORT === "465",
     auth: {
       user: process.env.MAIL_USER,
       pass: process.env.MAIL_PASS,
     },
-    tls: {
-      rejectUnauthorized: process.env.NODE_ENV === "production",
-    }
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000,
   },
   defaults: {
     from: `"crwsync" <${process.env.MAIL_USER}>`,
