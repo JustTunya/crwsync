@@ -23,29 +23,6 @@ x-deploy-settings: &deploy-settings
       memory: 256M
 
 services:
-  database:
-    image: postgres:15-alpine
-    ports:
-      - "5432:5432"
-    networks:
-      - net
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - POSTGRES_DB=${DB_NAME}
-    volumes:
-      - data:/var/lib/postgresql/data
-    deploy:
-      <<: *deploy-settings
-      placement:
-        constraints:
-          - node.hostname == beelink
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
-
   web:
     image: ${WEB_IMAGE}
     ports:

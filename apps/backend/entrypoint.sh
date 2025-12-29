@@ -1,7 +1,7 @@
 set -e
 
 for i in $(seq 1 120); do
-  if ./node_modules/.bin/prisma migrate deploy --schema=apps/backend/prisma/schema.prisma; then
+  if ./node_modules/.bin/prisma migrate deploy --config=apps/backend/prisma.config.ts; then
     echo "Migrations applied successfully!"
     exec node apps/backend/dist/main.js
   fi
