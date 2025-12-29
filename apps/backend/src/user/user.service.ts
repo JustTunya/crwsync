@@ -12,7 +12,11 @@ export class UserService {
 
   async create(dto: CreateUserDto): Promise<UserPublic> {
     const data = {
-      ...dto,
+      email: dto.email,
+      username: dto.username,
+      firstname: dto.firstname,
+      lastname: dto.lastname,
+      birthdate: new Date(`${dto.birthdate}T00:00:00.000Z`),
       password_hash: await hash(dto.password, 10),
     } as Prisma.UserCreateInput;
 
