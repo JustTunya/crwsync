@@ -10,28 +10,31 @@ interface UserAvatarProps {
 
 export default function UserAvatar({ size = 7, user, status }: UserAvatarProps) {
   const initials = `${user?.firstname?.charAt(0) ?? ""}${user?.lastname?.charAt(0) ?? ""}`.toUpperCase();
+  const pixels = size * 4;
 
   if (user && user.avatar_key) {
     const avatarUrl = `/api/avatars/${user.avatar_key}`;
+
     return (
       <Image
         src={avatarUrl}
         alt={`${user.firstname} ${user.lastname} avatar`}
         className="rounded-full object-cover"
-        width={size * 4}
-        height={size * 4}
+        width={pixels}
+        height={pixels}
+        priority
       />
     );
   } else {
     return (
         <div
-          className={cn("rounded-full bg-primary flex items-center justify-center relative ring-1 ring-offset-2 ring-offset-base-200", {
+          className={cn("shrink-0 rounded-full bg-primary flex items-center justify-center relative ring-1 ring-offset-2 ring-offset-base-200", {
             "ring-green-500": status === "online",
             "ring-gray-400": status === "offline",
             "ring-red-500": status === "busy",
             "ring-yellow-500": status === "away",
           })}
-          style={{ width: size * 4, height: size * 4 }}
+          style={{ width: pixels, height: pixels }}
         >
           <span className="text-primary-foreground text-sm font-semibold">{initials}</span>
 
