@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, Transition } from "framer-motion";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
 import { ArrowUp01Icon, ArrowDown01Icon, Home03Icon, TaskDone01Icon, Calendar03Icon, Search01Icon, Add01Icon, ZapIcon, Menu05Icon } from "@hugeicons/core-free-icons";
@@ -9,12 +10,20 @@ import { Input } from "@/components/ui/input";
 import UserAvatar from "@/components/user-avatar";
 import WorkspaceAvatar from "@/components/workspace-avatar";
 import ProjectAvatar from "@/components/project-avatar";
+import { useSidebar } from "@/hooks/use-sidebar";
 import { cn } from "@/lib/utils";
 
 const spring: Transition= { type: "spring", stiffness: 300, damping: 30 };
 
 export default function Sidebar() {
-  const [open, setOpen] = useState(true);
+  const { open, toggleOpen } = useSidebar();
+  const pathname = usePathname();
+
+  const modules = [
+    { name: "Home", icon: Home03Icon, href: "/" },
+    { name: "Tasks", icon: TaskDone01Icon, href: "/tasks" },
+    { name: "Calendar", icon: Calendar03Icon, href: "/calendar" },
+  ];
 
   return (
     <>
@@ -40,7 +49,7 @@ export default function Sidebar() {
                 <HugeiconsIcon
                   icon={Menu05Icon}
                   className="size-5 text-foreground cursor-pointer"
-                  onClick={() => setOpen(!open)}
+                  onClick={toggleOpen}
                 />
               </>
             )}
@@ -70,9 +79,16 @@ export default function Sidebar() {
 
         {/* MODULES */}
         <div className="flex flex-col">
-          <SidebarModule icon={Home03Icon} name="Home" active extended={open} />
-          <SidebarModule icon={TaskDone01Icon} name="Tasks" extended={open} />
-          <SidebarModule icon={Calendar03Icon} name="Calendar" extended={open} />
+          {modules.map((module) => (
+            <SidebarModule 
+              key={module.name}
+              icon={module.icon}
+              name={module.name}
+              href={module.href}
+              active={pathname === module.href}
+              extended={open}
+            />
+          ))}
         </div>
 
         {/* DIVIDER */}
@@ -129,7 +145,7 @@ export default function Sidebar() {
         <HugeiconsIcon
           icon={Menu05Icon}
           className="size-5 m-4 text-foreground cursor-pointer"
-          onClick={() => setOpen(!open)}
+          onClick={toggleOpen}
         />
       )}
     </>
@@ -169,13 +185,10 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
   );
 }
 
-export function SidebarModule({ icon, name, active, extended }: { icon: HugeiconsIconProps["icon"]; name?: string; active?: boolean; extended?: boolean }) {
+export function SidebarModule({ icon, name, href, active, extended }: { icon: HugeiconsIconProps["icon"]; name: string; href: string; active?: boolean; extended?: boolean }) {
   return (
-    <div className={cn(
-      "relative flex flex-row items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden",
-      active && "bg-base-200"
-    )}>
-      <HugeiconsIcon icon={icon} className="size-5" />
+    <Link href={href} className="relative flex flex-row items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden">
+      <HugeiconsIcon icon={icon} className="size-5 z-10" />
       <AnimatePresence>
         {extended && (
           <motion.p 
@@ -183,16 +196,15 @@ export function SidebarModule({ icon, name, active, extended }: { icon: Hugeicon
             animate={{ opacity: 1, width: "auto" }}
             exit={{ opacity: 0, width: 0 }}
             transition={{ duration: 0.15, ease: "easeInOut" }}
-            className="text-foreground text-sm font-medium whitespace-nowrap"
+            className="text-foreground text-sm font-medium whitespace-nowrap z-10"
           >
             {name}
           </motion.p>
         )}
       </AnimatePresence>
 
-      {active && (<div className="absolute inset-0 w-2/3 ml-auto rounded-r-lg bg-linear-to-l from-primary/25 to-transparent" />)}
-      {active && (<div className="absolute inset-0 w-1 my-2 ml-auto rounded-lg bg-primary" />)}
-    </div>
+      {active && (<div className="absolute inset-0 size-full rounded-lg -bg-linear-120 from-primary/60 dark:from-primary/30 via-base-200 to-base-200" />)}
+    </Link>
   );
 }
   
