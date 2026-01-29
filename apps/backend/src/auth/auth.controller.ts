@@ -8,7 +8,7 @@ import { ConfigService } from "@nestjs/config";
 import { Public } from "src/common/decorators/public.decorator";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { ActiveUserParam } from "src/common/decorators/active-user.decorator";
-import { ActiveUser } from "src/common/req.type.ts/active-user.type";
+import { ActiveUser } from "src/common/types/active-user.type";
 import { setAuthCookies } from "./auth.cookie";
 
 @Controller("auth")

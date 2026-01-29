@@ -17,6 +17,7 @@ import { AppService } from "src/app.service";
 // GUARDS
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { RolesGuard } from "src/common/guards/roles.guard";
+import { WorkspaceModule } from "./workspace/workspace.module";
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { RolesGuard } from "src/common/guards/roles.guard";
     AuthModule, 
     EmailModule,
     VerificationModule,
-    PasswordResetModule
+    PasswordResetModule,
+    WorkspaceModule,
   ],
   controllers: [AppController],
   providers: [

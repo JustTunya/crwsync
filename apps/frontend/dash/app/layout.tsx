@@ -5,6 +5,7 @@ import { UserProvider } from "@/providers/user.provider";
 import { getSession } from "@/lib/auth.server";
 import "@crwsync/styles";
 import Sidebar from "@/components/sidebar";
+import { WorkspaceProvider } from "@/providers/workspace.provider";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -33,10 +34,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={`${figtree.variable} font-figtree antialiased dark`}>
         <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
           <UserSession>
-            <div className="flex min-h-screen w-full">
-              <Sidebar />
-              <main className="flex-1 min-w-0">{children}</main>
-            </div>
+            <WorkspaceProvider>
+              <div className="flex min-h-screen w-full">
+                <Sidebar />
+                <main className="flex-1 min-w-0">{children}</main>
+              </div>
+            </WorkspaceProvider>
           </UserSession>
         </Suspense>
       </body>

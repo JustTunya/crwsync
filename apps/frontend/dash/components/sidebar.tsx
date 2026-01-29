@@ -7,6 +7,7 @@ import { motion, AnimatePresence, Transition } from "framer-motion";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
 import { ArrowUp01Icon, ArrowDown01Icon, Home03Icon, TaskDone01Icon, Calendar03Icon, Search01Icon, Add01Icon, ZapIcon, Menu05Icon, ArrowRight01Icon, Settings02Icon, Logout02Icon, InboxIcon, Link01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { useUser } from "@/providers/user.provider";
+import { useWorkspaces } from "@/hooks/use-workspace";
 import { Input } from "@/components/ui/input";
 import UserAvatar from "@/components/user-avatar";
 import WorkspaceAvatar from "@/components/workspace-avatar";
@@ -42,23 +43,6 @@ export default function Sidebar() {
         <div className="flex items-center">
           {/* WORKSPACE */}
           <SidebarWorkspace extended={open} />
-
-          {/* <AnimatePresence>
-            {open && (
-              <motion.div
-                key="divider-and-toggle"
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: "auto" }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={fadeSpring}
-                className="flex items-center"
-              >
-                <div className="h-6 w-px bg-base-200 rounded-full mx-4"/>
-
-                <SidebarToggle toggleOpen={toggleOpen} />
-              </motion.div>
-            )}
-          </AnimatePresence> */}
         </div>
 
         {/* SEARCH BAR */}
@@ -162,16 +146,27 @@ export function SidebarToggle({ toggleOpen, className }: { toggleOpen: () => voi
 }
 
 export function SidebarWorkspace({ extended }: { extended?: boolean }) {
-  const name = "My Workspace";
-
+  const { activeWorkspace, workspaces, switchWorkspace, isLoading } = useWorkspaces();
+  
   const [openWorkspaces, setOpenWorkspaces] = useState(false);
   const wsRef = useRef<HTMLDivElement>(null);
 
   useOutclick(wsRef, () => setOpenWorkspaces(false), openWorkspaces);
 
   const toggleMenu = () => {
-    if (extended) setOpenWorkspaces(!openWorkspaces);
+    if (extended && !isLoading) setOpenWorkspaces(!openWorkspaces);
   };
+
+  const handleSwitch = (id: string) => {
+    switchWorkspace(id);
+    setOpenWorkspaces(false);
+  };
+
+  if (isLoading && !activeWorkspace) {
+    return <div className="h-10 w-full bg-base-200 rounded-lg animate-pulse" />;
+  }
+
+  const displayName = activeWorkspace?.name || "No Workspace";
 
   return (
     <div 
@@ -185,11 +180,11 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
           !extended && "justify-center"
         )}
       >
-        <WorkspaceAvatar avatar_key="" name={name} />
+        <WorkspaceAvatar avatar_key={activeWorkspace?.logo_key || ""} name={displayName} />
 
         {extended && (
           <div className="flex items-center flex-1 overflow-hidden">
-            <p className="text-foreground text-sm font-semibold truncate">{name}</p>
+            <p className="text-foreground text-sm font-semibold truncate">{displayName}</p>
 
             <div className="ml-auto flex flex-col -space-y-1">
               <HugeiconsIcon icon={ArrowUp01Icon} strokeWidth={2} className="size-3.5" />
@@ -210,12 +205,31 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
           >
             <p className="px-2 py-1.5 text-xs text-muted-foreground">Workspaces</p>
             
-            <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-base-200 cursor-pointer">
-               <div className="flex items-center gap-2 overflow-hidden">
-                 <WorkspaceAvatar avatar_key="" name={name} className="size-5 text-[10px]" />
-                 <p className="text-xs font-medium truncate">{name}</p>
-               </div>
-               <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-4.5 text-primary" />
+            <div className="flex flex-col gap-1 mb-2 max-h-48 overflow-y-auto">
+              {workspaces.map((member) => {
+                const ws = member.workspace;
+                const isActive = ws?.id === activeWorkspace?.id;
+                if (!ws) return null;
+
+                return (
+                  <div 
+                    key={ws.id}
+                    onClick={() => handleSwitch(ws.id)}
+                    className={cn(
+                      "flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
+                      isActive && "bg-base-200"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <WorkspaceAvatar avatar_key={ws.logo_key || ""} name={ws.name} className="size-5 text-[10px]" />
+                      <p className="text-xs font-medium truncate">{ws.name}</p>
+                    </div>
+                    {isActive && (
+                      <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-4.5 text-primary" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="h-px w-full bg-base-200 my-2" />

@@ -4,11 +4,11 @@ import { WorkspaceRoleEnum } from '@prisma/client';
 export class CreateWorkspaceDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
-  slug: string;
+  slug!: string;
 }
 
 export class UpdateWorkspaceDto {
@@ -23,8 +23,8 @@ export class UpdateWorkspaceDto {
 
 export class InviteMemberDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsEnum(WorkspaceRoleEnum)
-  role: WorkspaceRoleEnum;
+  role!: WorkspaceRoleEnum;
 }
