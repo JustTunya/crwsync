@@ -144,7 +144,7 @@
   --secondary:                  oklch(0.28 0.015 64.35);
   --secondary-foreground:       oklch(0.95 0.010 64.35);
   --muted:                      oklch(0.25 0.015 64.35);
-  --muted-foreground:           oklch(0.70 0.015 64.35);
+  --muted-foreground:           oklch(0.75 0.015 64.35);
   /* SURFACE & SHADES */
   --base-100:                   oklch(0.21 0.015 64.35);
   --base-200:                   oklch(0.27 0.015 64.35);

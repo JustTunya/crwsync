@@ -22,9 +22,9 @@ function Input({ className, type, visible, setVisible, validation, error, prefix
 
   return (
     <div className={cn(
-      "w-full flex bg-input/50 backdrop-blur-md border shadow-md/5 rounded-lg transition-all", 
-      "focus-within:ring-3 focus-within:ring-primary/50 focus-within:border-primary",
-      error ? "border-error" : "border-border",
+      "w-full flex bg-input/50 backdrop-blur-md border-[1.5px] shadow-md/5 rounded-lg transition-all", 
+      "focus-within:ring-1 focus-within:ring-primary",
+      error ? "border-error" : "border-base-300",
       className
       )}>
       {prefix && <div className="h-8 flex justify-center items-center pl-3">{prefix}</div>}
