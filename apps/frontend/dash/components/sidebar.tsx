@@ -6,19 +6,19 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, Transition } from "framer-motion";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
 import { ArrowUp01Icon, ArrowDown01Icon, Home03Icon, TaskDone01Icon, Calendar03Icon, Search01Icon, Add01Icon, ZapIcon, Menu05Icon, ArrowRight01Icon, Settings02Icon, Logout02Icon, InboxIcon, Link01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { useWorkspace } from "@/providers/workspace.provider";
 import { useUser } from "@/providers/user.provider";
-import { useWorkspaces } from "@/hooks/use-workspace";
+import { WorkspaceAvatar } from "@/components/workspace-avatar";
+import { ProjectAvatar } from "@/components/project-avatar";
+import { UserAvatar } from "@/components/user-avatar";
 import { Input } from "@/components/ui/input";
-import UserAvatar from "@/components/user-avatar";
-import WorkspaceAvatar from "@/components/workspace-avatar";
-import ProjectAvatar from "@/components/project-avatar";
-import { signout } from "@/services/auth.service";
-import { useSidebar } from "@/hooks/use-sidebar";
 import { useOutclick } from "@/hooks/use-outclick";
+import { useSidebar } from "@/hooks/use-sidebar";
+import { signout } from "@/services/auth.service";
 import { cn } from "@/lib/utils";
 
-const spring: Transition= { type: "spring", stiffness: 300, damping: 30 };
-const fadeSpring: Transition = { duration: 0.15, ease: [0.4, 0, 0.2, 1] };
+const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
+const fading: Transition = { duration: 0.15, ease: [0.4, 0, 0.2, 1] };
 
 export default function Sidebar() {
   const [status, setStatus] = useState<"online" | "offline" | "busy" | "away">("online");
@@ -52,7 +52,7 @@ export default function Sidebar() {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
-            transition={fadeSpring}
+            transition={fading}
             className="w-full"
           >
             <Input 
@@ -146,7 +146,7 @@ export function SidebarToggle({ toggleOpen, className }: { toggleOpen: () => voi
 }
 
 export function SidebarWorkspace({ extended }: { extended?: boolean }) {
-  const { activeWorkspace, workspaces, switchWorkspace, isLoading } = useWorkspaces();
+  const { activeWorkspace, workspaces, switchWorkspace, loading } = useWorkspace();
   
   const [openWorkspaces, setOpenWorkspaces] = useState(false);
   const wsRef = useRef<HTMLDivElement>(null);
@@ -154,7 +154,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
   useOutclick(wsRef, () => setOpenWorkspaces(false), openWorkspaces);
 
   const toggleMenu = () => {
-    if (extended && !isLoading) setOpenWorkspaces(!openWorkspaces);
+    if (extended && !loading.active) setOpenWorkspaces(!openWorkspaces);
   };
 
   const handleSwitch = (id: string) => {
@@ -162,7 +162,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
     setOpenWorkspaces(false);
   };
 
-  if (isLoading && !activeWorkspace) {
+  if (loading.list && !activeWorkspace) {
     return <div className="h-10 w-full bg-base-200 rounded-lg animate-pulse" />;
   }
 

@@ -7,7 +7,7 @@ interface WorkspaceAvatarProps {
   className?: string;
 }
 
-export default function WorkspaceAvatar({ avatar_key, name, className }: WorkspaceAvatarProps) {
+export function WorkspaceAvatar({ avatar_key, name, className }: WorkspaceAvatarProps) {
   const initials = `${name?.charAt(0) ?? ""}${name?.charAt(1) ?? ""}`.toUpperCase();
 
   if (avatar_key) {

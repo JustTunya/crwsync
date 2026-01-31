@@ -1,18 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { 
-  getWorkspaces, 
-  getWorkspace, 
-  createWorkspace as apiCreateWorkspace,  
-} from "@/services/workspace.service";
 import { Workspace, WorkspaceMember, CreateWorkspacePayload } from "@crwsync/types";
+import { getWorkspaces, getWorkspace, createWorkspace as apiCreateWorkspace } from "@/services/workspace.service";
 
 interface WorkspaceContextType {
-  workspaces: WorkspaceMember[];
   activeWorkspace: Workspace | null;
-  isLoading: boolean;
+  workspaces: WorkspaceMember[];
+  loading: { list: boolean; active: boolean; mutation: boolean; };
   createWorkspace: (data: CreateWorkspacePayload) => Promise<void>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
   refreshWorkspaces: () => Promise<void>;
@@ -20,92 +16,108 @@ interface WorkspaceContextType {
 
 export const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
 
-const STORAGE_KEY = "crwsync_active_workspace_id";
+const STORAGE_KEY = "crw-ws";
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const params = useSearchParams();
+
   const [workspaces, setWorkspaces] = useState<WorkspaceMember[]>([]);
   const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const fetchActiveWorkspaceDetails = useCallback(async (id: string) => {
-    setIsLoading(true);
+  const [loading, setLoading] = useState({ list: true, active: false, mutation: false });
+
+  const reqIdRef = useRef(0); // To prevent race conditions
+
+  const setActiveById = useCallback(async (workspaceId: string) => {
+    const requestId = ++reqIdRef.current;
+
+    setLoading((s) => ({ ...s, active: true }));
+
     try {
-      const { success, data } = await getWorkspace(id);
+      const { success, data } = await getWorkspace(workspaceId);
+
+      if (requestId !== reqIdRef.current) return;
+
       if (success && data) {
         setActiveWorkspace(data);
-        localStorage.setItem(STORAGE_KEY, id);
+        localStorage.setItem(STORAGE_KEY, data.id);
       } else {
         setActiveWorkspace(null);
         localStorage.removeItem(STORAGE_KEY);
       }
-    } catch (err) {
-      console.error("Failed to fetch active workspace", err);
     } finally {
-      setIsLoading(false);
+      if (requestId === reqIdRef.current) {
+        setLoading((s) => ({ ...s, active: false }));
+      }
     }
   }, []);
 
   const refreshWorkspaces = useCallback(async () => {
-    setIsLoading(true);
+    setLoading((s) => ({ ...s, list: true }));
+
     const { success, data } = await getWorkspaces();
-    
-    if (success && data) {
-      setWorkspaces(data);
 
-      const storedId = localStorage.getItem(STORAGE_KEY);
-      const urlId = searchParams?.get("ws"); // Allow overriding via ?ws=UUID
-
-      const targetId = urlId || storedId;
-
-      const isValidTarget = data.some((w) => w.workspace_id === targetId);
-
-      if (isValidTarget && targetId) {
-        await fetchActiveWorkspaceDetails(targetId);
-      } else if (data.length > 0) {
-        await fetchActiveWorkspaceDetails(data[0].workspace_id);
-      } else {
-        setActiveWorkspace(null);
-        setIsLoading(false);
-      }
-    } else {
-      setIsLoading(false);
+    if (!success || !data) {
+      setLoading((s) => ({ ...s, list: false }));
+      return;
     }
-  }, [fetchActiveWorkspaceDetails, searchParams]);
+
+    setWorkspaces(data);
+
+    const urlId = params?.get("ws");
+    const storedId = localStorage.getItem(STORAGE_KEY);
+    const candidateId = urlId || storedId;
+
+    const valid = candidateId && data.some((w) => w.workspace_id === candidateId);
+
+    if (valid) {
+      await setActiveById(candidateId);
+    } else if (data.length > 0) {
+      await setActiveById(data[0].workspace_id);
+    } else {
+      setActiveWorkspace(null);
+    }
+
+    setLoading((s) => ({ ...s, list: false }));
+  }, [params, setActiveById]);
+
+  const switchWorkspace = useCallback(
+    async (workspaceId: string) => {
+      if (workspaceId === activeWorkspace?.id) return;
+      await setActiveById(workspaceId);
+    },
+    [activeWorkspace?.id, setActiveById]
+  );
+
+  const createWorkspace = useCallback(
+    async (payload: CreateWorkspacePayload) => {
+      setLoading((s) => ({ ...s, mutation: true }));
+
+      const { success, data } = await apiCreateWorkspace(payload);
+
+      if (success && data) {
+        await refreshWorkspaces();
+        await setActiveById(data.id);
+        router.replace(`?ws=${data.id}`);
+      }
+
+      setLoading((s) => ({ ...s, mutation: false }));
+    },
+    [refreshWorkspaces, setActiveById, router]
+  );
 
   useEffect(() => {
     refreshWorkspaces();
   }, [refreshWorkspaces]);
 
-  const switchWorkspace = async (workspaceId: string) => {
-    if (workspaceId === activeWorkspace?.id) return;
-    await fetchActiveWorkspaceDetails(workspaceId);
-    router.refresh();
-  };
-
-  const createWorkspace = async (payload: CreateWorkspacePayload) => {
-    setIsLoading(true);
-    const { success, data } = await apiCreateWorkspace(payload);
-    
-    if (success && data) {
-      await refreshWorkspaces();
-      await switchWorkspace(data.id);
-    }
-    setIsLoading(false);
-  };
+  const value = useMemo(
+    () => ({ workspaces, activeWorkspace, loading, createWorkspace, switchWorkspace, refreshWorkspaces }),
+    [workspaces, activeWorkspace, loading, createWorkspace, switchWorkspace, refreshWorkspaces]
+  );
 
   return (
-    <WorkspaceContext.Provider
-      value={{
-        workspaces,
-        activeWorkspace,
-        isLoading,
-        createWorkspace,
-        switchWorkspace,
-        refreshWorkspaces,
-      }}
-    >
+    <WorkspaceContext.Provider value={value}>
       {children}
     </WorkspaceContext.Provider>
   );
@@ -113,7 +125,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
 export function useWorkspace() {
   const context = useContext(WorkspaceContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useWorkspace must be used within a WorkspaceProvider");
   }
   return context;

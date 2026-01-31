@@ -8,7 +8,7 @@ interface UserAvatarProps {
   status?: "online" | "offline" | "busy" | "away";
 }
 
-export default function UserAvatar({ size = 7, user, status }: UserAvatarProps) {
+export function UserAvatar({ size = 7, user, status }: UserAvatarProps) {
   const initials = `${user?.firstname?.charAt(0) ?? ""}${user?.lastname?.charAt(0) ?? ""}`.toUpperCase();
   const pixels = size * 4;
 
