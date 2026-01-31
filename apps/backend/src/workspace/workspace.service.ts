@@ -14,10 +14,7 @@ export class WorkspaceService {
 
     return this.prisma.$transaction(async (tx) => {
       const workspace = await tx.workspace.create({
-        data: {
-          name: dto.name,
-          slug: dto.slug,
-        },
+        data: { name: dto.name, slug: dto.slug },
       });
 
       await tx.workspaceMember.create({
@@ -44,15 +41,14 @@ export class WorkspaceService {
       where: { id },
       include: { members: { include: { user: true } } },
     });
+
     if (!workspace) throw new NotFoundException("Workspace not found");
+
     return workspace;
   }
 
   async update(id: string, dto: UpdateWorkspaceDto) {
-    return this.prisma.workspace.update({
-      where: { id },
-      data: dto,
-    });
+    return this.prisma.workspace.update({where: { id }, data: dto });
   }
 
   async remove(id: string) {
@@ -84,7 +80,7 @@ export class WorkspaceService {
         throw new BadRequestException("Invalid or expired invite");
       
       if (new Date() > invite.expires_at) {
-        await tx.workspaceInvite.update({ where: { id: invite.id }, data: { status: "expired" }});
+        await tx.workspaceInvite.update({ where: { id: invite.id }, data: { status: "expired" } });
         throw new BadRequestException("Invite expired");
       }
 
@@ -103,10 +99,7 @@ export class WorkspaceService {
         },
       });
 
-      await tx.workspaceInvite.update({
-        where: { id: invite.id },
-        data: { status: "accepted" },
-      });
+      await tx.workspaceInvite.update({ where: { id: invite.id }, data: { status: "accepted" } });
 
       return member;
     });

@@ -23,7 +23,7 @@ export class IsMemberGuard implements CanActivate {
     });
 
     if (!member) {
-      throw new ForbiddenException('You are not a member of this workspace');
+      throw new ForbiddenException("You are not a member of this workspace");
     }
 
     request.member = member;
