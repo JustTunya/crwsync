@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from "@nestjs/common";
-import { PrismaService } from "../../prisma/prisma.service";
+import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
 export class IsMemberGuard implements CanActivate {
@@ -7,16 +7,17 @@ export class IsMemberGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const user = request.user; 
-    const workspaceId = request.params.id;
 
-    if (!user || !workspaceId) return false;
+    const userId = request.user?.userId;
+    const workspaceId = request.params.workspaceId;
+
+    if (!userId || !workspaceId) return false;
 
     const member = await this.prisma.workspaceMember.findUnique({
       where: {
         workspace_id_user_id: {
           workspace_id: workspaceId,
-          user_id: user.id,
+          user_id: userId,
         },
       },
       include: { workspace: true },

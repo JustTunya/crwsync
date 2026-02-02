@@ -47,7 +47,8 @@ model User {
   email_verifications EmailVerification[]
   password_resets     PasswordReset[]
   ws_memberships      WorkspaceMember[]
-  ws_invites          WorkspaceInvite[] @relation("InviteCreator")
+  ws_sent_invites     WorkspaceInvite[] @relation("InvCreator")
+  ws_received_invites WorkspaceInvite[] @relation("InvitedUser")
 
   @@map("users")
 }
@@ -129,20 +130,20 @@ model WorkspaceMember {
 
 model WorkspaceInvite {
   id           String            @id @default(uuid()) @db.Uuid
-  email        String            @db.Citext
+  invitee_id   String            @db.Uuid
+  creator_id   String?           @db.Uuid
   workspace_id String            @db.Uuid
   role         WorkspaceRoleEnum @default(MEMBER)
-  token        String            @unique(map: "idx_workspace_invite_token") @db.Text
-  expires_at   DateTime          @db.Timestamptz
   created_at   DateTime          @default(now()) @db.Timestamptz
   status       String            @default("pending") @db.Text
 
-  created_by_id String?          @db.Uuid
-  created_by    User?            @relation("InviteCreator", fields: [created_by_id], references: [id], onDelete: SetNull)
-
+  invitee      User              @relation("InvitedUser", fields: [invitee_id], references: [id], onDelete: Cascade)
+  creator      User?             @relation("InvCreator", fields: [creator_id], references: [id], onDelete: SetNull)
   workspace    Workspace         @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
 
-  @@index([email], map: "idx_workspace_invite_email")
+  @@unique([invitee_id, workspace_id], map: "idx_workspace_invite_unique")
+  @@index([invitee_id], map: "idx_workspace_invite_invitee_id")
+  @@index([creator_id], map: "idx_workspace_invite_creator_id")
   @@index([workspace_id], map: "idx_workspace_invite_workspace_id")
   @@map("workspace_invites")
 }

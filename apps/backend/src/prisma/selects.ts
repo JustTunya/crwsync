@@ -92,13 +92,12 @@ export type WorkspaceMemberPublic = Prisma.WorkspaceMemberGetPayload<{ select: t
 
 export const workspaceInvitePublicSelect = {
   id: true,
-  email: true,
+  invitee_id: true,
+  creator_id: true,
   workspace_id: true,
   role: true,
-  status: true,
-  created_by_id: true,
   created_at: true,
-  expires_at: true,
+  status: true,
 } satisfies Prisma.WorkspaceInviteSelect;
 
 export type WorkspaceInvitePublic = Prisma.WorkspaceInviteGetPayload<{ select: typeof workspaceInvitePublicSelect }>;

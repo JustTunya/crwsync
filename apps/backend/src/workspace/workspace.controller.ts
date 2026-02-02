@@ -1,22 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from "@nestjs/common";
-import type { Request as ExpressRequest } from "express";
-import { WorkspaceRoleEnum, WorkspaceMember, Workspace } from "@prisma/client";
-import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto } from "src/workspace/dto/workspace.dto";
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseUUIDPipe } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
+import { WorkspaceRoleEnum } from "@prisma/client";
+import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto, UpdateMemberRoleDto } from "src/workspace/dto/workspace.dto";
 import { RequireWorkspaceRoles } from "src/workspace/decorators/ws-roles.decorator";
+import { HasPendingInviteGuard } from "src/workspace/guards/ws-invite.guard";
 import { WorkspaceRolesGuard } from "src/workspace/guards/ws-roles.guard";
 import { IsMemberGuard } from "src/workspace/guards/ws-member.guard";
 import { WorkspaceService } from "src/workspace/workspace.service";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
-import { ActiveUser } from "src/common/types/active-user.type";
-
-type AuthenticatedRequest = ExpressRequest & {
-  user: ActiveUser;
-};
-
-type WorkspaceRequest = ExpressRequest & {
-  member: WorkspaceMember;
-  workspace: Workspace;
-};
+import { ActiveUserParam } from "src/common/decorators/active-user.decorator";
+import type { ActiveUser } from "src/common/types/active-user.type";
 
 @UseGuards(JwtAuthGuard)
 @Controller("workspaces")
@@ -24,48 +17,128 @@ export class WorkspaceController {
   constructor(private readonly workspaceService: WorkspaceService) {}
 
   @Post()
-  create(@Request() req: AuthenticatedRequest, @Body() createWorkspaceDto: CreateWorkspaceDto) {
-    return this.workspaceService.createWorkspace(req.user.userId, createWorkspaceDto);
+  @Throttle({ default: { ttl: 3600, limit: 5 } })
+  create(@ActiveUserParam() user: ActiveUser, @Body() createWorkspaceDto: CreateWorkspaceDto) {
+    return this.workspaceService.createWorkspace(user.userId, createWorkspaceDto);
   }
 
   @Get()
-  findAll(@Request() req: AuthenticatedRequest) {
-    return this.workspaceService.findAllUserWorkspaces(req.user.userId);
+  @Throttle({ default: { ttl: 60, limit: 120 } })
+  findAll(@ActiveUserParam() user: ActiveUser) {
+    return this.workspaceService.findAllUserWorkspaces(user.userId);
   }
 
-  @Post("join/:token")
-  join(@Request() req: AuthenticatedRequest, @Param("token") token: string) {
-    return this.workspaceService.joinWorkspace(req.user.userId, token);
-  }
-
-  @Get(":id")
+  @Get(":workspaceId")
+  @Throttle({ default: { ttl: 60, limit: 120 } })
   @UseGuards(IsMemberGuard)
-  findOne(@Param("id") id: string) {
-    return this.workspaceService.findOne(id);
+  findOne(@Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string) {
+    return this.workspaceService.findOne(workspaceId);
   }
 
-  @Patch(":id")
+  @Patch(":workspaceId")
+  @Throttle({ default: { ttl: 60, limit: 30 } })
   @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
   @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER, WorkspaceRoleEnum.ADMIN)
-  update(@Param("id") id: string, @Body() updateWorkspaceDto: UpdateWorkspaceDto) {
-    return this.workspaceService.update(id, updateWorkspaceDto);
+  update(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Body() dto: UpdateWorkspaceDto
+  ) {
+    return this.workspaceService.update(workspaceId, dto);
   }
 
-  @Delete(":id")
+  @Delete(":workspaceId")
+  @Throttle({ default: { ttl: 3600, limit: 5 } })
   @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
   @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER)
-  remove(@Param("id") id: string) {
-    return this.workspaceService.remove(id);
+  remove(@Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string) {
+    return this.workspaceService.remove(workspaceId);
   }
 
-  @Post(":id/invite")
+  @Post(":workspaceId/invites")
+  @Throttle({ default: { ttl: 3600, limit: 50 } })
   @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
   @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER, WorkspaceRoleEnum.ADMIN)
-  invite(
-    @Param("id") id: string, 
-    @Request() req: WorkspaceRequest,
-    @Body() inviteDto: InviteMemberDto
+  sendInvite(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @ActiveUserParam() user: ActiveUser,
+    @Body() dto: InviteMemberDto
   ) {
-    return this.workspaceService.inviteMember(id, req.member.id, inviteDto);
+    return this.workspaceService.sendInvite(workspaceId, user.userId, dto);
+  }
+
+  @Delete(":workspaceId/invites/:inviteId")
+  @Throttle({ default: { ttl: 3600, limit: 50 } })
+  @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
+  @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER, WorkspaceRoleEnum.ADMIN)
+  revokeInvite(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("inviteId", new ParseUUIDPipe({ version: "4" })) inviteId: string
+  ) {
+    return this.workspaceService.revokeInvite(workspaceId, inviteId);
+  }
+
+  @Delete(":workspaceId/members/:userId")
+  @Throttle({ default: { ttl: 3600, limit: 50 } })
+  @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
+  @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER, WorkspaceRoleEnum.ADMIN)
+  kickMember(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("userId", new ParseUUIDPipe({ version: "4" })) userIdToKick: string
+  ) {
+    return this.workspaceService.kickMember(workspaceId, userIdToKick);
+  }
+
+  @Patch(":workspaceId/members/:userId/role")
+  @Throttle({ default: { ttl: 3600, limit: 50 } })
+  @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
+  @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER) 
+  updateMemberRole(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("userId", new ParseUUIDPipe({ version: "4" })) memberUserId: string,
+    @Body() dto: UpdateMemberRoleDto,
+  ) {
+    return this.workspaceService.updateMemberRole(workspaceId, memberUserId, dto.role);
+  }
+
+  @Delete(":workspaceId/leave")
+  @Throttle({ default: { ttl: 3600, limit: 5 } })
+  @UseGuards(IsMemberGuard)
+  leaveWorkspace(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string, 
+    @ActiveUserParam() user: ActiveUser
+  ) {
+    return this.workspaceService.leaveWorkspace(workspaceId, user.userId);
+  }
+
+  @Post(":workspaceId/invites/accept")
+  @Throttle({ default: { ttl: 300, limit: 5 } })
+  @UseGuards(HasPendingInviteGuard)
+  acceptInvite(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @ActiveUserParam() user: ActiveUser
+  ) {
+    return this.workspaceService.acceptInvite(workspaceId, user.userId);
+  }
+
+  @Post(":workspaceId/invites/decline")
+  @Throttle({ default: { ttl: 300, limit: 5 } })
+  @UseGuards(HasPendingInviteGuard)
+  declineInvite(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @ActiveUserParam() user: ActiveUser
+  ) {
+    return this.workspaceService.declineInvite(workspaceId, user.userId);
+  }
+
+  @Post(":workspaceId/transfer-ownership")
+  @Throttle({ default: { ttl: 86400, limit: 5 } })
+  @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
+  @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER)
+  transferOwnership(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @ActiveUserParam() user: ActiveUser,
+    @Body("newOwnerId", new ParseUUIDPipe({ version: "4" })) newOwnerId: string
+  ) {
+    return this.workspaceService.transferOwnership(workspaceId, user.userId, newOwnerId);
   }
 }

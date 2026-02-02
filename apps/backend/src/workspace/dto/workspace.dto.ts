@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsEmail, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
 import { WorkspaceRoleEnum } from '@prisma/client';
 
 export class CreateWorkspaceDto {
@@ -22,9 +22,15 @@ export class UpdateWorkspaceDto {
 }
 
 export class InviteMemberDto {
-  @IsEmail()
-  email!: string;
+  @IsString()
+  @IsNotEmpty()
+  username!: string;
 
+  @IsEnum(WorkspaceRoleEnum)
+  role!: WorkspaceRoleEnum;
+}
+
+export class UpdateMemberRoleDto {
   @IsEnum(WorkspaceRoleEnum)
   role!: WorkspaceRoleEnum;
 }

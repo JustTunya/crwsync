@@ -5,6 +5,12 @@ export enum WorkspaceRoleEnum {
   GUEST = "guest",
 }
 
+export enum WorkspaceInviteStatusEnum {
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  DECLINED = "declined"
+}
+
 export interface Workspace {
   id: string;
   name: string;
@@ -34,7 +40,7 @@ export interface UpdateWorkspacePayload {
 }
 
 export interface InviteMemberPayload {
-  email: string;
+  username: string;
   role: WorkspaceRoleEnum;
 }
 
