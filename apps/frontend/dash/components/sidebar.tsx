@@ -5,7 +5,7 @@ import { useState, useRef, useTransition } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, Transition } from "framer-motion";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
-import { ArrowUp01Icon, ArrowDown01Icon, Home03Icon, TaskDone01Icon, Calendar03Icon, Search01Icon, Add01Icon, ZapIcon, Menu05Icon, ArrowRight01Icon, Settings02Icon, Logout02Icon, InboxIcon, Link01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { ArrowUp01Icon, ArrowDown01Icon, Home03Icon, TaskDone01Icon, Calendar03Icon, Search01Icon, Add01Icon, ZapIcon, Menu05Icon, ArrowRight01Icon, Settings02Icon, Logout02Icon, InboxIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useUser } from "@/providers/user.provider";
 import { WorkspaceAvatar } from "@/components/workspace-avatar";
@@ -166,33 +166,54 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
     return <div className="h-10 w-full bg-base-200 rounded-lg animate-pulse" />;
   }
 
-  const displayName = activeWorkspace?.name || "No Workspace";
-
   return (
     <div 
       ref={wsRef} 
       className={cn("relative flex-1", !extended && "flex justify-center")}
     >
-      <div 
-        onClick={toggleMenu}
-        className={cn(
-          "flex flex-row items-center gap-3 h-10 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
-          !extended && "justify-center"
-        )}
-      >
-        <WorkspaceAvatar avatar_key={activeWorkspace?.logo_key || ""} name={displayName} />
+      {activeWorkspace ? (
+        <div
+          onClick={toggleMenu}
+          className={cn(
+            "flex flex-row items-center gap-3 h-10 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
+            !extended && "justify-center"
+          )}
+        >
+          <WorkspaceAvatar avatar_key={activeWorkspace.logo_key || ""} name={activeWorkspace.name} />
 
-        {extended && (
-          <div className="flex items-center flex-1 overflow-hidden">
-            <p className="text-foreground text-sm font-semibold truncate">{displayName}</p>
+          {extended && (
+            <div className="flex items-center flex-1 overflow-hidden">
+              <p className="text-foreground text-sm font-semibold truncate">{activeWorkspace.name}</p>
 
-            <div className="ml-auto flex flex-col -space-y-1">
-              <HugeiconsIcon icon={ArrowUp01Icon} strokeWidth={2} className="size-3.5" />
-              <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-3.5" />
+              <div className="ml-auto flex flex-col -space-y-1">
+                <HugeiconsIcon icon={ArrowUp01Icon} strokeWidth={2} className="size-3.5" />
+                <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-3.5" />
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      ) : (
+        <div
+          onClick={toggleMenu}
+          className={cn(
+            "flex flex-row items-center gap-3 h-10 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
+            !extended && "justify-center"
+          )}
+        >
+          <div className="size-6 rounded-sm border-[1.5px] border-dashed border-base-300" />
+
+          {extended && (
+            <div className="flex items-center flex-1 overflow-hidden">
+              <p className="text-base-300 text-sm truncate">No Workspace</p>
+
+              <div className="ml-auto flex flex-col -space-y-1">
+                <HugeiconsIcon icon={ArrowUp01Icon} strokeWidth={2} className="size-3.5" />
+                <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-3.5" />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <AnimatePresence>
         {extended && openWorkspaces && (
@@ -234,15 +255,10 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
 
             <div className="h-px w-full bg-base-200 my-2" />
 
-            <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-200 transition-colors text-left cursor-pointer group">
+            <Link href="/create-workspace" className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-200 transition-colors text-left cursor-pointer group">
                 <HugeiconsIcon icon={Add01Icon} className="size-4 text-muted-foreground group-hover:text-foreground" />
                 <p className="text-sm font-light text-muted-foreground group-hover:text-foreground">Create Workspace</p>
-            </button>
-            
-            <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-200 transition-colors text-left cursor-pointer group">
-                <HugeiconsIcon icon={Link01Icon} className="size-4 text-muted-foreground group-hover:text-foreground" />
-                <p className="text-sm font-light text-muted-foreground group-hover:text-foreground">Join Workspace</p>
-            </button>
+            </Link>
 
           </motion.div>
         )}

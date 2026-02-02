@@ -29,7 +29,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const reqIdRef = useRef(0); // To prevent race conditions
 
-  const setActiveById = useCallback(async (workspaceId: string) => {
+  const fetchWorkspace = useCallback(async (workspaceId: string) => {
     const requestId = ++reqIdRef.current;
 
     setLoading((s) => ({ ...s, active: true }));
@@ -72,22 +72,22 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     const valid = candidateId && data.some((w) => w.workspace_id === candidateId);
 
     if (valid) {
-      await setActiveById(candidateId);
+      await fetchWorkspace(candidateId);
     } else if (data.length > 0) {
-      await setActiveById(data[0].workspace_id);
+      await fetchWorkspace(data[0].workspace_id);
     } else {
       setActiveWorkspace(null);
     }
 
     setLoading((s) => ({ ...s, list: false }));
-  }, [params, setActiveById]);
+  }, [params, fetchWorkspace]);
 
   const switchWorkspace = useCallback(
     async (workspaceId: string) => {
       if (workspaceId === activeWorkspace?.id) return;
-      await setActiveById(workspaceId);
+      await fetchWorkspace(workspaceId);
     },
-    [activeWorkspace?.id, setActiveById]
+    [activeWorkspace?.id, fetchWorkspace]
   );
 
   const createWorkspace = useCallback(
@@ -98,13 +98,13 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
       if (success && data) {
         await refreshWorkspaces();
-        await setActiveById(data.id);
+        await fetchWorkspace(data.id);
         router.replace(`?ws=${data.id}`);
       }
 
       setLoading((s) => ({ ...s, mutation: false }));
     },
-    [refreshWorkspaces, setActiveById, router]
+    [refreshWorkspaces, fetchWorkspace, router]
   );
 
   useEffect(() => {
