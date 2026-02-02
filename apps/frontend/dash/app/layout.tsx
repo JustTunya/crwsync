@@ -23,9 +23,15 @@ export const metadata: Metadata = {
   appleWebApp: { title: "crwsync", statusBarStyle: "default" }
 };
 
-async function UserSession({ children }: { children: React.ReactNode }) {
+async function Providers({ children }: { children: React.ReactNode }) {
   const user = await getSession();
-  return <UserProvider user={user}>{children}</UserProvider>;
+  return (
+    <UserProvider user={user}>
+      <WorkspaceProvider>
+        {children}
+      </WorkspaceProvider>
+    </UserProvider>
+  );
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -33,14 +39,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" suppressHydrationWarning>
       <body className={`${figtree.variable} font-figtree antialiased dark`}>
         <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
-          <UserSession>
-            <WorkspaceProvider>
-              <div className="flex min-h-screen w-full">
-                <Sidebar />
-                <main className="flex-1 min-w-0">{children}</main>
-              </div>
-            </WorkspaceProvider>
-          </UserSession>
+          <Providers>
+            <div className="flex min-h-screen w-full">
+              <Sidebar />
+              <main className="flex-1 min-w-0">{children}</main>
+            </div>
+          </Providers>
         </Suspense>
       </body>
     </html>

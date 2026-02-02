@@ -1,17 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseUUIDPipe } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseUUIDPipe, Req } from "@nestjs/common";
+import { Request as ExpressRequest } from "express";
 import { Throttle } from "@nestjs/throttler";
-import { WorkspaceRoleEnum } from "@prisma/client";
+import { WorkspaceRoleEnum, Workspace, WorkspaceMember } from "@prisma/client";
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto, UpdateMemberRoleDto } from "src/workspace/dto/workspace.dto";
 import { RequireWorkspaceRoles } from "src/workspace/decorators/ws-roles.decorator";
 import { HasPendingInviteGuard } from "src/workspace/guards/ws-invite.guard";
 import { WorkspaceRolesGuard } from "src/workspace/guards/ws-roles.guard";
 import { IsMemberGuard } from "src/workspace/guards/ws-member.guard";
 import { WorkspaceService } from "src/workspace/workspace.service";
-import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { ActiveUserParam } from "src/common/decorators/active-user.decorator";
 import type { ActiveUser } from "src/common/types/active-user.type";
 
-@UseGuards(JwtAuthGuard)
+interface WSRequest extends ExpressRequest {
+  workspace: Workspace;
+  member: WorkspaceMember;
+}
+
 @Controller("workspaces")
 export class WorkspaceController {
   constructor(private readonly workspaceService: WorkspaceService) {}
@@ -31,8 +35,8 @@ export class WorkspaceController {
   @Get(":workspaceId")
   @Throttle({ default: { ttl: 60, limit: 120 } })
   @UseGuards(IsMemberGuard)
-  findOne(@Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string) {
-    return this.workspaceService.findOne(workspaceId);
+  findOne(@Req() req: WSRequest) {
+    return req.workspace;
   }
 
   @Patch(":workspaceId")
