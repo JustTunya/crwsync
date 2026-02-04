@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Workspace, WorkspaceMember, CreateWorkspacePayload } from "@crwsync/types";
-import { getWorkspaces, getWorkspace, createWorkspace as apiCreateWorkspace } from "@/services/workspace.service";
+import { useWorkspaces, useWorkspace as useWorkspaceQuery, useCreateWorkspace, workspaceKeys } from "@/hooks/use-workspaces";
 
 interface WorkspaceContextType {
   activeWorkspace: Workspace | null;
@@ -21,99 +22,68 @@ const STORAGE_KEY = "crw-ws";
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const params = useSearchParams();
+  const queryClient = useQueryClient();
 
-  const [workspaces, setWorkspaces] = useState<WorkspaceMember[]>([]);
-  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
+  const { data: workspaces = [], isLoading: listLoading } = useWorkspaces();
 
-  const [loading, setLoading] = useState({ list: true, active: false, mutation: false });
-
-  const reqIdRef = useRef(0); // To prevent race conditions
-
-  const fetchWorkspace = useCallback(async (workspaceId: string) => {
-    const requestId = ++reqIdRef.current;
-
-    setLoading((s) => ({ ...s, active: true }));
-
-    try {
-      const { success, data } = await getWorkspace(workspaceId);
-
-      if (requestId !== reqIdRef.current) return;
-
-      if (success && data) {
-        setActiveWorkspace(data);
-        localStorage.setItem(STORAGE_KEY, data.id);
-      } else {
-        setActiveWorkspace(null);
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    } finally {
-      if (requestId === reqIdRef.current) {
-        setLoading((s) => ({ ...s, active: false }));
-      }
+  const urlId = params?.get("ws");
+  
+  const activeIdFromUrl = urlId;
+  
+  const resolveActiveId = useCallback(() => {
+    if (activeIdFromUrl) return activeIdFromUrl;
+    if (typeof window !== "undefined") {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) return stored;
     }
-  }, []);
+    return null;
+  }, [activeIdFromUrl]);
 
-  const refreshWorkspaces = useCallback(async () => {
-    setLoading((s) => ({ ...s, list: true }));
+  const candidateId = resolveActiveId();
 
-    const { success, data } = await getWorkspaces();
+  const validId = useMemo(() => {
+    if (!workspaces.length) return null;
+    if (candidateId && workspaces.some(w => w.workspace_id === candidateId)) return candidateId;
+    return workspaces[0].workspace_id;
+  }, [workspaces, candidateId]);
 
-    if (!success || !data) {
-      setLoading((s) => ({ ...s, list: false }));
-      return;
-    }
-
-    setWorkspaces(data);
-
-    const urlId = params?.get("ws");
-    const storedId = localStorage.getItem(STORAGE_KEY);
-    const candidateId = urlId || storedId;
-
-    const valid = candidateId && data.some((w) => w.workspace_id === candidateId);
-
-    if (valid) {
-      await fetchWorkspace(candidateId);
-    } else if (data.length > 0) {
-      await fetchWorkspace(data[0].workspace_id);
-    } else {
-      setActiveWorkspace(null);
-    }
-
-    setLoading((s) => ({ ...s, list: false }));
-  }, [params, fetchWorkspace]);
-
-  const switchWorkspace = useCallback(
-    async (workspaceId: string) => {
-      if (workspaceId === activeWorkspace?.id) return;
-      await fetchWorkspace(workspaceId);
-    },
-    [activeWorkspace?.id, fetchWorkspace]
-  );
-
-  const createWorkspace = useCallback(
-    async (payload: CreateWorkspacePayload) => {
-      setLoading((s) => ({ ...s, mutation: true }));
-
-      const { success, data } = await apiCreateWorkspace(payload);
-
-      if (success && data) {
-        await refreshWorkspaces();
-        await fetchWorkspace(data.id);
-        router.replace(`?ws=${data.id}`);
-      }
-
-      setLoading((s) => ({ ...s, mutation: false }));
-    },
-    [refreshWorkspaces, fetchWorkspace, router]
-  );
+  const { data: activeWorkspace = null, isLoading: activeLoading } = useWorkspaceQuery(validId);
 
   useEffect(() => {
-    refreshWorkspaces();
-  }, [refreshWorkspaces]);
+    if (validId) {
+       localStorage.setItem(STORAGE_KEY, validId);
+    }
+  }, [validId]);
+
+  const createMutation = useCreateWorkspace();
+
+  const createWorkspace = useCallback(async (payload: CreateWorkspacePayload) => {
+    await createMutation.mutateAsync(payload);
+  }, [createMutation]);
+
+  const switchWorkspace = useCallback(async (workspaceId: string) => {
+    localStorage.setItem(STORAGE_KEY, workspaceId);
+    router.push(`?ws=${workspaceId}`);
+  }, [router]);
+
+  const refreshWorkspaces = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
+  }, [queryClient]);
 
   const value = useMemo(
-    () => ({ workspaces, activeWorkspace, loading, createWorkspace, switchWorkspace, refreshWorkspaces }),
-    [workspaces, activeWorkspace, loading, createWorkspace, switchWorkspace, refreshWorkspaces]
+    () => ({
+      workspaces,
+      activeWorkspace,
+      loading: {
+        list: listLoading,
+        active: activeLoading,
+        mutation: createMutation.isPending
+      },
+      createWorkspace,
+      switchWorkspace,
+      refreshWorkspaces
+    }),
+    [workspaces, activeWorkspace, listLoading, activeLoading, createMutation.isPending, createWorkspace, switchWorkspace, refreshWorkspaces]
   );
 
   return (

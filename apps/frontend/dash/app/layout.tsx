@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
 import { Suspense } from "react";
+import { Figtree } from "next/font/google";
 import { UserProvider } from "@/providers/user.provider";
-import { getSession } from "@/lib/auth.server";
-import "@crwsync/styles";
-import Sidebar from "@/components/sidebar";
+import { QueryProvider } from "@/providers/query.provider";
 import { WorkspaceProvider } from "@/providers/workspace.provider";
+import { Sidebar } from "@/components/sidebar";
+import "@crwsync/styles";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -24,13 +24,14 @@ export const metadata: Metadata = {
 };
 
 async function Providers({ children }: { children: React.ReactNode }) {
-  const user = await getSession();
   return (
-    <UserProvider user={user}>
-      <WorkspaceProvider>
-        {children}
-      </WorkspaceProvider>
-    </UserProvider>
+    <QueryProvider>
+      <UserProvider>
+        <WorkspaceProvider>
+          {children}
+        </WorkspaceProvider>
+      </UserProvider>
+    </QueryProvider>
   );
 }
 

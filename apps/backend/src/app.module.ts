@@ -26,8 +26,7 @@ import { RolesGuard } from "src/common/guards/roles.guard";
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
-      { name: "default", ttl: 60_000, limit: 100 },
-      { name: "auth", ttl: 60_000, limit: 10 }
+      { name: "default", ttl: 60_000, limit: 100 }
     ]),
     HealthModule, 
     PrismaModule, 

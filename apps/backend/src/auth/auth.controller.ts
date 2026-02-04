@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Body, HttpCode, HttpStatus, UnauthorizedException, Req, Res, UseGuards } from "@nestjs/common"
-import { Throttle } from "@nestjs/throttler";
+import { SkipThrottle } from "@nestjs/throttler";
 import { Request, Response } from "express";
 import { AuthService } from "src/auth/auth.service";
 import { SignupDto } from "src/auth/dto/signup.dto";
@@ -26,7 +26,6 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post("signin")
   @HttpCode(HttpStatus.OK)
   async signin(
@@ -57,7 +56,6 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
   async refresh(
@@ -72,7 +70,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  @SkipThrottle()
   @Post("session")
   async session(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const { user, refresh } = await this.authService.sessionBootstrap(req);

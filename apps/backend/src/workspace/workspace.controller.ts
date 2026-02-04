@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseUUIDPipe, Req } from "@nestjs/common";
 import { Request as ExpressRequest } from "express";
-import { Throttle } from "@nestjs/throttler";
+import { Throttle, SkipThrottle } from "@nestjs/throttler";
 import { WorkspaceRoleEnum, Workspace, WorkspaceMember } from "@prisma/client";
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto, UpdateMemberRoleDto } from "src/workspace/dto/workspace.dto";
 import { RequireWorkspaceRoles } from "src/workspace/decorators/ws-roles.decorator";
@@ -27,13 +27,13 @@ export class WorkspaceController {
   }
 
   @Get()
-  @Throttle({ default: { ttl: 60, limit: 120 } })
+  @SkipThrottle()
   findAll(@ActiveUserParam() user: ActiveUser) {
     return this.workspaceService.findAllUserWorkspaces(user.userId);
   }
 
   @Get(":workspaceId")
-  @Throttle({ default: { ttl: 60, limit: 120 } })
+  @SkipThrottle()
   @UseGuards(IsMemberGuard)
   findOne(@Req() req: WSRequest) {
     return req.workspace;

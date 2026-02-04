@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 const fading: Transition = { duration: 0.15, ease: [0.4, 0, 0.2, 1] };
 
-export default function Sidebar() {
+export function Sidebar() {
   const [status, setStatus] = useState<"online" | "offline" | "busy" | "away">("online");
 
   const { open, toggleOpen } = useSidebar();
