@@ -30,12 +30,12 @@ export default function Header() {
     <>
       <header
         className={cn(
-          "fixed inset-x-0 z-40 flex flex-col items-start gap-12 m-4 px-4 sm:px-8 py-4 bg-background/60 border-2 border-background backdrop-saturate-100 inset-shadow-sm inset-shadow-background shadow-xl shadow-background/20 rounded-xl",
+          "fixed inset-x-0 z-40 flex flex-col items-start gap-12 m-4 px-4 sm:px-8 py-4 bg-background/15 dark:bg-white/5 border-[0.5px] border-background dark:border-white/10 backdrop-saturate-100 inset-shadow-sm inset-shadow-background dark:inset-shadow-white/10 shadow-lg shadow-black/5 rounded-xl",
           open ? "backdrop-blur-md h-[calc(100vh-2rem)]" : "backdrop-blur-sm h-18",
           "transition-[height, backdrop-filter] duration-500 ease-in-out"
         )}
       >
-        <div className="pointer-events-none absolute left-0 bottom-0 w-full h-1/2 bg-linear-to-t from-background/50 to-background/0 rounded-xl" />
+        <div className="pointer-events-none absolute -z-50 left-0 top-0 w-full h-1/2 bg-linear-to-b from-background dark:from-white/5 to-transparent rounded-t-xl" />
 
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center justify-center gap-4">

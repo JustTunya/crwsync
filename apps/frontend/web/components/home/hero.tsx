@@ -53,8 +53,7 @@ export default function Hero() {
               block
               text-transparent
               bg-clip-text
-              bg-gradient-to-tr from-primary to-primary/50
-              text-shadow-lg text-shadow-primary/15
+              bg-linear-to-tr from-primary to-primary/60 dark:bg-primary
             "
           >
             synchronized and simplified.
