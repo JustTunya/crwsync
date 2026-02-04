@@ -136,7 +136,10 @@ CREATE UNIQUE INDEX "idx_password_reset_token" ON "password_resets"("token_hash"
 CREATE INDEX "idx_password_reset_user_id" ON "password_resets"("user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "idx_workspace_slug" ON "workspaces"("slug");
+CREATE INDEX "idx_workspace_slug_index" ON "workspaces"("slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "idx_workspace_slug_unique" ON "workspaces"("slug");
 
 -- CreateIndex
 CREATE INDEX "idx_workspace_member_user_id" ON "workspace_members"("user_id");

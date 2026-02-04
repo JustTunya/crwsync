@@ -87,6 +87,32 @@ export class WorkspaceService {
     return workspace;
   }
 
+  async findBySlug(slug: string) {
+    const cacheKey = CacheKeys.workspaceSlug(slug);
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { slug },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: { id: true, username: true, email: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!workspace) throw new NotFoundException("Workspace not found");
+
+    await this.cache.set(cacheKey, workspace, CacheTTL.WORKSPACE);
+
+    return workspace;
+  }
+
   async update(id: string, dto: UpdateWorkspaceDto) {
     const result = await this.prisma.workspace.update({ where: { id }, data: dto });
     await this.cache.del(CacheKeys.workspace(id));

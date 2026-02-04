@@ -2,9 +2,10 @@ export const CacheKeys = {
   session: (id: string) => `session:${id}`,
   user: (id: string) => `user:${id}`,
   userByIdentifier: (identifier: string) => `user:identifier:${identifier.toLowerCase()}`,
-  workspaceMember: (workspaceId: string, userId: string) => `ws:${workspaceId}:member:${userId}`,
   userWorkspaces: (userId: string) => `user:${userId}:workspaces`,
   workspace: (id: string) => `workspace:${id}`,
+  workspaceSlug: (slug: string) => `workspace:slug:${slug.toLowerCase()}`,
+  workspaceMember: (workspaceId: string, userId: string) => `workspace:${workspaceId}:member:${userId}`,
   verification: (email: string) => `verification:${email.toLowerCase()}`,
 };
 

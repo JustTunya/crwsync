@@ -39,6 +39,14 @@ export class WorkspaceController {
     return req.workspace;
   }
 
+  @Get("slug/:slug")
+  @SkipThrottle()
+  findBySlug(
+    @Param("slug") slug: string,
+  ) {
+    return this.workspaceService.findBySlug(slug);
+  }
+
   @Patch(":workspaceId")
   @Throttle({ default: { ttl: 60, limit: 30 } })
   @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
