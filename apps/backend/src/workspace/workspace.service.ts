@@ -21,12 +21,22 @@ export class WorkspaceService {
   }
 
   async createWorkspace(userId: string, dto: CreateWorkspaceDto) {
-    const existing = await this.prisma.workspace.findUnique({ where: { slug: dto.slug } });
-    if (existing) throw new BadRequestException("Workspace slug already taken");
+    let slug = dto.slug;
+    if (!slug) {
+      slug = dto.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      
+      const existing = await this.prisma.workspace.findUnique({ where: { slug } });
+      if (existing) {
+        slug = `${slug}-${Math.floor(Math.random() * 10000)}`;
+      }
+    } else {
+        const existing = await this.prisma.workspace.findUnique({ where: { slug } });
+        if (existing) throw new BadRequestException("Workspace slug already taken");
+    }
 
     const result = await this.prisma.$transaction(async (tx) => {
       const workspace = await tx.workspace.create({
-        data: { name: dto.name, slug: dto.slug },
+        data: { name: dto.name, slug },
       });
 
       await tx.workspaceMember.create({

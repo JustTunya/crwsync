@@ -7,8 +7,8 @@ export class CreateWorkspaceDto {
   name!: string;
 
   @IsString()
-  @IsNotEmpty()
-  slug!: string;
+  @IsOptional()
+  slug?: string;
 }
 
 export class UpdateWorkspaceDto {

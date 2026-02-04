@@ -4,7 +4,6 @@ import { Figtree } from "next/font/google";
 import { UserProvider } from "@/providers/user.provider";
 import { QueryProvider } from "@/providers/query.provider";
 import { WorkspaceProvider } from "@/providers/workspace.provider";
-import { Sidebar } from "@/components/sidebar";
 import "@crwsync/styles";
 
 const figtree = Figtree({
@@ -38,13 +37,10 @@ async function Providers({ children }: { children: React.ReactNode }) {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${figtree.variable} font-figtree antialiased dark`}>
+      <body className={`${figtree.variable} font-figtree antialiased`}>
         <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
           <Providers>
-            <div className="flex min-h-screen w-full">
-              <Sidebar />
-              <main className="flex-1 min-w-0">{children}</main>
-            </div>
+            {children}
           </Providers>
         </Suspense>
       </body>

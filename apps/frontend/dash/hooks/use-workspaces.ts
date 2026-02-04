@@ -1,17 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  getWorkspaces, 
-  getWorkspace, 
-  createWorkspace as apiCreateWorkspace,
-  updateWorkspace as apiUpdateWorkspace,
-  deleteWorkspace as apiDeleteWorkspace,
-  inviteMember as apiInviteMember
-} from "@/services/workspace.service";
-import { api } from "@/services/auth.service";
-import { CreateWorkspacePayload, UpdateWorkspacePayload, InviteMemberPayload, WorkspaceRoleEnum } from "@crwsync/types";
-import { useRouter, useSearchParams } from "next/navigation";
+import { CreateWorkspacePayload, UpdateWorkspacePayload } from "@crwsync/types";
+import { getWorkspaces, getWorkspace, createWorkspace, updateWorkspace } from "@/services/workspace.service";
 
 export const workspaceKeys = {
   all: ["workspaces"] as const,
@@ -50,13 +42,13 @@ export function useCreateWorkspace() {
 
   return useMutation({
     mutationFn: async (payload: CreateWorkspacePayload) => {
-      const { success, data, message } = await apiCreateWorkspace(payload);
+      const { success, data, message } = await createWorkspace(payload);
       if (!success || !data) throw new Error(message);
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.list() });
-      router.replace(`?ws=${data.id}`);
+      router.push(`/${data.slug}`);
     },
   });
 }
@@ -66,7 +58,7 @@ export function useUpdateWorkspace() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateWorkspacePayload }) => {
-      const { success, data: result, message } = await apiUpdateWorkspace(id, data);
+      const { success, data: result, message } = await updateWorkspace(id, data);
       if (!success || !result) throw new Error(message);
       return result;
     },
@@ -76,5 +68,3 @@ export function useUpdateWorkspace() {
     },
   });
 }
-
-// Additional mutations (delete, invite, etc.) can be added here following the same pattern

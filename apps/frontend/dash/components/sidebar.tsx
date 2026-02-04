@@ -26,11 +26,14 @@ export function Sidebar() {
   const { open, toggleOpen } = useSidebar();
   const pathname = usePathname();
 
+  const { activeWorkspace } = useWorkspace();
+  const slug = activeWorkspace?.slug || "";
+
   const modules = [
-    { name: "Home", icon: Home03Icon, href: "/" },
-    { name: "Inbox", icon: InboxIcon, href: "/inbox" },
-    { name: "Tasks", icon: TaskDone01Icon, href: "/tasks" },
-    { name: "Calendar", icon: Calendar03Icon, href: "/calendar" },
+    { name: "Home", icon: Home03Icon, href: `/${slug}` },
+    { name: "Inbox", icon: InboxIcon, href: `/${slug}/inbox` },
+    { name: "Tasks", icon: TaskDone01Icon, href: `/${slug}/tasks` },
+    { name: "Calendar", icon: Calendar03Icon, href: `/${slug}/calendar` },
   ];
 
   return (
@@ -157,8 +160,8 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
     if (extended && !loading.active) setOpenWorkspaces(!openWorkspaces);
   };
 
-  const handleSwitch = (id: string) => {
-    switchWorkspace(id);
+  const handleSwitch = (slug: string) => {
+    switchWorkspace(slug);
     setOpenWorkspaces(false);
   };
 
@@ -235,7 +238,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
                 return (
                   <div 
                     key={ws.id}
-                    onClick={() => handleSwitch(ws.id)}
+                    onClick={() => handleSwitch(ws.slug)}
                     className={cn(
                       "flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
                       isActive && "bg-base-200"
@@ -347,6 +350,8 @@ const STATUS_META: Record<UserStatus, { label: string; color: string }> = {
 
 export function SidebarProfile({ status, setStatus, extended }: { status: UserStatus; setStatus: (status: UserStatus) => void; extended?: boolean }) {
   const user = useUser();
+  const { activeWorkspace } = useWorkspace();
+  const slug = activeWorkspace?.slug || "";
   const profRef = useRef<HTMLDivElement>(null);
 
   const [pending, start] = useTransition();
@@ -477,7 +482,7 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
                     <HugeiconsIcon icon={ArrowRight01Icon} className="size-5" />
                   </div>
 
-                  <MenuLink href="/settings" icon={Settings02Icon} label="Settings" />
+                  <MenuLink href={`/${slug}/settings`} icon={Settings02Icon} label="Settings" />
 
                   <button
                     onClick={handleSignout}

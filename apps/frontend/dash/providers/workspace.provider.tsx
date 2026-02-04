@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Workspace, WorkspaceMember, CreateWorkspacePayload } from "@crwsync/types";
 import { useWorkspaces, useWorkspace as useWorkspaceQuery, useCreateWorkspace, workspaceKeys } from "@/hooks/use-workspaces";
@@ -11,7 +11,7 @@ interface WorkspaceContextType {
   workspaces: WorkspaceMember[];
   loading: { list: boolean; active: boolean; mutation: boolean; };
   createWorkspace: (data: CreateWorkspacePayload) => Promise<void>;
-  switchWorkspace: (workspaceId: string) => Promise<void>;
+  switchWorkspace: (workspaceSlug: string) => Promise<void>;
   refreshWorkspaces: () => Promise<void>;
 }
 
@@ -21,39 +21,39 @@ const STORAGE_KEY = "crw-ws";
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const params = useSearchParams();
+  const params = useParams(); // { slug: string }
   const queryClient = useQueryClient();
 
   const { data: workspaces = [], isLoading: listLoading } = useWorkspaces();
 
-  const urlId = params?.get("ws");
-  
-  const activeIdFromUrl = urlId;
-  
-  const resolveActiveId = useCallback(() => {
-    if (activeIdFromUrl) return activeIdFromUrl;
-    if (typeof window !== "undefined") {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) return stored;
-    }
-    return null;
-  }, [activeIdFromUrl]);
+  // 1. Determine candidate slug from URL
+  const slugFromUrl = params?.slug as string | undefined;
 
-  const candidateId = resolveActiveId();
-
-  const validId = useMemo(() => {
+  // 2. Resolve to a valid workspace ID if possible
+  const validMember = useMemo(() => {
     if (!workspaces.length) return null;
-    if (candidateId && workspaces.some(w => w.workspace_id === candidateId)) return candidateId;
-    return workspaces[0].workspace_id;
-  }, [workspaces, candidateId]);
-
-  const { data: activeWorkspace = null, isLoading: activeLoading } = useWorkspaceQuery(validId);
-
-  useEffect(() => {
-    if (validId) {
-       localStorage.setItem(STORAGE_KEY, validId);
+    if (slugFromUrl) {
+      const match = workspaces.find((w) => w.workspace?.slug === slugFromUrl);
+      if (match) return match;
     }
-  }, [validId]);
+    // Fallback? If we are on a slug route but it does not match, we might want to redirect?
+    // But this provider is inside layout. If slug is invalid, maybe 404?
+    // For now, if no match, we return null.
+    // If we are NOT on a slug route (unlikely given layout structure), we might fallback to first.
+    return null; 
+  }, [workspaces, slugFromUrl]);
+
+  const activeId = validMember?.workspace_id;
+
+  // 3. Fetch full details for the active workspace
+  const { data: activeWorkspace = null, isLoading: activeLoading } = useWorkspaceQuery(activeId);
+
+  // 4. Persistence (optional now, since URL assumes source of truth)
+  useEffect(() => {
+    if (activeWorkspace) {
+       localStorage.setItem(STORAGE_KEY, activeWorkspace.id); // Maybe store slug instead?
+    }
+  }, [activeWorkspace]);
 
   const createMutation = useCreateWorkspace();
 
@@ -61,9 +61,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     await createMutation.mutateAsync(payload);
   }, [createMutation]);
 
-  const switchWorkspace = useCallback(async (workspaceId: string) => {
-    localStorage.setItem(STORAGE_KEY, workspaceId);
-    router.push(`?ws=${workspaceId}`);
+  const switchWorkspace = useCallback(async (workspaceSlug: string) => {
+    router.push(`/${workspaceSlug}`);
   }, [router]);
 
   const refreshWorkspaces = useCallback(async () => {
