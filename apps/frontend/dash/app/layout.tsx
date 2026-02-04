@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Figtree } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/providers/user.provider";
 import { QueryProvider } from "@/providers/query.provider";
 import { WorkspaceProvider } from "@/providers/workspace.provider";
@@ -24,13 +25,15 @@ export const metadata: Metadata = {
 
 async function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <QueryProvider>
-      <UserProvider>
-        <WorkspaceProvider>
-          {children}
-        </WorkspaceProvider>
-      </UserProvider>
-    </QueryProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <QueryProvider>
+        <UserProvider>
+          <WorkspaceProvider>
+            {children}
+          </WorkspaceProvider>
+        </UserProvider>
+      </QueryProvider>
+    </ThemeProvider>
   );
 }
 
