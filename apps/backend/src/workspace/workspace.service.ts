@@ -2,17 +2,29 @@ import { Injectable, BadRequestException, NotFoundException } from "@nestjs/comm
 import { WorkspaceRoleEnum } from "@prisma/client";
 import { WorkspaceInviteStatusEnum } from "@crwsync/types";
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto } from "src/workspace/dto/workspace.dto";
+import { CacheService, CacheKeys, CacheTTL } from "src/redis";
 import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
 export class WorkspaceService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
+
+  private async invMembershipCaches(workspaceId: string, userId: string) {
+    await Promise.all([
+      this.cache.del(CacheKeys.workspaceMember(workspaceId, userId)),
+      this.cache.del(CacheKeys.userWorkspaces(userId)),
+      this.cache.del(CacheKeys.workspace(workspaceId)),
+    ]);
+  }
 
   async createWorkspace(userId: string, dto: CreateWorkspaceDto) {
     const existing = await this.prisma.workspace.findUnique({ where: { slug: dto.slug } });
     if (existing) throw new BadRequestException("Workspace slug already taken");
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const workspace = await tx.workspace.create({
         data: { name: dto.name, slug: dto.slug },
       });
@@ -27,16 +39,34 @@ export class WorkspaceService {
 
       return workspace;
     });
+
+    await this.cache.del(CacheKeys.userWorkspaces(userId));
+
+    return result;
   }
 
   async findAllUserWorkspaces(userId: string) {
-    return this.prisma.workspaceMember.findMany({
+    const cacheKey = CacheKeys.userWorkspaces(userId);
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.prisma.workspaceMember.findMany({
       where: { user_id: userId },
       include: { workspace: true },
     });
+
+    await this.cache.set(cacheKey, result, CacheTTL.USER_WORKSPACES);
+
+    return result;
   }
 
   async findOne(id: string) {
+    const cacheKey = CacheKeys.workspace(id);
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
     const workspace = await this.prisma.workspace.findUnique({
       where: { id },
       include: {
@@ -52,15 +82,35 @@ export class WorkspaceService {
 
     if (!workspace) throw new NotFoundException("Workspace not found");
 
+    await this.cache.set(cacheKey, workspace, CacheTTL.WORKSPACE);
+
     return workspace;
   }
 
   async update(id: string, dto: UpdateWorkspaceDto) {
-    return this.prisma.workspace.update({where: { id }, data: dto });
+    const result = await this.prisma.workspace.update({ where: { id }, data: dto });
+    await this.cache.del(CacheKeys.workspace(id));
+    return result;
   }
 
   async remove(id: string) {
-    return this.prisma.workspace.delete({ where: { id } });
+    const members = await this.prisma.workspaceMember.findMany({
+      where: { workspace_id: id },
+      select: { user_id: true },
+    });
+
+    const result = await this.prisma.workspace.delete({ where: { id } });
+
+    const cacheKeys = [
+      CacheKeys.workspace(id),
+      ...members.flatMap((m) => [
+        CacheKeys.workspaceMember(id, m.user_id),
+        CacheKeys.userWorkspaces(m.user_id),
+      ]),
+    ];
+    await this.cache.del(cacheKeys);
+
+    return result;
   }
 
   async sendInvite(workspaceId: string, creatorId: string, dto: InviteMemberDto) {
@@ -118,7 +168,7 @@ export class WorkspaceService {
 
     if (!invite) throw new NotFoundException("No pending invite found for this workspace");
 
-    return this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
       await tx.workspaceMember.create({
         data: {
           user_id: userId,
@@ -132,6 +182,8 @@ export class WorkspaceService {
         data: { status: WorkspaceInviteStatusEnum.ACCEPTED },
       });
     });
+
+    await this.invMembershipCaches(workspaceId, userId);
   }
 
   async declineInvite(workspaceId: string, userId: string) {
@@ -158,9 +210,13 @@ export class WorkspaceService {
       throw new BadRequestException("Cannot kick the owner of the workspace");
     }
 
-    return this.prisma.workspaceMember.delete({
+    const result = await this.prisma.workspaceMember.delete({
       where: { id: member.id },
     });
+
+    await this.invMembershipCaches(workspaceId, memberId);
+
+    return result;
   }
 
   async leaveWorkspace(workspaceId: string, userId: string) {
@@ -174,9 +230,13 @@ export class WorkspaceService {
       throw new BadRequestException("Owners cannot leave the workspace. Please transfer ownership or delete the workspace.");
     }
 
-    return this.prisma.workspaceMember.delete({
+    const result = await this.prisma.workspaceMember.delete({
       where: { id: member.id },
     });
+
+    await this.invMembershipCaches(workspaceId, userId);
+
+    return result;
   }
 
   async updateMemberRole(workspaceId: string, memberId: string, newRole: WorkspaceRoleEnum) {
@@ -194,10 +254,14 @@ export class WorkspaceService {
       throw new BadRequestException("Cannot change the role of the workspace owner");
     }
 
-    return this.prisma.workspaceMember.update({
+    const result = await this.prisma.workspaceMember.update({
       where: { id: member.id },
       data: { role: newRole },
     });
+
+    await this.cache.del(CacheKeys.workspaceMember(workspaceId, memberId));
+
+    return result;
   }
 
   async transferOwnership(workspaceId: string, currentOwnerId: string, newOwnerId: string) {
@@ -210,12 +274,12 @@ export class WorkspaceService {
     const currentOwnerMember = await this.prisma.workspaceMember.findUnique({
       where: { workspace_id_user_id: { workspace_id: workspaceId, user_id: currentOwnerId } },
     });
-    
+
     if (!currentOwnerMember || currentOwnerMember.role !== WorkspaceRoleEnum.OWNER) {
       throw new BadRequestException("Only the current owner can transfer ownership");
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
       await tx.workspaceMember.update({
         where: { id: currentOwnerMember.id },
         data: { role: WorkspaceRoleEnum.ADMIN },
@@ -226,5 +290,10 @@ export class WorkspaceService {
         data: { role: WorkspaceRoleEnum.OWNER },
       });
     });
+
+    await Promise.all([
+      this.cache.del(CacheKeys.workspaceMember(workspaceId, currentOwnerId)),
+      this.cache.del(CacheKeys.workspaceMember(workspaceId, newOwnerId)),
+    ]);
   }
 }
