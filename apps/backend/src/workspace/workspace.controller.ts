@@ -47,6 +47,15 @@ export class WorkspaceController {
     return this.workspaceService.findBySlug(slug);
   }
 
+  @Get(":workspaceId/members")
+  @SkipThrottle()
+  @UseGuards(IsMemberGuard)
+  getMembers(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+  ) {
+    return this.workspaceService.getMembers(workspaceId);
+  }
+
   @Patch(":workspaceId")
   @Throttle({ default: { ttl: 60, limit: 30 } })
   @UseGuards(IsMemberGuard, WorkspaceRolesGuard)

@@ -11,6 +11,15 @@ export enum WorkspaceInviteStatusEnum {
   DECLINED = "declined"
 }
 
+export interface WorkspaceUser {
+  id: string;
+  email: string;
+  username: string;
+  firstname: string;
+  lastname: string;
+  avatar_key: string | null;
+}
+
 export interface Workspace {
   id: string;
   name: string;
@@ -27,6 +36,7 @@ export interface WorkspaceMember {
   role: WorkspaceRoleEnum;
   joined_at: string;
   workspace?: Workspace;
+  user?: WorkspaceUser;
 }
 
 export interface CreateWorkspacePayload {

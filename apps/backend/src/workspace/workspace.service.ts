@@ -20,6 +20,40 @@ export class WorkspaceService {
     ]);
   }
 
+  async getMembers(workspaceId: string) {
+    const members = await this.prisma.workspaceMember.findMany({
+      where: { workspace_id: workspaceId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            firstname: true,
+            lastname: true,
+            avatar_key: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    const rolePriority: Record<WorkspaceRoleEnum, number> = {
+      [WorkspaceRoleEnum.OWNER]: 0,
+      [WorkspaceRoleEnum.ADMIN]: 1,
+      [WorkspaceRoleEnum.MEMBER]: 2,
+      [WorkspaceRoleEnum.GUEST]: 3,
+    };
+
+    return members.sort((a, b) => {
+      const roleDiff = rolePriority[a.role] - rolePriority[b.role];
+      if (roleDiff !== 0) return roleDiff;
+      
+      const nameA = `${a.user.firstname} ${a.user.lastname}`.toLowerCase();
+      const nameB = `${b.user.firstname} ${b.user.lastname}`.toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  }
+
   async createWorkspace(userId: string, dto: CreateWorkspaceDto) {
     let slug = dto.slug;
     if (!slug) {

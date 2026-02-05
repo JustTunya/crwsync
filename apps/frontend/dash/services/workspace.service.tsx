@@ -2,6 +2,19 @@ import { isAxiosError } from "axios";
 import { CreateWorkspacePayload, InviteMemberPayload, UpdateWorkspacePayload, Workspace, WorkspaceMember, WorkspaceOperationState } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
+export async function getWorkspaceMembers(workspaceId: string): Promise<WorkspaceOperationState<(WorkspaceMember)[]>> {
+  try {
+    const response = await api.get(`/workspaces/${workspaceId}/members`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to fetch workspace members" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
 export async function createWorkspace(data: CreateWorkspacePayload): Promise<WorkspaceOperationState<Workspace>> {
   try {
     const response = await api.post("/workspaces", data);

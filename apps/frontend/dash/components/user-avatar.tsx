@@ -6,9 +6,10 @@ interface UserAvatarProps {
   size?: number;
   user?: SessionUserType | null;
   status?: "online" | "offline" | "busy" | "away";
+  className?: string;
 }
 
-export function UserAvatar({ size = 7, user, status }: UserAvatarProps) {
+export function UserAvatar({ size = 7, user, status, className }: UserAvatarProps) {
   const initials = `${user?.firstname?.charAt(0) ?? ""}${user?.lastname?.charAt(0) ?? ""}`.toUpperCase();
   const pixels = size * 4;
 
@@ -19,7 +20,7 @@ export function UserAvatar({ size = 7, user, status }: UserAvatarProps) {
       <Image
         src={avatarUrl}
         alt={`${user.firstname} ${user.lastname} avatar`}
-        className="rounded-full object-cover"
+        className={cn("rounded-full object-cover", className)}
         width={pixels}
         height={pixels}
         priority
@@ -28,7 +29,7 @@ export function UserAvatar({ size = 7, user, status }: UserAvatarProps) {
   } else {
     return (
         <div
-          className={cn("shrink-0 rounded-full bg-primary flex items-center justify-center relative ring-1 ring-offset-2 ring-offset-base-200", {
+          className={cn("shrink-0 rounded-full bg-primary flex items-center justify-center relative ring-1 ring-offset-2 ring-offset-base-200", className, {
             "ring-green-500": status === "online",
             "ring-gray-400": status === "offline",
             "ring-red-500": status === "busy",
