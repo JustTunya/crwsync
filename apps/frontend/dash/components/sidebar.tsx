@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useRef, useTransition } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, Transition } from "framer-motion";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
 import { ArrowUp01Icon, ArrowDown01Icon, Home03Icon, TaskDone01Icon, Calendar03Icon, Search01Icon, Add01Icon, ZapIcon, Menu05Icon, ArrowRight01Icon, Settings02Icon, Logout02Icon, InboxIcon, Tick02Icon } from "@hugeicons/core-free-icons";
@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Shortcut } from "@/components/ui/shortcut";
 import { useOutclick } from "@/hooks/use-outclick";
 import { useSidebar } from "@/hooks/use-sidebar";
+import { useHotkey } from "@/hooks/use-hotkey";
 import { signout } from "@/services/auth.service";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,8 @@ export function Sidebar() {
 
   const { open, toggleOpen } = useSidebar();
   const pathname = usePathname();
+  const router = useRouter();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const { activeWorkspace } = useWorkspace();
   const slug = activeWorkspace?.slug || "";
@@ -36,6 +39,19 @@ export function Sidebar() {
     { name: "Tasks", icon: TaskDone01Icon, href: `/${slug}/tasks`, shortcut: ["ctrl", "3"] },
     { name: "Calendar", icon: Calendar03Icon, href: `/${slug}/calendar`, shortcut: ["ctrl", "4"] },
   ];
+
+  useHotkey(["ctrl", "1"], () => router.push(`/${slug}`));
+  useHotkey(["ctrl", "2"], () => router.push(`/${slug}/inbox`));
+  useHotkey(["ctrl", "3"], () => router.push(`/${slug}/tasks`));
+  useHotkey(["ctrl", "4"], () => router.push(`/${slug}/calendar`));
+
+  useHotkey(["ctrl", "k"], (e) => {
+    e.preventDefault();
+    if (!open) toggleOpen();
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, open ? 0 : 300);
+  });
 
   return (
     <>
@@ -60,6 +76,7 @@ export function Sidebar() {
             className="w-full"
           >
             <Input 
+              ref={searchInputRef}
               placeholder="Search..."
               className="bg-base-200" 
               prefix={<HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} className="size-4 text-placeholder" />}

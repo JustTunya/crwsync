@@ -13,7 +13,7 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "prefix" | "suf
   suffix?: React.ReactNode;
 }
 
-function Input({ className, type, visible, setVisible, validation, error, prefix, suffix, ...props }: InputProps) {
+const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, visible, setVisible, validation, error, prefix, suffix, ...props }, ref) => {
   const hasVisibilityIcon = type === "password" && visible !== undefined && setVisible;
   const hasValidationIcon = validation !== undefined;
 
@@ -29,6 +29,7 @@ function Input({ className, type, visible, setVisible, validation, error, prefix
       )}>
       {prefix && <div className="h-8 flex justify-center items-center pl-2">{prefix}</div>}
       <input
+        ref={ref}
         type={type === "password" && visible ? "text" : type}
         data-slot="input"
         className={cn(
@@ -49,6 +50,7 @@ function Input({ className, type, visible, setVisible, validation, error, prefix
       {suffix && <div className="h-8 flex justify-center items-center pr-2">{suffix}</div>}
     </div>
   )
-}
+})
+Input.displayName = "Input"
 
 export { Input }
