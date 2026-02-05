@@ -102,7 +102,7 @@ function Icon({ svg, className, children }: { svg: string; className?: string; c
 
 export default function Footer() {
   return (
-    <footer className="flex flex-col md:flex-row items-center sm:justify-between gap-x-32 gap-y-16 bg-foreground border-t border-muted-foreground px-8 sm:px-24 lg:px-32 py-16">
+    <footer className="flex flex-col md:flex-row items-center sm:justify-between gap-x-32 gap-y-16 bg-foreground dark:bg-background border-t border-base-300 px-8 sm:px-24 lg:px-32 py-16">
       <Link href="/">
         <Image src="/logo@white.svg" alt="crwsync" width={3250} height={512} className="h-7 xl:h-8 md:w-auto" priority />
       </Link>
@@ -110,12 +110,12 @@ export default function Footer() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-16 sm:gap-x-32 lg:gap-32">
         {categories.map((category) => (
           <div key={category.title} className="flex flex-col gap-3 min-w-26 text-sm sm:text-base whitespace-nowrap">
-            <p className="text-background font-semibold mb-2 sm:mb-4">{category.title}</p>
+            <p className="text-background dark:text-foreground font-semibold mb-2 sm:mb-4">{category.title}</p>
             {category.links.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
-                className="text-muted-foreground font-light hover:text-background transition-colors"
+                className="text-muted-foreground font-light hover:text-background dark:hover:text-foreground transition-colors"
               >
                 {link.name}
               </a>
@@ -124,7 +124,7 @@ export default function Footer() {
         ))}
 
         <div className="flex flex-col gap-3 min-w-26 text-sm sm:text-base whitespace-nowrap">
-          <p className="text-background font-semibold mb-2 sm:mb-4">Socials</p>
+          <p className="text-background dark:text-foreground font-semibold mb-2 sm:mb-4">Socials</p>
           {socials.map((social) => (
             <a
               key={social.name}
@@ -133,8 +133,8 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Icon svg={social.svg} className="size-4 sm:size-5 bg-muted-foreground group-hover:bg-background" />
-              <span className="text-muted-foreground font-light group-hover:text-background">{social.name}</span>
+              <Icon svg={social.svg} className="size-4 sm:size-5 bg-muted-foreground group-hover:bg-background dark:group-hover:bg-foreground transition-colors" />
+              <span className="text-muted-foreground font-light group-hover:text-background dark:group-hover:text-foreground transition-colors">{social.name}</span>
             </a>
           ))}
         </div>

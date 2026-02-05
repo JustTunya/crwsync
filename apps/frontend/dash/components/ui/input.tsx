@@ -22,7 +22,7 @@ function Input({ className, type, visible, setVisible, validation, error, prefix
 
   return (
     <div className={cn(
-      "w-full flex bg-input/50 backdrop-blur-md border-[1.5px] shadow-md/5 rounded-lg transition-all", 
+      "w-full flex bg-input border-[1.5px] shadow-md/5 rounded-lg transition-all", 
       "focus-within:ring-1 focus-within:ring-primary",
       error ? "border-error" : "border-base-300",
       className

@@ -41,7 +41,7 @@ export function Sidebar() {
       <motion.aside
         animate={{ width: open ? 280 : 80 }}
         transition={spring}
-        className="flex flex-col gap-4 h-screen p-4 bg-base-100 border-r overflow-hidden"
+        className="flex flex-col gap-4 h-screen p-4 bg-base-100 border-r border-base-200 overflow-hidden"
       >
         <div className="flex items-center">
           {/* WORKSPACE */}
