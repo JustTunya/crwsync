@@ -27,7 +27,7 @@ function Input({ className, type, visible, setVisible, validation, error, prefix
       error ? "border-error" : "border-base-300",
       className
       )}>
-      {prefix && <div className="h-8 flex justify-center items-center pl-3">{prefix}</div>}
+      {prefix && <div className="h-8 flex justify-center items-center pl-2">{prefix}</div>}
       <input
         type={type === "password" && visible ? "text" : type}
         data-slot="input"
@@ -46,7 +46,7 @@ function Input({ className, type, visible, setVisible, validation, error, prefix
         {hasVisibilityIcon && <HugeiconsIcon icon={visible ? ViewOffSlashIcon : ViewIcon} size={iconSize} strokeWidth={iconWidth} onClick={setVisible} className="cursor-pointer text-primary" />}
         {hasValidationIcon && <HugeiconsIcon icon={validation ? CheckmarkCircle02Icon : CancelCircleIcon} size={iconSize} strokeWidth={iconWidth} className={cn(validation ? "text-success" : "text-error")} />}
       </div>
-      {suffix && <div className="h-8 flex justify-center items-center pr-3">{suffix}</div>}
+      {suffix && <div className="h-8 flex justify-center items-center pr-2">{suffix}</div>}
     </div>
   )
 }

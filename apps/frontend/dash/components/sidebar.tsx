@@ -12,6 +12,7 @@ import { WorkspaceAvatar } from "@/components/workspace-avatar";
 import { ProjectAvatar } from "@/components/project-avatar";
 import { UserAvatar } from "@/components/user-avatar";
 import { Input } from "@/components/ui/input";
+import { Shortcut } from "@/components/ui/shortcut";
 import { useOutclick } from "@/hooks/use-outclick";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { signout } from "@/services/auth.service";
@@ -30,10 +31,10 @@ export function Sidebar() {
   const slug = activeWorkspace?.slug || "";
 
   const modules = [
-    { name: "Home", icon: Home03Icon, href: `/${slug}` },
-    { name: "Inbox", icon: InboxIcon, href: `/${slug}/inbox` },
-    { name: "Tasks", icon: TaskDone01Icon, href: `/${slug}/tasks` },
-    { name: "Calendar", icon: Calendar03Icon, href: `/${slug}/calendar` },
+    { name: "Home", icon: Home03Icon, href: `/${slug}`, shortcut: ["ctrl", "1"] },
+    { name: "Inbox", icon: InboxIcon, href: `/${slug}/inbox`, shortcut: ["ctrl", "2"] },
+    { name: "Tasks", icon: TaskDone01Icon, href: `/${slug}/tasks`, shortcut: ["ctrl", "3"] },
+    { name: "Calendar", icon: Calendar03Icon, href: `/${slug}/calendar`, shortcut: ["ctrl", "4"] },
   ];
 
   return (
@@ -62,6 +63,7 @@ export function Sidebar() {
               placeholder="Search..."
               className="bg-base-200" 
               prefix={<HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} className="size-4 text-placeholder" />}
+              suffix={<Shortcut chars={["ctrl", "K"]} />}
             />
           </motion.div>
         ) : (
@@ -85,6 +87,7 @@ export function Sidebar() {
               icon={module.icon}
               name={module.name}
               href={module.href}
+              shortcut={module.shortcut}
               active={pathname === module.href}
               extended={open}
             />
@@ -270,9 +273,10 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
   );
 }
 
-export function SidebarModule({ icon, name, href, active, extended }: { icon: HugeiconsIconProps["icon"]; name: string; href: string; active?: boolean; extended?: boolean }) {
+export function SidebarModule({ icon, name, href, shortcut, active, extended }: { icon: HugeiconsIconProps["icon"]; name: string; href: string; shortcut?: string[]; active?: boolean; extended?: boolean }) {
   return (
-    <Link href={href} className={cn("relative flex flex-row items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden", !extended && "justify-center")}>
+    <Link href={href} className={cn("relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden", !extended && "justify-center")}>
+      <div className="flex flex-row items-center gap-2">
       <HugeiconsIcon icon={icon} strokeWidth={1.75} className="size-4.5 z-10" />
       <AnimatePresence>
         {extended && (
@@ -287,7 +291,10 @@ export function SidebarModule({ icon, name, href, active, extended }: { icon: Hu
           </motion.p>
         )}
       </AnimatePresence>
-      
+      </div>
+
+      {shortcut && extended && <Shortcut chars={shortcut} />}
+
       <AnimatePresence>
         {active && (
           <motion.div
