@@ -111,4 +111,67 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       return false;
     }
   }
+
+  async sadd(key: string, ...members: string[]): Promise<number> {
+    try {
+      if (members.length === 0) return 0;
+      return await this.redis.sadd(key, ...members);
+    } catch (error) {
+      this.logger.warn(`Cache sadd error for key ${key}: ${error}`);
+      return 0;
+    }
+  }
+
+  async srem(key: string, ...members: string[]): Promise<number> {
+    try {
+      if (members.length === 0) return 0;
+      return await this.redis.srem(key, ...members);
+    } catch (error) {
+      this.logger.warn(`Cache srem error for key ${key}: ${error}`);
+      return 0;
+    }
+  }
+
+  async scard(key: string): Promise<number> {
+    try {
+      return await this.redis.scard(key);
+    } catch (error) {
+      this.logger.warn(`Cache scard error for key ${key}: ${error}`);
+      return 0;
+    }
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    try {
+      return await this.redis.smembers(key);
+    } catch (error) {
+      this.logger.warn(`Cache smembers error for key ${key}: ${error}`);
+      return [];
+    }
+  }
+
+  async scardMulti(keys: string[]): Promise<number[]> {
+    try {
+      if (keys.length === 0) return [];
+      
+      const pipeline = this.redis.pipeline();
+      keys.forEach((key) => pipeline.scard(key));
+      
+      const results = await pipeline.exec();
+      
+      if (!results) return keys.map(() => 0);
+
+      return results.map(([error, result]) => {
+        if (error) {
+          this.logger.warn(`Pipeline error for key: ${error}`);
+          return 0;
+        }
+        return result as number;
+      });
+    } catch (error) {
+      this.logger.warn(`Cache scardMulti error: ${error}`);
+      return keys.map(() => 0);
+    }
+  }
 }
+

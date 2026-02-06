@@ -28,4 +28,5 @@ export interface SessionUserType {
   avatar_key?: string;
   role: RoleEnum;
   role_version: number;
+  status_preference?: string;
 }

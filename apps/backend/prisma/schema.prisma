@@ -25,23 +25,32 @@ enum WorkspaceRoleEnum {
   @@map("workspace_role_enum")
 }
 
+enum UserStatus {
+  ONLINE @map("online")
+  BUSY   @map("busy")
+  AWAY   @map("away")
+
+  @@map("user_status_enum")
+}
+
 model User {
-  id                   String   @id @default(uuid()) @db.Uuid
-  email                String   @unique(map: "idx_user_email") @db.Citext
-  username             String   @unique(map: "idx_user_username") @db.Citext
-  firstname            String   @db.Text
-  lastname             String   @db.Text
-  birthdate            DateTime @db.Date
-  avatar_key           String?  @db.Text
-  role                 RoleEnum @default(MEMBER)
-  role_version         Int      @default(1)
-  password_hash        String   @db.Text
-  last_password_change DateTime? @db.Timestamptz
-  email_verified_at    DateTime? @db.Timestamptz
-  role_changed_at      DateTime @default(now()) @db.Timestamptz
-  last_login           DateTime? @db.Timestamptz
-  created_at           DateTime @default(now()) @db.Timestamptz
-  updated_at           DateTime @updatedAt @db.Timestamptz
+  id                   String     @id @default(uuid()) @db.Uuid
+  email                String     @unique(map: "idx_user_email") @db.Citext
+  username             String     @unique(map: "idx_user_username") @db.Citext
+  firstname            String     @db.Text
+  lastname             String     @db.Text
+  birthdate            DateTime   @db.Date
+  avatar_key           String?    @db.Text
+  role                 RoleEnum   @default(MEMBER)
+  role_version         Int        @default(1)
+  status_preference    UserStatus @default(ONLINE)
+  password_hash        String     @db.Text
+  last_password_change DateTime?  @db.Timestamptz
+  email_verified_at    DateTime?  @db.Timestamptz
+  role_changed_at      DateTime   @default(now()) @db.Timestamptz
+  last_login           DateTime?  @db.Timestamptz
+  created_at           DateTime   @default(now()) @db.Timestamptz
+  updated_at           DateTime   @updatedAt @db.Timestamptz
 
   sessions            Session[]
   email_verifications EmailVerification[]

@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef, useTransition, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, Transition } from "framer-motion";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
 import { ArrowUp01Icon, ArrowDown01Icon, Home03Icon, TaskDone01Icon, Calendar03Icon, Search01Icon, Add01Icon, ZapIcon, Menu05Icon, ArrowRight01Icon, Settings02Icon, Logout02Icon, InboxIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useUser } from "@/providers/user.provider";
+import { useSocket } from "@/providers/socket.provider";
 import { WorkspaceAvatar } from "@/components/workspace-avatar";
 import { ProjectAvatar } from "@/components/project-avatar";
 import { UserAvatar } from "@/components/user-avatar";
@@ -31,7 +32,33 @@ export function NavSidebar() {
 
   const { activeWorkspace } = useWorkspace();
   const { open, toggleOpen } = useSidebar();
-  const [status, setStatus] = useState<UserStatus>("online");
+  const { socket } = useSocket();
+  const user = useUser();
+
+  const [status, setStatus] = useState<UserStatus>((user?.status_preference?.toLowerCase() as UserStatus) || "online");
+
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    const handleStatusUpdate = ({ userId, status: newStatus }: { userId: string; status: string }) => {
+      if (userId === user.id) {
+        setStatus(newStatus.toLowerCase() as UserStatus);
+      }
+    };
+
+    socket.on("status:update", handleStatusUpdate);
+
+    return () => {
+      socket.off("status:update", handleStatusUpdate);
+    };
+  }, [socket, user]);
+
+  const handleStatusChange = (newStatus: UserStatus) => {
+    setStatus(newStatus);
+    if (socket) {
+      socket.emit("update_status", newStatus.toUpperCase());
+    }
+  };
 
   const slug = activeWorkspace?.slug || "";
 
@@ -132,7 +159,7 @@ export function NavSidebar() {
         </div>
 
         {/* PROFILE */}
-        <SidebarProfile status={status} setStatus={setStatus} extended={open} />
+        <SidebarProfile status={status} setStatus={handleStatusChange} extended={open} />
       </motion.aside>
 
       {!open && (

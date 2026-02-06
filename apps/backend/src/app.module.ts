@@ -12,6 +12,7 @@ import { SessionModule } from "src/session/session.module";
 import { HealthModule } from "src/health/health.module";
 import { EmailModule } from "src/email/email.module";
 import { WorkspaceModule } from "src/workspace/workspace.module";
+import { StatusModule } from "src/status/status.module";
 import { UserModule } from "src/user/user.module";
 import { AuthModule } from "src/auth/auth.module";
 // CONTROLLERS & SERVICES
@@ -38,6 +39,7 @@ import { RolesGuard } from "src/common/guards/roles.guard";
     VerificationModule,
     PasswordResetModule,
     WorkspaceModule,
+    StatusModule,
   ],
   controllers: [AppController],
   providers: [

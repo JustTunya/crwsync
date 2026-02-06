@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/providers/user.provider";
 import { QueryProvider } from "@/providers/query.provider";
 import { WorkspaceProvider } from "@/providers/workspace.provider";
+import { SocketProvider } from "@/providers/socket.provider";
 import "@crwsync/styles";
 
 const figtree = Figtree({
@@ -28,9 +29,11 @@ async function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryProvider>
         <UserProvider>
-          <WorkspaceProvider>
-            {children}
-          </WorkspaceProvider>
+          <SocketProvider>
+            <WorkspaceProvider>
+              {children}
+            </WorkspaceProvider>
+          </SocketProvider>
         </UserProvider>
       </QueryProvider>
     </ThemeProvider>

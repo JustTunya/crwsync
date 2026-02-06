@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 interface UserAvatarProps {
   size?: number;
   user?: SessionUserType | WorkspaceUser | null;
-  status?: "online" | "offline" | "busy" | "away";
+  status?: string;
   className?: string;
 }
 

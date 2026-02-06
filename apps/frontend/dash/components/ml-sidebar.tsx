@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { motion, Transition } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { UserMultiple02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useMlSidebar } from "@/hooks/use-ml-sidebar";
+import { WorkspaceUser } from "@crwsync/types";
+import { useSocket } from "@/providers/socket.provider";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { getWorkspaceMembers } from "@/services/workspace.service";
-import { useOutclick } from "@/hooks/use-outclick";
 import { UserAvatar } from "@/components/user-avatar";
 import { cn } from "@/lib/utils";
-import { WorkspaceUser } from "@crwsync/types";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { UserMultiple02Icon } from "@hugeicons/core-free-icons";
-import { useMlSidebar } from "@/hooks/use-ml-sidebar";
 
 //! TODO: Use enum from packages/types
 export enum WorkspaceRoleEnum {
@@ -25,14 +25,39 @@ const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 
 export function MlSidebar() {
   const { activeWorkspace: workspace } = useWorkspace();
+  const { socket, isConnected } = useSocket();
 
   const { open, toggleOpen } = useMlSidebar();
+
+  const [statuses, setStatuses] = useState<Record<string, UserStatus>>({});
 
   const { data, isLoading } = useQuery({
     queryKey: ["ws-members", workspace?.id],
     queryFn: () => getWorkspaceMembers(workspace!.id),
     enabled: !!workspace?.id,
   });
+
+  useEffect(() => {
+    if (!socket || !workspace?.id || !isConnected) return;
+
+    socket.emit("sub_ws", workspace.id);
+
+    const handleStatusUpdate = ({ userId, status }: { userId: string; status: UserStatus }) => {
+      setStatuses((prev) => ({ ...prev, [userId]: status }));
+    };
+
+    const handleWorkspaceStatuses = (initialStatuses: Record<string, UserStatus>) => {
+      setStatuses(initialStatuses);
+    };
+
+    socket.on("status:update", handleStatusUpdate);
+    socket.on("ws_statuses", handleWorkspaceStatuses);
+
+    return () => {
+      socket.off("status:update", handleStatusUpdate);
+      socket.off("ws_statuses", handleWorkspaceStatuses);
+    };
+  }, [socket, workspace?.id, isConnected]);
 
   const groupedMembers = useMemo(() => {
     if (!data?.data) return [];
@@ -70,14 +95,14 @@ export function MlSidebar() {
       <motion.aside
         animate={{ width: open ? 240 : 0 }}
         transition={spring}
-        className={cn("flex flex-col gap-4 h-screen bg-base-100 border-r border-base-200 overflow-hidden", open ? "px-4 py-5" : "p-0")}
+        className="flex flex-col gap-4 h-screen bg-base-100 border-r border-base-200 overflow-hidden"
       >
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <span className="text-sm text-gray-500">Loading members...</span>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto">
+          <div className={cn("flex-1 overflow-y-auto", open ? "px-4 py-5" : "p-0")}>
             {groupedMembers.map((group) => {
               if (group.members.length === 0) return null;
               
@@ -91,8 +116,7 @@ export function MlSidebar() {
                       <SidebarProfile 
                         key={member.id} 
                         user={member.user}
-                        status="online" //! TODO: Add real status
-                        extended={true}
+                        status={statuses[member.user_id] || "OFFLINE"} 
                       />
                     ))}
                   </ul>
@@ -101,43 +125,37 @@ export function MlSidebar() {
             })}
           </div>
         )}
+
+        <div className="flex flex-row items-center justify-center w-full p-2 mt-auto bg-red-50"></div>
       </motion.aside>
     </>
   );
 }
 
-type UserStatus = "online" | "offline" | "busy" | "away";
+type UserStatus = "ONLINE" | "OFFLINE" | "BUSY" | "AWAY";
 
-export function SidebarProfile({ user, status, extended }: { user: WorkspaceUser | undefined; status: UserStatus; extended?: boolean }) {
+interface SidebarProfileProps {
+  user: WorkspaceUser | undefined;
+  status: UserStatus;
+}
+
+export function SidebarProfile({ user, status }: SidebarProfileProps) {
   const profRef = useRef<HTMLDivElement>(null);
-
-  const [openMenu, setOpenMenu] = useState(false);
-
-  useOutclick(profRef, () => {
-    setOpenMenu(false);
-  }, openMenu);
 
   return (
     <div 
       ref={profRef}
-      className={cn(
-        "mt-auto cursor-pointer flex flex-col items-center",
-        extended && [
-          "py-2 px-1 rounded-lg",
-          !openMenu && "hover:bg-base-300/75 transition-colors"
-        ],
-        !extended && "mb-3"
-      )}
+      className="relative flex flex-col items-center hover:bg-base-300/75 transition-colors cursor-pointer"
     >
       <div className="px-2 flex-nowrap flex flex-row items-center gap-3 w-full">
-        <UserAvatar user={user} key={"user-avatar"} status={status} />
+        <div className="relative">
+          <UserAvatar user={user} status={status.toLowerCase()} key={"user-avatar"} />
+        </div>
 
-        {extended && (
-          <div className="flex flex-col">
-            <p className="text-foreground text-sm whitespace-nowrap">{user?.lastname} {user?.firstname}</p>
-            <p className="text-muted-foreground text-xs whitespace-nowrap h-4 flex items-center truncate">{user?.username}</p>
-          </div>
-        )}
+        <div className="flex flex-col">
+          <p className="text-foreground text-sm whitespace-nowrap">{user?.lastname} {user?.firstname}</p>
+          <p className="text-muted-foreground text-xs whitespace-nowrap h-4 flex items-center truncate">{user?.username}</p>
+        </div>
       </div>
     </div>
   );
