@@ -22,15 +22,17 @@ import { cn } from "@/lib/utils";
 const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 const fading: Transition = { duration: 0.15, ease: [0.4, 0, 0.2, 1] };
 
-export function Sidebar() {
-  const [status, setStatus] = useState<"online" | "offline" | "busy" | "away">("online");
+type UserStatus = "online" | "offline" | "busy" | "away";
 
-  const { open, toggleOpen } = useSidebar();
-  const pathname = usePathname();
+export function NavSidebar() {
   const router = useRouter();
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const pathname = usePathname();
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const { activeWorkspace } = useWorkspace();
+  const { open, toggleOpen } = useSidebar();
+  const [status, setStatus] = useState<UserStatus>("online");
+
   const slug = activeWorkspace?.slug || "";
 
   const modules = [
@@ -49,7 +51,7 @@ export function Sidebar() {
     e.preventDefault();
     if (!open) toggleOpen();
     setTimeout(() => {
-      searchInputRef.current?.focus();
+      searchRef.current?.focus();
     }, open ? 0 : 300);
   });
 
@@ -76,7 +78,7 @@ export function Sidebar() {
             className="w-full"
           >
             <Input 
-              ref={searchInputRef}
+              ref={searchRef}
               placeholder="Search..."
               className="bg-base-200" 
               prefix={<HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} className="size-4 text-placeholder" />}
@@ -363,8 +365,6 @@ export function SidebarProject({ icon, name, extended }: { icon: HugeiconsIconPr
   );
 }
 
-type UserStatus = "online" | "offline" | "busy" | "away";
-
 const STATUS_META: Record<UserStatus, { label: string; color: string }> = {
   online: { label: "Online", color: "bg-green-500" },
   offline:{ label: "Offline", color: "bg-gray-400" },
@@ -443,7 +443,7 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
                     {user?.email}
                   </p>
                   <p className="text-muted-foreground text-xs whitespace-nowrap h-4 flex items-center truncate">
-                    @{user?.username}
+                    {user?.username}
                   </p>
                 </motion.div>
               </div>

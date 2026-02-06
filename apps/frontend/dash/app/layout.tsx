@@ -40,7 +40,7 @@ async function Providers({ children }: { children: React.ReactNode }) {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${figtree.variable} font-figtree antialiased`}>
+      <body className={`${figtree.variable} font-figtree antialiased`} suppressHydrationWarning>
         <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
           <Providers>
             {children}
