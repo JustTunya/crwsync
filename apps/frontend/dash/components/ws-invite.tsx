@@ -1,8 +1,8 @@
-import { Invite } from "@/hooks/use-invites";
+import { WorkspaceInvite as WorkspaceInviteType } from "@crwsync/types";
 import { acceptInvite, declineInvite } from "@/services/workspace.service";
 
 interface WorkspaceInviteProps {
-  invite: Invite;
+  invite: WorkspaceInviteType;
 }
 
 export function WorkspaceInvite({ invite }: WorkspaceInviteProps) {
