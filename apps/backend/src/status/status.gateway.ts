@@ -3,7 +3,6 @@ import { Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { UserStatus, WorkspaceInvite } from "@prisma/client";
 import { Server, Socket } from "socket.io";
-import { CacheService } from "src/redis/cache.service";
 import { PrismaService } from "src/prisma/prisma.service";
 
 @WebSocketGateway({
@@ -19,7 +18,6 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly jwtService: JwtService,
-    private readonly cacheService: CacheService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -36,16 +34,15 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const userId = payload.sub;
       client.data.userId = userId;
 
-      const deviceId = client.id;
-      const key = `user:${userId}:sockets`;
+      const userRoom = `user_${userId}`;
+      await client.join(userRoom);
 
-      const count = await this.cacheService.sadd(key, deviceId);
+      const sockets = await this.server.in(userRoom).fetchSockets();
+      const count = sockets.length;
 
-      await client.join(`user_${userId}`);
-
-      if (count === 1) await this.broadcastUserStatus(userId);
+      if (count === 1) await this.broadcastUserStatus(userId, "ONLINE");
       
-      this.logger.debug(`Client connected: ${client.id} (User: ${userId})`);
+      this.logger.debug(`Client connected: ${client.id} (User: ${userId}, Count: ${count})`);
     } catch (error) {
       this.logger.error(`Error during client connection: ${error}`);
       client.disconnect();
@@ -56,16 +53,16 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.userId;
     if (!userId) return;
 
-    const key = `user:${userId}:sockets`;
-    await this.cacheService.srem(key, client.id);
+    const userRoom = `user_${userId}`;
     
-    const count = await this.cacheService.scard(key);
-    
+    const sockets = await this.server.in(userRoom).fetchSockets();
+    const count = sockets.length;
+
     if (count === 0) {
-      await this.broadcastStatus(userId, "OFFLINE");
+      await this.broadcastUserStatus(userId, "OFFLINE");
     }
     
-    this.logger.debug(`Client disconnected: ${client.id} (User: ${userId})`);
+    this.logger.debug(`Client disconnected: ${client.id} (User: ${userId}, Remaining: ${count})`);
   }
 
   @SubscribeMessage("sub_ws")
@@ -77,17 +74,14 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
       select: { user_id: true, user: { select: { status_preference: true } } },
     });
 
-    const keys = members.map((m) => `user:${m.user_id}:sockets`);
-    const counts = await this.cacheService.scardMulti(keys);
-
     const statuses: Record<string, string> = {};
 
-    members.forEach((member, index) => {
-      const count = counts[index];
-      if (count > 0) {
+    await Promise.all(members.map(async (member) => {
+      const userSockets = await this.server.in(`user_${member.user_id}`).fetchSockets();
+      if (userSockets.length > 0) {
         statuses[member.user_id] = member.user.status_preference;
       }
-    });
+    }));
 
     client.emit("ws_statuses", statuses);
 
@@ -104,7 +98,7 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data: { status_preference: status },
     });
 
-    await this.broadcastUserStatus(userId);
+    await this.broadcastUserStatus(userId, status);
   }
 
   private extractToken(client: Socket): string | null {
@@ -127,7 +121,7 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return cookies['crw-at'] || null;
   }
 
-  private async broadcastUserStatus(userId: string) {
+  private async broadcastUserStatus(userId: string, forceStatus?: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { status_preference: true, ws_memberships: { select: { workspace_id: true } } },
@@ -135,27 +129,10 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     if (!user) return;
 
-    const status = user.status_preference;
+    const status = forceStatus || user.status_preference;
 
     const rooms = user.ws_memberships.map((m) => `workspace_${m.workspace_id}`);
     
-    rooms.push(`user_${userId}`);
-
-    this.server.to(rooms).emit("status:update", {
-      userId,
-      status,
-    });
-  }
-
-  private async broadcastStatus(userId: string, status: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { ws_memberships: { select: { workspace_id: true } } },
-    });
-
-    if (!user) return;
-
-    const rooms = user.ws_memberships.map((m) => `workspace_${m.workspace_id}`);
     rooms.push(`user_${userId}`);
 
     this.server.to(rooms).emit("status:update", {
