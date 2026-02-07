@@ -4,12 +4,14 @@ import { WorkspaceInviteStatusEnum } from "@crwsync/types";
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto } from "src/workspace/dto/workspace.dto";
 import { CacheService, CacheKeys, CacheTTL } from "src/redis";
 import { PrismaService } from "src/prisma/prisma.service";
+import { StatusGateway } from "src/status/status.gateway";
 
 @Injectable()
 export class WorkspaceService {
   constructor(
     private prisma: PrismaService,
     private cache: CacheService,
+    private statusGateway: StatusGateway,
   ) {}
 
   private async invMembershipCaches(workspaceId: string, userId: string) {
@@ -209,14 +211,30 @@ export class WorkspaceService {
       }
     }
 
-    return this.prisma.workspaceInvite.create({
+    const invite = await this.prisma.workspaceInvite.create({
       data: {
         invitee_id: dto.invitee_id,
         creator_id: creatorId,
         workspace_id: workspaceId,
         role: dto.role,
       },
+      include: {
+        workspace: true,
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            firstname: true,
+            lastname: true,
+            avatar_key: true,
+          }
+        }
+      }
     });
+
+    await this.statusGateway.emitInviteReceived(dto.invitee_id, invite);
+
+    return invite;
   }
 
   async revokeInvite(workspaceId: string, inviteId: string) {
@@ -225,6 +243,8 @@ export class WorkspaceService {
     });
 
     if (!invite) throw new NotFoundException("No pending invite found for this workspace");
+
+    await this.statusGateway.emitInviteHandled(invite.invitee_id, invite.id, "REVOKED");
 
     return this.prisma.workspaceInvite.delete({
       where: { id: invite.id },
@@ -253,6 +273,8 @@ export class WorkspaceService {
       });
     });
 
+    await this.statusGateway.emitInviteHandled(userId, invite.id, "ACCEPTED");
+
     await this.invMembershipCaches(workspaceId, userId);
   }
 
@@ -263,10 +285,14 @@ export class WorkspaceService {
 
     if (!invite) throw new NotFoundException("No pending invite found for this workspace");
 
-    return this.prisma.workspaceInvite.update({
+    const result = await this.prisma.workspaceInvite.update({
       where: { id: invite.id },
       data: { status: WorkspaceInviteStatusEnum.DECLINED },
     });
+
+    await this.statusGateway.emitInviteHandled(userId, invite.id, "DECLINED");
+
+    return result;
   }
 
   async kickMember(workspaceId: string, memberId: string) {

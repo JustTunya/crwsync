@@ -64,4 +64,11 @@ export class UserController {
   async remove(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<void> {
     await this.userService.remove(userId);
   }
+  
+  @UseGuards(new OwnershipGuard("userId"))
+  @Get(":userId/invites")
+  @HttpCode(HttpStatus.OK)
+  findInvites(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string) {
+    return this.userService.findInvites(userId);
+  }
 }

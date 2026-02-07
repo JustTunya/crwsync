@@ -93,14 +93,27 @@ export async function inviteMember(workspaceId: string, data: InviteMemberPayloa
   }
 }
 
-export async function joinWorkspace(token: string): Promise<WorkspaceOperationState<WorkspaceMember>> {
+export async function acceptInvite(workspaceId: string): Promise<WorkspaceOperationState> {
   try {
-    const response = await api.post(`/workspaces/join/${token}`);
-    return { success: true, message: "Joined workspace successfully", data: response.data };
+    await api.post(`/workspaces/${workspaceId}/invites/accept`);
+    return { success: true, message: "Invitation accepted successfully" };
   } catch (error) {
     if (isAxiosError(error)) {
       const resp = error.response?.data;
-      return { success: false, message: resp?.message || "Failed to join workspace" };
+      return { success: false, message: resp?.message || "Failed to accept invitation" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function declineInvite(workspaceId: string): Promise<WorkspaceOperationState> {
+  try {
+    await api.post(`/workspaces/${workspaceId}/invites/decline`);
+    return { success: true, message: "Invitation declined successfully" };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to decline invitation" };
     }
     return { success: false, message: "An unexpected error occurred" };
   }

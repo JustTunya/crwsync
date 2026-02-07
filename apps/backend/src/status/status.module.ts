@@ -15,5 +15,6 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
     }),
   ],
   providers: [StatusGateway],
+  exports: [StatusGateway],
 })
 export class StatusModule {}

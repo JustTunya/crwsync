@@ -6,9 +6,9 @@ export enum WorkspaceRoleEnum {
 }
 
 export enum WorkspaceInviteStatusEnum {
-  PENDING = "PENDING",
-  ACCEPTED = "ACCEPTED",
-  DECLINED = "DECLINED"
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  DECLINED = "declined"
 }
 
 export interface WorkspaceUser {
@@ -52,6 +52,25 @@ export interface UpdateWorkspacePayload {
 export interface InviteMemberPayload {
   invitee_id: string;
   role: WorkspaceRoleEnum;
+}
+
+export interface WorkspaceInvite {
+  id: string;
+  role: WorkspaceRoleEnum;
+  status: WorkspaceInviteStatusEnum;
+  created_at: string;
+  workspace: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  creator: {
+    id: string;
+    username: string;
+    firstname: string;
+    lastname: string;
+    avatar_key: string | null;
+  };
 }
 
 export interface WorkspaceOperationState<T = undefined> {

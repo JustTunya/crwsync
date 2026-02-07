@@ -1,14 +1,7 @@
-
-import {
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
-} from "@nestjs/websockets";
+import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { UserStatus } from "@prisma/client";
+import { UserStatus, WorkspaceInvite } from "@prisma/client";
 import { Server, Socket } from "socket.io";
 import { CacheService } from "src/redis/cache.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -169,5 +162,13 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
       userId,
       status,
     });
+  }
+  
+  async emitInviteReceived(userId: string, invite: WorkspaceInvite) {
+    this.server.to(`user_${userId}`).emit("invite:received", invite);
+  }
+
+  async emitInviteHandled(userId: string, inviteId: string, status: string) {
+    this.server.to(`user_${userId}`).emit("invite:handled", { inviteId, status });
   }
 }

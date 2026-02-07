@@ -75,7 +75,7 @@ export function MlSidebar() {
 
     const groups = ROLES_ORDER.map((role) => {
       const mems = members
-        .filter((m) => m.role.toLocaleLowerCase() === role)
+        .filter((m) => m.role === role)
         .sort((a, b) => {
           const nameA = `${a.user?.firstname} ${a.user?.lastname}`.toLowerCase();
           const nameB = `${b.user?.firstname} ${b.user?.lastname}`.toLowerCase();

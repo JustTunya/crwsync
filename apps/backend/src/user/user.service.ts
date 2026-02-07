@@ -105,6 +105,17 @@ export class UserService {
     return updated;
   }
 
+  async findInvites(userId: string) {
+    return this.prisma.workspaceInvite.findMany({
+      where: { invitee_id: userId, status: "pending" },
+      include: {
+        workspace: { select: { id: true, name: true, slug: true } },
+        creator: { select: { id: true, username: true, firstname: true, lastname: true, avatar_key: true } },
+      },
+      orderBy: { created_at: "desc" },
+    });
+  }
+
   async remove(id: string): Promise<void> {
     const user = await this.findOne(id);
     await this.prisma.user.delete({ where: { id: user.id } });
