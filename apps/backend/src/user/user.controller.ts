@@ -37,6 +37,13 @@ export class UserController {
     return this.userService.checkEmailOrUsername(field, value);
   }
 
+  @Public()
+  @Get("search")
+  @HttpCode(HttpStatus.OK)
+  searchByIdentifier(@Query("identifier") identifier: string): Promise<UserPublic[]> {
+    return this.userService.searchByEmailOrUsername(identifier);
+  }
+
   @UseGuards(new OwnershipGuard("userId"))
   @Get(":userId")
   @HttpCode(HttpStatus.OK)

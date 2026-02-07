@@ -24,7 +24,7 @@ export class UpdateWorkspaceDto {
 export class InviteMemberDto {
   @IsString()
   @IsNotEmpty()
-  username!: string;
+  invitee_id!: string;
 
   @IsEnum(WorkspaceRoleEnum)
   role!: WorkspaceRoleEnum;

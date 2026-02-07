@@ -82,7 +82,7 @@ export async function deleteWorkspace(id: string): Promise<WorkspaceOperationSta
 
 export async function inviteMember(workspaceId: string, data: InviteMemberPayload): Promise<WorkspaceOperationState> {
   try {
-    await api.post(`/workspaces/${workspaceId}/invite`, data);
+    await api.post(`/workspaces/${workspaceId}/invites`, data);
     return { success: true, message: "Invitation sent successfully" };
   } catch (error) {
     if (isAxiosError(error)) {

@@ -184,18 +184,18 @@ export class WorkspaceService {
   }
 
   async sendInvite(workspaceId: string, creatorId: string, dto: InviteMemberDto) {
-    const invitee = await this.prisma.user.findUnique({ where: { username: dto.username } });
-
-    if (!invitee) throw new NotFoundException("User not found");
+    if (await this.prisma.user.findUnique({ where: { id: dto.invitee_id } }) === null) {
+      throw new NotFoundException("Invitee user not found");
+    }
 
     const isMember = await this.prisma.workspaceMember.findUnique({
-      where: { workspace_id_user_id: { workspace_id: workspaceId, user_id: invitee.id } },
+      where: { workspace_id_user_id: { workspace_id: workspaceId, user_id: dto.invitee_id } },
     });
 
     if (isMember) throw new BadRequestException("User is already a member of the workspace");
 
     const existingInvite = await this.prisma.workspaceInvite.findUnique({
-      where: { invitee_id_workspace_id: { invitee_id: invitee.id, workspace_id: workspaceId } },
+      where: { invitee_id_workspace_id: { invitee_id: dto.invitee_id, workspace_id: workspaceId } },
     });
 
     if (existingInvite) {
@@ -211,7 +211,7 @@ export class WorkspaceService {
 
     return this.prisma.workspaceInvite.create({
       data: {
-        invitee_id: invitee.id,
+        invitee_id: dto.invitee_id,
         creator_id: creatorId,
         workspace_id: workspaceId,
         role: dto.role,

@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, Transition } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { UserMultiple02Icon } from "@hugeicons/core-free-icons";
+import { AddTeamIcon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMlSidebar } from "@/hooks/use-ml-sidebar";
 import { WorkspaceUser } from "@crwsync/types";
@@ -12,13 +12,14 @@ import { useWorkspace } from "@/providers/workspace.provider";
 import { getWorkspaceMembers } from "@/services/workspace.service";
 import { UserAvatar } from "@/components/user-avatar";
 import { cn } from "@/lib/utils";
+import InviteMemberModal from "./inv-modal";
 
 //! TODO: Use enum from packages/types
 export enum WorkspaceRoleEnum {
-  OWNER = "owner",
-  ADMIN = "admin",
-  MEMBER = "member",
-  GUEST = "guest",
+  OWNER = "OWNER",
+  ADMIN = "ADMIN",
+  MEMBER = "MEMBER",
+  GUEST = "GUEST",
 }
 
 const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
@@ -30,6 +31,7 @@ export function MlSidebar() {
   const { open, toggleOpen } = useMlSidebar();
 
   const [statuses, setStatuses] = useState<Record<string, UserStatus>>({});
+  const [openInviteModal, setOpenInviteModal] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["ws-members", workspace?.id],
@@ -126,8 +128,16 @@ export function MlSidebar() {
           </div>
         )}
 
-        <div className="flex flex-row items-center justify-center w-full p-2 mt-auto bg-red-50"></div>
+        <button 
+          onClick={() => setOpenInviteModal(true)}
+          className="flex flex-row items-center gap-2 justify-center p-2 m-2 mt-auto bg-base-200 rounded-lg hover:bg-base-300/75 transition-colors cursor-pointer"
+        >
+          <HugeiconsIcon icon={AddTeamIcon} className="size-5 text-foreground" />
+          <span className="text-base text-foreground font-thin">Invite Members</span>
+        </button>
       </motion.aside>
+
+      {openInviteModal && (<InviteMemberModal workspace={{ id: workspace?.id, name: workspace?.name }} isOpen={openInviteModal} onClose={() => setOpenInviteModal(false)} />)}
     </>
   );
 }
@@ -136,24 +146,20 @@ type UserStatus = "ONLINE" | "OFFLINE" | "BUSY" | "AWAY";
 
 interface SidebarProfileProps {
   user: WorkspaceUser | undefined;
-  status: UserStatus;
+  status?: UserStatus;
+  className?: string;
 }
 
-export function SidebarProfile({ user, status }: SidebarProfileProps) {
-  const profRef = useRef<HTMLDivElement>(null);
-
+export function SidebarProfile({ user, status, className }: SidebarProfileProps) {
   return (
-    <div 
-      ref={profRef}
-      className="relative flex flex-col items-center hover:bg-base-300/75 transition-colors cursor-pointer"
-    >
+    <div className={cn("relative flex flex-col items-center px-1 py-2 rounded-lg hover:bg-base-300/75 transition-colors cursor-pointer", className)}>
       <div className="px-2 flex-nowrap flex flex-row items-center gap-3 w-full">
         <div className="relative">
-          <UserAvatar user={user} status={status.toLowerCase()} key={"user-avatar"} />
+          <UserAvatar key={"user-avatar"} user={user} status={status?.toLowerCase()} size={8} />
         </div>
 
         <div className="flex flex-col">
-          <p className="text-foreground text-sm whitespace-nowrap">{user?.lastname} {user?.firstname}</p>
+          <p className="text-foreground text-sm whitespace-nowrap">{user?.firstname} {user?.lastname}</p>
           <p className="text-muted-foreground text-xs whitespace-nowrap h-4 flex items-center truncate">{user?.username}</p>
         </div>
       </div>

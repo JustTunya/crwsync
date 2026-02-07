@@ -1,14 +1,14 @@
 export enum WorkspaceRoleEnum {
-  OWNER = "owner",
-  ADMIN = "admin",
-  MEMBER = "member",
-  GUEST = "guest",
+  OWNER = "OWNER",
+  ADMIN = "ADMIN",
+  MEMBER = "MEMBER",
+  GUEST = "GUEST",
 }
 
 export enum WorkspaceInviteStatusEnum {
-  PENDING = "pending",
-  ACCEPTED = "accepted",
-  DECLINED = "declined"
+  PENDING = "PENDING",
+  ACCEPTED = "ACCEPTED",
+  DECLINED = "DECLINED"
 }
 
 export interface WorkspaceUser {
@@ -50,7 +50,7 @@ export interface UpdateWorkspacePayload {
 }
 
 export interface InviteMemberPayload {
-  username: string;
+  invitee_id: string;
   role: WorkspaceRoleEnum;
 }
 

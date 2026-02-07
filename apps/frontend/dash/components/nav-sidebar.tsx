@@ -5,7 +5,7 @@ import { useState, useRef, useTransition, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, Transition } from "framer-motion";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
-import { ArrowUp01Icon, ArrowDown01Icon, Home03Icon, TaskDone01Icon, Calendar03Icon, Search01Icon, Add01Icon, ZapIcon, Menu05Icon, ArrowRight01Icon, Settings02Icon, Logout02Icon, InboxIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { ArrowUp01Icon, ArrowDown01Icon, Home03Icon, TaskDone01Icon, Calendar03Icon, Search01Icon, Add01Icon, ZapIcon, Menu05Icon, ArrowRight01Icon, Settings02Icon, Logout02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useUser } from "@/providers/user.provider";
 import { useSocket } from "@/providers/socket.provider";
@@ -64,15 +64,13 @@ export function NavSidebar() {
 
   const modules = [
     { name: "Home", icon: Home03Icon, href: `/${slug}`, shortcut: ["ctrl", "1"] },
-    { name: "Inbox", icon: InboxIcon, href: `/${slug}/inbox`, shortcut: ["ctrl", "2"] },
-    { name: "Tasks", icon: TaskDone01Icon, href: `/${slug}/tasks`, shortcut: ["ctrl", "3"] },
-    { name: "Calendar", icon: Calendar03Icon, href: `/${slug}/calendar`, shortcut: ["ctrl", "4"] },
+    { name: "Tasks", icon: TaskDone01Icon, href: `/${slug}/tasks`, shortcut: ["ctrl", "2"] },
+    { name: "Calendar", icon: Calendar03Icon, href: `/${slug}/calendar`, shortcut: ["ctrl", "3"] },
   ];
 
   useHotkey(["ctrl", "1"], () => router.push(`/${slug}`));
-  useHotkey(["ctrl", "2"], () => router.push(`/${slug}/inbox`));
-  useHotkey(["ctrl", "3"], () => router.push(`/${slug}/tasks`));
-  useHotkey(["ctrl", "4"], () => router.push(`/${slug}/calendar`));
+  useHotkey(["ctrl", "2"], () => router.push(`/${slug}/tasks`));
+  useHotkey(["ctrl", "3"], () => router.push(`/${slug}/calendar`));
 
   useHotkey(["ctrl", "k"], (e) => {
     e.preventDefault();
@@ -457,7 +455,7 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
               transition={{ duration: 0.15, ease: "easeInOut" }}
               className="flex flex-col"
             >
-              <p className="text-foreground text-sm whitespace-nowrap">{user?.lastname} {user?.firstname}</p>
+              <p className="text-foreground text-sm whitespace-nowrap">{user?.firstname} {user?.lastname}</p>
               
               <div className="relative h-4 w-full overflow-hidden">
                 <motion.div

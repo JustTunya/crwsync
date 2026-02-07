@@ -65,6 +65,16 @@ export class UserService {
     return user;
   }
 
+  async searchByEmailOrUsername(identifier: string): Promise<UserPublic[]> {
+    const users = await this.prisma.user.findMany({
+      where: { OR: [{ email: { contains: identifier } }, { username: { contains: identifier } }] },
+      select: userPublicSelect,
+      take: 5,
+    });
+
+    return users;
+  }
+
   async checkEmailOrUsername(field: "email" | "username", value: string): Promise<{ available: boolean }> {
     const where = field === "email" ? { email: value } : { username: value };
     const exists = await this.prisma.user.findUnique({ where, select: { id: true } });
