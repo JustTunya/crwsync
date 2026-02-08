@@ -44,7 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${figtree.variable} font-figtree antialiased`} suppressHydrationWarning>
-        <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+        <Suspense fallback={<div />}>
           <Providers>
             {children}
           </Providers>
