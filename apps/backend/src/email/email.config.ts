@@ -11,6 +11,9 @@ export const emailConfig = (): MailerOptions => ({
       user: process.env.MAIL_USER,
       pass: process.env.MAIL_PASS,
     },
+    tls: {
+      rejectUnauthorized: false,
+    },
     connectionTimeout: 5000,
     greetingTimeout: 5000,
     socketTimeout: 10000,

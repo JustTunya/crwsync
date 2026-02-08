@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 // MODULES
@@ -21,6 +21,7 @@ import { AppService } from "src/app.service";
 // GUARDS
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { RolesGuard } from "src/common/guards/roles.guard";
+import { BullModule } from "@nestjs/bullmq";
 
 @Module({
   imports: [
@@ -29,6 +30,19 @@ import { RolesGuard } from "src/common/guards/roles.guard";
     ThrottlerModule.forRoot([
       { name: "default", ttl: 60_000, limit: 100 }
     ]),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        connection: {
+          host: config.get<string>("REDIS_HOST") || "localhost",
+          port: config.get<number>("REDIS_PORT") || 6379,
+          username: config.get<string>("REDIS_USER"),
+          password: config.get<string>("REDIS_PASS"),
+          db: config.get<number>("REDIS_DB") || 0,
+        },
+        prefix: config.get<string>("REDIS_KEY_PREFIX") || "crwsync",
+      }),
+    }),
     HealthModule, 
     PrismaModule, 
     RedisModule,
