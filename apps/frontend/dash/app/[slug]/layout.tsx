@@ -1,14 +1,14 @@
-import { NavSidebar } from "@/components/nav-sidebar";
-import { MlSidebar } from "@/components/ml-sidebar";
+import { LSidebar } from "@/components/l-sidebar";
+import { RSidebar } from "@/components/r-sidebar";
 import { WorkspaceProvider } from "@/providers/workspace.provider";
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   return (
     <WorkspaceProvider>
       <div className="flex min-h-screen w-full">
-        <NavSidebar />
+        <LSidebar />
         <main className="flex-1 min-w-0">{children}</main>
-        <MlSidebar />
+        <RSidebar />
       </div>
     </WorkspaceProvider>
   );

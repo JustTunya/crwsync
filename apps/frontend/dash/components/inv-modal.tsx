@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { InviteMemberPayload, UserType } from "@crwsync/types";
 import { Input } from "@/components/ui/input";
-import { SidebarProfile } from "@/components/ml-sidebar";
+import { SidebarProfile } from "@/components/r-sidebar";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useSearchUsers } from "@/hooks/use-search-user";
 import { inviteMember } from "@/services/workspace.service";

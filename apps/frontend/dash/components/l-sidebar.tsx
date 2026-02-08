@@ -15,7 +15,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { Input } from "@/components/ui/input";
 import { Shortcut } from "@/components/ui/shortcut";
 import { useOutclick } from "@/hooks/use-outclick";
-import { useSidebar } from "@/hooks/use-sidebar";
+import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { signout } from "@/services/auth.service";
 import { cn } from "@/lib/utils";
@@ -25,13 +25,13 @@ const fading: Transition = { duration: 0.15, ease: [0.4, 0, 0.2, 1] };
 
 type UserStatus = "online" | "offline" | "busy" | "away";
 
-export function NavSidebar() {
+export function LSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const searchRef = useRef<HTMLInputElement>(null);
 
   const { activeWorkspace } = useWorkspace();
-  const { open, toggleOpen } = useSidebar();
+  const { open, toggleOpen } = useLSidebar();
   const { socket } = useSocket();
   const user = useUser();
 
@@ -65,12 +65,12 @@ export function NavSidebar() {
   const modules = [
     { name: "Home", icon: Home03Icon, href: `/${slug}`, shortcut: ["ctrl", "1"] },
     { name: "Tasks", icon: TaskDone01Icon, href: `/${slug}/tasks`, shortcut: ["ctrl", "2"] },
-    { name: "Calendar", icon: Calendar03Icon, href: `/${slug}/calendar`, shortcut: ["ctrl", "3"] },
+    { name: "Schedule", icon: Calendar03Icon, href: `/${slug}/schedule`, shortcut: ["ctrl", "3"] },
   ];
 
   useHotkey(["ctrl", "1"], () => router.push(`/${slug}`));
   useHotkey(["ctrl", "2"], () => router.push(`/${slug}/tasks`));
-  useHotkey(["ctrl", "3"], () => router.push(`/${slug}/calendar`));
+  useHotkey(["ctrl", "3"], () => router.push(`/${slug}/schedule`));
 
   useHotkey(["ctrl", "k"], (e) => {
     e.preventDefault();
@@ -160,11 +160,9 @@ export function NavSidebar() {
         <SidebarProfile status={status} setStatus={handleStatusChange} extended={open} />
       </motion.aside>
 
-      {!open && (
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <SidebarToggle toggleOpen={toggleOpen} className="size-7 my-5 mx-3" />
-        </motion.div>
-      )}
+      <div className="flex items-center justify-center size-8 m-4 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer">
+        <HugeiconsIcon onClick={toggleOpen} icon={Menu05Icon} strokeWidth={2} className="size-5" />
+      </div>
     </>
   );
 }
@@ -321,20 +319,20 @@ export function SidebarModule({ icon, name, href, shortcut, active, extended }: 
   return (
     <Link href={href} className={cn("relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden", !extended && "justify-center")}>
       <div className="flex flex-row items-center gap-2">
-      <HugeiconsIcon icon={icon} strokeWidth={1.75} className="size-4.5 z-10" />
-      <AnimatePresence>
-        {extended && (
-          <motion.p 
-            initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: "auto" }}
-            exit={{ opacity: 0, width: 0 }}
-            transition={{ duration: 0.15, ease: "easeInOut" }}
-            className="text-foreground text-xs font-medium whitespace-nowrap z-10"
-          >
-            {name}
-          </motion.p>
-        )}
-      </AnimatePresence>
+        <HugeiconsIcon icon={icon} strokeWidth={1.75} className="size-4.5 z-10" />
+        <AnimatePresence>
+          {extended && (
+            <motion.p 
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
+              className="text-foreground text-xs font-medium whitespace-nowrap z-10"
+            >
+              {name}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
 
       {shortcut && extended && <Shortcut chars={shortcut} />}
@@ -399,8 +397,6 @@ const STATUS_META: Record<UserStatus, { label: string; color: string }> = {
 
 export function SidebarProfile({ status, setStatus, extended }: { status: UserStatus; setStatus: (status: UserStatus) => void; extended?: boolean }) {
   const user = useUser();
-  const { activeWorkspace } = useWorkspace();
-  const slug = activeWorkspace?.slug || "";
   const profRef = useRef<HTMLDivElement>(null);
 
   const [pending, start] = useTransition();
@@ -455,7 +451,7 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
               transition={{ duration: 0.15, ease: "easeInOut" }}
               className="flex flex-col"
             >
-              <p className="text-foreground text-sm whitespace-nowrap">{user?.firstname} {user?.lastname}</p>
+              <p className="text-foreground text-sm leading-tight whitespace-nowrap">{user?.firstname} {user?.lastname}</p>
               
               <div className="relative h-4 w-full overflow-hidden">
                 <motion.div
@@ -464,10 +460,10 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   className="flex flex-col"
                 >
-                  <p className="text-muted-foreground text-xs whitespace-nowrap h-4 flex items-center truncate">
+                  <p className="text-muted-foreground text-xs leading-0 whitespace-nowrap h-4 flex items-center truncate">
                     {user?.email}
                   </p>
-                  <p className="text-muted-foreground text-xs whitespace-nowrap h-4 flex items-center truncate">
+                  <p className="text-muted-foreground text-xs leading-0 whitespace-nowrap h-4 flex items-center truncate">
                     {user?.username}
                   </p>
                 </motion.div>
@@ -531,7 +527,7 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
                     <HugeiconsIcon icon={ArrowRight01Icon} className="size-5" />
                   </div>
 
-                  <MenuLink href={`/${slug}/settings`} icon={Settings02Icon} label="Settings" />
+                  <MenuLink href={`/settings`} icon={Settings02Icon} label="Settings" />
 
                   <button
                     onClick={handleSignout}

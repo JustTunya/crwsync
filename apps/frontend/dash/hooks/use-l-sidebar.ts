@@ -1,19 +1,19 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface MlSidebarState {
+interface LSidebarState {
   open: boolean;
   toggleOpen: () => void;
 }
 
-export const useMlSidebar = create<MlSidebarState>()(
+export const useLSidebar = create<LSidebarState>()(
   persist(
     (set) => ({
       open: true,
       toggleOpen: () => set((state) => ({ open: !state.open })),
     }),
     {
-      name: "ml-sidebar-state"
+      name: "l-sidebar-state"
     }
   )
 );
