@@ -38,13 +38,6 @@ export function LSidebar() {
   const [status, setStatus] = useState<UserStatus>((user?.status_preference?.toLowerCase() as UserStatus) || "online");
 
   useEffect(() => {
-    console.log("User status preference:", user?.status_preference);
-    if (user?.status_preference) {
-      setStatus(user.status_preference.toLowerCase() as UserStatus);
-    }
-  }, [user?.status_preference]);
-
-  useEffect(() => {
     if (!socket || !user) return;
 
     const handleStatusUpdate = ({ userId, status: newStatus }: { userId: string; status: string }) => {
