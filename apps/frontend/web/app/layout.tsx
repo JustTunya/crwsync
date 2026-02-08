@@ -38,7 +38,7 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${figtree.variable} font-figtree antialiased`}>
+      <body className={`${figtree.variable} font-figtree antialiased`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Background />
           <Suspense fallback={<div className="min-h-screen bg-background" />}>

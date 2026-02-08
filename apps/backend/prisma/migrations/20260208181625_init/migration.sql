@@ -7,6 +7,9 @@ CREATE TYPE "users_role_enum" AS ENUM ('member', 'admin', 'super_admin');
 -- CreateEnum
 CREATE TYPE "workspace_role_enum" AS ENUM ('owner', 'admin', 'member', 'guest');
 
+-- CreateEnum
+CREATE TYPE "user_status_enum" AS ENUM ('online', 'busy', 'away');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" UUID NOT NULL,
@@ -18,6 +21,7 @@ CREATE TABLE "users" (
     "avatar_key" TEXT,
     "role" "users_role_enum" NOT NULL DEFAULT 'member',
     "role_version" INTEGER NOT NULL DEFAULT 1,
+    "status_preference" "user_status_enum" NOT NULL DEFAULT 'online',
     "password_hash" TEXT NOT NULL,
     "last_password_change" TIMESTAMPTZ,
     "email_verified_at" TIMESTAMPTZ,

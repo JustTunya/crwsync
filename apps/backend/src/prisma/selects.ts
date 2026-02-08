@@ -16,6 +16,7 @@ export const userPublicSelect = {
   last_login: true,
   created_at: true,
   updated_at: true,
+  status_preference: true,
 } satisfies Prisma.UserSelect;
 
 export const userAuthSelect = {
