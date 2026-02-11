@@ -1,10 +1,9 @@
 import Image from "next/image";
-import { SessionUserType, WorkspaceUser } from "@crwsync/types";
 import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
   size?: number;
-  user?: SessionUserType | WorkspaceUser | null;
+  user?: { firstname: string; lastname: string; avatar_key?: string | null } | null;
   status?: string;
   className?: string;
 }

@@ -12,6 +12,8 @@ import { getWorkspaceMembers } from "@/services/workspace.service";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
 import { UserAvatar } from "@/components/user-avatar";
 import InviteMemberModal from "@/components/inv-modal";
+import { useInvites } from "@/hooks/use-invites";
+import { InviteNotification } from "@/components/notifications";
 
 import { cn } from "@/lib/utils";
 
@@ -117,7 +119,7 @@ export function RSidebar() {
       </div>
 
       <motion.aside
-        animate={{ width: open ? 240 : 0 }}
+        animate={{ width: open ? (view === "MEMBERS" ? 240 : 360) : 0 }}
         transition={spring}
         className="flex flex-col gap-4 h-screen bg-base-100 border-l border-base-200 overflow-hidden"
       >
@@ -135,11 +137,31 @@ export function RSidebar() {
 }
 
 export function SidebarNotifications() {
+  const { invites, isLoading } = useInvites();
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <span className="text-sm text-muted-foreground">Loading notifications...</span>
+      </div>
+    );
+  }
+
+  if (invites.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center">
+        <HugeiconsIcon icon={InboxIcon} className="size-12 text-muted-foreground mb-4" />
+        <p className="text-foreground font-medium">No Notifications</p>
+        <p className="text-muted-foreground text-sm">You are all caught up!</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center">
-      <HugeiconsIcon icon={InboxIcon} className="size-12 text-muted-foreground mb-4" />
-      <p className="text-foreground font-medium">No Notifications</p>
-      <p className="text-muted-foreground text-sm">You are all caught up!</p>
+    <div className="flex flex-col gap-4 p-4 w-full">
+      {invites.map((invite) => (
+        <InviteNotification key={invite.id} invite={invite} />
+      ))}
     </div>
   );
 }

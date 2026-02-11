@@ -30,9 +30,11 @@ export function useInvites() {
       });
     };
 
-    const handleInviteHandled = ({ inviteId }: { inviteId: string; }) => {
+    const handleInviteHandled = ({ inviteId, status }: { inviteId: string; status: string }) => {
       queryClient.setQueryData(["invites", user.id], (old: WorkspaceInvite[] = []) => {
-        return old.filter((invite) => invite.id !== inviteId);
+        return old.map((invite) => 
+          invite.id === inviteId ? { ...invite, status } : invite
+        );
       });
     };
 
