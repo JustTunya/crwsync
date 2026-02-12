@@ -19,14 +19,13 @@ export function InviteNotification({ invite }: InviteNotificationProps) {
 
   const handleAction = async (action: "accept" | "decline") => {
     setLoading(true);
+    
     try {
       if (action === "accept") {
         await acceptInvite(invite.workspace.id);
       } else {
         await declineInvite(invite.workspace.id);
       }
-    } catch (error) {
-      console.error(`Failed to ${action} invite:`, error);
     } finally {
       setLoading(false);
     }
