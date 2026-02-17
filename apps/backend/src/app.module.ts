@@ -13,6 +13,7 @@ import { HealthModule } from "src/health/health.module";
 import { EmailModule } from "src/email/email.module";
 import { WorkspaceModule } from "src/workspace/workspace.module";
 import { StatusModule } from "src/status/status.module";
+import { BoardModule } from "src/board/board.module";
 import { UserModule } from "src/user/user.module";
 import { AuthModule } from "src/auth/auth.module";
 // CONTROLLERS & SERVICES
@@ -27,9 +28,7 @@ import { BullModule } from "@nestjs/bullmq";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([
-      { name: "default", ttl: 60_000, limit: 100 }
-    ]),
+    ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 100 }]),
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -43,17 +42,18 @@ import { BullModule } from "@nestjs/bullmq";
         prefix: config.get<string>("REDIS_KEY_PREFIX") || "crwsync",
       }),
     }),
-    HealthModule, 
-    PrismaModule, 
+    HealthModule,
+    PrismaModule,
     RedisModule,
     UserModule,
     SessionModule,
-    AuthModule, 
+    AuthModule,
     EmailModule,
     VerificationModule,
     PasswordResetModule,
     WorkspaceModule,
     StatusModule,
+    BoardModule,
   ],
   controllers: [AppController],
   providers: [

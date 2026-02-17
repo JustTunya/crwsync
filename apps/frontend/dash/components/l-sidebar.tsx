@@ -5,17 +5,35 @@ import { useState, useRef, useTransition, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, Transition } from "framer-motion";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
-import { ArrowUp01Icon, ArrowDown01Icon, Home03Icon, TaskDone01Icon, Calendar03Icon, Search01Icon, Add01Icon, ZapIcon, Menu05Icon, ArrowRight01Icon, Settings02Icon, Logout02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import {
+  ArrowUp01Icon,
+  ArrowDown01Icon,
+  Home03Icon,
+  TaskDone01Icon,
+  Calendar03Icon,
+  Search01Icon,
+  Add01Icon,
+  ZapIcon,
+  Menu05Icon,
+  ArrowRight01Icon,
+  Settings02Icon,
+  Logout02Icon,
+  Tick02Icon,
+  DashboardSquare01Icon,
+} from "@hugeicons/core-free-icons";
+import { WorkspaceModule } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useUser } from "@/providers/user.provider";
 import { useSocket } from "@/providers/socket.provider";
 import { WorkspaceAvatar } from "@/components/workspace-avatar";
 import { ProjectAvatar } from "@/components/project-avatar";
 import { UserAvatar } from "@/components/user-avatar";
+import AddModuleModal from "@/components/add-module-modal";
 import { Input } from "@/components/ui/input";
 import { Shortcut } from "@/components/ui/shortcut";
 import { useOutclick } from "@/hooks/use-outclick";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
+import { useWorkspaceModules } from "@/hooks/use-workspace-modules";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { signout } from "@/services/auth.service";
 import { cn } from "@/lib/utils";
@@ -24,6 +42,10 @@ const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 const fading: Transition = { duration: 0.15, ease: [0.4, 0, 0.2, 1] };
 
 type UserStatus = "online" | "offline" | "busy" | "away";
+
+enum ModuleTypeEnum {
+  BOARD = "BOARD",
+}
 
 export function LSidebar() {
   const router = useRouter();
@@ -35,12 +57,20 @@ export function LSidebar() {
   const { socket } = useSocket();
   const user = useUser();
 
-  const [status, setStatus] = useState<UserStatus>((user?.status_preference?.toLowerCase() as UserStatus) || "online");
+  const [status, setStatus] = useState<UserStatus>(
+    (user?.status_preference?.toLowerCase() as UserStatus) || "online",
+  );
 
   useEffect(() => {
     if (!socket || !user) return;
 
-    const handleStatusUpdate = ({ userId, status: newStatus }: { userId: string; status: string }) => {
+    const handleStatusUpdate = ({
+      userId,
+      status: newStatus,
+    }: {
+      userId: string;
+      status: string;
+    }) => {
       if (userId === user.id) {
         setStatus(newStatus.toLowerCase() as UserStatus);
       }
@@ -61,11 +91,28 @@ export function LSidebar() {
   };
 
   const slug = activeWorkspace?.slug || "";
+  const [addModuleOpen, setAddModuleOpen] = useState(false);
+  const { data: wsModules } = useWorkspaceModules(activeWorkspace?.id);
 
   const modules = [
-    { name: "Home", icon: Home03Icon, href: `/${slug}`, shortcut: ["ctrl", "1"] },
-    { name: "Tasks", icon: TaskDone01Icon, href: `/${slug}/tasks`, shortcut: ["ctrl", "2"] },
-    { name: "Schedule", icon: Calendar03Icon, href: `/${slug}/schedule`, shortcut: ["ctrl", "3"] },
+    {
+      name: "Home",
+      icon: Home03Icon,
+      href: `/${slug}`,
+      shortcut: ["ctrl", "1"],
+    },
+    {
+      name: "Tasks",
+      icon: TaskDone01Icon,
+      href: `/${slug}/tasks`,
+      shortcut: ["ctrl", "2"],
+    },
+    {
+      name: "Schedule",
+      icon: Calendar03Icon,
+      href: `/${slug}/schedule`,
+      shortcut: ["ctrl", "3"],
+    },
   ];
 
   useHotkey(["ctrl", "1"], () => router.push(`/${slug}`));
@@ -75,9 +122,12 @@ export function LSidebar() {
   useHotkey(["ctrl", "k"], (e) => {
     e.preventDefault();
     if (!open) toggleOpen();
-    setTimeout(() => {
-      searchRef.current?.focus();
-    }, open ? 0 : 300);
+    setTimeout(
+      () => {
+        searchRef.current?.focus();
+      },
+      open ? 0 : 300,
+    );
   });
 
   return (
@@ -102,16 +152,22 @@ export function LSidebar() {
             transition={fading}
             className="w-full"
           >
-            <Input 
+            <Input
               ref={searchRef}
               placeholder="Search..."
-              className="bg-base-200" 
-              prefix={<HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} className="size-4 text-placeholder" />}
+              className="bg-base-200"
+              prefix={
+                <HugeiconsIcon
+                  icon={Search01Icon}
+                  strokeWidth={1.75}
+                  className="size-4 text-placeholder"
+                />
+              }
               suffix={<Shortcut chars={["ctrl", "K"]} />}
             />
           </motion.div>
         ) : (
-          <motion.div 
+          <motion.div
             key="search-icon"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -119,14 +175,18 @@ export function LSidebar() {
             transition={{ duration: 0.15 }}
             className="flex justify-center"
           >
-            <HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} className="size-4.5 text-foreground my-2" />
+            <HugeiconsIcon
+              icon={Search01Icon}
+              strokeWidth={1.75}
+              className="size-4.5 text-foreground my-2"
+            />
           </motion.div>
         )}
 
         {/* MODULES */}
         <div className="flex flex-col">
           {modules.map((module) => (
-            <SidebarModule 
+            <SidebarModule
               key={module.name}
               icon={module.icon}
               name={module.name}
@@ -139,16 +199,38 @@ export function LSidebar() {
         </div>
 
         {/* DIVIDER */}
-        <div className="h-px w-full bg-base-200 rounded-full"/>
+        <div className="h-px w-full bg-base-200 rounded-full" />
 
         {/* SHARED */}
         <div className="flex flex-col">
-          <SectionHeader label="Shared" extended={open} />
-          <SidebarNoModule message="No shared modules yet." extended={open} />
+          <SectionHeader
+            label="Shared"
+            extended={open}
+            onAdd={() => setAddModuleOpen(true)}
+          />
+          {wsModules && wsModules.length > 0 ? (
+            wsModules.map((mod) => (
+              <SidebarModule
+                key={mod.id}
+                icon={getModuleIcon(mod.type)}
+                name={mod.name}
+                href={getModuleHref(slug, mod)}
+                active={isModuleActive(pathname, slug, mod)}
+                extended={open}
+              />
+            ))
+          ) : (
+            <SidebarNoModule message="No shared modules yet." extended={open} />
+          )}
         </div>
 
+        <AddModuleModal
+          isOpen={addModuleOpen}
+          onClose={() => setAddModuleOpen(false)}
+        />
+
         {/* DIVIDER */}
-        <div className="h-px w-full bg-base-200 rounded-full"/>
+        <div className="h-px w-full bg-base-200 rounded-full" />
 
         {/* PROJECTS */}
         <div className="flex flex-col">
@@ -157,45 +239,110 @@ export function LSidebar() {
         </div>
 
         {/* PROFILE */}
-        <SidebarProfile status={status} setStatus={handleStatusChange} extended={open} />
+        <SidebarProfile
+          status={status}
+          setStatus={handleStatusChange}
+          extended={open}
+        />
       </motion.aside>
 
       <div className="flex items-center justify-center size-8 m-4 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer">
-        <HugeiconsIcon onClick={toggleOpen} icon={Menu05Icon} strokeWidth={2} className="size-5" />
+        <HugeiconsIcon
+          onClick={toggleOpen}
+          icon={Menu05Icon}
+          strokeWidth={2}
+          className="size-5"
+        />
       </div>
     </>
   );
 }
 
-export function SectionHeader({ label, extended }: { label: string; extended: boolean }) {
+function getModuleIcon(type: ModuleTypeEnum): HugeiconsIconProps["icon"] {
+  switch (type) {
+    case ModuleTypeEnum.BOARD:
+      return DashboardSquare01Icon;
+    default:
+      return DashboardSquare01Icon;
+  }
+}
+
+function getModuleHref(slug: string, mod: WorkspaceModule): string {
+  switch (mod.type) {
+    case ModuleTypeEnum.BOARD:
+      return `/${slug}/board/${mod.reference_id}`;
+    default:
+      return `/${slug}`;
+  }
+}
+
+function isModuleActive(
+  pathname: string,
+  slug: string,
+  mod: WorkspaceModule,
+): boolean {
+  switch (mod.type) {
+    case ModuleTypeEnum.BOARD:
+      return pathname === `/${slug}/board/${mod.reference_id}`;
+    default:
+      return false;
+  }
+}
+
+export function SectionHeader({
+  label,
+  extended,
+  onAdd,
+}: {
+  label: string;
+  extended: boolean;
+  onAdd?: () => void;
+}) {
   return (
     <AnimatePresence>
       {extended && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, height: 0, marginBottom: 0 }}
           animate={{ opacity: 1, height: "auto", marginBottom: "0.5rem" }}
           exit={{ opacity: 0, height: 0, marginBottom: 0 }}
           className="flex items-center justify-between overflow-hidden px-2"
         >
           <p className="text-xs text-muted-foreground">{label}</p>
-          <HugeiconsIcon icon={Add01Icon} className="size-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+          <HugeiconsIcon
+            icon={Add01Icon}
+            className="size-4 text-muted-foreground hover:text-foreground cursor-pointer"
+            onClick={onAdd}
+          />
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
 
-export function SidebarToggle({ toggleOpen, className }: { toggleOpen: () => void; className?: string }) {
+export function SidebarToggle({
+  toggleOpen,
+  className,
+}: {
+  toggleOpen: () => void;
+  className?: string;
+}) {
   return (
-    <div className={cn("p-1 rounded-full hover:bg-base-200 transition-colors cursor-pointer", className)} onClick={toggleOpen}>
-      <HugeiconsIcon icon={Menu05Icon} className="size-5 text-foreground"/>
+    <div
+      className={cn(
+        "p-1 rounded-full hover:bg-base-200 transition-colors cursor-pointer",
+        className,
+      )}
+      onClick={toggleOpen}
+    >
+      <HugeiconsIcon icon={Menu05Icon} className="size-5 text-foreground" />
     </div>
   );
 }
 
 export function SidebarWorkspace({ extended }: { extended?: boolean }) {
-  const { activeWorkspace, workspaces, switchWorkspace, loading } = useWorkspace();
-  
+  const { activeWorkspace, workspaces, switchWorkspace, loading } =
+    useWorkspace();
+
   const [openWorkspaces, setOpenWorkspaces] = useState(false);
   const wsRef = useRef<HTMLDivElement>(null);
 
@@ -215,8 +362,8 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
   }
 
   return (
-    <div 
-      ref={wsRef} 
+    <div
+      ref={wsRef}
       className={cn("relative flex-1", !extended && "flex justify-center")}
     >
       {activeWorkspace ? (
@@ -224,18 +371,31 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
           onClick={toggleMenu}
           className={cn(
             "flex flex-row items-center gap-3 h-10 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
-            !extended && "justify-center"
+            !extended && "justify-center",
           )}
         >
-          <WorkspaceAvatar avatar_key={activeWorkspace.logo_key || ""} name={activeWorkspace.name} />
+          <WorkspaceAvatar
+            avatar_key={activeWorkspace.logo_key || ""}
+            name={activeWorkspace.name}
+          />
 
           {extended && (
             <div className="flex items-center flex-1 overflow-hidden">
-              <p className="text-foreground text-sm font-semibold truncate">{activeWorkspace.name}</p>
+              <p className="text-foreground text-sm font-semibold truncate">
+                {activeWorkspace.name}
+              </p>
 
               <div className="ml-auto flex flex-col -space-y-1">
-                <HugeiconsIcon icon={ArrowUp01Icon} strokeWidth={2} className="size-3.5" />
-                <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-3.5" />
+                <HugeiconsIcon
+                  icon={ArrowUp01Icon}
+                  strokeWidth={2}
+                  className="size-3.5"
+                />
+                <HugeiconsIcon
+                  icon={ArrowDown01Icon}
+                  strokeWidth={2}
+                  className="size-3.5"
+                />
               </div>
             </div>
           )}
@@ -245,7 +405,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
           onClick={toggleMenu}
           className={cn(
             "flex flex-row items-center gap-3 h-10 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
-            !extended && "justify-center"
+            !extended && "justify-center",
           )}
         >
           <div className="size-6 rounded-sm border-[1.5px] border-dashed border-base-300" />
@@ -255,8 +415,16 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
               <p className="text-base-300 text-sm truncate">No Workspace</p>
 
               <div className="ml-auto flex flex-col -space-y-1">
-                <HugeiconsIcon icon={ArrowUp01Icon} strokeWidth={2} className="size-3.5" />
-                <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-3.5" />
+                <HugeiconsIcon
+                  icon={ArrowUp01Icon}
+                  strokeWidth={2}
+                  className="size-3.5"
+                />
+                <HugeiconsIcon
+                  icon={ArrowDown01Icon}
+                  strokeWidth={2}
+                  className="size-3.5"
+                />
               </div>
             </div>
           )}
@@ -272,8 +440,10 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
             transition={spring}
             className="absolute top-12 left-0 z-50 flex flex-col w-full p-2 bg-base-100 border border-base-200 rounded-xl shadow-xl"
           >
-            <p className="px-2 py-1.5 text-xs text-muted-foreground">Workspaces</p>
-            
+            <p className="px-2 py-1.5 text-xs text-muted-foreground">
+              Workspaces
+            </p>
+
             <div className="flex flex-col gap-1 mb-2 max-h-48 overflow-y-auto">
               {workspaces.map((member) => {
                 const ws = member.workspace;
@@ -281,20 +451,28 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
                 if (!ws) return null;
 
                 return (
-                  <div 
+                  <div
                     key={ws.id}
                     onClick={() => handleSwitch(ws.slug)}
                     className={cn(
                       "flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
-                      isActive && "bg-base-200"
+                      isActive && "bg-base-200",
                     )}
                   >
                     <div className="flex items-center gap-2 overflow-hidden">
-                      <WorkspaceAvatar avatar_key={ws.logo_key || ""} name={ws.name} className="size-5 text-[10px]" />
+                      <WorkspaceAvatar
+                        avatar_key={ws.logo_key || ""}
+                        name={ws.name}
+                        className="size-5 text-[10px]"
+                      />
                       <p className="text-xs font-medium truncate">{ws.name}</p>
                     </div>
                     {isActive && (
-                      <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-4.5 text-primary" />
+                      <HugeiconsIcon
+                        icon={Tick02Icon}
+                        strokeWidth={2}
+                        className="size-4.5 text-primary"
+                      />
                     )}
                   </div>
                 );
@@ -303,11 +481,18 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
 
             <div className="h-px w-full bg-base-200 my-2" />
 
-            <Link href="/create-workspace" className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-200 transition-colors text-left cursor-pointer group">
-                <HugeiconsIcon icon={Add01Icon} className="size-4 text-muted-foreground group-hover:text-foreground" />
-                <p className="text-sm font-light text-muted-foreground group-hover:text-foreground">Create Workspace</p>
+            <Link
+              href="/create-workspace"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-200 transition-colors text-left cursor-pointer group"
+            >
+              <HugeiconsIcon
+                icon={Add01Icon}
+                className="size-4 text-muted-foreground group-hover:text-foreground"
+              />
+              <p className="text-sm font-light text-muted-foreground group-hover:text-foreground">
+                Create Workspace
+              </p>
             </Link>
-
           </motion.div>
         )}
       </AnimatePresence>
@@ -315,14 +500,38 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
   );
 }
 
-export function SidebarModule({ icon, name, href, shortcut, active, extended }: { icon: HugeiconsIconProps["icon"]; name: string; href: string; shortcut?: string[]; active?: boolean; extended?: boolean }) {
+export function SidebarModule({
+  icon,
+  name,
+  href,
+  shortcut,
+  active,
+  extended,
+}: {
+  icon: HugeiconsIconProps["icon"];
+  name: string;
+  href: string;
+  shortcut?: string[];
+  active?: boolean;
+  extended?: boolean;
+}) {
   return (
-    <Link href={href} className={cn("relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden", !extended && "justify-center")}>
+    <Link
+      href={href}
+      className={cn(
+        "relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden",
+        !extended && "justify-center",
+      )}
+    >
       <div className="flex flex-row items-center gap-2">
-        <HugeiconsIcon icon={icon} strokeWidth={1.75} className="size-4.5 z-10" />
+        <HugeiconsIcon
+          icon={icon}
+          strokeWidth={1.75}
+          className="size-4.5 z-10"
+        />
         <AnimatePresence>
           {extended && (
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, width: 0 }}
               animate={{ opacity: 1, width: "auto" }}
               exit={{ opacity: 0, width: 0 }}
@@ -350,13 +559,19 @@ export function SidebarModule({ icon, name, href, shortcut, active, extended }: 
     </Link>
   );
 }
-  
-export function SidebarNoModule({ message, extended }: { message?: string; extended?: boolean }) {
+
+export function SidebarNoModule({
+  message,
+  extended,
+}: {
+  message?: string;
+  extended?: boolean;
+}) {
   return (
-    <motion.div 
-      animate={{ 
+    <motion.div
+      animate={{
         width: extended ? "100%" : "0",
-        padding: extended ? "4px" : "8px"
+        padding: extended ? "4px" : "8px",
       }}
       transition={{ duration: 0.15, ease: "easeInOut" }}
       className="flex items-center justify-center rounded-full border-[1.5px] border-dashed border-base-300 mx-auto overflow-hidden"
@@ -377,25 +592,48 @@ export function SidebarNoModule({ message, extended }: { message?: string; exten
   );
 }
 
-export function SidebarProject({ icon, name, extended }: { icon: HugeiconsIconProps["icon"]; name?: string; extended?: boolean }) {
+export function SidebarProject({
+  icon,
+  name,
+  extended,
+}: {
+  icon: HugeiconsIconProps["icon"];
+  name?: string;
+  extended?: boolean;
+}) {
   return (
-    <div className={cn("flex flex-row items-center gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors", !extended && "justify-center")}>
+    <div
+      className={cn(
+        "flex flex-row items-center gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
+        !extended && "justify-center",
+      )}
+    >
       <ProjectAvatar icon={icon} />
-        {extended && (
-          <p className="text-foreground text-xs font-medium whitespace-nowrap">{name}</p>
-        )}
+      {extended && (
+        <p className="text-foreground text-xs font-medium whitespace-nowrap">
+          {name}
+        </p>
+      )}
     </div>
   );
 }
 
 const STATUS_META: Record<UserStatus, { label: string; color: string }> = {
   online: { label: "Online", color: "bg-green-500" },
-  offline:{ label: "Offline", color: "bg-gray-400" },
-  busy:   { label: "Busy",   color: "bg-red-500" },
-  away:   { label: "Away",   color: "bg-yellow-500" },
+  offline: { label: "Offline", color: "bg-gray-400" },
+  busy: { label: "Busy", color: "bg-red-500" },
+  away: { label: "Away", color: "bg-yellow-500" },
 };
 
-export function SidebarProfile({ status, setStatus, extended }: { status: UserStatus; setStatus: (status: UserStatus) => void; extended?: boolean }) {
+export function SidebarProfile({
+  status,
+  setStatus,
+  extended,
+}: {
+  status: UserStatus;
+  setStatus: (status: UserStatus) => void;
+  extended?: boolean;
+}) {
   const user = useUser();
   const profRef = useRef<HTMLDivElement>(null);
 
@@ -404,10 +642,14 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
   const [editStatus, setEditStatus] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  useOutclick(profRef, () => {
-    setOpenMenu(false);
-    setEditStatus(false);
-  }, openMenu);
+  useOutclick(
+    profRef,
+    () => {
+      setOpenMenu(false);
+      setEditStatus(false);
+    },
+    openMenu,
+  );
 
   const handleSignout = () => {
     if (pending) return;
@@ -424,7 +666,7 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
   };
 
   return (
-    <div 
+    <div
       ref={profRef}
       onClick={handleMenuToggle}
       onMouseEnter={() => setIsHovered(true)}
@@ -433,9 +675,9 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
         "mt-auto cursor-pointer flex flex-col items-center",
         extended && [
           "p-2 rounded-lg bg-base-200 shadow-md",
-          !openMenu && "hover:bg-base-300/75 transition-colors"
+          !openMenu && "hover:bg-base-300/75 transition-colors",
         ],
-        !extended && "mb-3"
+        !extended && "mb-3",
       )}
     >
       <div className="px-2 flex-nowrap flex flex-row items-center gap-3 w-full">
@@ -445,14 +687,16 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
           {extended && (
             <motion.div
               key={"user-info"}
-              initial={{ opacity: 0, width: 0 }} 
-              animate={{ opacity: 1, width: "auto" }} 
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.15, ease: "easeInOut" }}
               className="flex flex-col"
             >
-              <p className="text-foreground text-sm leading-tight whitespace-nowrap">{user?.firstname} {user?.lastname}</p>
-              
+              <p className="text-foreground text-sm leading-tight whitespace-nowrap">
+                {user?.firstname} {user?.lastname}
+              </p>
+
               <div className="relative h-4 w-full overflow-hidden">
                 <motion.div
                   initial={{ y: 0 }}
@@ -474,12 +718,20 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
 
         {extended && (
           <div className="ml-auto flex flex-col -space-y-1">
-            <HugeiconsIcon icon={ArrowUp01Icon} strokeWidth={2} className="size-3.5" />
-            <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-3.5" />
+            <HugeiconsIcon
+              icon={ArrowUp01Icon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
+            <HugeiconsIcon
+              icon={ArrowDown01Icon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
           </div>
         )}
       </div>
-      
+
       <AnimatePresence>
         {extended && openMenu && (
           <motion.div
@@ -503,11 +755,15 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
                   className="flex flex-col"
                 >
                   {["online", "busy", "away"].map((s) => (
-                    <StatusItem 
+                    <StatusItem
                       key={s}
                       label={s}
                       status={s as UserStatus}
-                      onClick={() => { setStatus(s as UserStatus); setEditStatus(false); }} />
+                      onClick={() => {
+                        setStatus(s as UserStatus);
+                        setEditStatus(false);
+                      }}
+                    />
                   ))}
                 </motion.div>
               ) : (
@@ -519,15 +775,19 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
                   transition={{ duration: 0.2 }}
                   className="flex flex-col"
                 >
-                  <div 
-                    onClick={() => setEditStatus(true)} 
+                  <div
+                    onClick={() => setEditStatus(true)}
                     className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors cursor-pointer"
                   >
                     <StatusItem label={status} status={status} asContainer />
                     <HugeiconsIcon icon={ArrowRight01Icon} className="size-5" />
                   </div>
 
-                  <MenuLink href={`/settings`} icon={Settings02Icon} label="Settings" />
+                  <MenuLink
+                    href={`/settings`}
+                    icon={Settings02Icon}
+                    label="Settings"
+                  />
 
                   <button
                     onClick={handleSignout}
@@ -535,7 +795,9 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
                     className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors disabled:opacity-60 disabled:pointer-events-none"
                   >
                     <HugeiconsIcon icon={Logout02Icon} className="size-4" />
-                    <p className="text-sm font-light">{pending ? "Signing out..." : "Sign Out"}</p>
+                    <p className="text-sm font-light">
+                      {pending ? "Signing out..." : "Sign Out"}
+                    </p>
                   </button>
                 </motion.div>
               )}
@@ -547,10 +809,22 @@ export function SidebarProfile({ status, setStatus, extended }: { status: UserSt
   );
 }
 
-export function StatusItem({ label, status, onClick, asContainer }: { label: string; status: UserStatus; onClick?: () => void; asContainer?: boolean }) {
+export function StatusItem({
+  label,
+  status,
+  onClick,
+  asContainer,
+}: {
+  label: string;
+  status: UserStatus;
+  onClick?: () => void;
+  asContainer?: boolean;
+}) {
   const content = (
     <div className="flex items-center gap-2">
-      <div className={cn("size-3 mx-0.5 rounded-full", STATUS_META[status].color)} />
+      <div
+        className={cn("size-3 mx-0.5 rounded-full", STATUS_META[status].color)}
+      />
       <p className="text-sm font-light capitalize">{label}</p>
     </div>
   );
@@ -558,15 +832,29 @@ export function StatusItem({ label, status, onClick, asContainer }: { label: str
   if (asContainer) return content;
 
   return (
-    <div onClick={onClick} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors cursor-pointer">
+    <div
+      onClick={onClick}
+      className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors cursor-pointer"
+    >
       {content}
     </div>
   );
 }
 
-export function MenuLink({ href, icon, label }: { href: string; icon: HugeiconsIconProps["icon"]; label: string }) {
+export function MenuLink({
+  href,
+  icon,
+  label,
+}: {
+  href: string;
+  icon: HugeiconsIconProps["icon"];
+  label: string;
+}) {
   return (
-    <Link href={href} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors">
+    <Link
+      href={href}
+      className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors"
+    >
       <HugeiconsIcon icon={icon} strokeWidth={2} className="size-4" />
       <p className="text-sm font-light">{label}</p>
     </Link>

@@ -5,3 +5,4 @@ export * from "./mail-verification";
 export * from "./password-reset";
 export * from "./session";
 export * from "./workspace";
+export * from "./board";

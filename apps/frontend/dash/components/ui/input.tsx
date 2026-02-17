@@ -1,32 +1,32 @@
-import * as React from "react"
+import { ReactNode, ComponentProps, forwardRef } from "react";
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ViewIcon, ViewOffSlashIcon, CheckmarkCircle02Icon, CancelCircleIcon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 
-interface InputProps extends Omit<React.ComponentProps<"input">, "prefix" | "suffix"> {
+interface InputProps extends Omit<ComponentProps<"input">, "prefix" | "suffix"> {
   className?: string;
   visible?: boolean;
   setVisible?: () => void;
   validation?: boolean;
   error?: boolean;
-  prefix?: React.ReactNode;
-  suffix?: React.ReactNode;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
 }
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, visible, setVisible, validation, error, prefix, suffix, ...props }, ref) => {
+const Input = forwardRef<HTMLInputElement, InputProps>(({ className, type, visible, setVisible, validation, error, prefix, suffix, ...props }, ref) => {
   const hasVisibilityIcon = type === "password" && visible !== undefined && setVisible;
   const hasValidationIcon = validation !== undefined;
 
   const iconSize = 18;
-  const iconWidth =1.5;
+  const iconWidth = 1.5;
 
   return (
     <div className={cn(
-      "w-full flex bg-input border-[1.5px] shadow-md/5 rounded-lg transition-all", 
+      "w-full flex bg-input dark:bg-base-200 border-[1.5px] shadow-md/5 rounded-lg transition-all", 
       "focus-within:ring-1 focus-within:ring-primary",
       error ? "border-error" : "border-base-300",
       className
-      )}>
+    )}>
       {prefix && <div className="h-8 flex justify-center items-center pl-2">{prefix}</div>}
       <input
         ref={ref}

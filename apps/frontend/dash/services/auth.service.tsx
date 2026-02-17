@@ -233,7 +233,6 @@ export async function getEmailVerificationStatus(token: string): Promise<{ statu
 export async function bootstrapSession(): Promise<SessionUserType | undefined> {
   try {
     const resp = await api.post("/auth/session");
-    console.log("Bootstrap session response:", resp.data);
     return resp.data as SessionUserType;
   } catch (err) {
     if (isAxiosError(err) && err.response?.status === 401) return undefined;
@@ -246,7 +245,6 @@ export async function getMyself(): Promise<SessionUserType | undefined> {
     const resp = await api.get("/auth/me");
     return resp.data as SessionUserType;
   } catch (err) {
-    console.log(err);
     if (isAxiosError(err) && err.response?.status === 401) return undefined;
     throw err;
   }

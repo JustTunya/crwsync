@@ -33,6 +33,22 @@ enum UserStatus {
   @@map("user_status_enum")
 }
 
+enum TaskPriorityEnum {
+  NONE   @map("none")
+  LOW    @map("low")
+  MEDIUM @map("medium")
+  HIGH   @map("high")
+  URGENT @map("urgent")
+
+  @@map("task_priority_enum")
+}
+
+enum ModuleTypeEnum {
+  BOARD @map("board")
+
+  @@map("module_type_enum")
+}
+
 model User {
   id                   String     @id @default(uuid()) @db.Uuid
   email                String     @unique(map: "idx_user_email") @db.Citext
@@ -58,6 +74,9 @@ model User {
   ws_memberships      WorkspaceMember[]
   ws_sent_invites     WorkspaceInvite[] @relation("InvCreator")
   ws_received_invites WorkspaceInvite[] @relation("InvitedUser")
+  boards_created      Board[]
+  tasks_assigned      Task[]            @relation("TaskAssignee")
+  tasks_created       Task[]            @relation("TaskCreator")
 
   @@map("users")
 }
@@ -118,6 +137,8 @@ model Workspace {
 
   members     WorkspaceMember[]
   invites     WorkspaceInvite[]
+  boards      Board[]
+  modules     WorkspaceModule[]
 
   @@unique([slug], map: "idx_workspace_slug_unique")
   @@index([slug], map: "idx_workspace_slug_index")
@@ -157,4 +178,77 @@ model WorkspaceInvite {
   @@index([creator_id], map: "idx_workspace_invite_creator_id")
   @@index([workspace_id], map: "idx_workspace_invite_workspace_id")
   @@map("workspace_invites")
+}
+
+model Board {
+  id           String    @id @default(uuid()) @db.Uuid
+  workspace_id String    @db.Uuid
+  name         String    @db.Text
+  description  String?   @db.Text
+  created_by   String    @db.Uuid
+  created_at   DateTime  @default(now()) @db.Timestamptz
+  updated_at   DateTime  @updatedAt @db.Timestamptz
+
+  workspace    Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  creator      User      @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  columns      BoardColumn[]
+
+  @@index([workspace_id], map: "idx_board_workspace_id")
+  @@map("boards")
+}
+
+model BoardColumn {
+  id         String   @id @default(uuid()) @db.Uuid
+  board_id   String   @db.Uuid
+  name       String   @db.Text
+  position   Int      @default(0)
+  color      String?  @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  board      Board    @relation(fields: [board_id], references: [id], onDelete: Cascade)
+  tasks      Task[]
+
+  @@index([board_id], map: "idx_board_column_board_id")
+  @@map("board_columns")
+}
+
+model Task {
+  id          String           @id @default(uuid()) @db.Uuid
+  column_id   String           @db.Uuid
+  title       String           @db.Text
+  description String?          @db.Text
+  priority    TaskPriorityEnum @default(NONE)
+  labels      String[]         @default([])
+  tags        String[]         @default([])
+  assignee_id String?          @db.Uuid
+  due_date    DateTime?        @db.Timestamptz
+  position    Int              @default(0)
+  created_by  String           @db.Uuid
+  created_at  DateTime         @default(now()) @db.Timestamptz
+  updated_at  DateTime         @updatedAt @db.Timestamptz
+
+  column      BoardColumn      @relation(fields: [column_id], references: [id], onDelete: Cascade)
+  assignee    User?            @relation("TaskAssignee", fields: [assignee_id], references: [id], onDelete: SetNull)
+  creator     User             @relation("TaskCreator", fields: [created_by], references: [id], onDelete: Cascade)
+
+  @@index([column_id], map: "idx_task_column_id")
+  @@index([assignee_id], map: "idx_task_assignee_id")
+  @@map("tasks")
+}
+
+model WorkspaceModule {
+  id           String         @id @default(uuid()) @db.Uuid
+  workspace_id String         @db.Uuid
+  type         ModuleTypeEnum
+  reference_id String         @db.Uuid
+  name         String         @db.Text
+  position     Int            @default(0)
+  created_at   DateTime       @default(now()) @db.Timestamptz
+
+  workspace    Workspace      @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+
+  @@unique([workspace_id, reference_id], map: "idx_workspace_module_unique")
+  @@index([workspace_id], map: "idx_workspace_module_workspace_id")
+  @@map("workspace_modules")
 }
