@@ -3,13 +3,27 @@
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreateWorkspacePayload, UpdateWorkspacePayload } from "@crwsync/types";
-import { getWorkspaces, getWorkspace, createWorkspace, updateWorkspace } from "@/services/workspace.service";
+import { getWorkspaces, getWorkspace, createWorkspace, updateWorkspace, getWorkspaceMembers } from "@/services/workspace.service";
 
 export const workspaceKeys = {
   all: ["workspaces"] as const,
   list: () => [...workspaceKeys.all, "list"] as const,
   detail: (id: string) => [...workspaceKeys.all, "detail", id] as const,
+  members: (id: string) => [...workspaceKeys.all, "members", id] as const,
 };
+
+export function useWorkspaceMembers(workspaceId: string) {
+  return useQuery({
+    queryKey: workspaceKeys.members(workspaceId),
+    queryFn: async () => {
+      const { success, data } = await getWorkspaceMembers(workspaceId);
+      if (!success || !data) throw new Error("Failed to fetch workspace members");
+      return data;
+    },
+    enabled: !!workspaceId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
 
 export function useWorkspaces() {
   return useQuery({

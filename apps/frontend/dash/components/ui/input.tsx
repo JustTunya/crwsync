@@ -22,7 +22,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ className, type, visib
 
   return (
     <div className={cn(
-      "w-full flex bg-input dark:bg-base-200 border-[1.5px] shadow-md/5 rounded-lg transition-all", 
+      "w-full flex bg-base-200 border-[1.5px] shadow-md/5 rounded-lg transition-all", 
       "focus-within:ring-1 focus-within:ring-primary",
       error ? "border-error" : "border-base-300",
       className

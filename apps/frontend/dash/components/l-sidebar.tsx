@@ -9,7 +9,7 @@ import {
   ArrowUp01Icon,
   ArrowDown01Icon,
   Home03Icon,
-  TaskDone01Icon,
+  Task01Icon,
   Calendar03Icon,
   Search01Icon,
   Add01Icon,
@@ -103,7 +103,7 @@ export function LSidebar() {
     },
     {
       name: "Tasks",
-      icon: TaskDone01Icon,
+      icon: Task01Icon,
       href: `/${slug}/tasks`,
       shortcut: ["ctrl", "2"],
     },

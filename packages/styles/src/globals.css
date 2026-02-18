@@ -52,6 +52,14 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-label-red: var(--label-red);
+  --color-label-orange: var(--label-orange);
+  --color-label-yellow: var(--label-yellow);
+  --color-label-green: var(--label-green);
+  --color-label-teal: var(--label-teal);
+  --color-label-blue: var(--label-blue);
+  --color-label-purple: var(--label-purple);
+  --color-label-pink: var(--label-pink);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -106,6 +114,15 @@
   --warning-foreground:         oklch(0.98 0.02 75);
   --error:                      oklch(0.72 0.18 25);
   --error-foreground:           oklch(0.98 0.02 25);
+  /* 8-COLOR LABEL PALETTE */
+  --label-red:    oklch(0.62 0.19 25);
+  --label-orange: oklch(0.68 0.18 50);
+  --label-yellow: oklch(0.75 0.16 95);
+  --label-green:  oklch(0.65 0.16 145);
+  --label-teal:   oklch(0.65 0.14 195);
+  --label-blue:   oklch(0.60 0.17 250);
+  --label-purple: oklch(0.60 0.18 300);
+  --label-pink:   oklch(0.62 0.18 345);
 }
 
 .dark {
@@ -158,6 +175,15 @@
   --warning-foreground:         oklch(0.15 0.02 75);
   --error:                      oklch(0.60 0.15 25);
   --error-foreground:           oklch(1.00 0.00 0);
+  /* 8-COLOR LABEL PALETTE */
+  --label-red:    oklch(0.68 0.16 25);
+  --label-orange: oklch(0.72 0.15 50);
+  --label-yellow: oklch(0.80 0.14 95);
+  --label-green:  oklch(0.72 0.14 145);
+  --label-teal:   oklch(0.72 0.12 195);
+  --label-blue:   oklch(0.70 0.14 250);
+  --label-purple: oklch(0.70 0.15 300);
+  --label-pink:   oklch(0.70 0.15 345);
 }
 
 @layer base {
@@ -166,5 +192,9 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  .tiptap p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply text-muted-foreground pointer-events-none float-left h-0;
   }
 }
