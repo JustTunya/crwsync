@@ -36,7 +36,7 @@ const PRIORITY_STYLES: Record<string, string> = {
   NONE: "text-muted-foreground bg-muted-foreground/10 border-muted-foreground/75",
   LOW: "text-info bg-info/10 border-info/75",
   MEDIUM: "text-warning bg-warning/10 border-warning/75",
-  HIGH: "text-error bg-error/10 border-error/75",
+  HIGH: "text-alert bg-alert/10 border-alert/75",
   URGENT: "text-error bg-error/10 border-error/75",
 };
 
@@ -49,10 +49,10 @@ const DEADLINE_STYLES = (date: string): string => {
     return "text-error bg-error/10 border-error/75";
   }
   if (diff < 24 * 60 * 60 * 1000) { // TODAY
-    return "text-warning bg-warning/10 border-warning/75";
+    return "text-alert bg-alert/10 border-alert/75";
   }
   if (diff < 2 * 24 * 60 * 60 * 1000) { // TOMORROW
-    return "text-success bg-success/10 border-success/75";
+    return "text-warning bg-warning/10 border-warning/75";
   }
   if (diff < 7 * 24 * 60 * 60 * 1000) { // THIS WEEK
     return "text-info bg-info/10 border-info/75";
@@ -273,7 +273,9 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                         "flex items-center justify-center size-5 mx-auto rounded-full border border-base-300 hover:scale-110 transition-transform cursor-pointer",
                         { "ring-2 ring-primary ring-offset-1 ring-offset-base-100": !column.color },
                       )}
-                    />
+                    >
+                      <div className="w-full h-px bg-base-300 -rotate-45" />
+                    </button>
                   </div>
                 </div>
 

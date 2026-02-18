@@ -2,32 +2,14 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import {
-  DndContext,
-  DragOverlay,
-  closestCorners,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragStartEvent,
-  type DragEndEvent,
-} from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent } from "@dnd-kit/core";
 import type { Task, BoardColumn } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
-import {
-  useBoard,
-  useCreateColumn,
-  useCreateTask,
-  useMoveTask,
-} from "@/hooks/use-boards";
-import {
-  KanbanCol,
-  KanbanTaskOverlay,
-  TaskDetailModal,
-} from "@/components/kanban";
+import { KanbanCol, KanbanTaskOverlay, TaskDetailModal } from "@/components/kanban";
+import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/use-boards";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -157,8 +139,15 @@ export default function BoardPage() {
 
   return (
     <div className="size-full flex flex-col">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-base-200">
-        <h1 className="text-lg font-semibold">{board.name}</h1>
+      <div className="flex items-center justify-between pl-16 pr-24 py-4.5 border-b border-base-200">
+        <h1 className="text-lg font-semibold leading-none">{board.name}</h1>
+        <button
+          onClick={() => setAddingColumn(true)}
+          className="flex items-center gap-1 bg-foreground text-background px-2 py-1 rounded-md text-sm font-semibold cursor-pointer"
+        >
+          <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
+          Add Column
+        </button>
       </div>
       <div className="flex-1 overflow-x-auto p-6">
         <DndContext
@@ -191,8 +180,8 @@ export default function BoardPage() {
                 />
               ))}
 
-              {addingColumn ? (
-                <div className="flex flex-col w-72 shrink-0 bg-base-200/50 rounded-xl p-3">
+              {addingColumn && (
+                <div className="flex flex-col shrink-0 w-72 bg-base-200/50 rounded-xl p-3 border-[1.5px] border-primary ring-3 ring-primary/50">
                   <input
                     ref={columnInputRef}
                     type="text"
@@ -215,19 +204,6 @@ export default function BoardPage() {
                     className="text-sm font-medium bg-transparent outline-none placeholder:text-muted-foreground"
                   />
                 </div>
-              ) : (
-                <button
-                  onClick={() => setAddingColumn(true)}
-                  className="flex items-center gap-2 w-72 shrink-0 h-fit p-3 rounded-xl border-[1.5px] border-dashed border-base-300 hover:border-base-400 hover:bg-base-200/30 transition-colors cursor-pointer"
-                >
-                  <HugeiconsIcon
-                    icon={Add01Icon}
-                    className="size-4 text-muted-foreground"
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    Add Column
-                  </span>
-                </button>
               )}
             </div>
           </SortableContext>
@@ -237,6 +213,7 @@ export default function BoardPage() {
           </DragOverlay>
         </DndContext>
       </div>
+
 
       {editingTask && (
         <TaskDetailModal

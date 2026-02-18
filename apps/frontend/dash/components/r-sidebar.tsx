@@ -93,30 +93,41 @@ export function RSidebar() {
 
   return (
     <>
-      <div className="flex flex-row gap-2 m-4">
-        <div 
-          onClick={() => open && view === "NOTIFICATIONS" ? toggleOpen() : setView("NOTIFICATIONS")}
+      <motion.div
+        initial={false}
+        animate={{ right: open ? (view === "MEMBERS" ? 256 : 376) : 16 }}
+        transition={spring}
+        className="absolute top-4 flex flex-row gap-2 z-50"
+      >
+        <div
+          onClick={() =>
+            open && view === "NOTIFICATIONS"
+              ? toggleOpen()
+              : setView("NOTIFICATIONS")
+          }
           className="flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer"
         >
           <HugeiconsIcon
             icon={Notification01Icon}
-            fill={(view === "NOTIFICATIONS" && open) ? "currentColor" : "none"}
+            fill={view === "NOTIFICATIONS" && open ? "currentColor" : "none"}
             strokeWidth={2}
             className="size-5 text-foreground"
           />
         </div>
-        <div 
-          onClick={() => open && view === "MEMBERS" ? toggleOpen() : setView("MEMBERS")}
+        <div
+          onClick={() =>
+            open && view === "MEMBERS" ? toggleOpen() : setView("MEMBERS")
+          }
           className="flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer"
         >
           <HugeiconsIcon
             icon={UserMultiple02Icon}
-            fill={(view === "MEMBERS" && open) ? "currentColor" : "none"}
+            fill={view === "MEMBERS" && open ? "currentColor" : "none"}
             strokeWidth={2}
             className="size-5 text-foreground"
           />
         </div>
-      </div>
+      </motion.div>
 
       <motion.aside
         animate={{ width: open ? (view === "MEMBERS" ? 240 : 360) : 0 }}

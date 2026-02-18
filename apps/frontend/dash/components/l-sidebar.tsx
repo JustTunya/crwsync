@@ -246,14 +246,19 @@ export function LSidebar() {
         />
       </motion.aside>
 
-      <div className="flex items-center justify-center size-8 m-4 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer">
+      <motion.div
+        initial={false}
+        transition={spring}
+        animate={{ left: open ? 296 : 96 }}
+        className="absolute top-4 flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer z-50"
+        onClick={toggleOpen}
+      >
         <HugeiconsIcon
-          onClick={toggleOpen}
           icon={Menu05Icon}
           strokeWidth={2}
           className="size-5"
         />
-      </div>
+      </motion.div>
     </>
   );
 }
