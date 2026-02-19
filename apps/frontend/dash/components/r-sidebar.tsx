@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion, Transition } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon } from "@hugeicons/core-free-icons";
@@ -10,9 +10,11 @@ import { useSocket } from "@/providers/socket.provider";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { getWorkspaceMembers } from "@/services/workspace.service";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
+import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { UserAvatar } from "@/components/user-avatar";
 import InviteMemberModal from "@/components/inv-modal";
 import { useInvites } from "@/hooks/use-invites";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { InviteNotification } from "@/components/notifications";
 
 import { cn } from "@/lib/utils";
@@ -31,7 +33,9 @@ export function RSidebar() {
   const { activeWorkspace: workspace } = useWorkspace();
   const { socket, isConnected } = useSocket();
 
-  const { open, toggleOpen, view, setView } = useRSidebar();
+  const { open, toggleOpen, view, setView, setOpen } = useRSidebar();
+  const { open: lOpen } = useLSidebar();
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const [statuses, setStatuses] = useState<Record<string, UserStatus>>({});
   const [openInviteModal, setOpenInviteModal] = useState(false);
@@ -43,15 +47,29 @@ export function RSidebar() {
   });
 
   useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  }, [isMobile, setOpen]);
+
+  useEffect(() => {
     if (!socket || !workspace?.id || !isConnected) return;
 
     socket.emit("sub_ws", workspace.id);
 
-    const handleStatusUpdate = ({ userId, status }: { userId: string; status: UserStatus }) => {
+    const handleStatusUpdate = ({
+      userId,
+      status,
+    }: {
+      userId: string;
+      status: UserStatus;
+    }) => {
       setStatuses((prev) => ({ ...prev, [userId]: status }));
     };
 
-    const handleWorkspaceStatuses = (initialStatuses: Record<string, UserStatus>) => {
+    const handleWorkspaceStatuses = (
+      initialStatuses: Record<string, UserStatus>,
+    ) => {
       setStatuses(initialStatuses);
     };
 
@@ -91,58 +109,121 @@ export function RSidebar() {
     return groups;
   }, [data]);
 
+  const sidebarVariants = {
+    desktop: {
+      width: open ? (view === "MEMBERS" ? 240 : 360) : 0,
+      x: 0,
+      position: "relative" as const,
+    },
+    mobile: {
+      width: "100%",
+      x: open ? 0 : "100%",
+      position: "fixed" as const,
+      zIndex: 50,
+      right: 0,
+    },
+  };
+
+  const toggleBtnVariants = {
+    desktop: {
+      right: open ? (view === "MEMBERS" ? 256 : 376) : 16,
+      x: 0,
+      opacity: 1,
+      pointerEvents: "auto" as const,
+    },
+    mobile: {
+      right: 16,
+      x: 0,
+      zIndex: 60, 
+      opacity: lOpen ? 0 : 1,
+      pointerEvents: lOpen ? "none" as const : "auto" as const,
+    },
+  };
+
   return (
     <>
-      <motion.div
-        initial={false}
-        animate={{ right: open ? (view === "MEMBERS" ? 256 : 376) : 16 }}
-        transition={spring}
-        className="absolute top-4 flex flex-row gap-2 z-50"
-      >
-        <div
-          onClick={() =>
-            open && view === "NOTIFICATIONS"
-              ? toggleOpen()
-              : setView("NOTIFICATIONS")
-          }
-          className="flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer"
-        >
-          <HugeiconsIcon
-            icon={Notification01Icon}
-            fill={view === "NOTIFICATIONS" && open ? "currentColor" : "none"}
-            strokeWidth={2}
-            className="size-5 text-foreground"
-          />
-        </div>
-        <div
-          onClick={() =>
-            open && view === "MEMBERS" ? toggleOpen() : setView("MEMBERS")
-          }
-          className="flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer"
-        >
-          <HugeiconsIcon
-            icon={UserMultiple02Icon}
-            fill={view === "MEMBERS" && open ? "currentColor" : "none"}
-            strokeWidth={2}
-            className="size-5 text-foreground"
-          />
-        </div>
-      </motion.div>
-
-      <motion.aside
-        animate={{ width: open ? (view === "MEMBERS" ? 240 : 360) : 0 }}
-        transition={spring}
-        className="flex flex-col gap-4 h-screen bg-base-100 border-l border-base-200 overflow-hidden"
-      >
-        <div className={cn("flex-1 overflow-y-auto", open ? "p-4" : "p-0")}>
-          {view === "MEMBERS" ? (
-            <SidebarMembers 
-            groups={groupedMembers} statuses={statuses} isLoading={isLoading} workspace={workspace} open={openInviteModal} setOpen={setOpenInviteModal} />
-          ) : (
-            <SidebarNotifications />
+      <React.Fragment>
+          {isMobile && open && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+            />
           )}
-        </div>
-      </motion.aside>
+
+        <motion.div
+          initial={false}
+          variants={toggleBtnVariants}
+          animate={isMobile ? "mobile" : "desktop"}
+          transition={spring}
+          className={cn(
+            "absolute top-4 flex flex-row gap-2 z-50",
+            isMobile && open ? "fixed right-4" : "absolute"
+          )}
+        >
+          <div
+            onClick={() =>
+              open && view === "NOTIFICATIONS"
+                ? toggleOpen()
+                : setView("NOTIFICATIONS")
+            }
+            className={cn(
+              "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
+              isMobile && open && view === "NOTIFICATIONS" && "bg-base-200"
+            )}
+          >
+            <HugeiconsIcon
+              icon={Notification01Icon}
+              fill={view === "NOTIFICATIONS" && open ? "currentColor" : "none"}
+              strokeWidth={2}
+              className="size-5 text-foreground"
+            />
+          </div>
+          <div
+            onClick={() =>
+              open && view === "MEMBERS" ? toggleOpen() : setView("MEMBERS")
+            }
+            className={cn(
+              "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
+               isMobile && open && view === "MEMBERS" && "bg-base-200"
+            )}
+          >
+            <HugeiconsIcon
+              icon={UserMultiple02Icon}
+              fill={view === "MEMBERS" && open ? "currentColor" : "none"}
+              strokeWidth={2}
+              className="size-5 text-foreground"
+            />
+          </div>
+        </motion.div>
+
+        <motion.aside
+          variants={sidebarVariants}
+          animate={isMobile ? "mobile" : "desktop"}
+          transition={spring}
+          className={cn(
+            "flex flex-col gap-4 h-screen bg-base-100 border-l border-base-200 overflow-hidden",
+            isMobile ? "fixed right-0 top-0 shadow-2xl border-l" : "border-l"
+          )}
+        >
+          <div className={cn("flex-1 overflow-y-auto", open ? "p-4" : "p-0")}>
+            {view === "MEMBERS" ? (
+              <SidebarMembers
+                groups={groupedMembers}
+                statuses={statuses}
+                isLoading={isLoading}
+                workspace={workspace}
+                open={openInviteModal}
+                setOpen={setOpenInviteModal}
+              />
+            ) : (
+              <SidebarNotifications />
+            )}
+          </div>
+        </motion.aside>
+      </React.Fragment>
     </>
   );
 }

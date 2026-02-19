@@ -10,12 +10,15 @@ import { KanbanCol, KanbanTaskOverlay, TaskDetailModal } from "@/components/kanb
 import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/use-boards";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
 
   const { activeWorkspace } = useWorkspace();
   const workspaceId = activeWorkspace?.id || "";
+
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const { data: board, isLoading } = useBoard(workspaceId, boardId);
   const createColumn = useCreateColumn(workspaceId, boardId);
@@ -140,14 +143,25 @@ export default function BoardPage() {
   return (
     <div className="size-full flex flex-col">
       <div className="flex items-center justify-between pl-16 pr-24 py-4.5 border-b border-base-200">
-        <h1 className="text-lg font-semibold leading-none">{board.name}</h1>
-        <button
-          onClick={() => setAddingColumn(true)}
-          className="flex items-center gap-1 bg-foreground text-background px-2 py-1 rounded-md text-sm font-semibold cursor-pointer"
-        >
-          <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
-          Add Column
-        </button>
+        <div className="w-0 flex-1">
+          <h1 className="text-lg font-semibold leading-none overflow-hidden text-ellipsis">{board.name}</h1>
+        </div>
+        {isMobile ? (
+          <button
+            onClick={() => setAddingColumn(true)}
+            className="flex items-center gap-1 bg-foreground text-background p-1.5 rounded-full text-sm font-semibold cursor-pointer"
+          >
+            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
+          </button>
+        ) : (
+          <button
+            onClick={() => setAddingColumn(true)}
+            className="flex items-center gap-1 bg-foreground text-background px-2 py-1 rounded-md text-sm font-semibold cursor-pointer"
+          >
+            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
+            Add Column
+          </button>
+        )}
       </div>
       <div className="flex-1 overflow-x-auto p-6">
         <DndContext

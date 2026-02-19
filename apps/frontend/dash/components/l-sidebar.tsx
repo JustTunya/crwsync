@@ -33,6 +33,8 @@ import { Input } from "@/components/ui/input";
 import { Shortcut } from "@/components/ui/shortcut";
 import { useOutclick } from "@/hooks/use-outclick";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
+import { useRSidebar } from "@/hooks/use-r-sidebar";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWorkspaceModules } from "@/hooks/use-workspace-modules";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { signout } from "@/services/auth.service";
@@ -52,14 +54,20 @@ export function LSidebar() {
   const pathname = usePathname();
   const searchRef = useRef<HTMLInputElement>(null);
 
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   const { activeWorkspace } = useWorkspace();
-  const { open, toggleOpen } = useLSidebar();
+  const { open, toggleOpen, setOpen } = useLSidebar();
   const { socket } = useSocket();
   const user = useUser();
 
   const [status, setStatus] = useState<UserStatus>(
     (user?.status_preference?.toLowerCase() as UserStatus) || "online",
   );
+
+  useEffect(() => {
+    if (isMobile) setOpen(false);
+  }, [pathname, isMobile, setOpen]);
 
   useEffect(() => {
     if (!socket || !user) return;
@@ -130,12 +138,44 @@ export function LSidebar() {
     );
   });
 
+  const sidebarVariants = {
+    desktop: {
+      width: open ? 280 : 80,
+      x: 0,
+      position: "relative" as const,
+    },
+    mobile: {
+      width: "82vw",
+      x: open ? 0 : "-100%",
+      position: "fixed" as const,
+      zIndex: 50,
+    },
+  };
+
+  const { open: rOpen } = useRSidebar(); // Use alias to avoid conflict
+
   return (
     <>
+      <AnimatePresence>
+        {isMobile && open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+          />
+        )}
+      </AnimatePresence>
+
       <motion.aside
-        animate={{ width: open ? 280 : 80 }}
+        variants={sidebarVariants}
+        animate={isMobile ? "mobile" : "desktop"}
         transition={spring}
-        className="flex flex-col gap-4 h-screen p-4 bg-base-100 border-r border-base-200 overflow-hidden"
+        className={cn(
+          "flex flex-col gap-4 h-screen p-4 bg-base-100 border-r border-base-200 overflow-hidden",
+          isMobile ? "fixed left-0 top-0 shadow-2xl" : "sticky top-0",
+        )}
       >
         <div className="flex items-center">
           {/* WORKSPACE */}
@@ -249,8 +289,24 @@ export function LSidebar() {
       <motion.div
         initial={false}
         transition={spring}
-        animate={{ left: open ? 296 : 96 }}
-        className="absolute top-4 flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer z-50"
+        animate={
+          isMobile
+            ? {
+                left: open ? "calc(91vw - 1rem)" : 16,
+                x: 0,
+                opacity: rOpen ? 0 : 1,
+                pointerEvents: rOpen ? "none" : "auto",
+              }
+            : {
+                left: open ? 296 : 96,
+                x: 0,
+                opacity: 1,
+                pointerEvents: "auto",
+              }
+        }
+        className={cn(
+          "fixed top-4 flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer z-50",
+        )}
         onClick={toggleOpen}
       >
         <HugeiconsIcon
