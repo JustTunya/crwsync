@@ -28,6 +28,7 @@ import {
   MoveTaskDto,
   ReorderColumnsDto,
   ReorderModulesDto,
+  UpdateModuleDto,
 } from "src/board/dto/board.dto";
 
 @Controller("workspaces/:workspaceId/boards")
@@ -195,5 +196,28 @@ export class ModuleController {
     @Body() dto: ReorderModulesDto,
   ) {
     return this.boardService.reorderModules(workspaceId, dto);
+  }
+
+  @Patch(":moduleId")
+  @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
+  @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER, WorkspaceRoleEnum.ADMIN)
+  update(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" }))
+    workspaceId: string,
+    @Param("moduleId", new ParseUUIDPipe({ version: "4" })) moduleId: string,
+    @Body() dto: UpdateModuleDto,
+  ) {
+    return this.boardService.updateModule(workspaceId, moduleId, dto);
+  }
+
+  @Delete(":moduleId")
+  @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
+  @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER, WorkspaceRoleEnum.ADMIN)
+  remove(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" }))
+    workspaceId: string,
+    @Param("moduleId", new ParseUUIDPipe({ version: "4" })) moduleId: string,
+  ) {
+    return this.boardService.deleteModule(workspaceId, moduleId);
   }
 }

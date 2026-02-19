@@ -138,3 +138,9 @@ export class ReorderModulesDto {
   @IsUUID("4", { each: true })
   module_ids!: string[];
 }
+
+export class UpdateModuleDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+}

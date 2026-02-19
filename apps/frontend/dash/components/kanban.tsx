@@ -13,11 +13,12 @@ import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
 import { Add01Icon, Calendar04Icon, Cancel01Icon, Delete02Icon, FileEmpty02Icon, Flag02Icon, MoreHorizontalIcon, UserIcon, TextBoldIcon, TextItalicIcon, TextUnderlineIcon, LeftToRightListNumberIcon, Image01Icon, LeftToRightListBulletIcon, Link02Icon } from "@hugeicons/core-free-icons";
 import type { Task, BoardColumn } from "@crwsync/types";
 import { UserAvatar } from "@/components/user-avatar";
-import { DatePickerTime } from "@/components/ui/date-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useUpdateColumn, useDeleteColumn, useUpdateTask, useDeleteTask } from "@/hooks/use-boards";
 import { useWorkspaceMembers } from "@/hooks/use-workspaces";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 
 // TODO: replace placeholder values
@@ -238,16 +239,18 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
         <div className="flex items-center gap-1 shrink-0">
           <div className="relative" ref={menuRef}>
             <div className="flex items-center gap-1">
-              <HugeiconsIcon
-                icon={Add01Icon}
-                className="size-4 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
-                onClick={onAddTask}
-              />
-              <HugeiconsIcon
-                icon={MoreHorizontalIcon}
-                className="size-4 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
-                onClick={() => setShowMenu(!showMenu)}
-              />
+              <button type="button" title="Add task" onClick={onAddTask}>
+                <HugeiconsIcon
+                  icon={Add01Icon}
+                  className="size-4.5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                />
+              </button>
+              <button type="button" title="More" onClick={() => setShowMenu(!showMenu)}>
+                <HugeiconsIcon
+                  icon={MoreHorizontalIcon}
+                  className="size-4.5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                />
+              </button>
             </div>
             {showMenu && (
               <div className="absolute right-0 top-6 flex flex-col gap-1 z-30 min-w-34 p-2 bg-base-100 border border-base-200 rounded-lg shadow-lg">
@@ -491,6 +494,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
   const updateTask = useUpdateTask(workspaceId, boardId);
   const deleteTask = useDeleteTask(workspaceId, boardId);
   const { data: members } = useWorkspaceMembers(workspaceId);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
@@ -555,11 +559,14 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/50"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-background/50 p-4 sm:p-0"
       onClick={onClose}
     >
       <div
-        className="bg-base-100 rounded-xl p-6 max-w-3xl w-full mx-4 border border-base-200 shadow-xl"
+        className={cn(
+          "bg-base-100 rounded-xl p-6 shadow-xl border border-base-200 w-full mx-auto overflow-y-auto max-h-[90vh]",
+          isMobile ? "max-w-full" : "max-w-3xl"
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
@@ -580,7 +587,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
           </div>
         </div>
 
-        <div className="flex gap-6">
+        <div className={cn("flex gap-6", isMobile ? "flex-col" : "flex-row")}>
           <div className="flex-1 flex flex-col gap-4 min-w-0">
             <div>
               <label className="text-xs text-muted-foreground mb-2 block">
@@ -603,7 +610,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
             </div>
           </div>
 
-          <div className="w-[280px] shrink-0 flex flex-col gap-4">
+          <div className={cn("shrink-0 flex flex-col gap-4", isMobile ? "w-full" : "w-[280px]")}>
             <div>
               <label className="text-xs text-muted-foreground mb-2 block">
                 Priority
@@ -648,7 +655,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
                 )}
               </div>
               {deadline ? (
-                <DatePickerTime date={deadline} setDate={setDeadline} />
+                <DatePicker date={deadline} setDate={setDeadline} />
               ) : (
                 <div className="flex items-center justify-center w-full h-9 text-xs text-muted-foreground border-[1.5px] border-dashed border-base-300 rounded-lg">No deadline</div>
               )}

@@ -25,17 +25,21 @@ import { WorkspaceModule } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useUser } from "@/providers/user.provider";
 import { useSocket } from "@/providers/socket.provider";
+import AddModuleModal from "@/components/add-module-modal";
 import { WorkspaceAvatar } from "@/components/workspace-avatar";
 import { ProjectAvatar } from "@/components/project-avatar";
 import { UserAvatar } from "@/components/user-avatar";
-import AddModuleModal from "@/components/add-module-modal";
 import { Input } from "@/components/ui/input";
 import { Shortcut } from "@/components/ui/shortcut";
 import { useOutclick } from "@/hooks/use-outclick";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useWorkspaceModules } from "@/hooks/use-workspace-modules";
+import {
+  useWorkspaceModules,
+  useUpdateModule,
+  useDeleteModule,
+} from "@/hooks/use-workspace-modules";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { signout } from "@/services/auth.service";
 import { cn } from "@/lib/utils";
@@ -223,10 +227,10 @@ export function LSidebar() {
           </motion.div>
         )}
 
-        {/* MODULES */}
+        {/* GLOBAL MODULES */}
         <div className="flex flex-col">
           {modules.map((module) => (
-            <SidebarModule
+            <SidebarGlobalModule
               key={module.name}
               icon={module.icon}
               name={module.name}
@@ -252,6 +256,8 @@ export function LSidebar() {
             wsModules.map((mod) => (
               <SidebarModule
                 key={mod.id}
+                id={mod.id}
+                activeWorkspaceId={activeWorkspace!.id}
                 icon={getModuleIcon(mod.type)}
                 name={mod.name}
                 href={getModuleHref(slug, mod)}
@@ -350,7 +356,7 @@ function isModuleActive(
   }
 }
 
-export function SectionHeader({
+function SectionHeader({
   label,
   extended,
   onAdd,
@@ -400,7 +406,7 @@ export function SidebarToggle({
   );
 }
 
-export function SidebarWorkspace({ extended }: { extended?: boolean }) {
+function SidebarWorkspace({ extended }: { extended?: boolean }) {
   const { activeWorkspace, workspaces, switchWorkspace, loading } =
     useWorkspace();
 
@@ -561,30 +567,171 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
   );
 }
 
-export function SidebarModule({
-  icon,
-  name,
-  href,
-  shortcut,
-  active,
-  extended,
-}: {
+interface SidebarModuleProps {
+  id: string; // Added id prop
+  activeWorkspaceId: string; // Added activeWorkspaceId prop
+  icon: HugeiconsIconProps["icon"];
+  name: string;
+  href: string;
+  active?: boolean;
+  extended?: boolean;
+}
+
+function SidebarModule({ id, activeWorkspaceId, icon, name, href, active, extended }: SidebarModuleProps) {
+  const updateModule = useUpdateModule(activeWorkspaceId);
+  const deleteModule = useDeleteModule(activeWorkspaceId);
+
+  const [showSettingsBtn, setShowSettingsBtn] = useState<boolean>(false);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [moduleName, setModuleName] = useState<string>(name);
+  const [rename, setRename] = useState<boolean>(false);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setModuleName(name);
+  }, [name]);
+
+  const handleMouseEvent = (state: boolean) => {
+    setShowSettingsBtn(state);
+    setShowSettings(false);
+  };
+
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowSettings(!showSettings);
+  };
+
+  const handleRenameClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowSettings(false);
+    setRename(true);
+  };
+
+  const handleRenameSubmit = async () => {
+    if (moduleName.trim() && moduleName !== name) {
+      await updateModule.mutateAsync({
+        moduleId: id,
+        data: { name: moduleName.trim() },
+      });
+    } else {
+      setModuleName(name);
+    }
+    setRename(false);
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowSettings(false);
+    if (confirm("Are you sure you want to delete this module?")) {
+      await deleteModule.mutateAsync(id);
+    }
+  };
+
+  return (
+    <Link
+      href={href}
+      onMouseEnter={() => handleMouseEvent(true)}
+      onMouseLeave={() => handleMouseEvent(false)}
+      className="relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
+    >
+      <div className={cn("flex-1 flex flex-row items-center gap-2 min-w-0", !extended && "justify-center")}>
+        <HugeiconsIcon
+          icon={icon}
+          strokeWidth={1.75}
+          className="size-4.5 z-10"
+        />
+        <AnimatePresence>
+          {extended && !rename && (
+            <motion.p
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
+              className="text-foreground text-xs font-medium truncate z-10"
+            >
+              {name}
+            </motion.p>
+          )}
+          {extended && rename && (
+            <motion.input
+              type="text"
+              autoFocus
+              value={moduleName}
+              onChange={(e) => setModuleName(e.target.value)}
+              onBlur={handleRenameSubmit}
+              onClick={(e) => {
+                 e.preventDefault();
+                 e.stopPropagation();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleRenameSubmit();
+                if (e.key === "Escape") {
+                    setModuleName(name);
+                    setRename(false);
+                }
+              }}
+              className="text-foreground text-xs font-medium truncate z-10 border-none outline-none bg-transparent w-full"
+            />
+          )}
+        </AnimatePresence>
+      </div>
+
+      {extended && showSettingsBtn && !rename && (
+        <button className="z-10 cursor-pointer" onClick={handleSettingsClick}>
+          <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} className="size-4" />
+        </button>
+      )}
+
+      <AnimatePresence>
+        {active && (
+          <motion.div
+            initial={{ backgroundPosition: "0% 75%" }}
+            animate={{ backgroundPosition: active ? "75% 0%" : "0% 75%" }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            className="absolute inset-0 rounded-lg bg-linear-240 from-primary/80 dark:from-primary/40 via-base-200 to-base-200 bg-size-[200%_100%]"
+          />
+        )}
+      </AnimatePresence>
+
+      {extended && showSettings && (
+        <div className="absolute right-0 top-6 flex flex-col gap-1 z-30 p-1 bg-base-100 border border-base-200 rounded-lg shadow-lg">
+          <button
+            onClick={handleRenameClick}
+            className="w-full px-2 py-1 text-xs text-left hover:bg-base-200 rounded-md transition-colors cursor-pointer"
+          >
+            Rename
+          </button>
+          <button
+            onClick={handleDelete}
+            className="w-full px-2 py-1 text-xs text-left text-error hover:bg-base-200 rounded-md transition-colors cursor-pointer"
+          >
+            Delete
+          </button>
+        </div>
+      )}
+    </Link>
+  );
+}
+
+interface SidebarGlobalModuleProps {
   icon: HugeiconsIconProps["icon"];
   name: string;
   href: string;
   shortcut?: string[];
   active?: boolean;
   extended?: boolean;
-}) {
+}
+
+function SidebarGlobalModule({ icon, name, href, shortcut, active, extended }: SidebarGlobalModuleProps) {
   return (
     <Link
       href={href}
-      className={cn(
-        "relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden",
-        !extended && "justify-center",
-      )}
+      className="relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden"
     >
-      <div className="flex flex-row items-center gap-2">
+      <div className={cn("flex flex-row items-center gap-2 w-full", !extended && "justify-center")}>
         <HugeiconsIcon
           icon={icon}
           strokeWidth={1.75}
@@ -597,7 +744,7 @@ export function SidebarModule({
               animate={{ opacity: 1, width: "auto" }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.15, ease: "easeInOut" }}
-              className="text-foreground text-xs font-medium whitespace-nowrap z-10"
+              className="text-foreground text-xs font-medium truncate z-10"
             >
               {name}
             </motion.p>
@@ -653,15 +800,13 @@ export function SidebarNoModule({
   );
 }
 
-export function SidebarProject({
-  icon,
-  name,
-  extended,
-}: {
+interface SidebarProjectProps {
   icon: HugeiconsIconProps["icon"];
   name?: string;
   extended?: boolean;
-}) {
+}
+
+function SidebarProject({ icon, name, extended }: SidebarProjectProps) {
   return (
     <div
       className={cn(
@@ -686,15 +831,13 @@ const STATUS_META: Record<UserStatus, { label: string; color: string }> = {
   away: { label: "Away", color: "bg-yellow-500" },
 };
 
-export function SidebarProfile({
-  status,
-  setStatus,
-  extended,
-}: {
+interface SidebarProfileProps {
   status: UserStatus;
   setStatus: (status: UserStatus) => void;
   extended?: boolean;
-}) {
+}
+
+function SidebarProfile({ status, setStatus, extended }: SidebarProfileProps) {
   const user = useUser();
   const profRef = useRef<HTMLDivElement>(null);
 
@@ -870,17 +1013,14 @@ export function SidebarProfile({
   );
 }
 
-export function StatusItem({
-  label,
-  status,
-  onClick,
-  asContainer,
-}: {
+interface StatusItemProps {
   label: string;
   status: UserStatus;
   onClick?: () => void;
   asContainer?: boolean;
-}) {
+}
+
+function StatusItem({ label, status, onClick, asContainer }: StatusItemProps) {
   const content = (
     <div className="flex items-center gap-2">
       <div
@@ -902,15 +1042,13 @@ export function StatusItem({
   );
 }
 
-export function MenuLink({
-  href,
-  icon,
-  label,
-}: {
+interface MenuLinkProps {
   href: string;
   icon: HugeiconsIconProps["icon"];
   label: string;
-}) {
+}
+
+function MenuLink({ href, icon, label }: MenuLinkProps) {
   return (
     <Link
       href={href}

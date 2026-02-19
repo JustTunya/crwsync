@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Field, FieldGroup } from "@/components/ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
-export function DatePickerTime({ date, setDate }: { date: Date | undefined; setDate: (date: Date | undefined) => void }) {
+export function DatePicker({ date, setDate }: { date: Date | undefined; setDate: (date: Date | undefined) => void }) {
   const [open, setOpen] = useState(false)
 
   return (

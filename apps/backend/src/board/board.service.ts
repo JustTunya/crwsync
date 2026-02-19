@@ -13,6 +13,7 @@ import {
   MoveTaskDto,
   ReorderColumnsDto,
   ReorderModulesDto,
+  UpdateModuleDto,
 } from "src/board/dto/board.dto";
 
 const POSITION_GAP = 1000;
@@ -360,6 +361,56 @@ export class BoardService {
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("module:reordered", { moduleIds: dto.module_ids });
+
+    return { success: true };
+  }
+
+  async updateModule(
+    workspaceId: string,
+    moduleId: string,
+    dto: UpdateModuleDto,
+  ) {
+    const wsModule = await this.prisma.workspaceModule.update({
+      where: { id: moduleId },
+      data: { name: dto.name },
+    });
+
+    if (wsModule.type === ModuleTypeEnum.BOARD && wsModule.reference_id) {
+      await this.prisma.board.update({
+        where: { id: wsModule.reference_id },
+        data: { name: dto.name },
+      });
+      
+       this.statusGateway.server
+        .to(`workspace_${workspaceId}`)
+        .emit("board:updated", { boardId: wsModule.reference_id, data: { name: dto.name } });
+    }
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("module:updated", { moduleId, data: dto });
+
+    return { success: true, data: wsModule };
+  }
+
+  async deleteModule(workspaceId: string, moduleId: string) {
+    const wsModule = await this.prisma.workspaceModule.findUnique({
+      where: { id: moduleId },
+    });
+
+    if (!wsModule) throw new NotFoundException("Module not found");
+
+    if (wsModule.type === ModuleTypeEnum.BOARD && wsModule.reference_id) {
+       await this.deleteBoard(workspaceId, wsModule.reference_id);
+    } else {
+        await this.prisma.workspaceModule.delete({
+            where: { id: moduleId },
+        });
+
+        this.statusGateway.server
+        .to(`workspace_${workspaceId}`)
+        .emit("module:deleted", { moduleId });
+    }
 
     return { success: true };
   }

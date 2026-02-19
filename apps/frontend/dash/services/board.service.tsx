@@ -299,3 +299,40 @@ export async function reorderModules(
     return { success: false, message: "An unexpected error occurred" };
   }
 }
+
+export async function updateModule(
+  workspaceId: string,
+  moduleId: string,
+  data: Partial<WorkspaceModule>,
+): Promise<BoardOperationState<WorkspaceModule>> {
+  try {
+    const response = await api.patch(`${MODULE_BASE(workspaceId)}/${moduleId}`, data);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to update module",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function deleteModule(
+  workspaceId: string,
+  moduleId: string,
+): Promise<BoardOperationState> {
+  try {
+    await api.delete(`${MODULE_BASE(workspaceId)}/${moduleId}`);
+    return { success: true };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to delete module",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
