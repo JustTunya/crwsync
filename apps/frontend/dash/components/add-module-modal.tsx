@@ -24,7 +24,7 @@ const MODULE_OPTIONS = [
   },
 ];
 
-export default function AddModuleModal({ isOpen, onClose }: AddModuleModalProps) {
+export function AddModuleModal({ isOpen, onClose }: AddModuleModalProps) {
   const { activeWorkspace } = useWorkspace();
   const createBoard = useCreateBoard(activeWorkspace?.id || "");
 
