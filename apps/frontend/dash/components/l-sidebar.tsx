@@ -9,7 +9,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon, Menu05Icon, ZapIcon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
-import { getModules, getModuleIcon, getModuleHref, isModuleActive } from "@/components/sidebar/sidebar.utils";
+import { getModules, getModuleIcon, getModuleHref, isModuleActive } from "@/lib/sidebar.utils";
 import { SidebarModule, SidebarGlobalModule, SidebarNoModule } from "@/components/sidebar/SidebarModule";
 import { SidebarWorkspace } from "@/components/sidebar/SidebarWorkspace";
 import { SidebarProfile } from "@/components/sidebar/SidebarProfile";

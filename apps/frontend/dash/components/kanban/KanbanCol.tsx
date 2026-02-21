@@ -8,7 +8,7 @@ import type { Task, BoardColumn } from "@crwsync/types";
 import { useUpdateColumn, useDeleteColumn } from "@/hooks/use-boards";
 import { cn } from "@/lib/utils";
 
-import { COLUMN_COLORS } from "../kanban.utils";
+import { COLUMN_COLORS } from "../../lib/kanban.utils";
 import { KanbanTask } from "./KanbanTask";
 
 export interface KanbanColProps {

@@ -8,7 +8,7 @@ import { signout } from "@/services/auth.service";
 import { UserAvatar } from "@/components/user-avatar";
 import { useOutclick } from "@/hooks/use-outclick";
 import { cn } from "@/lib/utils";
-import { STATUS_META, UserStatus } from "./sidebar.utils";
+import { STATUS_META, UserStatus } from "../../lib/sidebar.utils";
 
 const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 

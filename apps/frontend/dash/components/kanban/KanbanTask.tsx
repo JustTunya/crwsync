@@ -9,7 +9,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { useWorkspaceMembers } from "@/hooks/use-workspaces";
 import { cn } from "@/lib/utils";
 
-import { PRIORITY_STYLES, DEADLINE_STYLES, formatChipDate } from "../kanban.utils";
+import { PRIORITY_STYLES, DEADLINE_STYLES, formatChipDate } from "../../lib/kanban.utils";
 import { ReadOnlyDescription } from "./RichTextEditor";
 
 export function KanbanTask({ task, onClick, workspaceId }: { task: Task; onClick: () => void; workspaceId: string }) {

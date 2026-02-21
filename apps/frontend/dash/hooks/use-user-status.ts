@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSocket } from "@/providers/socket.provider";
 import { useUser } from "@/providers/user.provider";
-import { UserStatus } from "@/components/sidebar/sidebar.utils";
+import { UserStatus } from "@/lib/sidebar.utils";
 
 export function useUserStatus() {
   const { socket } = useSocket();

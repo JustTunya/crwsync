@@ -12,7 +12,7 @@ import { useWorkspaceMembers } from "@/hooks/use-workspaces";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 
-import { TaskPriorityEnum } from "../kanban.utils";
+import { TaskPriorityEnum } from "../../lib/kanban.utils";
 import { RichTextEditor } from "./RichTextEditor";
 
 export interface TaskDetailModalProps {
