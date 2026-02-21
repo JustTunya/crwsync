@@ -9,10 +9,10 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run --workspaces --if-present build",
-    "lint": "npm run --workspaces --if-present lint",
-    "test": "npm run --workspaces --if-present test",
-    "dev": "npm run --workspaces --if-present dev"
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "dev": "turbo run dev"
   },
   "keywords": [
     "crwsync",
@@ -46,6 +46,7 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-import": "^2.32.0",
     "prettier": "^3.6.2",
+    "turbo": "^2.8.10",
     "typescript": "^5.8.3"
   },
   "dependencies": {
