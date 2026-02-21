@@ -9,24 +9,23 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon, Menu05Icon, ZapIcon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
+import { getModules, getModuleIcon, getModuleHref, isModuleActive } from "@/components/sidebar/sidebar.utils";
+import { SidebarModule, SidebarGlobalModule, SidebarNoModule } from "@/components/sidebar/SidebarModule";
+import { SidebarWorkspace } from "@/components/sidebar/SidebarWorkspace";
+import { SidebarProfile } from "@/components/sidebar/SidebarProfile";
+import { SidebarProject } from "@/components/sidebar/SidebarProject";
+import { SectionHeader } from "@/components/sidebar/SectionHeader";
 import { AddModuleModal } from "@/components/add-module-modal";
 import { Input } from "@/components/ui/input";
 import { Shortcut } from "@/components/ui/shortcut";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
+import { useUserStatus } from "@/hooks/use-user-status";
+import { useModuleDnd } from "@/hooks/use-module-dnd";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWorkspaceModules, useReorderModules } from "@/hooks/use-workspace-modules";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
-
-import { getModules, getModuleIcon, getModuleHref, isModuleActive } from "./sidebar/sidebar.utils";
-import { useUserStatus } from "@/hooks/use-user-status";
-import { useModuleDnd } from "@/hooks/use-module-dnd";
-import { SidebarWorkspace } from "./sidebar/SidebarWorkspace";
-import { SidebarModule, SidebarGlobalModule, SidebarNoModule } from "./sidebar/SidebarModule";
-import { SidebarProfile } from "./sidebar/SidebarProfile";
-import { SidebarProject } from "./sidebar/SidebarProject";
-import { SectionHeader } from "./sidebar/SectionHeader";
 
 const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 const fading: Transition = { duration: 0.15, ease: [0.4, 0, 0.2, 1] };
