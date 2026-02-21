@@ -51,11 +51,13 @@ export function LSidebar() {
   const { data: wsModules } = useWorkspaceModules(activeWorkspace?.id);
   const reorderModules = useReorderModules(activeWorkspace?.id || "");
 
+  const [prevWsModules, setPrevWsModules] = useState(wsModules);
   const [localModules, setLocalModules] = useState(wsModules);
 
-  useEffect(() => {
+  if (wsModules !== prevWsModules) {
+    setPrevWsModules(wsModules);
     setLocalModules(wsModules);
-  }, [wsModules]);
+  }
 
   const { activeId, sensors, handleDragStart, handleDragEnd } = useModuleDnd(
     localModules,

@@ -108,15 +108,15 @@ export function AddModuleModal({ isOpen, onClose }: AddModuleModalProps) {
         {step === "configure" && (
           <div className="flex flex-col gap-4">
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">
+              <label htmlFor="module-name" className="text-xs text-muted-foreground mb-1 block">
                 Name
               </label>
               <input
                 type="text"
+                id="module-name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
                 placeholder="Enter a name..."
-                autoFocus
+                onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                 className="w-full px-3 py-2 text-sm bg-base-200 rounded-lg border border-base-200 focus:border-primary focus:outline-none transition-colors"
               />

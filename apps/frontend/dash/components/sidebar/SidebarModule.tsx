@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -31,10 +31,12 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [moduleName, setModuleName] = useState<string>(name);
   const [rename, setRename] = useState<boolean>(false);
+  const [prevName, setPrevName] = useState<string>(name);
 
-  useEffect(() => {
+  if (name !== prevName) {
+    setPrevName(name);
     setModuleName(name);
-  }, [name]);
+  }
 
   const handleMouseEvent = (state: boolean) => {
     setShowSettingsBtn(state);

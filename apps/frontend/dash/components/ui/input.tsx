@@ -44,7 +44,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ className, type, visib
         {...props}
       />
       <div className={cn("h-8 flex justify-center items-center", (hasVisibilityIcon || hasValidationIcon) && "px-3")}>
-        {hasVisibilityIcon && <HugeiconsIcon icon={visible ? ViewOffSlashIcon : ViewIcon} size={iconSize} strokeWidth={iconWidth} onClick={setVisible} className="cursor-pointer text-primary" />}
+        {hasVisibilityIcon && (
+          <button onClick={setVisible}>
+            <HugeiconsIcon icon={visible ? ViewOffSlashIcon : ViewIcon} size={iconSize} strokeWidth={iconWidth} className="cursor-pointer text-primary" />
+          </button>
+        )}
         {hasValidationIcon && <HugeiconsIcon icon={validation ? CheckmarkCircle02Icon : CancelCircleIcon} size={iconSize} strokeWidth={iconWidth} className={cn(validation ? "text-success" : "text-error")} />}
       </div>
       {suffix && <div className="h-8 flex justify-center items-center pr-2">{suffix}</div>}

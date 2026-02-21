@@ -58,11 +58,11 @@ export function SidebarProfile({ status, setStatus, extended }: SidebarProfilePr
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "mt-auto cursor-pointer flex flex-col items-center",
+        !extended && "mb-3",
         extended && [
           "p-2 rounded-lg bg-base-200 shadow-md",
           !openMenu && "hover:bg-base-300/75 transition-colors",
         ],
-        !extended && "mb-3",
       )}
     >
       <div className="px-2 flex-nowrap flex flex-row items-center gap-3 w-full">
@@ -160,13 +160,13 @@ export function SidebarProfile({ status, setStatus, extended }: SidebarProfilePr
                   transition={{ duration: 0.2 }}
                   className="flex flex-col"
                 >
-                  <div
+                  <button
                     onClick={() => setEditStatus(true)}
                     className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors cursor-pointer"
                   >
                     <StatusItem label={status} status={status} asContainer />
                     <HugeiconsIcon icon={ArrowRight01Icon} className="size-5" />
-                  </div>
+                  </button>
 
                   <MenuLink
                     href={`/settings`}
@@ -214,12 +214,12 @@ export function StatusItem({ label, status, onClick, asContainer }: StatusItemPr
   if (asContainer) return content;
 
   return (
-    <div
+    <button
       onClick={onClick}
       className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors cursor-pointer"
     >
       {content}
-    </div>
+    </button>
   );
 }
 

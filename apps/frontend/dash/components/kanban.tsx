@@ -590,11 +590,12 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
         <div className={cn("flex gap-6", isMobile ? "flex-col" : "flex-row")}>
           <div className="flex-1 flex flex-col gap-4 min-w-0">
             <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
+              <label htmlFor="task-title" className="text-xs text-muted-foreground mb-2 block">
                 Title
               </label>
               <Input
                 type="text"
+                id="task-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSave()}
@@ -603,7 +604,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
             </div>
 
             <div className="flex-1 flex flex-col min-h-0">
-              <label className="text-xs text-muted-foreground mb-2 block">
+              <label htmlFor="task-description" className="text-xs text-muted-foreground mb-2 block">
                 Description
               </label>
               <RichTextEditor value={description} onChange={setDescription} />
@@ -612,7 +613,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
 
           <div className={cn("shrink-0 flex flex-col gap-4", isMobile ? "w-full" : "w-[280px]")}>
             <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
+              <label htmlFor="task-priority" className="text-xs text-muted-foreground mb-2 block">
                 Priority
               </label>
               <div className="flex justify-center gap-1.5">
@@ -633,7 +634,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs text-muted-foreground">
+                <label htmlFor="task-deadline" className="text-xs text-muted-foreground">
                   Deadline
                 </label>
                 {deadline ? (
@@ -662,7 +663,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
+              <label htmlFor="task-assignee" className="text-xs text-muted-foreground mb-2 block">
                 Assignee
               </label>
               <div className="relative" ref={assigneeRef}>
@@ -736,7 +737,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
+              <label htmlFor="task-labels" className="text-xs text-muted-foreground mb-2 block">
                 Labels
               </label>
               <div className={cn("flex flex-wrap gap-2", labels.length > 0 && "mb-2")}>

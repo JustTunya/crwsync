@@ -35,14 +35,14 @@ export function SidebarToggle({
   className?: string;
 }) {
   return (
-    <div
+    <button
+      onClick={toggleOpen}
       className={cn(
         "p-1 rounded-full hover:bg-base-200 transition-colors cursor-pointer",
         className,
       )}
-      onClick={toggleOpen}
     >
       <HugeiconsIcon icon={Menu05Icon} className="size-5 text-foreground" />
-    </div>
+    </button>
   );
 }

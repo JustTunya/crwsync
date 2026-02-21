@@ -1,29 +1,25 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 
 export default function RootPage() {
-  const router = useRouter();
   const { data: workspaces, isLoading } = useWorkspaces();
 
-  useEffect(() => {
-    if (isLoading) return;
-
+  if (!isLoading) {
     if (workspaces && workspaces.length > 0) {
-      const lastWsId = localStorage.getItem("crw-ws");
+      const lastWsId = typeof window !== "undefined" ? localStorage.getItem("crw-ws") : null;
       const lastWs = workspaces.find(w => w.workspace_id === lastWsId);
       
       if (lastWs?.workspace) {
-        router.replace(`/${lastWs.workspace.slug}`);
+        redirect(`/${lastWs.workspace.slug}`);
       } else if (workspaces[0]?.workspace) {
-        router.replace(`/${workspaces[0].workspace.slug}`);
+        redirect(`/${workspaces[0].workspace.slug}`);
       }
     } else {
-      router.replace("/create-workspace");
+      redirect("/create-workspace");
     }
-  }, [workspaces, isLoading, router]);
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center">
