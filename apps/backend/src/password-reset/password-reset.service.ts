@@ -9,15 +9,17 @@ import { UpdatePasswordResetDto } from "src/password-reset/dto/update-password-r
 import { ResetPasswordDto } from "src/password-reset/dto/reset-password.dto";
 import { SessionService } from "src/session/session.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { EmailService } from "src/email/email.service";
+
+import { Queue } from "bullmq";
+import { InjectQueue } from "@nestjs/bullmq";
 
 @Injectable()
 export class PasswordResetService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly emailService: EmailService,
     private readonly sessionService: SessionService,
     private readonly config: ConfigService,
+    @InjectQueue("email") private readonly emailQueue: Queue,
   ) {}
 
   async create(dto: CreatePasswordResetDto): Promise<PasswordResetPublic> {
@@ -50,7 +52,7 @@ export class PasswordResetService {
     const url = new URL("/auth/reset-password", appUrl);
     url.searchParams.set("token", token);
 
-    await this.emailService.sendEmail({
+    await this.emailQueue.add("send-password-reset", {
       to: dto.email,
       subject: "Reset your password",
       template: "reset-password",

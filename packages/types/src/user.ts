@@ -4,10 +4,10 @@ export interface UserType {
   id: string;
   email: string;
   username: string;
-  firstName: string;
-  lastName: string;
+  firstname: string;
+  lastname: string;
   birthdate: string;
-  avatar_key?: string;
+  avatar_key: string | null;
   role: RoleEnum;
   role_version: number;
   password_hash: string;
@@ -28,4 +28,12 @@ export interface SessionUserType {
   avatar_key?: string;
   role: RoleEnum;
   role_version: number;
+  status_preference?: string;
+}
+
+export interface UserOperationState<T = undefined> {
+  success: boolean;
+  message?: string;
+  errors?: Record<string, string[]>;
+  data?: T;
 }

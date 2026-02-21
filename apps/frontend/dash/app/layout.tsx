@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
 import { Suspense } from "react";
+import { Figtree } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/providers/user.provider";
-import { getSession } from "@/lib/auth.server";
+import { QueryProvider } from "@/providers/query.provider";
+import { WorkspaceProvider } from "@/providers/workspace.provider";
+import { SocketProvider } from "@/providers/socket.provider";
 import "@crwsync/styles";
 
 const figtree = Figtree({
@@ -21,17 +24,30 @@ export const metadata: Metadata = {
   appleWebApp: { title: "crwsync", statusBarStyle: "default" }
 };
 
-async function UserSession({ children }: { children: React.ReactNode }) {
-  const user = await getSession();
-  return <UserProvider user={user}>{children}</UserProvider>;
+async function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <QueryProvider>
+        <UserProvider>
+          <SocketProvider>
+            <WorkspaceProvider>
+              {children}
+            </WorkspaceProvider>
+          </SocketProvider>
+        </UserProvider>
+      </QueryProvider>
+    </ThemeProvider>
+  );
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${figtree.variable} font-figtree antialiased`}>
-        <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
-          <UserSession>{children}</UserSession>
+      <body className={`${figtree.variable} font-figtree antialiased`} suppressHydrationWarning>
+        <Suspense fallback={<div />}>
+          <Providers>
+            {children}
+          </Providers>
         </Suspense>
       </body>
     </html>

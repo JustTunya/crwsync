@@ -1,24 +1,21 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext } from "react";
 import { SessionUserType } from "@crwsync/types";
-import { bootstrapSession } from "@/services/auth.service";
+import { useSession } from "@/hooks/use-session";
 
-export const UserContext = createContext<SessionUserType | undefined>(undefined);
+export const UserContext = createContext<SessionUserType | null | undefined>(undefined);
 
-export function UserProvider({ user, children }: { user: SessionUserType | undefined; children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState(user);
+export function UserProvider({ children }: { children: React.ReactNode }) {
+  const { data: user } = useSession();
 
-  useEffect(() => {
-    if (currentUser) return;
-    let alive = true;
-    bootstrapSession().then((u) => { if (alive) setCurrentUser(u); }).catch(() => undefined);
-    return () => { alive = false; };
-  }, [currentUser]);
-
-  return <UserContext.Provider value={currentUser}>{children}</UserContext.Provider>;
+  return <UserContext.Provider value={user ?? null}>{children}</UserContext.Provider>;
 }
 
 export function useUser() {
-  return useContext(UserContext);
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error("useUser must be used within a UserProvider");
+  }
+  return context;
 }

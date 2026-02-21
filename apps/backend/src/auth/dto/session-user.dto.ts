@@ -25,4 +25,7 @@ export class SessionUserDto {
 
   @IsNumber()
   role_version!: number;
+
+  @IsString()
+  status_preference?: string;
 }

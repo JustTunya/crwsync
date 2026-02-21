@@ -9,6 +9,7 @@ import { AppModule } from "src/app.module";
 import { AllExceptionsFilter } from "src/common/filters/all-exceptions.filter";
 import { LoggingInterceptor } from "src/common/interceptors/logging.interceptor";
 import { TimeoutInterceptor } from "src/common/interceptors/timeout.interceptor";
+import { RedisIoAdapter } from "src/common/adapters/redis-io.adapter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -57,6 +58,11 @@ async function bootstrap() {
     new LoggingInterceptor(),
     new TimeoutInterceptor(10000)
   );
+
+  const redisIoAdapter = new RedisIoAdapter(app, config);
+  await redisIoAdapter.connectToRedis();
+
+  app.useWebSocketAdapter(redisIoAdapter);
 
   app.useGlobalFilters(new AllExceptionsFilter());
 

@@ -37,6 +37,13 @@ export class UserController {
     return this.userService.checkEmailOrUsername(field, value);
   }
 
+  @Public()
+  @Get("search")
+  @HttpCode(HttpStatus.OK)
+  searchByIdentifier(@Query("identifier") identifier: string): Promise<UserPublic[]> {
+    return this.userService.searchByEmailOrUsername(identifier);
+  }
+
   @UseGuards(new OwnershipGuard("userId"))
   @Get(":userId")
   @HttpCode(HttpStatus.OK)
@@ -56,5 +63,12 @@ export class UserController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<void> {
     await this.userService.remove(userId);
+  }
+  
+  @UseGuards(new OwnershipGuard("userId"))
+  @Get(":userId/invites")
+  @HttpCode(HttpStatus.OK)
+  findInvites(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string) {
+    return this.userService.findInvites(userId);
   }
 }

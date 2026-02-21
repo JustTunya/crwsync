@@ -6,12 +6,16 @@ import { UpdateSessionDto } from "src/session/dto/update-session.dto";
 import { RotateSessionDto } from "src/session/dto/rotate-session.dto";
 import { getClientIp, getUserAgent } from "src/session/session.utils";
 import { VerifySessionDto } from "src/session/dto/verify-session.dto";
+import { CacheService, CacheKeys, CacheTTL } from "src/redis";
 import { PrismaService } from "src/prisma/prisma.service";
 import { SessionPublic, sessionPublicSelect } from "src/prisma/selects";
 
 @Injectable()
 export class SessionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+  ) {}
 
   async create(dto: CreateSessionDto, req: Request): Promise<{ session: SessionPublic; token: string }> {
     const user = await this.prisma.user.findUnique({ where: { id: dto.user_id }, select: { id: true } });
@@ -47,10 +51,15 @@ export class SessionService {
   }
 
   async findOne(id: string): Promise<SessionPublic> {
+    const cached = await this.cache.get<SessionPublic>(CacheKeys.session(id));
+    if (cached) return cached;
+
     const session = await this.prisma.session.findUnique({ where: { id }, select: sessionPublicSelect });
     if (!session) {
       throw new NotFoundException("Session not found");
     }
+
+    await this.cache.set(CacheKeys.session(id), session, CacheTTL.SESSION);
     return session;
   }
 
@@ -65,7 +74,9 @@ export class SessionService {
       ...(dto.user_id ? { user: { connect: { id: dto.user_id } } } : {}),
     };
 
-    return this.prisma.session.update({ where: { id }, data, select: sessionPublicSelect });
+    const updated = await this.prisma.session.update({ where: { id }, data, select: sessionPublicSelect });
+    await this.cache.del(CacheKeys.session(id));
+    return updated;
   }
 
   async remove(id: string): Promise<void> {
@@ -74,6 +85,7 @@ export class SessionService {
       throw new NotFoundException("Session not found");
     }
     await this.prisma.session.delete({ where: { id } });
+    await this.cache.del(CacheKeys.session(id));
   }
 
   async verify(dto: VerifySessionDto): Promise<SessionPublic> {
@@ -122,13 +134,24 @@ export class SessionService {
 
   async revoke(id: string): Promise<void> {
     await this.prisma.session.updateMany({ where: { id }, data: { revoked_at: new Date() } });
+    await this.cache.del(CacheKeys.session(id));
   }
 
   async revokeAll(userId: string): Promise<void> {
+    const sessions = await this.prisma.session.findMany({
+      where: { user_id: userId, revoked_at: null },
+      select: { id: true },
+    });
+
     await this.prisma.session.updateMany({
       where: { user_id: userId, revoked_at: null },
       data: { revoked_at: new Date() },
     });
+
+    const cacheKeys = sessions.map((s) => CacheKeys.session(s.id));
+    if (cacheKeys.length > 0) {
+      await this.cache.del(cacheKeys);
+    }
   }
 
   async purgeExpired(): Promise<void> {

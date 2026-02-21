@@ -16,10 +16,25 @@ x-deploy-settings: &deploy-settings
     window: 60s
   resources:
     limits:
+      cpus: '1.0'
+      memory: 1G
+    reservations:
+      cpus: '0.5'
+      memory: 512M
+
+x-redis-deploy-settings: &redis-deploy-settings
+  replicas: 1
+  restart_policy:
+    condition: on-failure
+    delay: 5s
+    max_attempts: 3
+    window: 60s
+  resources:
+    limits:
       cpus: '0.5'
       memory: 512M
     reservations:
-      cpus: '0.25'
+      cpus: '0.1'
       memory: 256M
 
 services:
@@ -68,6 +83,12 @@ services:
       - PORT=8080
       - APP_URL=${NEXT_PUBLIC_WEB_URL}
       - DATABASE_URL=${DATABASE_URL}
+      - PRISMA_LOG_QUERY=${PRISMA_LOG_QUERY}
+      - REDIS_DB=0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASS=${REDIS_PASS}
+      - REDIS_KEY_PREFIX=${REDIS_KEY_PREFIX}
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_PORT=${MAIL_PORT}
       - MAIL_USER=${MAIL_USER}
@@ -86,6 +107,30 @@ services:
         max-size: "5m"
         max-file: "3"
 
+  redis:
+    image: redis:7-alpine
+    command: >
+      sh -c '
+        if [ -n "$REDIS_PASS" ]; then
+          redis-server --requirepass "$REDIS_PASS" --appendonly yes;
+        else
+          redis-server --appendonly yes;
+        fi
+      '
+    environment:
+      - REDIS_PASS=${REDIS_PASS}
+    networks:
+      - net
+    volumes:
+      - redis_data:/data
+    deploy:
+      <<: *redis-deploy-settings
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
 networks:
   net:
     external: true
@@ -95,3 +140,6 @@ volumes:
   data:
     driver: local
     name: crwsync_data
+  redis_data:
+    driver: local
+    name: crwsync_redis_data

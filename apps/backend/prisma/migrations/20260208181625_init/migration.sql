@@ -4,6 +4,12 @@ CREATE EXTENSION IF NOT EXISTS "citext";
 -- CreateEnum
 CREATE TYPE "users_role_enum" AS ENUM ('member', 'admin', 'super_admin');
 
+-- CreateEnum
+CREATE TYPE "workspace_role_enum" AS ENUM ('owner', 'admin', 'member', 'guest');
+
+-- CreateEnum
+CREATE TYPE "user_status_enum" AS ENUM ('online', 'busy', 'away');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" UUID NOT NULL,
@@ -15,6 +21,7 @@ CREATE TABLE "users" (
     "avatar_key" TEXT,
     "role" "users_role_enum" NOT NULL DEFAULT 'member',
     "role_version" INTEGER NOT NULL DEFAULT 1,
+    "status_preference" "user_status_enum" NOT NULL DEFAULT 'online',
     "password_hash" TEXT NOT NULL,
     "last_password_change" TIMESTAMPTZ,
     "email_verified_at" TIMESTAMPTZ,
@@ -69,6 +76,42 @@ CREATE TABLE "password_resets" (
     CONSTRAINT "password_resets_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "workspaces" (
+    "id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "slug" CITEXT NOT NULL,
+    "logo_key" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "workspaces_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "workspace_members" (
+    "id" UUID NOT NULL,
+    "workspace_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    "role" "workspace_role_enum" NOT NULL DEFAULT 'member',
+    "joined_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "workspace_members_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "workspace_invites" (
+    "id" UUID NOT NULL,
+    "invitee_id" UUID NOT NULL,
+    "creator_id" UUID,
+    "workspace_id" UUID NOT NULL,
+    "role" "workspace_role_enum" NOT NULL DEFAULT 'member',
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+
+    CONSTRAINT "workspace_invites_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "idx_user_email" ON "users"("email");
 
@@ -96,6 +139,30 @@ CREATE UNIQUE INDEX "idx_password_reset_token" ON "password_resets"("token_hash"
 -- CreateIndex
 CREATE INDEX "idx_password_reset_user_id" ON "password_resets"("user_id");
 
+-- CreateIndex
+CREATE INDEX "idx_workspace_slug_index" ON "workspaces"("slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "idx_workspace_slug_unique" ON "workspaces"("slug");
+
+-- CreateIndex
+CREATE INDEX "idx_workspace_member_user_id" ON "workspace_members"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "idx_workspace_member_unique" ON "workspace_members"("workspace_id", "user_id");
+
+-- CreateIndex
+CREATE INDEX "idx_workspace_invite_invitee_id" ON "workspace_invites"("invitee_id");
+
+-- CreateIndex
+CREATE INDEX "idx_workspace_invite_creator_id" ON "workspace_invites"("creator_id");
+
+-- CreateIndex
+CREATE INDEX "idx_workspace_invite_workspace_id" ON "workspace_invites"("workspace_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "idx_workspace_invite_unique" ON "workspace_invites"("invitee_id", "workspace_id");
+
 -- AddForeignKey
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -104,3 +171,18 @@ ALTER TABLE "email_verifications" ADD CONSTRAINT "email_verifications_user_id_fk
 
 -- AddForeignKey
 ALTER TABLE "password_resets" ADD CONSTRAINT "password_resets_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "workspace_members" ADD CONSTRAINT "workspace_members_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "workspace_members" ADD CONSTRAINT "workspace_members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "workspace_invites" ADD CONSTRAINT "workspace_invites_invitee_id_fkey" FOREIGN KEY ("invitee_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "workspace_invites" ADD CONSTRAINT "workspace_invites_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "workspace_invites" ADD CONSTRAINT "workspace_invites_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE CASCADE;

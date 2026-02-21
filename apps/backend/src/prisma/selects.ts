@@ -16,6 +16,7 @@ export const userPublicSelect = {
   last_login: true,
   created_at: true,
   updated_at: true,
+  status_preference: true,
 } satisfies Prisma.UserSelect;
 
 export const userAuthSelect = {
@@ -68,3 +69,36 @@ export const passwordResetPublicSelect = {
 } satisfies Prisma.PasswordResetSelect;
 
 export type PasswordResetPublic = Prisma.PasswordResetGetPayload<{ select: typeof passwordResetPublicSelect }>;
+
+export const workspacePublicSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  logo_key: true,
+  created_at: true,
+  updated_at: true,
+} satisfies Prisma.WorkspaceSelect;
+
+export type WorkspacePublic = Prisma.WorkspaceGetPayload<{ select: typeof workspacePublicSelect }>;
+
+export const workspaceMemberPublicSelect = {
+  id: true,
+  workspace_id: true,
+  user_id: true,
+  role: true,
+  joined_at: true,
+} satisfies Prisma.WorkspaceMemberSelect;
+
+export type WorkspaceMemberPublic = Prisma.WorkspaceMemberGetPayload<{ select: typeof workspaceMemberPublicSelect }>;
+
+export const workspaceInvitePublicSelect = {
+  id: true,
+  invitee_id: true,
+  creator_id: true,
+  workspace_id: true,
+  role: true,
+  created_at: true,
+  status: true,
+} satisfies Prisma.WorkspaceInviteSelect;
+
+export type WorkspaceInvitePublic = Prisma.WorkspaceInviteGetPayload<{ select: typeof workspaceInvitePublicSelect }>;

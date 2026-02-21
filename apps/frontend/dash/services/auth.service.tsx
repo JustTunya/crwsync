@@ -40,7 +40,6 @@ export function addInterceptors(client: AxiosInstance): AxiosInstance {
     const status = error?.response?.status;
     if (status !== 401) return Promise.reject(error);
 
-
     const baseUrl = client.defaults.baseURL || "";
     const pathname = getPathName(request.url, baseUrl);
 
@@ -61,7 +60,7 @@ export function addInterceptors(client: AxiosInstance): AxiosInstance {
   return client;
 }
 
-const api: AxiosInstance = addInterceptors(
+export const api: AxiosInstance = addInterceptors(
   axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL!,
     withCredentials: true,
@@ -246,7 +245,6 @@ export async function getMyself(): Promise<SessionUserType | undefined> {
     const resp = await api.get("/auth/me");
     return resp.data as SessionUserType;
   } catch (err) {
-    console.log(err);
     if (isAxiosError(err) && err.response?.status === 401) return undefined;
     throw err;
   }

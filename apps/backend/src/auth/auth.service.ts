@@ -28,7 +28,7 @@ export class AuthService {
   ) {}
 
   private payload(user: UserPublic, jti: string) {
-    return { jti, sub: user.id, email: user.email, role: user.role, rver: user.role_version };
+    return { jti, sub: user.id, email: user.email, role: user.role, rver: user.role_version, status_preference: user.status_preference };
   }
 
   async validateUser(dto: SigninDto): Promise<UserPublic | null> {
@@ -141,6 +141,7 @@ export class AuthService {
         const user = await this.me({ userId: payload.sub });
         return { user };
       } catch {
+        // If access token is invalid/expired, we'll attempt to refresh below
       }
     }
 

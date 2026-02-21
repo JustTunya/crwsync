@@ -246,7 +246,6 @@ export async function getMyself(): Promise<SessionUserType | undefined> {
     const resp = await api.get("/auth/me");
     return resp.data as SessionUserType;
   } catch (err) {
-    console.log(err);
     if (isAxiosError(err) && err.response?.status === 401) return undefined;
     throw err;
   }

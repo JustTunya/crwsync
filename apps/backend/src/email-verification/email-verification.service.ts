@@ -5,15 +5,17 @@ import { MailVerificationStatus } from "@crwsync/types";
 import { VerificationPublic, verificationPublicSelect } from "src/prisma/selects";
 import { CreateVerificationDto } from "src/email-verification/dto/create-email-verification.dto";
 import { UpdateVerificationDto } from "src/email-verification/dto/update-email-verification.dto";
-import { EmailService } from "src/email/email.service";
 import { PrismaService } from "src/prisma/prisma.service";
+
+import { Queue } from "bullmq";
+import { InjectQueue } from "@nestjs/bullmq";
 
 @Injectable()
 export class VerificationService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly emailService: EmailService,
     private readonly config: ConfigService,
+    @InjectQueue("email") private readonly emailQueue: Queue,
   ) {}
 
   async create(dto: CreateVerificationDto): Promise<VerificationPublic> {
@@ -52,7 +54,7 @@ export class VerificationService {
     const url = new URL("/auth/verify-email", appUrl);
     url.searchParams.set("token", token);
 
-    await this.emailService.sendEmail({
+    await this.emailQueue.add("send-verification", {
       to: dto.email,
       subject: "Welcome to CRWSYNC",
       template: "email-verification",

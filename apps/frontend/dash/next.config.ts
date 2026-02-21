@@ -1,12 +1,9 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   typescript: { ignoreBuildErrors: false },
-  outputFileTracingRoot: path.join(__dirname, "../../.."),
 
   compress: true,
 
@@ -25,6 +22,8 @@ const nextConfig: NextConfig = {
       { source: "/:path*.png", headers: [{ key: "Cache-Control", value: `public, max-age=${ONE_YEAR_SECONDS}, immutable` }] }
     ];
   },
+  
+  output: 'standalone',
 };
 
 export default nextConfig;
