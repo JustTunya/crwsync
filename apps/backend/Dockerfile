@@ -31,7 +31,7 @@ RUN corepack enable
 COPY --from=deps /app ./
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    ./node_modules/.bin/prisma generate --schema=apps/backend/prisma/schema.prisma && \
+    pnpx prisma generate --schema=apps/backend/prisma/schema.prisma && \
     pnpm run build --filter="@crwsync/types" --filter="@crwsync/backend"
 
 
@@ -52,7 +52,7 @@ RUN corepack enable
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --prod --frozen-lockfile --filter="@crwsync/backend" && \
-    ./node_modules/.bin/prisma generate --schema=apps/backend/prisma/schema.prisma
+    pnpx prisma generate --schema=apps/backend/prisma/schema.prisma
 
 COPY --from=builder --chown=node:node /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder --chown=node:node /app/packages/types/dist ./node_modules/@crwsync/types
