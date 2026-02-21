@@ -3,7 +3,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 ENV NODE_ENV=development
-COPY package.json pnpm-lock.yaml tsconfig.json tsconfig.base.json pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml tsconfig.json tsconfig.base.json pnpm-workspace.yaml turbo.json ./
 COPY apps/backend/package.json apps/backend/nest-cli.json apps/backend/tsconfig.json ./apps/backend/
 COPY packages/types/package.json ./packages/types/package.json
 COPY apps/backend/prisma ./apps/backend/prisma
@@ -23,6 +23,10 @@ COPY apps/backend ./apps/backend
 # --- BUILDER STAGE ---
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
 COPY --from=deps /app ./
 

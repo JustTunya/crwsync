@@ -5,16 +5,17 @@ WORKDIR /app
 ENV NODE_ENV=development
 RUN corepack enable
 
-COPY package.json pnpm-lock.yaml tsconfig.json tsconfig.base.json pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml tsconfig.json tsconfig.base.json pnpm-workspace.yaml turbo.json ./
 COPY apps/frontend/dash/package.json apps/frontend/dash/tsconfig*.json ./apps/frontend/dash/
 COPY packages/types/package.json ./packages/types/package.json
+COPY packages/styles/package.json ./packages/styles/package.json
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile --filter="@crwsync/types" --filter="@crwsync/dash"
+    pnpm install --frozen-lockfile --filter="@crwsync/types" --filter="@crwsync/styles" --filter="@crwsync/dash"
 
 COPY packages ./packages
 COPY apps/frontend/dash ./apps/frontend/dash
@@ -22,6 +23,10 @@ COPY apps/frontend/dash ./apps/frontend/dash
 # --- BUILDER STAGE ---
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_WEB_URL
