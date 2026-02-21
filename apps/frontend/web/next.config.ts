@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 

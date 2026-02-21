@@ -2,6 +2,7 @@
   "name": "crwsync",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.29.3",
   "license": "UNLICENSED",
   "scripts": {
     "build": "turbo run build",
@@ -34,6 +35,7 @@
   "author": "Tunya Lénárd-Sándor",
   "description": "crwsync is a collaborative tool designed to enhance teamwork and productivity by providing real-time synchronization of tasks, files, and communication across distributed teams. It aims to streamline project management and improve workflow efficiency in remote work environments.",
   "devDependencies": {
+    "@next/eslint-plugin-next": "^16.1.6",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
     "eslint": "^9.39.1",
