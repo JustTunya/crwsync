@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useReducer, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { SortableContext } from "@dnd-kit/sortable";
 import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent } from "@dnd-kit/core";
@@ -11,6 +11,57 @@ import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/u
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@/hooks/use-media-query";
+
+interface BoardPageState {
+  addingTaskFor: string | null;
+  editingTask: Task | null;
+  activeTask: Task | null;
+  addingColumn: boolean;
+  columnName: string;
+  taskTitle: string;
+}
+
+type BoardPageAction =
+  | { type: "SET_ADDING_TASK_FOR"; payload: string | null }
+  | { type: "SET_EDITING_TASK"; payload: Task | null }
+  | { type: "SET_ACTIVE_TASK"; payload: Task | null }
+  | { type: "SET_ADDING_COLUMN"; payload: boolean }
+  | { type: "SET_COLUMN_NAME"; payload: string }
+  | { type: "SET_TASK_TITLE"; payload: string }
+  | { type: "RESET_COLUMN_INPUT" }
+  | { type: "RESET_TASK_INPUT" };
+
+const initialState: BoardPageState = {
+  addingTaskFor: null,
+  editingTask: null,
+  activeTask: null,
+  addingColumn: false,
+  columnName: "",
+  taskTitle: "",
+};
+
+function boardReducer(state: BoardPageState, action: BoardPageAction): BoardPageState {
+  switch (action.type) {
+    case "SET_ADDING_TASK_FOR":
+      return { ...state, addingTaskFor: action.payload };
+    case "SET_EDITING_TASK":
+      return { ...state, editingTask: action.payload };
+    case "SET_ACTIVE_TASK":
+      return { ...state, activeTask: action.payload };
+    case "SET_ADDING_COLUMN":
+      return { ...state, addingColumn: action.payload };
+    case "SET_COLUMN_NAME":
+      return { ...state, columnName: action.payload };
+    case "SET_TASK_TITLE":
+      return { ...state, taskTitle: action.payload };
+    case "RESET_COLUMN_INPUT":
+      return { ...state, addingColumn: false, columnName: "" };
+    case "RESET_TASK_INPUT":
+      return { ...state, addingTaskFor: null, taskTitle: "" };
+    default:
+      return state;
+  }
+}
 
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -25,12 +76,8 @@ export default function BoardPage() {
   const createTask = useCreateTask(workspaceId, boardId);
   const moveTask = useMoveTask(workspaceId, boardId);
 
-  const [addingTaskFor, setAddingTaskFor] = useState<string | null>(null);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [addingColumn, setAddingColumn] = useState(false);
-  const [columnName, setColumnName] = useState("");
-  const [taskTitle, setTaskTitle] = useState("");
+  const [state, dispatch] = useReducer(boardReducer, initialState);
+  const { addingTaskFor, editingTask, activeTask, addingColumn, columnName, taskTitle } = state;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -39,8 +86,7 @@ export default function BoardPage() {
   const handleCreateColumn = async () => {
     if (!columnName.trim()) return;
     await createColumn.mutateAsync({ name: columnName.trim() });
-    setColumnName("");
-    setAddingColumn(false);
+    dispatch({ type: "RESET_COLUMN_INPUT" });
   };
 
   const handleCreateTask = async (columnId: string) => {
@@ -49,8 +95,7 @@ export default function BoardPage() {
       title: taskTitle.trim(),
       column_id: columnId,
     });
-    setTaskTitle("");
-    setAddingTaskFor(null);
+    dispatch({ type: "RESET_TASK_INPUT" });
   };
 
   const findColumnByTaskId = useCallback(
@@ -65,12 +110,12 @@ export default function BoardPage() {
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const task = active.data.current?.task as Task | undefined;
-    if (task) setActiveTask(task);
+    if (task) dispatch({ type: "SET_ACTIVE_TASK", payload: task });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveTask(null);
+    dispatch({ type: "SET_ACTIVE_TASK", payload: null });
 
     if (!over || !board?.columns || active.id === over.id) return;
 
@@ -137,14 +182,14 @@ export default function BoardPage() {
         </div>
         {isMobile ? (
           <button
-            onClick={() => setAddingColumn(true)}
+            onClick={() => dispatch({ type: "SET_ADDING_COLUMN", payload: true })}
             className="flex items-center gap-1 bg-foreground text-background p-1.5 rounded-full text-sm font-semibold cursor-pointer"
           >
             <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
           </button>
         ) : (
           <button
-            onClick={() => setAddingColumn(true)}
+            onClick={() => dispatch({ type: "SET_ADDING_COLUMN", payload: true })}
             className="flex items-center gap-1 bg-foreground text-background px-2 py-1 rounded-md text-sm font-semibold cursor-pointer"
           >
             <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
@@ -169,14 +214,14 @@ export default function BoardPage() {
                   workspaceId={workspaceId}
                   boardId={boardId}
                   taskTitle={taskTitle}
-                  setTaskTitle={setTaskTitle}
+                  setTaskTitle={(v) => dispatch({ type: "SET_TASK_TITLE", payload: v })}
                   addingTask={addingTaskFor === column.id}
                   onCreateTask={() => handleCreateTask(column.id)}
-                  onCancelTask={() => setAddingTaskFor(null)}
-                  onTaskClick={(task) => setEditingTask(task)}
+                  onCancelTask={() => dispatch({ type: "SET_ADDING_TASK_FOR", payload: null })}
+                  onTaskClick={(task) => dispatch({ type: "SET_EDITING_TASK", payload: task })}
                   onAddTask={() => {
-                    setAddingTaskFor(column.id);
-                    setTaskTitle("");
+                    dispatch({ type: "SET_ADDING_TASK_FOR", payload: column.id });
+                    dispatch({ type: "SET_TASK_TITLE", payload: "" });
                   }}
                 />
               ))}
@@ -189,18 +234,16 @@ export default function BoardPage() {
                     }}
                     type="text"
                     value={columnName}
-                    onChange={(e) => setColumnName(e.target.value)}
+                    onChange={(e) => dispatch({ type: "SET_COLUMN_NAME", payload: e.target.value })}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleCreateColumn();
                       if (e.key === "Escape") {
-                        setAddingColumn(false);
-                        setColumnName("");
+                        dispatch({ type: "RESET_COLUMN_INPUT" });
                       }
                     }}
                     onBlur={() => {
                       if (!columnName.trim()) {
-                        setAddingColumn(false);
-                        setColumnName("");
+                        dispatch({ type: "RESET_COLUMN_INPUT" });
                       }
                     }}
                     placeholder="Column name..."
@@ -223,7 +266,7 @@ export default function BoardPage() {
           task={editingTask}
           workspaceId={workspaceId}
           boardId={boardId}
-          onClose={() => setEditingTask(null)}
+          onClose={() => dispatch({ type: "SET_EDITING_TASK", payload: null })}
         />
       )}
     </div>
