@@ -4,9 +4,7 @@ import path from "path";
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   typescript: { ignoreBuildErrors: false },
-  outputFileTracingRoot: path.join(__dirname, "../../.."),
 
   compress: true,
 

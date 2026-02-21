@@ -3,11 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "license": "UNLICENSED",
-  "workspaces": [
-    "apps/frontend/*",
-    "apps/backend",
-    "packages/*"
-  ],
   "scripts": {
     "build": "turbo run build",
     "lint": "turbo run lint",

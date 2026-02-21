@@ -21,7 +21,7 @@ export class HasPendingInviteGuard {
 
     const invite = await this.prisma.workspaceInvite.findFirst({
       where: {
-        workspace_id: workspaceId,
+        workspace_id: workspaceId as string,
         invitee_id: userId,
         status: WorkspaceInviteStatusEnum.PENDING,
       },
