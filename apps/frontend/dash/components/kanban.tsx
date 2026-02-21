@@ -75,7 +75,15 @@ export function KanbanTask({ task, onClick, workspaceId }: { task: Task; onClick
       {...attributes}
       {...listeners}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onClick();
+        if (listeners?.onKeyDown) {
+          listeners.onKeyDown(e);
+        }
+      }}
       style={style}
+      role="button"
+      tabIndex={0}
       className="bg-background dark:bg-base-200 rounded-lg p-3 border-[1.5px] border-base-200 dark:border-base-300 hover:border-base-300 transition-colors cursor-grab active:cursor-grabbing"
     >
       <h3 className="text-sm text-foreground font-medium leading-tight truncate">{task.title}</h3>
@@ -131,11 +139,10 @@ interface KanbanColProps {
   setTaskTitle: (v: string) => void;
   onCreateTask: () => void;
   onCancelTask: () => void;
-  taskInputRef: React.RefObject<HTMLInputElement | null>;
   onTaskClick: (task: Task) => void;
 }
 
-export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, addingTask, taskTitle, setTaskTitle, onCreateTask, onCancelTask, taskInputRef, onTaskClick }: KanbanColProps) {
+export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, addingTask, taskTitle, setTaskTitle, onCreateTask, onCancelTask, onTaskClick }: KanbanColProps) {
   const updateColumn = useUpdateColumn(workspaceId, boardId);
   const deleteColumn = useDeleteColumn(workspaceId, boardId);
 
@@ -143,12 +150,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
   const [editName, setEditName] = useState(column.name);
   const [showMenu, setShowMenu] = useState(false);
 
-  const editRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (editing) editRef.current?.focus();
-  }, [editing]);
 
   useEffect(() => {
     if (!showMenu) return;
@@ -206,7 +208,9 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
           {editing ? (
             <input
               type="text"
-              ref={editRef}
+              ref={(input) => {
+                if (input && editing) input.focus();
+              }}
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               onKeyDown={(e) => {
@@ -320,7 +324,9 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
             {addingTask && (
               <div className="bg-base-100 rounded-lg p-3 border border-primary/50">
                 <input
-                  ref={taskInputRef}
+                  ref={(input) => {
+                    if (input && addingTask) input.focus();
+                  }}
                   type="text"
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
@@ -343,7 +349,9 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
           {addingTask ? (
             <div className="bg-base-100 rounded-lg p-3 border border-primary/50">
               <input
-                ref={taskInputRef}
+                ref={(input) => {
+                  if (input && addingTask) input.focus();
+                }}
                 type="text"
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
@@ -444,7 +452,7 @@ function RichTextEditor({ value, onChange }: RichTextEditorProps) {
 
   return (
     <div className="flex-1 flex flex-col rounded-lg border-[1.5px] border-base-300 bg-base-200 overflow-hidden focus-within:border-primary transition-colors">
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-base-300 bg-base-200/50" onMouseDown={(e) => e.preventDefault()}>
+      <div role="presentation" className="flex items-center gap-0.5 px-2 py-1.5 border-b border-base-300 bg-base-200/50" onMouseDown={(e) => e.preventDefault()}>
         <ToggleGroup type="multiple" size="sm" value={activeFormats} onValueChange={() => {}}>
           <ToggleGroupItem value="bold" aria-label="Bold" onClick={() => editor.chain().focus().toggleBold().run()} className="size-7 p-0 rounded-md">
             <HugeiconsIcon icon={TextBoldIcon} className="size-3.5" />
@@ -561,6 +569,10 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
     <div
       className="fixed inset-0 z-100 flex items-center justify-center bg-background/50 p-4 sm:p-0"
       onClick={onClose}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" || e.key === "Enter") onClose();
+      }}
+      role="presentation"
     >
       <div
         className={cn(
@@ -568,6 +580,8 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
           isMobile ? "max-w-full" : "max-w-3xl"
         )}
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        role="presentation"
       >
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-sm font-semibold">Edit Task Details</h2>
@@ -599,7 +613,9 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSave()}
-                autoFocus
+                ref={(input) => {
+                  if (input) input.focus();
+                }}
               />
             </div>
 
@@ -697,7 +713,9 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
                         value={assigneeSearch}
                         onChange={(e) => setAssigneeSearch(e.target.value)}
                         placeholder="Search members..."
-                        autoFocus
+                        ref={(input) => {
+                          if (input) input.focus();
+                        }}
                       />
                     </div>
                     <div className="p-1">
@@ -741,14 +759,14 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
                 Labels
               </label>
               <div className={cn("flex flex-wrap gap-2", labels.length > 0 && "mb-2")}>
-                {labels.map((label, i) => (
+                {labels.map((label) => (
                   <span
-                    key={i}
+                    key={label}
                     className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-base-200 rounded-md text-foreground"
                   >
                     {label}
                     <button
-                      onClick={() => setLabels(labels.filter((_, idx) => idx !== i))}
+                      onClick={() => setLabels(labels.filter((l) => l !== label))}
                       className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                       <HugeiconsIcon icon={Cancel01Icon} size={12} strokeWidth={2} />

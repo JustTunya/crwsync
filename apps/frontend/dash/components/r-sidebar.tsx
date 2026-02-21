@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
-import { motion, Transition } from "framer-motion";
+import { m, Transition, LazyMotion, domAnimation } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -45,12 +45,6 @@ export function RSidebar() {
     queryFn: () => getWorkspaceMembers(workspace!.id),
     enabled: !!workspace?.id,
   });
-
-  useEffect(() => {
-    if (isMobile) {
-      setOpen(false);
-    }
-  }, [isMobile, setOpen]);
 
   useEffect(() => {
     if (!socket || !workspace?.id || !isConnected) return;
@@ -142,88 +136,106 @@ export function RSidebar() {
 
   return (
     <>
-      <React.Fragment>
-          {isMobile && open && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
-            />
-          )}
-
-        <motion.div
-          initial={false}
-          variants={toggleBtnVariants}
-          animate={isMobile ? "mobile" : "desktop"}
-          transition={spring}
-          className={cn(
-            "absolute top-4 flex flex-row gap-2 z-50",
-            isMobile && open ? "fixed right-4" : "absolute"
-          )}
-        >
-          <div
-            onClick={() =>
-              open && view === "NOTIFICATIONS"
-                ? toggleOpen()
-                : setView("NOTIFICATIONS")
-            }
-            className={cn(
-              "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
-              isMobile && open && view === "NOTIFICATIONS" && "bg-base-200"
-            )}
-          >
-            <HugeiconsIcon
-              icon={Notification01Icon}
-              fill={view === "NOTIFICATIONS" && open ? "currentColor" : "none"}
-              strokeWidth={2}
-              className="size-5 text-foreground"
-            />
-          </div>
-          <div
-            onClick={() =>
-              open && view === "MEMBERS" ? toggleOpen() : setView("MEMBERS")
-            }
-            className={cn(
-              "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
-               isMobile && open && view === "MEMBERS" && "bg-base-200"
-            )}
-          >
-            <HugeiconsIcon
-              icon={UserMultiple02Icon}
-              fill={view === "MEMBERS" && open ? "currentColor" : "none"}
-              strokeWidth={2}
-              className="size-5 text-foreground"
-            />
-          </div>
-        </motion.div>
-
-        <motion.aside
-          variants={sidebarVariants}
-          animate={isMobile ? "mobile" : "desktop"}
-          transition={spring}
-          className={cn(
-            "flex flex-col gap-4 h-screen bg-base-100 border-l border-base-200 overflow-hidden",
-            isMobile ? "fixed right-0 top-0 shadow-2xl border-l" : "border-l"
-          )}
-        >
-          <div className={cn("flex-1 overflow-y-auto", open ? "p-4" : "p-0")}>
-            {view === "MEMBERS" ? (
-              <SidebarMembers
-                groups={groupedMembers}
-                statuses={statuses}
-                isLoading={isLoading}
-                workspace={workspace}
-                open={openInviteModal}
-                setOpen={setOpenInviteModal}
+      <LazyMotion features={domAnimation} strict>
+        <React.Fragment>
+            {isMobile && open && (
+              <m.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setOpen(false)}
+                className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
               />
-            ) : (
-              <SidebarNotifications />
             )}
-          </div>
-        </motion.aside>
-      </React.Fragment>
+
+          <m.div
+            initial={false}
+            variants={toggleBtnVariants}
+            animate={isMobile ? "mobile" : "desktop"}
+            transition={spring}
+            className={cn(
+              "absolute top-4 flex flex-row gap-2 z-50",
+              isMobile && open ? "fixed right-4" : "absolute"
+            )}
+          >
+            <div
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (open && view === "NOTIFICATIONS") toggleOpen();
+                  else setView("NOTIFICATIONS");
+                }
+              }}
+              onClick={() =>
+                open && view === "NOTIFICATIONS"
+                  ? toggleOpen()
+                  : setView("NOTIFICATIONS")
+              }
+              className={cn(
+                "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
+                isMobile && open && view === "NOTIFICATIONS" && "bg-base-200"
+              )}
+            >
+              <HugeiconsIcon
+                icon={Notification01Icon}
+                fill={view === "NOTIFICATIONS" && open ? "currentColor" : "none"}
+                strokeWidth={2}
+                className="size-5 text-foreground"
+              />
+            </div>
+            <div
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (open && view === "MEMBERS") toggleOpen();
+                  else setView("MEMBERS");
+                }
+              }}
+              onClick={() =>
+                open && view === "MEMBERS" ? toggleOpen() : setView("MEMBERS")
+              }
+              className={cn(
+                "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
+                isMobile && open && view === "MEMBERS" && "bg-base-200"
+              )}
+            >
+              <HugeiconsIcon
+                icon={UserMultiple02Icon}
+                fill={view === "MEMBERS" && open ? "currentColor" : "none"}
+                strokeWidth={2}
+                className="size-5 text-foreground"
+              />
+            </div>
+          </m.div>
+
+          <m.aside
+            variants={sidebarVariants}
+            animate={isMobile ? "mobile" : "desktop"}
+            transition={spring}
+            className={cn(
+              "flex flex-col gap-4 h-screen bg-base-100 border-l border-base-200 overflow-hidden",
+              isMobile ? "fixed right-0 top-0 shadow-2xl border-l" : "border-l"
+            )}
+          >
+            <div className={cn("flex-1 overflow-y-auto", open ? "p-4" : "p-0")}>
+              {view === "MEMBERS" ? (
+                <SidebarMembers
+                  groups={groupedMembers}
+                  statuses={statuses}
+                  isLoading={isLoading}
+                  workspace={workspace}
+                  open={openInviteModal}
+                  setOpen={setOpenInviteModal}
+                />
+              ) : (
+                <SidebarNotifications />
+              )}
+            </div>
+          </m.aside>
+        </React.Fragment>
+      </LazyMotion>
     </>
   );
 }

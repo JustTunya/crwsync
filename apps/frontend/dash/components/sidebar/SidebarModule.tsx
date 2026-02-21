@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { m, AnimatePresence, LazyMotion, domAnimation } from "framer-motion";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
@@ -10,8 +10,8 @@ import { Shortcut } from "@/components/ui/shortcut";
 import { cn } from "@/lib/utils";
 
 interface SidebarModuleProps {
-  id: string; // Added id prop
-  activeWorkspaceId: string; // Added activeWorkspaceId prop
+  id: string;
+  activeWorkspaceId: string;
   icon: HugeiconsIconProps["icon"];
   name: string;
   href: string;
@@ -29,14 +29,8 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
 
   const [showSettingsBtn, setShowSettingsBtn] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [moduleName, setModuleName] = useState<string>(name);
+  const [moduleName, setModuleName] = useState<string>("");
   const [rename, setRename] = useState<boolean>(false);
-  const [prevName, setPrevName] = useState<string>(name);
-
-  if (name !== prevName) {
-    setPrevName(name);
-    setModuleName(name);
-  }
 
   const handleMouseEvent = (state: boolean) => {
     setShowSettingsBtn(state);
@@ -53,6 +47,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
     e.preventDefault();
     e.stopPropagation();
     setShowSettings(false);
+    setModuleName(name);
     setRename(true);
   };
 
@@ -63,7 +58,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
         data: { name: moduleName.trim() },
       });
     } else {
-      setModuleName(name);
+      setModuleName("");
     }
     setRename(false);
   };
@@ -109,41 +104,46 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
           strokeWidth={1.75}
           className="size-4.5 z-10"
         />
-        <AnimatePresence>
-          {extended && !rename && (
-            <motion.p
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.15, ease: "easeInOut" }}
-              className="text-foreground text-xs font-medium truncate z-10"
-            >
-              {name}
-            </motion.p>
-          )}
-          {extended && rename && (
-            <motion.input
-              type="text"
-              autoFocus
-              value={moduleName}
-              onChange={(e) => setModuleName(e.target.value)}
-              onBlur={handleRenameSubmit}
-              onClick={(e) => {
-                 e.preventDefault();
-                 e.stopPropagation();
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleRenameSubmit();
-                if (e.key === "Escape") {
-                    setModuleName(name);
-                    setRename(false);
-                }
-              }}
-              className="text-foreground text-xs font-medium truncate z-10 border-none outline-none bg-transparent w-full"
-            />
-          )}
-        </AnimatePresence>
+
+        <LazyMotion features={domAnimation} strict>
+          <AnimatePresence>
+            {extended && !rename && (
+              <m.p
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: "auto" }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.15, ease: "easeInOut" }}
+                className="text-foreground text-xs font-medium truncate z-10"
+              >
+                {name}
+              </m.p>
+            )}
+            {extended && rename && (
+              <m.input
+                type="text"
+                ref={(input) => {
+                  if (input) input.focus();
+                }}
+                value={moduleName}
+                onChange={(e) => setModuleName(e.target.value)}
+                onBlur={handleRenameSubmit}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleRenameSubmit();
+                  if (e.key === "Escape") {
+                      setModuleName("");
+                      setRename(false);
+                  }
+                }}
+                className="text-foreground text-xs font-medium truncate z-10 border-none outline-none bg-transparent w-full"
+              />
+            )}
+          </AnimatePresence>
+        </LazyMotion>
       </div>
 
       {extended && showSettingsBtn && !rename && (
@@ -152,16 +152,18 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
         </button>
       )}
 
-      <AnimatePresence>
-        {active && (
-          <motion.div
-            initial={{ backgroundPosition: "0% 75%" }}
-            animate={{ backgroundPosition: active ? "75% 0%" : "0% 75%" }}
-            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-            className="absolute inset-0 rounded-lg bg-linear-240 from-primary/80 dark:from-primary/40 via-base-200 to-base-200 bg-size-[200%_100%]"
-          />
-        )}
-      </AnimatePresence>
+      <LazyMotion features={domAnimation} strict>
+        <AnimatePresence>
+          {active && (
+            <m.div
+              initial={{ backgroundPosition: "0% 75%" }}
+              animate={{ backgroundPosition: active ? "75% 0%" : "0% 75%" }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              className="absolute inset-0 rounded-lg bg-linear-240 from-primary/80 dark:from-primary/40 via-base-200 to-base-200 bg-size-[200%_100%]"
+            />
+          )}
+        </AnimatePresence>
+      </LazyMotion>
 
       {extended && showSettings && (
         <div className="absolute right-0 top-6 flex flex-col gap-1 z-30 p-1 bg-base-100 border border-base-200 rounded-lg shadow-lg">
@@ -206,7 +208,7 @@ export function SidebarGlobalModule({ icon, name, href, shortcut, active, extend
         />
         <AnimatePresence>
           {extended && (
-            <motion.p
+            <m.p
               initial={{ opacity: 0, width: 0 }}
               animate={{ opacity: 1, width: "auto" }}
               exit={{ opacity: 0, width: 0 }}
@@ -214,7 +216,7 @@ export function SidebarGlobalModule({ icon, name, href, shortcut, active, extend
               className="text-foreground text-xs font-medium truncate z-10"
             >
               {name}
-            </motion.p>
+            </m.p>
           )}
         </AnimatePresence>
       </div>
@@ -223,7 +225,7 @@ export function SidebarGlobalModule({ icon, name, href, shortcut, active, extend
 
       <AnimatePresence>
         {active && (
-          <motion.div
+          <m.div
             initial={{ backgroundPosition: "0% 75%" }}
             animate={{ backgroundPosition: active ? "75% 0%" : "0% 75%" }}
             transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
@@ -243,7 +245,7 @@ export function SidebarNoModule({
   extended?: boolean;
 }) {
   return (
-    <motion.div
+    <m.div
       animate={{
         width: extended ? "100%" : "0",
         padding: extended ? "4px" : "8px",
@@ -252,7 +254,7 @@ export function SidebarNoModule({
       className="flex items-center justify-center rounded-full border-[1.5px] border-dashed border-base-300 mx-auto overflow-hidden"
     >
       {extended && message && (
-        <motion.p
+        <m.p
           key="no-module-message"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -261,8 +263,8 @@ export function SidebarNoModule({
           className="text-muted-foreground text-xs italic text-center whitespace-nowrap"
         >
           {message}
-        </motion.p>
+        </m.p>
       )}
-    </motion.div>
+    </m.div>
   );
 }

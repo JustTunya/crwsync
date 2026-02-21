@@ -57,8 +57,20 @@ export default function InviteMemberModal({ workspace, isOpen, onClose }: Invite
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/50" onClick={handleClose}>
-      <div className="flex flex-col gap-4 bg-base-100 rounded-lg p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/50" 
+      onClick={handleClose}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" || e.key === "Enter") handleClose();
+      }}
+      role="presentation"
+    >
+      <div 
+        className="flex flex-col gap-4 bg-base-100 rounded-lg p-6 w-full max-w-md" 
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        role="presentation"
+      >
         <div>
           <h2 className="text-lg text-center font-semibold leading-tight mb-4">Invite people to {workspace.name}</h2>
           <p className="text-sm text-muted-foreground text-center leading-0 mb-6">Search by username or email</p>
@@ -86,7 +98,15 @@ export default function InviteMemberModal({ workspace, isOpen, onClose }: Invite
             {users.length > 0 && (
               <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
                 {users.map((u) => (
-                  <div key={u.id} onClick={() => setUser(u)}>
+                  <div 
+                    key={u.id} 
+                    onClick={() => setUser(u)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setUser(u);
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
                     <SidebarProfile user={u} />
                   </div>
                 ))}
@@ -124,7 +144,7 @@ interface SelectMemberRoleProps {
 export function SelectMemberRole({ role, setRole }: SelectMemberRoleProps) {
   return (
     <Select defaultValue={role} value={role} onValueChange={(value) => setRole(value as WorkspaceRoleEnum)}>
-      <SelectTrigger className="border-none bg-transparent dark:bg-transparent hover:bg-base-200 dark:hover:bg-base-200">
+      <SelectTrigger className="flex items-center justify-center gap-1 border-none bg-transparent dark:bg-transparent hover:bg-base-200 dark:hover:bg-base-200">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

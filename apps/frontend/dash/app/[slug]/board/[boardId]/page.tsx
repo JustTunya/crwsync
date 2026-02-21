@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { SortableContext } from "@dnd-kit/sortable";
 import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent } from "@dnd-kit/core";
@@ -31,17 +31,6 @@ export default function BoardPage() {
   const [addingColumn, setAddingColumn] = useState(false);
   const [columnName, setColumnName] = useState("");
   const [taskTitle, setTaskTitle] = useState("");
-
-  const columnInputRef = useRef<HTMLInputElement>(null);
-  const taskInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (addingColumn) columnInputRef.current?.focus();
-  }, [addingColumn]);
-
-  useEffect(() => {
-    if (addingTaskFor) taskInputRef.current?.focus();
-  }, [addingTaskFor]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -180,7 +169,6 @@ export default function BoardPage() {
                   workspaceId={workspaceId}
                   boardId={boardId}
                   taskTitle={taskTitle}
-                  taskInputRef={taskInputRef}
                   setTaskTitle={setTaskTitle}
                   addingTask={addingTaskFor === column.id}
                   onCreateTask={() => handleCreateTask(column.id)}
@@ -189,7 +177,6 @@ export default function BoardPage() {
                   onAddTask={() => {
                     setAddingTaskFor(column.id);
                     setTaskTitle("");
-                    setTimeout(() => taskInputRef.current?.focus(), 0);
                   }}
                 />
               ))}
@@ -197,7 +184,9 @@ export default function BoardPage() {
               {addingColumn && (
                 <div className="flex flex-col shrink-0 w-72 bg-base-200/50 rounded-xl p-3 border-[1.5px] border-primary ring-3 ring-primary/50">
                   <input
-                    ref={columnInputRef}
+                    ref={(input) => {
+                      if (input && addingColumn) input.focus();
+                    }}
                     type="text"
                     value={columnName}
                     onChange={(e) => setColumnName(e.target.value)}

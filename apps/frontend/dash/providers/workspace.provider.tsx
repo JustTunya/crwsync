@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useCallback } from "react";
+import { createContext, useContext, useMemo, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Workspace, WorkspaceMember, CreateWorkspacePayload } from "@crwsync/types";
@@ -48,13 +48,6 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   // 3. Fetch full details for the active workspace
   const { data: activeWorkspace = null, isLoading: activeLoading } = useWorkspaceQuery(activeId);
 
-  // 4. Persistence (optional now, since URL assumes source of truth)
-  useEffect(() => {
-    if (activeWorkspace) {
-       localStorage.setItem(STORAGE_KEY, activeWorkspace.id); // Maybe store slug instead?
-    }
-  }, [activeWorkspace]);
-
   const createMutation = useCreateWorkspace();
 
   const createWorkspace = useCallback(async (payload: CreateWorkspacePayload) => {
@@ -62,8 +55,12 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }, [createMutation]);
 
   const switchWorkspace = useCallback(async (workspaceSlug: string) => {
+    const ws = workspaces.find((w) => w.workspace?.slug === workspaceSlug);
+    if (ws?.workspace_id) {
+       localStorage.setItem(STORAGE_KEY, ws.workspace_id);
+    }
     router.push(`/${workspaceSlug}`);
-  }, [router]);
+  }, [router, workspaces]);
 
   const refreshWorkspaces = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: workspaceKeys.all });

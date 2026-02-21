@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useReducer } from "react";
 import { io, Socket } from "socket.io-client";
 import { useUser } from "@/providers/user.provider";
 
@@ -16,14 +16,31 @@ const SocketContext = createContext<SocketContextType>({
   isConnected: false,
 });
 
+type SocketAction =
+  | { type: "CONNECT"; payload: Socket }
+  | { type: "DISCONNECT" };
+
+function socketReducer(state: SocketContextType, action: SocketAction): SocketContextType {
+  switch (action.type) {
+    case "CONNECT":
+      return { socket: action.payload, isConnected: true };
+    case "DISCONNECT":
+      return { socket: null, isConnected: false };
+    default:
+      return state;
+  }
+}
+
 export function useSocket() {
   return useContext(SocketContext);
 }
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const user = useUser();
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [state, dispatch] = useReducer(socketReducer, {
+    socket: null,
+    isConnected: false,
+  });
 
   useEffect(() => {
     if (!user) {
@@ -37,22 +54,21 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     });
 
     socketInstance.on("connect", () => {
-      setSocket(socketInstance);
-      setIsConnected(true);
+      dispatch({ type: "CONNECT", payload: socketInstance });
     });
 
     socketInstance.on("disconnect", () => {
-      setIsConnected(false);
+      dispatch({ type: "DISCONNECT" });
     });
 
     return () => {
       socketInstance.disconnect();
-      setIsConnected(false);
+      dispatch({ type: "DISCONNECT" });
     };
   }, [user]);
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected }}>
+    <SocketContext.Provider value={state}>
       {children}
     </SocketContext.Provider>
   );

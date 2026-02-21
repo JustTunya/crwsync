@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence, Transition } from "framer-motion";
+import { m, AnimatePresence, Transition, LazyMotion, domAnimation } from "framer-motion";
 import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -41,10 +41,6 @@ export function LSidebar() {
   const { open, toggleOpen, setOpen } = useLSidebar();
 
   const { status, handleStatusChange } = useUserStatus();
-
-  useEffect(() => {
-    if (isMobile) setOpen(false);
-  }, [pathname, isMobile, setOpen]);
 
   const slug = activeWorkspace?.slug || "";
   const [addModuleOpen, setAddModuleOpen] = useState(false);
@@ -101,203 +97,205 @@ export function LSidebar() {
 
   return (
     <>
-      <AnimatePresence>
-        {isMobile && open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setOpen(false)}
-            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
-          />
-        )}
-      </AnimatePresence>
-
-      <motion.aside
-        variants={sidebarVariants}
-        animate={isMobile ? "mobile" : "desktop"}
-        transition={spring}
-        className={cn(
-          "flex flex-col gap-4 h-screen p-4 bg-base-100 border-r border-base-200 overflow-hidden",
-          isMobile ? "fixed left-0 top-0 shadow-2xl" : "sticky top-0",
-        )}
-      >
-        <div className="flex items-center">
-          {/* WORKSPACE */}
-          <SidebarWorkspace extended={open} />
-        </div>
-
-        {/* SEARCH BAR */}
-        {open ? (
-          <motion.div
-            key="search-input"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={fading}
-            className="w-full"
-          >
-            <Input
-              ref={searchRef}
-              placeholder="Search..."
-              className="bg-base-200"
-              prefix={
-                <HugeiconsIcon
-                  icon={Search01Icon}
-                  strokeWidth={1.75}
-                  className="size-4 text-placeholder"
-                />
-              }
-              suffix={<Shortcut chars={["ctrl", "K"]} />}
+      <LazyMotion features={domAnimation} strict>
+        <AnimatePresence>
+          {isMobile && open && (
+            <m.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
             />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="search-icon"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="flex justify-center"
-          >
-            <HugeiconsIcon
-              icon={Search01Icon}
-              strokeWidth={1.75}
-              className="size-4.5 text-foreground my-2"
-            />
-          </motion.div>
-        )}
+          )}
+        </AnimatePresence>
 
-        {/* GLOBAL MODULES */}
-        <div className="flex flex-col">
-          {modules.map((module) => (
-            <SidebarGlobalModule
-              key={module.name}
-              icon={module.icon}
-              name={module.name}
-              href={module.href}
-              shortcut={module.shortcut}
-              active={pathname === module.href}
-              extended={open}
-            />
-          ))}
-        </div>
+        <m.aside
+          variants={sidebarVariants}
+          animate={isMobile ? "mobile" : "desktop"}
+          transition={spring}
+          className={cn(
+            "flex flex-col gap-4 h-screen p-4 bg-base-100 border-r border-base-200 overflow-hidden",
+            isMobile ? "fixed left-0 top-0 shadow-2xl" : "sticky top-0",
+          )}
+        >
+          <div className="flex items-center">
+            {/* WORKSPACE */}
+            <SidebarWorkspace extended={open} />
+          </div>
 
-        {/* DIVIDER */}
-        <div className="h-px w-full bg-base-200 rounded-full" />
-
-        {/* SHARED */}
-        <div className="flex flex-col">
-          <SectionHeader
-            label="Shared"
-            extended={open}
-            onAdd={() => setAddModuleOpen(true)}
-          />
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={localModules?.map((m) => m.id) || []}
-              strategy={verticalListSortingStrategy}
+          {/* SEARCH BAR */}
+          {open ? (
+            <m.div
+              key="search-input"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={fading}
+              className="w-full"
             >
-              <div className="flex flex-col">
-                {localModules && localModules.length > 0 ? (
-                  localModules.map((mod) => (
-                    <SidebarModule
-                      key={mod.id}
-                      id={mod.id}
-                      activeWorkspaceId={activeWorkspace!.id}
-                      icon={getModuleIcon(mod.type)}
-                      name={mod.name}
-                      href={getModuleHref(slug, mod)}
-                      active={isModuleActive(pathname, slug, mod)}
-                      extended={open}
-                    />
-                  ))
-                ) : (
-                  <SidebarNoModule message="No shared modules yet." extended={open} />
-                )}
-              </div>
-            </SortableContext>
-            
-            {typeof window !== "undefined" && createPortal(
-              <DragOverlay dropAnimation={null}>
-                {activeId ? (() => {
-                  const mod = localModules?.find((m) => m.id === activeId);
-                  if (!mod) return null;
-                  return (
-                    <SidebarModule
-                      id={mod.id}
-                      activeWorkspaceId={activeWorkspace!.id}
-                      icon={getModuleIcon(mod.type)}
-                      name={mod.name}
-                      href={getModuleHref(slug, mod)}
-                      active={isModuleActive(pathname, slug, mod)}
-                      extended={open}
-                      isOverlay
-                    />
-                  );
-                })() : null}
-              </DragOverlay>,
-              document.body
-            )}
-          </DndContext>
-        </div>
+              <Input
+                ref={searchRef}
+                placeholder="Search..."
+                className="bg-base-200"
+                prefix={
+                  <HugeiconsIcon
+                    icon={Search01Icon}
+                    strokeWidth={1.75}
+                    className="size-4 text-placeholder"
+                  />
+                }
+                suffix={<Shortcut chars={["ctrl", "K"]} />}
+              />
+            </m.div>
+          ) : (
+            <m.div
+              key="search-icon"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex justify-center"
+            >
+              <HugeiconsIcon
+                icon={Search01Icon}
+                strokeWidth={1.75}
+                className="size-4.5 text-foreground my-2"
+              />
+            </m.div>
+          )}
 
-        <AddModuleModal
-          isOpen={addModuleOpen}
-          onClose={() => setAddModuleOpen(false)}
-        />
+          {/* GLOBAL MODULES */}
+          <div className="flex flex-col">
+            {modules.map((module) => (
+              <SidebarGlobalModule
+                key={module.name}
+                icon={module.icon}
+                name={module.name}
+                href={module.href}
+                shortcut={module.shortcut}
+                active={pathname === module.href}
+                extended={open}
+              />
+            ))}
+          </div>
 
-        {/* DIVIDER */}
-        <div className="h-px w-full bg-base-200 rounded-full" />
+          {/* DIVIDER */}
+          <div className="h-px w-full bg-base-200 rounded-full" />
 
-        {/* PROJECTS */}
-        <div className="flex flex-col">
-          <SectionHeader label="Projects" extended={open} />
-          <SidebarProject icon={ZapIcon} name="Demo project" extended={open} />
-        </div>
+          {/* SHARED */}
+          <div className="flex flex-col">
+            <SectionHeader
+              label="Shared"
+              extended={open}
+              onAdd={() => setAddModuleOpen(true)}
+            />
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={localModules?.map((m) => m.id) || []}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="flex flex-col">
+                  {localModules && localModules.length > 0 ? (
+                    localModules.map((mod) => (
+                      <SidebarModule
+                        key={mod.id}
+                        id={mod.id}
+                        activeWorkspaceId={activeWorkspace!.id}
+                        icon={getModuleIcon(mod.type)}
+                        name={mod.name}
+                        href={getModuleHref(slug, mod)}
+                        active={isModuleActive(pathname, slug, mod)}
+                        extended={open}
+                      />
+                    ))
+                  ) : (
+                    <SidebarNoModule message="No shared modules yet." extended={open} />
+                  )}
+                </div>
+              </SortableContext>
+              
+              {typeof window !== "undefined" && createPortal(
+                <DragOverlay dropAnimation={null}>
+                  {activeId ? (() => {
+                    const mod = localModules?.find((m) => m.id === activeId);
+                    if (!mod) return null;
+                    return (
+                      <SidebarModule
+                        id={mod.id}
+                        activeWorkspaceId={activeWorkspace!.id}
+                        icon={getModuleIcon(mod.type)}
+                        name={mod.name}
+                        href={getModuleHref(slug, mod)}
+                        active={isModuleActive(pathname, slug, mod)}
+                        extended={open}
+                        isOverlay
+                      />
+                    );
+                  })() : null}
+                </DragOverlay>,
+                document.body
+              )}
+            </DndContext>
+          </div>
 
-        {/* PROFILE */}
-        <SidebarProfile
-          status={status}
-          setStatus={handleStatusChange}
-          extended={open}
-        />
-      </motion.aside>
+          <AddModuleModal
+            isOpen={addModuleOpen}
+            onClose={() => setAddModuleOpen(false)}
+          />
 
-      <motion.div
-        initial={false}
-        transition={spring}
-        animate={
-          isMobile
-            ? {
-                left: open ? "calc(91vw - 1rem)" : 16,
-                x: 0,
-                opacity: rOpen ? 0 : 1,
-                pointerEvents: rOpen ? "none" : "auto",
-              }
-            : {
-                left: open ? 296 : 96,
-                x: 0,
-                opacity: 1,
-                pointerEvents: "auto",
-              }
-        }
-        className={cn(
-          "fixed top-4 flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer z-50",
-        )}
-        onClick={toggleOpen}
-      >
-        <HugeiconsIcon
-          icon={Menu05Icon}
-          strokeWidth={2}
-          className="size-5"
-        />
-      </motion.div>
+          {/* DIVIDER */}
+          <div className="h-px w-full bg-base-200 rounded-full" />
+
+          {/* PROJECTS */}
+          <div className="flex flex-col">
+            <SectionHeader label="Projects" extended={open} />
+            <SidebarProject icon={ZapIcon} name="Demo project" extended={open} />
+          </div>
+
+          {/* PROFILE */}
+          <SidebarProfile
+            status={status}
+            setStatus={handleStatusChange}
+            extended={open}
+          />
+        </m.aside>
+
+        <m.div
+          initial={false}
+          transition={spring}
+          animate={
+            isMobile
+              ? {
+                  left: open ? "calc(91vw - 1rem)" : 16,
+                  x: 0,
+                  opacity: rOpen ? 0 : 1,
+                  pointerEvents: rOpen ? "none" : "auto",
+                }
+              : {
+                  left: open ? 296 : 96,
+                  x: 0,
+                  opacity: 1,
+                  pointerEvents: "auto",
+                }
+          }
+          className={cn(
+            "fixed top-4 flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer z-50",
+          )}
+          onClick={toggleOpen}
+        >
+          <HugeiconsIcon
+            icon={Menu05Icon}
+            strokeWidth={2}
+            className="size-5"
+          />
+        </m.div>
+      </LazyMotion>
     </>
   );
 }
