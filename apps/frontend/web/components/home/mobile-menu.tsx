@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { motion, Variants } from "framer-motion";
+import { m, Variants, LazyMotion, domAnimation } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 
@@ -56,51 +56,53 @@ interface MobileMenuProps {
 
 export default function MobileMenu({ setOpen }: MobileMenuProps) {
   return (
-    <motion.nav
-      className="flex flex-col gap-3 w-full"
-      variants={container}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-    >
-      <motion.div className="flex flex-col gap-2" variants={item}>
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground ml-2">
-          Product
-        </span>
-      </motion.div>
+    <LazyMotion features={domAnimation} strict>
+      <m.nav
+        className="flex flex-col gap-3 w-full"
+        variants={container}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+      >
+        <m.div className="flex flex-col gap-2" variants={item}>
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground ml-2">
+            Product
+          </span>
+        </m.div>
 
-      <div className="flex flex-col gap-1.5">
-        <MobileItem
-          index={0}
-          href="#overview"
-          title="Overview"
-          description="What is crwsync?"
-          onClick={() => setOpen(false)}
-        />
-        <MobileItem
-          index={1}
-          href="/modules"
-          title="Modules"
-          description="What does crwsync include?"
-          onClick={() => setOpen(false)}
-        />
-        <MobileItem
-          index={2}
-          href="/solutions"
-          title="Solutions"
-          description="Who is crwsync for?"
-          onClick={() => setOpen(false)}
-        />
-      </div>
+        <div className="flex flex-col gap-1.5">
+          <MobileItem
+            index={0}
+            href="#overview"
+            title="Overview"
+            description="What is crwsync?"
+            onClick={() => setOpen(false)}
+          />
+          <MobileItem
+            index={1}
+            href="/modules"
+            title="Modules"
+            description="What does crwsync include?"
+            onClick={() => setOpen(false)}
+          />
+          <MobileItem
+            index={2}
+            href="/solutions"
+            title="Solutions"
+            description="Who is crwsync for?"
+            onClick={() => setOpen(false)}
+          />
+        </div>
 
-      <motion.div className="h-px bg-border my-2" variants={item} />
+        <m.div className="h-px bg-border my-2" variants={item} />
 
-      <div className="flex flex-col gap-2">
-        <MobileRow index={3} href="/roadmap" label="Roadmap" onClick={() => setOpen(false)} />
-        <MobileRow index={4} href="/changelog" label="Changelog" onClick={() => setOpen(false)} />
-        <MobileRow index={5} href="/founder" label="Founder" onClick={() => setOpen(false)} />
-      </div>
-    </motion.nav>
+        <div className="flex flex-col gap-2">
+          <MobileRow index={3} href="/roadmap" label="Roadmap" onClick={() => setOpen(false)} />
+          <MobileRow index={4} href="/changelog" label="Changelog" onClick={() => setOpen(false)} />
+          <MobileRow index={5} href="/founder" label="Founder" onClick={() => setOpen(false)} />
+        </div>
+      </m.nav>
+    </LazyMotion>
   );
 }
 
@@ -114,7 +116,7 @@ interface MobileItemProps {
 
 function MobileItem({ index, href, title, description, onClick }: MobileItemProps) {
   return (
-    <motion.div variants={item} custom={index}>
+    <m.div variants={item} custom={index}>
       <Link
         href={href}
         onClick={onClick}
@@ -127,7 +129,7 @@ function MobileItem({ index, href, title, description, onClick }: MobileItemProp
           {description}
         </span>
       </Link>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -140,7 +142,7 @@ interface MobileRowProps {
 
 function MobileRow({ index, href, label, onClick }: MobileRowProps) {
   return (
-    <motion.div variants={item} custom={index}>
+    <m.div variants={item} custom={index}>
       <Link href={href} onClick={onClick} className="text-xl text-foreground font-semibold">
         <div className="group flex items-center justify-between p-2 hover:text-primary transition-colors">
           <span>{label}</span>
@@ -151,6 +153,6 @@ function MobileRow({ index, href, label, onClick }: MobileRowProps) {
           />
         </div>
       </Link>
-    </motion.div>
+    </m.div>
   );
 }

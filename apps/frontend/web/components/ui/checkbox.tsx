@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tick02Icon } from "@hugeicons/core-free-icons";
@@ -12,13 +12,9 @@ interface CheckboxProps {
 }
 
 export function Checkbox({ id, checked, onChange }: CheckboxProps) {
-  const [check, setCheck] = useState(checked);
-
   const toggle = () => {
-    const next = !check;
-    setCheck(next);
-    onChange?.(next);
-  }
+    onChange?.(!checked);
+  };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -34,7 +30,7 @@ export function Checkbox({ id, checked, onChange }: CheckboxProps) {
       tabIndex={0}
       onClick={toggle}
       onKeyDown={onKeyDown}
-      aria-checked={check}
+      aria-checked={checked}
       aria-labelledby={id}
       aria-label="Checkbox"
       className={cn(
