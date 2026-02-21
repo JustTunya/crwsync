@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
       { source: "/:path*.png", headers: [{ key: "Cache-Control", value: `public, max-age=${ONE_YEAR_SECONDS}, immutable` }] }
     ];
   },
+  
+  output: 'standalone',
 };
 
 export default nextConfig;
