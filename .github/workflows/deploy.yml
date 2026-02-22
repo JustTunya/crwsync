@@ -19,6 +19,9 @@ jobs:
     name: 🧪 Lint, Test & Scan
     runs-on: ubuntu-latest
     steps:
+      - name: Revive Tailscale
+        run: sudo tailscale up --authkey=${{ secrets.TAILSCALE_KEY }} --reset
+        
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
