@@ -164,7 +164,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Revive Tailscale
-        run: sudo tailscale up --authkey=${{ secrets.TAILSCALE_KEY }} --reset
+        run: echo "${{ secrets.SUDO_PASS }}" | sudo -S tailscale up --authkey=${{ secrets.TAILSCALE_KEY }} --reset
 
       - name: Determine Swarm state
         id: swarm
