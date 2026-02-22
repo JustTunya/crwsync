@@ -19,9 +19,6 @@ jobs:
     name: 🧪 Lint, Test & Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Revive Tailscale
-        run: sudo tailscale up --authkey=${{ secrets.TAILSCALE_KEY }} --reset
-        
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
@@ -165,6 +162,9 @@ jobs:
       CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Revive Tailscale
+        run: sudo tailscale up --authkey=${{ secrets.TAILSCALE_KEY }} --reset
 
       - name: Determine Swarm state
         id: swarm
