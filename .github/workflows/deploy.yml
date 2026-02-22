@@ -163,10 +163,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Revive Tailscale
-        run: |
-          docker run --rm --privileged --pid=host ubuntu nsenter -t 1 -m -u -n -i bash -c "systemctl enable --now tailscaled && tailscale up --authkey=${{ secrets.TAILSCALE_KEY }} --reset"
-
       - name: Determine Swarm state
         id: swarm
         run: |
