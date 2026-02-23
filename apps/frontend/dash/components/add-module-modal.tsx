@@ -71,8 +71,18 @@ export function AddModuleModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/50">
-      <div className="bg-base-100 rounded-lg p-6 max-w-md w-full mx-4 border border-base-200 shadow-xl shadow-background/50">
+    <div 
+      role="presentation"
+      onClick={handleClose}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" || e.key === "Enter") onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/50"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-base-100 rounded-xl p-6 max-w-md w-full mx-4 border border-base-200 shadow-xl shadow-background/50"
+      >
         {/* HEADER */}
         <div className="flex items-start justify-between mb-6">
           <div>
@@ -85,8 +95,11 @@ export function AddModuleModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                 : "Give your new module a name to get started."}
             </p>
           </div>
-          <button title="Close" onClick={handleClose} className="cursor-pointer">
-            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.75} className="size-5" />
+          <button title="Close" onClick={onClose} className="size-7 p-0 rounded-md inline-flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-muted-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-base-300 data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap">
+            <HugeiconsIcon
+              icon={Cancel01Icon}
+              className="size-4 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            />
           </button>
         </div>
 
@@ -108,9 +121,8 @@ export function AddModuleModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
           ) : (
             <div className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="module-name" className="text-sm font-medium">Name</label>
+                <label htmlFor="module-name" className="text-xs text-muted-foreground font-medium">Name</label>
                 <Input
-                  autoFocus
                   id="module-name"
                   value={name}
                   placeholder="e.g. Project Alpha"

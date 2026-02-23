@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ReorderModulesPayload, WorkspaceModule } from "@crwsync/types";
+import { ReorderModulesPayload, WorkspaceModule, Board } from "@crwsync/types";
 import * as boardService from "@/services/board.service";
 
 export const moduleKeys = {
@@ -74,6 +74,15 @@ export function useUpdateModule(workspaceId: string) {
       });
       const previous = queryClient.getQueryData(moduleKeys.list(workspaceId));
 
+      let referenceId: string | undefined;
+      const prevData = previous as { data: WorkspaceModule[] } | undefined;
+      if (prevData?.data) {
+        const mod = prevData.data.find((m) => m.id === moduleId);
+        if (mod && mod.type === "BOARD") {
+          referenceId = mod.reference_id;
+        }
+      }
+
       queryClient.setQueryData(
         moduleKeys.list(workspaceId),
         (old: { data: WorkspaceModule[] } | undefined) => {
@@ -87,15 +96,31 @@ export function useUpdateModule(workspaceId: string) {
         },
       );
 
-      return { previous };
+      if (referenceId && data.name) {
+        queryClient.setQueryData(
+          ["boards", "detail", referenceId],
+          (old: { data: Board } | undefined) => {
+            if (!old?.data) return old;
+            return {
+              ...old,
+              data: { ...old.data, name: data.name },
+            };
+          }
+        );
+      }
+
+      return { previous, referenceId };
     },
     onError: (_, __, context) => {
       if (context?.previous) {
         queryClient.setQueryData(moduleKeys.list(workspaceId), context.previous);
       }
     },
-    onSettled: () => {
+    onSettled: (_, __, ___, context) => {
       queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
+      if (context?.referenceId) {
+        queryClient.invalidateQueries({ queryKey: ["boards", "detail", context.referenceId] });
+      }
     },
   });
 }

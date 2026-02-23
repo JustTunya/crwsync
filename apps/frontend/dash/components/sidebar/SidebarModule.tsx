@@ -133,6 +133,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
                 }}
                 onPointerDown={(e) => e.stopPropagation()}
                 onKeyDown={(e) => {
+                  e.stopPropagation();
                   if (e.key === "Enter") handleRenameSubmit();
                   if (e.key === "Escape") {
                       setModuleName("");
