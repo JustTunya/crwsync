@@ -386,6 +386,13 @@ export class BoardService {
         .emit("board:updated", { boardId: wsModule.reference_id, data: { name: dto.name } });
     }
 
+    if (wsModule.type === ModuleTypeEnum.CHAT && wsModule.reference_id) {
+      await this.prisma.chatRoom.update({
+        where: { id: wsModule.reference_id },
+        data: { name: dto.name },
+      });
+    }
+
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("module:updated", { moduleId, data: dto });
@@ -402,6 +409,16 @@ export class BoardService {
 
     if (wsModule.type === ModuleTypeEnum.BOARD && wsModule.reference_id) {
        await this.deleteBoard(workspaceId, wsModule.reference_id);
+    } else if (wsModule.type === ModuleTypeEnum.CHAT && wsModule.reference_id) {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.chatMessage.deleteMany({ where: { room_id: wsModule.reference_id } });
+        await tx.chatRoom.delete({ where: { id: wsModule.reference_id } });
+        await tx.workspaceModule.delete({ where: { id: moduleId } });
+      });
+
+      this.statusGateway.server
+        .to(`workspace_${workspaceId}`)
+        .emit("module:deleted", { moduleId });
     } else {
         await this.prisma.workspaceModule.delete({
             where: { id: moduleId },

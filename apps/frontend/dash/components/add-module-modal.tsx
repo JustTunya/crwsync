@@ -5,6 +5,7 @@ import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
 import { Cancel01Icon, Chat01Icon, DashboardSquare01Icon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useCreateBoard } from "@/hooks/use-boards";
+import { useCreateChatRoom } from "@/hooks/use-chat";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -38,6 +39,7 @@ const MODULE_OPTIONS: ModuleOption[] = [
 export function AddModuleModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { activeWorkspace } = useWorkspace();
   const createBoard = useCreateBoard(activeWorkspace?.id || "");
+  const createChatRoom = useCreateChatRoom(activeWorkspace?.id || "");
 
   const [step, setStep] = useState<"select" | "configure">("select");
   const [selectedType, setSelectedType] = useState<ModuleType | null>(null);
@@ -61,6 +63,8 @@ export function AddModuleModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
     try {
       if (selectedType === ModuleType.BOARD) {
         await createBoard.mutateAsync({ name: name.trim() });
+      } else if (selectedType === ModuleType.CHAT) {
+        await createChatRoom.mutateAsync({ name: name.trim() });
       }
       handleClose();
     } catch (error) {
@@ -137,9 +141,9 @@ export function AddModuleModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                 </Button>
                 <Button 
                   onClick={handleCreate} 
-                  disabled={!name.trim() || createBoard.isPending}
+                  disabled={!name.trim() || createBoard.isPending || createChatRoom.isPending}
                 >
-                  {createBoard.isPending ? "Creating..." : "Create Module"}
+                  {(createBoard.isPending || createChatRoom.isPending) ? "Creating..." : "Create Module"}
                 </Button>
               </div>
             </div>
