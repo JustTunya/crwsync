@@ -5,6 +5,7 @@ import { io, Socket } from "socket.io-client";
 import type { ChatMessage } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { getChatMessages } from "@/services/chat.service";
+import { useSession } from "@/hooks/use-session";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -16,13 +17,27 @@ interface UseChatSocketOptions {
 
 export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSocketOptions) {
   const socketRef = useRef<Socket | null>(null);
+  
+  const { isFetching } = useSession();
+  const wasFetching = useRef(isFetching);
+
   const {
     appendMessage,
     addOptimistic,
     confirmOptimistic,
     rejectOptimistic,
+    updateMessage,
     setConnected,
   } = useChatStore();
+
+  useEffect(() => {
+    if (wasFetching.current && !isFetching) {
+      if (socketRef.current?.disconnected) {
+        socketRef.current.connect();
+      }
+    }
+    wasFetching.current = isFetching;
+  }, [isFetching]);
 
   useEffect(() => {
     const socket = io(`${SOCKET_URL}/chat`, {
@@ -44,6 +59,10 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
 
     socket.on("new_message", (message: ChatMessage) => {
       appendMessage(roomId, message);
+    });
+
+    socket.on("message_updated", (message: ChatMessage) => {
+      updateMessage(roomId, message.id, message);
     });
 
     socket.on("message_ack", (ack: { client_id: string; message_id: string; created_at: string }) => {
@@ -90,7 +109,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       setConnected(false);
       socketRef.current = null;
     };
-  }, [workspaceId, roomId, appendMessage, confirmOptimistic, rejectOptimistic, setConnected]);
+  }, [workspaceId, roomId, appendMessage, updateMessage, confirmOptimistic, rejectOptimistic, setConnected]);
 
   const sendMessage = useCallback(
     (content: string) => {
@@ -130,5 +149,38 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
     [workspaceId, roomId, currentUserId, addOptimistic, rejectOptimistic],
   );
 
-  return { sendMessage };
+  const editMessage = useCallback(
+    (messageId: string, newContent: string) => {
+      if (!socketRef.current) return;
+
+      updateMessage(roomId, messageId, {
+        content: newContent,
+        is_edited: true,
+      });
+
+      socketRef.current.emit("edit_message", {
+        message_id: messageId,
+        new_content: newContent,
+      });
+    },
+    [roomId, updateMessage],
+  );
+
+  const deleteMessage = useCallback(
+    (messageId: string) => {
+      if (!socketRef.current) return;
+
+      updateMessage(roomId, messageId, {
+        is_deleted: true,
+        content: "This message was deleted.",
+      });
+
+      socketRef.current.emit("delete_message", {
+        message_id: messageId,
+      });
+    },
+    [roomId, updateMessage],
+  );
+
+  return { sendMessage, editMessage, deleteMessage };
 }

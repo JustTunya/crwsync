@@ -12,7 +12,7 @@ import { JwtService } from "@nestjs/jwt";
 import { Server, Socket } from "socket.io";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ChatService } from "src/chat/chat.service";
-import { SendMessageDto } from "src/chat/dto/chat.dto";
+import { SendMessageDto, EditMessageDto, DeleteMessageDto } from "src/chat/dto/chat.dto";
 
 @WebSocketGateway({
   cors: { origin: "*", methods: ["GET", "POST"], credentials: true },
@@ -136,6 +136,56 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client_id: dto.client_id,
         error: "Failed to send message",
       });
+    }
+  }
+
+  @SubscribeMessage("edit_message")
+  async handleEditMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() dto: EditMessageDto,
+  ) {
+    const userId = client.data.userId;
+    const roomId = client.data.currentRoom;
+    const workspaceId = client.data.workspaceId;
+
+    if (!userId || !roomId || !workspaceId) return;
+
+    try {
+      const updatedMessage = await this.chatService.editMessage(
+        workspaceId,
+        roomId,
+        userId,
+        dto,
+      );
+
+      this.server.to(`chat_${roomId}`).emit("message_updated", updatedMessage);
+    } catch (error) {
+      this.logger.error(`Edit message error: ${error}`);
+    }
+  }
+
+  @SubscribeMessage("delete_message")
+  async handleDeleteMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() dto: DeleteMessageDto,
+  ) {
+    const userId = client.data.userId;
+    const roomId = client.data.currentRoom;
+    const workspaceId = client.data.workspaceId;
+
+    if (!userId || !roomId || !workspaceId) return;
+
+    try {
+      const updatedMessage = await this.chatService.deleteMessage(
+        workspaceId,
+        roomId,
+        userId,
+        dto,
+      );
+
+      this.server.to(`chat_${roomId}`).emit("message_updated", updatedMessage);
+    } catch (error) {
+      this.logger.error(`Delete message error: ${error}`);
     }
   }
 

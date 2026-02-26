@@ -14,6 +14,7 @@ interface ChatStoreActions {
   addOptimistic: (roomId: string, message: ChatMessage, clientId: string) => void;
   confirmOptimistic: (clientId: string, serverMessage: ChatMessage) => void;
   rejectOptimistic: (clientId: string, roomId: string) => void;
+  updateMessage: (roomId: string, messageId: string, updates: Partial<ChatMessage>) => void;
   setConnected: (connected: boolean) => void;
   clearRoom: (roomId: string) => void;
 }
@@ -110,6 +111,27 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
       nextPending.delete(clientId);
 
       return { messages: nextMessages, pendingMessages: nextPending };
+    }),
+
+  updateMessage: (roomId, messageId, updates) =>
+    set((state) => {
+      const nextMessages = new Map(state.messages);
+      const existing = nextMessages.get(roomId) || [];
+
+      let found = false;
+      const updated = existing.map((m) => {
+        if (m.id === messageId) {
+          found = true;
+          return { ...m, ...updates };
+        }
+        return m;
+      });
+
+      if (found) {
+        nextMessages.set(roomId, updated);
+        return { messages: nextMessages };
+      }
+      return state;
     }),
 
   setConnected: (connected) => set({ isConnected: connected }),

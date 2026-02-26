@@ -24,7 +24,7 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
   const messages = useChatStore((s) => s.messages.get(roomId)) ?? EMPTY_MESSAGES;
   const isConnected = useChatStore((s) => s.isConnected);
 
-  const { sendMessage } = useChatSocket({ workspaceId, roomId, currentUserId });
+  const { sendMessage, editMessage, deleteMessage } = useChatSocket({ workspaceId, roomId, currentUserId });
 
   useEffect(() => {
     if (initialMessages?.messages && messages.length === 0) {
@@ -53,6 +53,8 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
       <MessageList
         messages={messages}
         currentUserId={currentUserId}
+        onEditMessage={editMessage}
+        onDeleteMessage={deleteMessage}
       />
 
       <ChatInput onSend={sendMessage} disabled={!isConnected} />

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { ModuleTypeEnum } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
-import { CreateChatRoomDto, SendMessageDto } from "src/chat/dto/chat.dto";
+import { CreateChatRoomDto, SendMessageDto, EditMessageDto, DeleteMessageDto } from "src/chat/dto/chat.dto";
 
 const POSITION_GAP = 1000;
 
@@ -74,7 +74,6 @@ export class ChatService {
 
     const where: Record<string, unknown> = {
       room_id: roomId,
-      is_deleted: false,
     };
 
     if (cursor) {
@@ -137,6 +136,62 @@ export class ChatService {
     });
 
     return message;
+  }
+
+  async editMessage(workspaceId: string, roomId: string, senderId: string, dto: EditMessageDto) {
+    const message = await this.prisma.chatMessage.findUnique({
+      where: { id: dto.message_id },
+      select: { id: true, sender_id: true, room_id: true, workspace_id: true },
+    });
+
+    if (!message || message.room_id !== roomId || message.workspace_id !== workspaceId) {
+      throw new NotFoundException("Message not found");
+    }
+
+    if (message.sender_id !== senderId) {
+      throw new Error("Unauthorized to edit this message");
+    }
+
+    const updated = await this.prisma.chatMessage.update({
+      where: { id: dto.message_id },
+      data: {
+        content: dto.new_content,
+        is_edited: true,
+      },
+      include: {
+        sender: { select: SENDER_SELECT },
+      },
+    });
+
+    return updated;
+  }
+
+  async deleteMessage(workspaceId: string, roomId: string, senderId: string, dto: DeleteMessageDto) {
+    const message = await this.prisma.chatMessage.findUnique({
+      where: { id: dto.message_id },
+      select: { id: true, sender_id: true, room_id: true, workspace_id: true },
+    });
+
+    if (!message || message.room_id !== roomId || message.workspace_id !== workspaceId) {
+      throw new NotFoundException("Message not found");
+    }
+
+    if (message.sender_id !== senderId) {
+      throw new Error("Unauthorized to delete this message");
+    }
+
+    const updated = await this.prisma.chatMessage.update({
+      where: { id: dto.message_id },
+      data: {
+        is_deleted: true,
+        content: "This message was deleted.",
+      },
+      include: {
+        sender: { select: SENDER_SELECT },
+      },
+    });
+
+    return updated;
   }
 
   async deleteRoom(workspaceId: string, roomId: string) {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Fragment } from "react";
 import type { ChatMessage } from "@crwsync/types";
+import { format } from "date-fns";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 
 interface MessageListProps {
@@ -10,9 +11,11 @@ interface MessageListProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  onEditMessage: (id: string, newContent: string) => void;
+  onDeleteMessage: (id: string) => void;
 }
 
-export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore }: MessageListProps) {
+export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const wasAtBottomRef = useRef(true);
@@ -44,8 +47,20 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
     }
   };
 
+  const isNewDay = (index: number): boolean => {
+    if (index === 0) return true;
+    const prevDate = new Date(messages[index - 1].created_at);
+    const currDate = new Date(messages[index].created_at);
+    return (
+      currDate.getDate() !== prevDate.getDate() ||
+      currDate.getMonth() !== prevDate.getMonth() ||
+      currDate.getFullYear() !== prevDate.getFullYear()
+    );
+  };
+
   const isConsecutive = (index: number): boolean => {
     if (index === 0) return false;
+    if (isNewDay(index)) return false;
     const prev = messages[index - 1];
     const curr = messages[index];
     if (prev.sender_id !== curr.sender_id) return false;
@@ -68,7 +83,7 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto px-4 py-3 space-y-0.5"
+      className="flex-1 overflow-y-auto px-4 py-3 flex flex-col"
     >
       {isLoadingMore && (
         <div className="flex justify-center py-3">
@@ -82,16 +97,32 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
         </div>
       )}
 
-      {messages.map((message, index) => (
-        <MessageBubble
-          key={message.id}
-          message={message}
-          isSelf={message.sender_id === currentUserId}
-          isConsecutive={isConsecutive(index)}
-          isLastInGroup={isLastInGroup(index)}
-          isPending={message.id.startsWith("pending_")}
-        />
-      ))}
+      {messages.map((message, index) => {
+        const showDate = isNewDay(index);
+
+        return (
+          <Fragment key={message.id}>
+            {showDate && (
+              <div className="flex items-center justify-center gap-6 mt-6 mb-3 first:mt-3">
+                <div className="w-full h-px bg-base-200 rounded-full" />
+                <span className="text-base-300 text-xs font-semibold">
+                  {format(new Date(message.created_at), "yyyy.MM.dd")}
+                </span>
+                <div className="w-full h-px bg-base-200 rounded-full" />
+              </div>
+            )}
+            <MessageBubble
+              message={message}
+              isSelf={message.sender_id === currentUserId}
+              isConsecutive={isConsecutive(index)}
+              isLastInGroup={isLastInGroup(index)}
+              isPending={message.id.startsWith("pending_")}
+              onEditMessage={onEditMessage}
+              onDeleteMessage={onDeleteMessage}
+            />
+          </Fragment>
+        );
+      })}
 
       <div ref={bottomRef} />
     </div>

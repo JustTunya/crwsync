@@ -21,3 +21,20 @@ export class SendMessageDto {
   @IsNotEmpty()
   client_id!: string;
 }
+
+export class EditMessageDto {
+  @IsString()
+  @IsNotEmpty()
+  message_id!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(4000)
+  new_content!: string;
+}
+
+export class DeleteMessageDto {
+  @IsString()
+  @IsNotEmpty()
+  message_id!: string;
+}
