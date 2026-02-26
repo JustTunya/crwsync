@@ -282,11 +282,13 @@ model ChatMessage {
   is_deleted   Boolean  @default(false)
   is_edited    Boolean  @default(false)
   is_pinned    Boolean  @default(false)
-  reply_to     String?  @db.Uuid
+  reply_to_id  String?  @db.Uuid
 
   workspace    Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   room         ChatRoom  @relation(fields: [room_id], references: [id], onDelete: Cascade)
   sender       User      @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+  reply_to     ChatMessage? @relation("MessageReplies", fields: [reply_to_id], references: [id], onDelete: SetNull)
+  replies      ChatMessage[] @relation("MessageReplies")
 
   @@index([room_id, created_at], map: "idx_chatmsg_room_created")
   @@index([workspace_id], map: "idx_chatmsg_workspace_id")

@@ -86,6 +86,13 @@ export class ChatService {
       take: take + 1,
       include: {
         sender: { select: SENDER_SELECT },
+        reply_to: {
+          select: {
+            id: true,
+            content: true,
+            sender: { select: { firstname: true, lastname: true } },
+          },
+        },
       },
     });
 
@@ -129,9 +136,17 @@ export class ChatService {
         room_id: roomId,
         sender_id: senderId,
         content: dto.content,
+        reply_to_id: dto.reply_to_id,
       },
       include: {
         sender: { select: SENDER_SELECT },
+        reply_to: {
+          select: {
+            id: true,
+            content: true,
+            sender: { select: { firstname: true, lastname: true } },
+          },
+        },
       },
     });
 

@@ -129,15 +129,32 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
         is_deleted: false,
         is_edited: false,
         is_pinned: false,
+        reply_to_id: null,
         reply_to: null,
       };
+
+      const store = useChatStore.getState();
+      if (store.replyingToMessage) {
+        optimisticMessage.reply_to_id = store.replyingToMessage.id;
+        optimisticMessage.reply_to = {
+          id: store.replyingToMessage.id,
+          content: store.replyingToMessage.content,
+          sender: {
+            firstname: store.replyingToMessage.sender?.firstname || "",
+            lastname: store.replyingToMessage.sender?.lastname || "",
+          },
+        };
+      }
 
       addOptimistic(roomId, optimisticMessage, clientId);
 
       socketRef.current.emit("send_message", {
         content: content.trim(),
         client_id: clientId,
+        reply_to_id: store.replyingToMessage?.id || undefined,
       });
+
+      store.setReplyingTo(null);
 
       setTimeout(() => {
         const store = useChatStore.getState();

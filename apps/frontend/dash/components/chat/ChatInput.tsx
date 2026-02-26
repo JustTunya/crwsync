@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon } from "@hugeicons/core-free-icons";
+import { SentIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { useChatStore } from "@/hooks/use-chat-store";
 import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
@@ -11,6 +12,7 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
+  const { replyingToMessage, setReplyingTo } = useChatStore();
   const [content, setContent] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -40,8 +42,28 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   return (
     <>
       <div className="flex items-center justify-center w-full px-4 pt-4 pb-6">
-        <div className="flex items-center gap-8 w-full max-w-2xl pl-4 p-2 bg-muted border-[1.5px] border-base-300 rounded-2xl focus-within:border-primary/50 transition-colors">
-          <textarea
+        <div className="flex flex-col w-full max-w-2xl bg-muted border-[1.5px] border-base-300 rounded-2xl focus-within:border-primary/50 transition-colors overflow-hidden">
+          {replyingToMessage && (
+            <div className="flex items-center justify-between px-3 py-2 bg-base-100/50 border-b-[1.5px] border-b-base-300">
+              <div className="flex flex-col gap-0.5 overflow-hidden">
+                <span className="text-xs text-primary font-medium tracking-wide">
+                  Replying to {replyingToMessage.sender?.firstname || "Unknown User"} {replyingToMessage.sender?.lastname ? ` ${replyingToMessage.sender.lastname.charAt(0)}.` : ""}
+                </span>
+                <span className="text-sm text-foreground/80 truncate max-w-xl">
+                  {replyingToMessage.content}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-base-200 transition-colors shrink-0 cursor-pointer"
+                onClick={() => setReplyingTo(null)}
+              >
+                <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
+              </button>
+            </div>
+          )}
+          <div className="flex items-center gap-8 w-full pl-4 p-2">
+            <textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -67,6 +89,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           >
             <HugeiconsIcon icon={SentIcon} strokeWidth={2} className="size-4.5" />
           </button>
+          </div>
         </div>
       </div>
     </>

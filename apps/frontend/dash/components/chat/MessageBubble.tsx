@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef } from "react";
-import type { ChatMessage } from "@crwsync/types";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Edit03Icon, Delete02Icon, UnavailableIcon } from "@hugeicons/core-free-icons";
+import { Edit03Icon, Delete02Icon, UnavailableIcon, ArrowTurnBackwardIcon } from "@hugeicons/core-free-icons";
+import type { ChatMessage } from "@crwsync/types";
+import { useChatStore } from "@/hooks/use-chat-store";
 import { UserAvatar } from "@/components/user-avatar";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
   const time = new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const ref = useRef<HTMLDivElement>(null);
+  const { setReplyingTo } = useChatStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
@@ -44,6 +46,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
 
   return (
     <div
+      id={`message-${message.id}`}
       ref={ref}
       className={cn(
         "flex gap-2",
@@ -73,10 +76,37 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
           </span>
         )}
 
-        <div className={cn("relative group/bubble flex items-center gap-2", isSelf ? "flex-row-reverse" : "flex-row")}>
+        {message.reply_to && !message.is_deleted && (
+          <div
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const target = document.getElementById(`message-${message.reply_to_id}`);
+              if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "center" });
+                const bubble = target.querySelector(".message-highlight-target");
+                if (bubble) {
+                  bubble.classList.add("bg-primary/20");
+                  setTimeout(() => bubble.classList.remove("bg-primary/20"), 1500);
+                }
+              }
+            }}
+            className="relative z-0 flex flex-col max-w-xs mb-1 px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded-2xl opacity-90 bg-muted/60 hover:bg-muted border border-base-200 hover:border-base-300 transition-all cursor-pointer"
+          >
+            <span className="font-semibold text-primary/80 mb-0.5">
+              {message.reply_to.sender?.firstname || "Unknown User"}
+              {message.reply_to.sender?.lastname ? ` ${message.reply_to.sender.lastname.charAt(0)}.` : ""}
+            </span>
+            <span className="text-muted-foreground/90 text-ellipsis line-clamp-2 overflow-hidden">
+              {message.reply_to.content}
+            </span>
+          </div>
+        )}
+
+        <div className={cn("relative z-10 group/bubble flex items-center gap-2", isSelf ? "flex-row-reverse" : "flex-row")}>
           <div
             className={cn(
-              "px-2.5 py-1.5 text-sm leading-relaxed whitespace-pre-wrap",
+              "message-highlight-target px-2.5 py-1.5 text-sm leading-relaxed whitespace-pre-wrap transition-colors duration-500",
               isSelf
                 ? "bg-primary text-primary-foreground rounded-2xl rounded-br-xs"
                 : "bg-muted text-muted-foreground rounded-2xl rounded-bl-xs",
@@ -118,23 +148,35 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                 </div>
               </div>
             ) : (
-              <>{message.is_deleted ? (
-                <div className="flex items-center gap-1">
-                  <HugeiconsIcon icon={UnavailableIcon} strokeWidth={1.75} className="size-3.5" />
-                  <p className="text-muted-foreground italic">This message was deleted.</p>
-                </div>
-              ) : message.content}</>
+              <>
+                {message.is_deleted ? (
+                  <div className="flex items-center gap-1">
+                    <HugeiconsIcon icon={UnavailableIcon} strokeWidth={1.75} className="size-3.5" />
+                    <p className="text-muted-foreground italic">This message was deleted.</p>
+                  </div>
+                ) : message.content}
+              </>
             )}
           </div>
 
-          {isSelf && !message.is_deleted && !isPending && !isEditing && (
-            <div className="opacity-0 group-hover/bubble:opacity-100 flex items-center gap-1 transition-opacity">
-              <button onClick={() => setIsEditing(true)} className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200">
-                <HugeiconsIcon icon={Edit03Icon} strokeWidth={2} className="size-4" />
+          {!message.is_deleted && !isPending && !isEditing && (
+            <div className={cn(
+              "opacity-0 group-hover/bubble:opacity-100 flex items-center gap-1 transition-opacity",
+              !isSelf && "flex-row-reverse"
+            )}>
+              <button onClick={() => setReplyingTo(message)} className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer">
+                <HugeiconsIcon icon={ArrowTurnBackwardIcon} strokeWidth={2} className="size-4 -scale-y-100" />
               </button>
-              <button onClick={() => onDeleteMessage?.(message.id)} className="p-1 text-muted-foreground hover:text-error transition-colors rounded-md hover:bg-error/10">
-                <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
-              </button>
+              {isSelf && (
+                <>
+                  <button onClick={() => setIsEditing(true)} className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer">
+                    <HugeiconsIcon icon={Edit03Icon} strokeWidth={2} className="size-4" />
+                  </button>
+                  <button onClick={() => onDeleteMessage?.(message.id)} className="p-1 text-muted-foreground hover:text-error transition-colors rounded-md hover:bg-error/10 cursor-pointer">
+                    <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>

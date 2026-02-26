@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsUUID,
   MaxLength,
+  IsOptional,
 } from "class-validator";
 
 export class CreateChatRoomDto {
@@ -20,6 +21,10 @@ export class SendMessageDto {
   @IsUUID("4")
   @IsNotEmpty()
   client_id!: string;
+
+  @IsOptional()
+  @IsUUID("4")
+  reply_to_id?: string;
 }
 
 export class EditMessageDto {

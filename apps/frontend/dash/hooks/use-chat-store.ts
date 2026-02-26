@@ -5,6 +5,7 @@ interface ChatStoreState {
   messages: Map<string, ChatMessage[]>;
   pendingMessages: Map<string, ChatMessage>;
   isConnected: boolean;
+  replyingToMessage: ChatMessage | null;
 }
 
 interface ChatStoreActions {
@@ -17,12 +18,16 @@ interface ChatStoreActions {
   updateMessage: (roomId: string, messageId: string, updates: Partial<ChatMessage>) => void;
   setConnected: (connected: boolean) => void;
   clearRoom: (roomId: string) => void;
+  setReplyingTo: (message: ChatMessage | null) => void;
 }
 
 export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => ({
   messages: new Map(),
   pendingMessages: new Map(),
   isConnected: false,
+  replyingToMessage: null,
+
+  setReplyingTo: (message) => set({ replyingToMessage: message }),
 
   setMessages: (roomId, messages) =>
     set((state) => {

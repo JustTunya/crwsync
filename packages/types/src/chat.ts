@@ -24,7 +24,12 @@ export interface ChatMessage {
   is_deleted: boolean;
   is_edited: boolean;
   is_pinned: boolean;
-  reply_to: string | null;
+  reply_to_id: string | null;
+  reply_to?: {
+    id: string;
+    content: string;
+    sender: { firstname: string; lastname: string };
+  } | null;
   sender?: ChatMessageSender;
 }
 
@@ -35,6 +40,7 @@ export interface CreateChatRoomPayload {
 export interface SendMessagePayload {
   content: string;
   client_id: string;
+  reply_to_id?: string;
 }
 
 export interface ChatMessagePage {
