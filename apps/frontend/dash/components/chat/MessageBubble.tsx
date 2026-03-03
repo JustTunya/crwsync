@@ -118,13 +118,13 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                 }
               }
             }}
-            className="relative z-0 flex flex-col max-w-xs mb-1 px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded-2xl opacity-90 bg-muted/60 hover:bg-muted border border-base-200 hover:border-base-300 transition-all cursor-pointer"
+            className="group/reply relative z-0 flex flex-col max-w-xs mb-1 px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded-2xl bg-muted/60 hover:bg-muted border border-base-200 hover:border-base-300 transition-all cursor-pointer"
           >
-            <span className="font-semibold text-primary/80 mb-0.5">
+            <span className="font-semibold text-primary/80 mb-0.5 opacity-90 group-hover/reply:opacity-100 transition-opacity">
               {message.reply_to.sender?.firstname || "Unknown User"}
               {message.reply_to.sender?.lastname ? ` ${message.reply_to.sender.lastname.charAt(0)}.` : ""}
             </span>
-            <span className="text-muted-foreground/90 text-ellipsis line-clamp-2 overflow-hidden">
+            <span className="text-muted-foreground/90 text-ellipsis line-clamp-2 overflow-hidden opacity-90 group-hover/reply:opacity-100 transition-opacity">
               {message.reply_to.content}
             </span>
           </div>

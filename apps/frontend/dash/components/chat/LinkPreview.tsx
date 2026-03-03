@@ -49,11 +49,11 @@ export function LinkPreview({ workspaceId, url }: LinkPreviewProps) {
       href={data.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-2 flex flex-col sm:flex-row overflow-hidden rounded-xl border border-base-200 bg-base-100 hover:bg-muted/30 transition-colors w-full max-w-sm text-left text-current decoration-transparent"
+      className="flex flex-col sm:flex-row mt-2 w-full max-w-sm border border-base-200 bg-base-100 text-left text-current rounded-xl hover:bg-base-100/60 hover:border-base-200/60 transition-colors overflow-hidden"
       onClick={(e) => e.stopPropagation()}
     >
       {data.image && (
-        <div className="relative w-24 h-24 shrink-0 bg-muted overflow-hidden">
+        <div className="relative size-20 shrink-0 bg-muted overflow-hidden">
           <Image
             src={data.image}
             alt={data.title || "Preview"}
