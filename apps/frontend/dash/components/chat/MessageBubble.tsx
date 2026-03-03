@@ -6,7 +6,31 @@ import { Edit03Icon, Delete02Icon, UnavailableIcon, ArrowTurnBackwardIcon } from
 import type { ChatMessage } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { UserAvatar } from "@/components/user-avatar";
+import { LinkPreview } from "./LinkPreview";
 import { cn } from "@/lib/utils";
+
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+
+function renderMessageContent(text: string) {
+  const parts = text.split(URL_REGEX);
+  return parts.map((part, i) => {
+    if (part.match(URL_REGEX)) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:opacity-80 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -43,6 +67,9 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
       setIsEditing(false);
     }
   };
+
+  const match = message.content.match(URL_REGEX);
+  const firstUrl = match ? match[0] : null;
 
   return (
     <div
@@ -154,7 +181,9 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                     <HugeiconsIcon icon={UnavailableIcon} strokeWidth={1.75} className="size-3.5" />
                     <p className="text-muted-foreground italic">This message was deleted.</p>
                   </div>
-                ) : message.content}
+                ) : (
+                  renderMessageContent(message.content)
+                )}
               </>
             )}
           </div>
@@ -180,6 +209,10 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
             </div>
           )}
         </div>
+
+        {firstUrl && !message.is_deleted && !isEditing && (
+          <LinkPreview workspaceId={message.workspace_id} url={firstUrl} />
+        )}
 
         {(isLastInGroup || isPending) && (
           <div className="flex items-center gap-1 mt-0.5">

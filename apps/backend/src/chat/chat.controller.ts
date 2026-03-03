@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
   ParseUUIDPipe,
+  BadRequestException,
 } from "@nestjs/common";
 import { SkipThrottle } from "@nestjs/throttler";
 import { IsMemberGuard } from "src/workspace/guards/ws-member.guard";
@@ -29,6 +30,14 @@ export class ChatController {
     @Body() dto: CreateChatRoomDto,
   ) {
     return this.chatService.createRoom(workspaceId, user.userId, dto);
+  }
+
+  @Get("link-preview")
+  getLinkPreview(@Query("url") url: string) {
+    if (!url) {
+      throw new BadRequestException("URL is required");
+    }
+    return this.chatService.getLinkPreview(url);
   }
 
   @Get(":roomId")

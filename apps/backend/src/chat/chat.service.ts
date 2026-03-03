@@ -3,6 +3,7 @@ import { ModuleTypeEnum } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
 import { CreateChatRoomDto, SendMessageDto, EditMessageDto, DeleteMessageDto } from "src/chat/dto/chat.dto";
+import ogs from "open-graph-scraper";
 
 const POSITION_GAP = 1000;
 
@@ -223,5 +224,27 @@ export class ChatService {
       .emit("module:deleted", { referenceId: roomId });
 
     return { success: true };
+  }
+
+  async getLinkPreview(url: string) {
+    try {
+      const options = { url, timeout: 5000 };
+      const { result } = await ogs(options);
+
+      return {
+        success: true,
+        data: {
+          url: result.requestUrl || url,
+          title: result.ogTitle || result.twitterTitle || null,
+          description: result.ogDescription || result.twitterDescription || null,
+          image: result.ogImage?.[0]?.url || result.twitterImage?.[0]?.url || null,
+        },
+      };
+    } catch {
+      return {
+        success: false,
+        data: null,
+      };
+    }
   }
 }

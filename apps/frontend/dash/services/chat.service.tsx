@@ -71,3 +71,30 @@ export async function getChatMessages(
     return { success: false, message: "An unexpected error occurred" };
   }
 }
+
+export interface LinkPreviewData {
+  url: string;
+  title: string | null;
+  description: string | null;
+  image: string | null;
+}
+
+export async function getLinkPreview(
+  workspaceId: string,
+  url: string,
+): Promise<{ success: boolean; data?: LinkPreviewData; message?: string }> {
+  try {
+    const response = await api.get(`${CHAT_BASE(workspaceId)}/link-preview`, {
+      params: { url },
+    });
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to fetch link preview",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
