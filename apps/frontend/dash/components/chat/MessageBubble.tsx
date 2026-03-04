@@ -9,12 +9,16 @@ import { UserAvatar } from "@/components/user-avatar";
 import { LinkPreview } from "./LinkPreview";
 import { cn } from "@/lib/utils";
 
-const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+const COMBINED_REGEX = /(@\[.*?\]\(user:[a-zA-Z0-9-]+\)|https?:\/\/[^\s]+|@everyone)/g;
+const URL_REGEX_EXACT = /^(https?:\/\/[^\s]+)$/;
+const MENTION_REGEX_EXACT = /^@\[(.*?)\]\(user:([a-zA-Z0-9-]+)\)$/;
 
 function renderMessageContent(text: string) {
-  const parts = text.split(URL_REGEX);
+  const parts = text.split(COMBINED_REGEX);
   return parts.map((part, i) => {
-    if (part.match(URL_REGEX)) {
+    if (!part) return null;
+
+    if (URL_REGEX_EXACT.test(part)) {
       return (
         <a
           key={i}
@@ -28,6 +32,25 @@ function renderMessageContent(text: string) {
         </a>
       );
     }
+
+    const mentionMatch = part.match(MENTION_REGEX_EXACT);
+    if (mentionMatch) {
+      const name = mentionMatch[1];
+      return (
+        <span key={i} className="font-bold cursor-pointer hover:underline">
+          @{name}
+        </span>
+      );
+    }
+
+    if (part === "@everyone") {
+      return (
+        <span key={i} className="font-bold cursor-pointer hover:underline">
+          @everyone
+        </span>
+      );
+    }
+
     return part;
   });
 }
@@ -68,7 +91,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
     }
   };
 
-  const match = message.content.match(URL_REGEX);
+  const match = message.content.match(/(https?:\/\/[^\s]+)/);
   const firstUrl = match ? match[0] : null;
 
   return (
@@ -125,7 +148,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
               {message.reply_to.sender?.lastname ? ` ${message.reply_to.sender.lastname.charAt(0)}.` : ""}
             </span>
             <span className="text-muted-foreground/90 text-ellipsis line-clamp-2 overflow-hidden opacity-90 group-hover/reply:opacity-100 transition-opacity">
-              {message.reply_to.content}
+              {message.reply_to.content.replace(/@\[(.*?)\]\(user:[a-zA-Z0-9-]+\)/g, '@$1')}
             </span>
           </div>
         )}

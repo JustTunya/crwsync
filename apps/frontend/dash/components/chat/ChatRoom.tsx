@@ -57,7 +57,7 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
         onDeleteMessage={deleteMessage}
       />
 
-      <ChatInput onSend={sendMessage} disabled={!isConnected} />
+      <ChatInput workspaceId={workspaceId} onSend={sendMessage} disabled={!isConnected} />
     </div>
   );
 }

@@ -125,6 +125,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       this.server.to(`chat_${roomId}`).emit("new_message", message);
 
+      if (dto.isEveryoneMention) {
+        this.server.to(`chat_${roomId}`).emit("mention_notification", message);
+      } else if (dto.mentionedUserIds?.length) {
+        const sockets = await this.server.in(`chat_${roomId}`).fetchSockets();
+        for (const socket of sockets) {
+          if (dto.mentionedUserIds.includes(socket.data.userId)) {
+            socket.emit("mention_notification", message);
+          }
+        }
+      }
+
       client.emit("message_ack", {
         client_id: dto.client_id,
         message_id: message.id,

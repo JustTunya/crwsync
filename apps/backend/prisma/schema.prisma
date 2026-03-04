@@ -79,6 +79,7 @@ model User {
   tasks_assigned      Task[]            @relation("TaskAssignee")
   tasks_created       Task[]            @relation("TaskCreator")
   chat_messages       ChatMessage[]
+  mentioned_in        ChatMessage[]     @relation("MessageMentions")
 
   @@map("users")
 }
@@ -282,11 +283,13 @@ model ChatMessage {
   is_deleted   Boolean  @default(false)
   is_edited    Boolean  @default(false)
   is_pinned    Boolean  @default(false)
+  is_everyone_mention Boolean @default(false)
   reply_to_id  String?  @db.Uuid
 
   workspace    Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   room         ChatRoom  @relation(fields: [room_id], references: [id], onDelete: Cascade)
   sender       User      @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+  mentions     User[]    @relation("MessageMentions")
   reply_to     ChatMessage? @relation("MessageReplies", fields: [reply_to_id], references: [id], onDelete: SetNull)
   replies      ChatMessage[] @relation("MessageReplies")
 

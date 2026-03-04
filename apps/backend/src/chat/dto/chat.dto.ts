@@ -4,6 +4,8 @@ import {
   IsUUID,
   MaxLength,
   IsOptional,
+  IsArray,
+  IsBoolean,
 } from "class-validator";
 
 export class CreateChatRoomDto {
@@ -25,6 +27,15 @@ export class SendMessageDto {
   @IsOptional()
   @IsUUID("4")
   reply_to_id?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsUUID("4", { each: true })
+  mentionedUserIds?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isEveryoneMention?: boolean;
 }
 
 export class EditMessageDto {

@@ -87,6 +87,7 @@ export class ChatService {
       take: take + 1,
       include: {
         sender: { select: SENDER_SELECT },
+        mentions: { select: SENDER_SELECT },
         reply_to: {
           select: {
             id: true,
@@ -138,9 +139,18 @@ export class ChatService {
         sender_id: senderId,
         content: dto.content,
         reply_to_id: dto.reply_to_id,
+        is_everyone_mention: dto.isEveryoneMention || false,
+        ...(dto.mentionedUserIds?.length
+          ? {
+              mentions: {
+                connect: dto.mentionedUserIds.map((id) => ({ id })),
+              },
+            }
+          : {}),
       },
       include: {
         sender: { select: SENDER_SELECT },
+        mentions: { select: SENDER_SELECT },
         reply_to: {
           select: {
             id: true,
