@@ -13,6 +13,15 @@ export interface ChatMessageSender {
   avatar_key: string | null;
 }
 
+export interface MessageReaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
+  user?: ChatMessageSender;
+}
+
 export interface ChatMessage {
   id: string;
   workspace_id: string;
@@ -31,6 +40,7 @@ export interface ChatMessage {
     sender: { firstname: string; lastname: string };
   } | null;
   sender?: ChatMessageSender;
+  reactions?: MessageReaction[];
 }
 
 export interface CreateChatRoomPayload {
@@ -41,6 +51,13 @@ export interface SendMessagePayload {
   content: string;
   client_id: string;
   reply_to_id?: string;
+  isEveryoneMention?: boolean;
+  mentionedUserIds?: string[];
+}
+
+export interface ToggleReactionPayload {
+  message_id: string;
+  emoji: string;
 }
 
 export interface ChatMessagePage {

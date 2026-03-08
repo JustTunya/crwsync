@@ -80,6 +80,7 @@ model User {
   tasks_created       Task[]            @relation("TaskCreator")
   chat_messages       ChatMessage[]
   mentioned_in        ChatMessage[]     @relation("MessageMentions")
+  message_reactions   MessageReaction[]
 
   @@map("users")
 }
@@ -292,8 +293,24 @@ model ChatMessage {
   mentions     User[]    @relation("MessageMentions")
   reply_to     ChatMessage? @relation("MessageReplies", fields: [reply_to_id], references: [id], onDelete: SetNull)
   replies      ChatMessage[] @relation("MessageReplies")
+  reactions    MessageReaction[]
 
   @@index([room_id, created_at], map: "idx_chatmsg_room_created")
   @@index([workspace_id], map: "idx_chatmsg_workspace_id")
   @@map("chat_messages")
+}
+
+model MessageReaction {
+  id         String   @id @default(uuid()) @db.Uuid
+  message_id String   @db.Uuid
+  user_id    String   @db.Uuid
+  emoji      String   @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  message    ChatMessage @relation(fields: [message_id], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([message_id, user_id], map: "idx_message_reaction_unique")
+  @@index([message_id], map: "idx_message_reaction_message_id")
+  @@map("message_reactions")
 }

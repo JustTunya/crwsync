@@ -54,3 +54,14 @@ export class DeleteMessageDto {
   @IsNotEmpty()
   message_id!: string;
 }
+
+export class ToggleReactionDto {
+  @IsString()
+  @IsNotEmpty()
+  message_id!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  emoji!: string;
+}

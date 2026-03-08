@@ -200,6 +200,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage("toggle_reaction")
+  async handleToggleReaction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() dto: { message_id: string; emoji: string },
+  ) {
+    const userId = client.data.userId;
+    const roomId = client.data.currentRoom;
+    const workspaceId = client.data.workspaceId;
+
+    if (!userId || !roomId || !workspaceId) return;
+
+    try {
+      const updatedMessage = await this.chatService.toggleReaction(
+        workspaceId,
+        roomId,
+        userId,
+        dto.message_id,
+        dto.emoji,
+      );
+
+      this.server.to(`chat_${roomId}`).emit("message_updated", updatedMessage);
+    } catch (error) {
+      this.logger.error(`Toggle reaction error: ${error}`);
+      client.emit("error", { message: "Failed to toggle reaction" });
+    }
+  }
+
   private extractToken(client: Socket): string | null {
     if (client.handshake.auth?.token) {
       return client.handshake.auth.token;

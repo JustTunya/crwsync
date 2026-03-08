@@ -95,6 +95,11 @@ export class ChatService {
             sender: { select: { firstname: true, lastname: true } },
           },
         },
+        reactions: {
+          include: {
+            user: { select: SENDER_SELECT },
+          },
+        },
       },
     });
 
@@ -156,6 +161,11 @@ export class ChatService {
             id: true,
             content: true,
             sender: { select: { firstname: true, lastname: true } },
+          },
+        },
+        reactions: {
+          include: {
+            user: { select: SENDER_SELECT },
           },
         },
       },
@@ -234,6 +244,75 @@ export class ChatService {
       .emit("module:deleted", { referenceId: roomId });
 
     return { success: true };
+  }
+
+  async toggleReaction(
+    workspaceId: string,
+    roomId: string,
+    userId: string,
+    messageId: string,
+    emoji: string,
+  ) {
+    const message = await this.prisma.chatMessage.findUnique({
+      where: { id: messageId },
+      select: { room_id: true, workspace_id: true },
+    });
+
+    if (!message || message.room_id !== roomId || message.workspace_id !== workspaceId) {
+      throw new NotFoundException("Message not found");
+    }
+
+    const existingReaction = await this.prisma.messageReaction.findUnique({
+      where: {
+        message_id_user_id: {
+          message_id: messageId,
+          user_id: userId,
+        },
+      },
+    });
+
+    if (existingReaction) {
+      if (existingReaction.emoji === emoji) {
+        await this.prisma.messageReaction.delete({
+          where: { id: existingReaction.id },
+        });
+      } else {
+        await this.prisma.messageReaction.update({
+          where: { id: existingReaction.id },
+          data: { emoji: emoji },
+        });
+      }
+    } else {
+      await this.prisma.messageReaction.create({
+        data: {
+          message_id: messageId,
+          user_id: userId,
+          emoji: emoji,
+        },
+      });
+    }
+
+    const updatedMessage = await this.prisma.chatMessage.findUnique({
+      where: { id: messageId },
+      include: {
+        sender: { select: SENDER_SELECT },
+        mentions: { select: SENDER_SELECT },
+        reply_to: {
+          select: {
+            id: true,
+            content: true,
+            sender: { select: { firstname: true, lastname: true } },
+          },
+        },
+        reactions: {
+          include: {
+            user: { select: SENDER_SELECT },
+          },
+        },
+      },
+    });
+
+    return updatedMessage;
   }
 
   async getLinkPreview(url: string) {

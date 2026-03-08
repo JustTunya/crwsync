@@ -199,5 +199,59 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
     [roomId, updateMessage],
   );
 
-  return { sendMessage, editMessage, deleteMessage };
+  const toggleReaction = useCallback(
+    (messageId: string, emoji: string) => {
+      if (!socketRef.current || !currentUserId) return;
+
+      const store = useChatStore.getState();
+      const existing = store.messages.get(roomId) || [];
+      const message = existing.find((m) => m.id === messageId);
+      
+      if (!message) return;
+
+      const currentReactions = message.reactions || [];
+
+      const optimisticReactions = [...currentReactions];
+      const existingReactionIndex = optimisticReactions.findIndex(r => r.user_id === currentUserId);
+
+      if (existingReactionIndex !== -1) {
+        if (optimisticReactions[existingReactionIndex].emoji === emoji) {
+          optimisticReactions.splice(existingReactionIndex, 1);
+        } else {
+          optimisticReactions[existingReactionIndex] = {
+            ...optimisticReactions[existingReactionIndex],
+            emoji,
+            created_at: new Date().toISOString()
+          };
+        }
+      } else {
+        const newReaction = {
+          id: `pending_${crypto.randomUUID()}`,
+          message_id: messageId,
+          user_id: currentUserId,
+          emoji,
+          created_at: new Date().toISOString(),
+          user: {
+            id: currentUserId,
+            firstname: store.replyingToMessage?.sender?.firstname || "",
+            lastname: store.replyingToMessage?.sender?.lastname || "",
+            avatar_key: null,
+          }
+        };
+        optimisticReactions.push(newReaction);
+      }
+
+      updateMessage(roomId, messageId, {
+        reactions: optimisticReactions,
+      });
+
+      socketRef.current.emit("toggle_reaction", {
+        message_id: messageId,
+        emoji,
+      });
+    },
+    [roomId, updateMessage, currentUserId],
+  );
+
+  return { sendMessage, editMessage, deleteMessage, toggleReaction };
 }
