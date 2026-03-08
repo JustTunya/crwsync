@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
-import { useChatStore } from "@/hooks/use-chat-store";
-import { cn } from "@/lib/utils";
-import { useWorkspaceMembers } from "@/hooks/use-workspaces";
-import { UserAvatar } from "@/components/user-avatar";
+import { SentIcon, Cancel01Icon, Happy01Icon } from "@hugeicons/core-free-icons";
 import type { WorkspaceMember } from "@crwsync/types";
+import { useWorkspaceMembers } from "@/hooks/use-workspaces";
+import { useChatStore } from "@/hooks/use-chat-store";
+import { UserAvatar } from "@/components/user-avatar";
+import EmojiPicker from "@/components/chat/EmojiPicker";
+import { cn } from "@/lib/utils";
 
 type MentionOption = 
   | { type: "user"; user: NonNullable<WorkspaceMember["user"]> }
@@ -22,8 +23,29 @@ interface ChatInputProps {
 export function ChatInput({ workspaceId, onSend, disabled }: ChatInputProps) {
   const { replyingToMessage, setReplyingTo } = useChatStore();
   const [content, setContent] = useState("");
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        emojiPickerOpen &&
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        emojiButtonRef.current &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
+        setEmojiPickerOpen(false);
+      }
+    };
+    if (emojiPickerOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [emojiPickerOpen]);
 
   const { data: members } = useWorkspaceMembers(workspaceId);
 
@@ -166,6 +188,24 @@ export function ChatInput({ workspaceId, onSend, disabled }: ChatInputProps) {
     }, 0);
   };
 
+  const handleEmojiSelect = (emoji: { native: string }) => {
+    const cursorPosition = textareaRef.current?.selectionStart || content.length;
+    const textBeforeCursor = content.slice(0, cursorPosition);
+    const textAfterCursor = content.slice(cursorPosition);
+    
+    const newContent = textBeforeCursor + emoji.native + textAfterCursor;
+    setContent(newContent);
+    setEmojiPickerOpen(false);
+    
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const newCursorPos = cursorPosition + emoji.native.length;
+        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 0);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setContent(value);
@@ -190,6 +230,12 @@ export function ChatInput({ workspaceId, onSend, disabled }: ChatInputProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (emojiPickerOpen && e.key === "Escape") {
+      e.preventDefault();
+      setEmojiPickerOpen(false);
+      return;
+    }
+
     if (mentionState.active && filteredOptions.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -270,9 +316,9 @@ export function ChatInput({ workspaceId, onSend, disabled }: ChatInputProps) {
           </div>
         )}
 
-        <div className="flex flex-col w-full max-w-2xl bg-muted border-[1.5px] border-base-300 rounded-2xl focus-within:border-primary/50 transition-colors overflow-hidden">
+        <div className="flex flex-col w-full max-w-2xl bg-muted border-[1.5px] border-base-300 rounded-2xl focus-within:border-primary/50 transition-colors">
           {replyingToMessage && (
-            <div className="flex items-center justify-between px-3 py-2 bg-base-100/50 border-b-[1.5px] border-b-base-300">
+            <div className="flex items-center justify-between px-3 py-2 bg-base-100/50 border-b-[1.5px] border-b-base-300 rounded-t-[calc(1rem-1.5px)]">
               <div className="flex flex-col gap-0.5 overflow-hidden">
                 <span className="text-xs text-primary font-medium tracking-wide">
                   Replying to {replyingToMessage.sender?.firstname || "Unknown User"} {replyingToMessage.sender?.lastname ? ` ${replyingToMessage.sender.lastname.charAt(0)}.` : ""}
@@ -325,19 +371,43 @@ export function ChatInput({ workspaceId, onSend, disabled }: ChatInputProps) {
                 spellCheck="false"
               />
             </div>
-            <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!content.trim() || disabled}
-            className={cn(
-              "shrink-0 p-1.75 rounded-lg flex items-center justify-center transition-all",
-              content.trim() && !disabled
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "text-muted-foreground cursor-not-allowed",
-            )}
-          >
-            <HugeiconsIcon icon={SentIcon} strokeWidth={2} className="size-4.5" />
-          </button>
+            <div className="flex items-center gap-2 relative">
+              <button
+                ref={emojiButtonRef}
+                type="button"
+                disabled={disabled}
+                onClick={() => setEmojiPickerOpen((prev) => !prev)}
+                className={cn(
+                  "p-1.75 text-muted-foreground hover:text-foreground hover:bg-base-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer z-20",
+                  emojiPickerOpen && "bg-base-200 text-foreground"
+                )}
+              >
+                <HugeiconsIcon icon={Happy01Icon} strokeWidth={2} className="size-4.5" />
+              </button>
+
+              <div 
+                ref={emojiPickerRef}
+                className={cn(
+                  "absolute bottom-full right-0 mb-3 z-50 origin-bottom-right transition-all duration-200 ease-out flex",
+                  emojiPickerOpen ? "opacity-100 scale-100 translate-y-0" : "invisible opacity-0 scale-95 translate-y-2 pointer-events-none"
+                )}
+              >
+                <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+              </div>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!content.trim() || disabled}
+                className={cn(
+                  "shrink-0 p-1.75 rounded-lg flex items-center justify-center transition-all",
+                  content.trim() && !disabled
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
+                    : "text-muted-foreground cursor-not-allowed",
+                )}
+              >
+                <HugeiconsIcon icon={SentIcon} strokeWidth={2} className="size-4.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
