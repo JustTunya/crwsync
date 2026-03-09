@@ -47,20 +47,20 @@ export function ReactionIndicator({ reactions, currentUserId, onToggleReaction }
       <button
         onClick={() => setIsModalOpen(true)}
         className={cn(
-          "flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors border",
+          "flex items-center justify-center gap-0.5 px-1 py-0.5 rounded-full text-xs font-medium transition-colors border cursor-pointer",
           userHasReactedToAny 
-            ? "bg-primary/10 border-primary/20 hover:bg-primary/20 text-primary-foreground/90" 
+            ? "bg-primary/15 border-primary/30 hover:bg-primary/30 text-primary-foreground" 
             : "bg-base-100 border-base-300 hover:bg-base-200 text-muted-foreground"
         )}
       >
-        <div className="flex -space-x-1 mr-1">
+        <div className="flex -space-x-1">
           {topEmojis.map((g, i) => (
             <span key={g.emoji} className="relative z-10 text-[13px] leading-none select-none drop-shadow-sm" style={{ zIndex: 10 - i }}>
               {g.emoji}
             </span>
           ))}
         </div>
-        <span>{totalCount}</span>
+        <span className="mr-0.5">{totalCount}</span>
       </button>
 
       {isModalOpen && (

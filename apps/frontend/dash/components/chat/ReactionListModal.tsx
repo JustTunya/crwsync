@@ -38,39 +38,25 @@ export default function ReactionListModal({ isOpen, onClose, reactions, currentU
           <DialogTitle className="text-lg font-semibold">Reactions</DialogTitle>
         </DialogHeader>
 
-        {/* Tabs */}
+        {/* TABS */}
         <div className="flex flex-wrap gap-2 px-4 pb-3 border-b border-base-300/50">
-          <button
-            autoFocus={false}
+          <TabButton 
+            active={activeTab === "All"}
+            label="All" count={reactions.length}
             onClick={() => setActiveTab("All")}
-            className={cn(
-              "px-3 py-1.5 rounded-lg text-sm font-medium transition-all shadow-sm",
-              activeTab === "All"
-                ? "bg-primary text-primary-foreground"
-                : "bg-base-200 text-muted-foreground hover:bg-base-300"
-            )}
-          >
-            All <span className="text-xs opacity-70 ml-1">{reactions.length}</span>
-          </button>
+          />
           
           {grouped.map(([emoji, count]) => (
-            <button
+            <TabButton 
               key={emoji}
+              active={activeTab === emoji}
+              label={emoji} count={count}
               onClick={() => setActiveTab(emoji)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all shadow-sm",
-                activeTab === emoji
-                  ? "bg-primary/10 text-primary border border-primary/20"
-                  : "bg-base-200 text-muted-foreground hover:bg-base-300 border border-transparent"
-              )}
-            >
-              <span>{emoji}</span>
-              <span className="text-xs opacity-70">{count}</span>
-            </button>
+            />
           ))}
         </div>
 
-        {/* List */}
+        {/* LIST */}
         <div className="max-h-[60vh] overflow-y-auto p-2">
           {filteredReactions.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground text-sm">
@@ -118,5 +104,21 @@ export default function ReactionListModal({ isOpen, onClose, reactions, currentU
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function TabButton({ active, onClick, label, count }: { active: boolean; onClick: () => void; label: string, count: number }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "px-2.5 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm",
+        active
+          ? "bg-primary text-primary-foreground"
+          : "bg-base-200 text-muted-foreground hover:bg-base-300"
+      )}
+    >
+      {label}{' '}<span className="text-xs opacity-75">{count}</span>
+    </button>
   );
 }
