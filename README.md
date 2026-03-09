@@ -216,7 +216,7 @@ docker stack deploy -c stack.yml crwsync
 
 ---
 
-## ©️ License & Copyright
+## 📄 License & Copyright
 
 **Proprietary and Confidential**
 
