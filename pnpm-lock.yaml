@@ -262,6 +262,12 @@ importers:
 
   apps/frontend/dash:
     dependencies:
+      '@crwsync/styles':
+        specifier: workspace:*
+        version: link:../../../packages/styles
+      '@crwsync/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -389,6 +395,12 @@ importers:
 
   apps/frontend/web:
     dependencies:
+      '@crwsync/styles':
+        specifier: workspace:*
+        version: link:../../../packages/styles
+      '@crwsync/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
       '@hugeicons/core-free-icons':
         specifier: ^2.0.0
         version: 2.0.0

@@ -1,65 +1,50 @@
-# --- DEPENDENCY STAGE ---
-FROM node:20-alpine AS deps
-WORKDIR /app
-
-ENV NODE_ENV=development
-COPY package.json pnpm-lock.yaml tsconfig.json tsconfig.base.json pnpm-workspace.yaml turbo.json ./
-COPY apps/backend/package.json apps/backend/nest-cli.json apps/backend/tsconfig.json ./apps/backend/
-COPY packages/types/package.json ./packages/types/package.json
-COPY apps/backend/prisma ./apps/backend/prisma
-COPY apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
-
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile --filter="@crwsync/types" --filter="@crwsync/backend"
-
-COPY packages ./packages
-COPY apps/backend ./apps/backend
-
+FROM node:20-alpine AS base
 
 # --- BUILDER STAGE ---
-FROM node:20-alpine AS builder
+FROM base AS builder
 WORKDIR /app
+RUN corepack enable
+COPY . .
+RUN pnpm dlx turbo prune @crwsync/backend --docker
 
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+# --- INSTALLER STAGE ---
+FROM base AS installer
+WORKDIR /app
 RUN corepack enable
 
-COPY --from=deps /app ./
+# First install dependencies (as they change less often)
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+RUN pnpm install --frozen-lockfile
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpx prisma generate --schema=apps/backend/prisma/schema.prisma && \
-    pnpm run build --filter="@crwsync/types" --filter="@crwsync/backend"
-
+# Build the project and its dependencies
+COPY --from=builder /app/out/full/ .
+COPY turbo.json turbo.json
+COPY tsconfig.json tsconfig.json
+COPY tsconfig.base.json tsconfig.base.json
+RUN pnpx prisma generate --schema=apps/backend/prisma/schema.prisma
+RUN pnpm turbo run build --filter=@crwsync/backend...
 
 # --- RUNNER STAGE ---
-FROM node:20-alpine AS runner
+FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/backend/package.json ./apps/backend/package.json
-COPY apps/backend/prisma ./apps/backend/prisma
-COPY apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
-
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN corepack enable
+RUN pnpm install --prod --frozen-lockfile
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --prod --frozen-lockfile --filter="@crwsync/backend" && \
-    pnpx prisma generate --schema=apps/backend/prisma/schema.prisma
+COPY --from=installer /app/apps/backend/prisma ./apps/backend/prisma
+RUN pnpx prisma generate --schema=apps/backend/prisma/schema.prisma
 
-COPY --from=builder --chown=node:node /app/apps/backend/dist ./apps/backend/dist
-COPY --from=builder --chown=node:node /app/packages/types/dist ./node_modules/@crwsync/types
-COPY --from=builder --chown=node:node /app/packages/types/package.json ./node_modules/@crwsync/types/package.json
+COPY --from=installer --chown=node:node /app/apps/backend/dist ./apps/backend/dist
+COPY --from=installer --chown=node:node /app/packages/types/dist ./node_modules/@crwsync/types
+COPY --from=installer --chown=node:node /app/packages/types/package.json ./node_modules/@crwsync/types/package.json
 COPY --from=builder --chown=node:node /app/packages/templates ./packages/templates
 
-COPY --chown=node:node apps/backend/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --from=installer --chown=node:node /app/apps/backend/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 USER node
