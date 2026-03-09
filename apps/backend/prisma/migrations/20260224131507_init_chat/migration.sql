@@ -10,6 +10,12 @@ CREATE TYPE "workspace_role_enum" AS ENUM ('owner', 'admin', 'member', 'guest');
 -- CreateEnum
 CREATE TYPE "user_status_enum" AS ENUM ('online', 'busy', 'away');
 
+-- CreateEnum
+CREATE TYPE "task_priority_enum" AS ENUM ('none', 'low', 'medium', 'high', 'urgent');
+
+-- CreateEnum
+CREATE TYPE "module_type_enum" AS ENUM ('board', 'chat');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" UUID NOT NULL,
@@ -112,6 +118,93 @@ CREATE TABLE "workspace_invites" (
     CONSTRAINT "workspace_invites_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "boards" (
+    "id" UUID NOT NULL,
+    "workspace_id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "created_by" UUID NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "boards_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "board_columns" (
+    "id" UUID NOT NULL,
+    "board_id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "position" INTEGER NOT NULL DEFAULT 0,
+    "color" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "board_columns_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tasks" (
+    "id" UUID NOT NULL,
+    "column_id" UUID NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "priority" "task_priority_enum" NOT NULL DEFAULT 'none',
+    "labels" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "assignee_id" UUID,
+    "due_date" TIMESTAMPTZ,
+    "position" INTEGER NOT NULL DEFAULT 0,
+    "created_by" UUID NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "tasks_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "workspace_modules" (
+    "id" UUID NOT NULL,
+    "workspace_id" UUID NOT NULL,
+    "type" "module_type_enum" NOT NULL,
+    "reference_id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "position" INTEGER NOT NULL DEFAULT 0,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "workspace_modules_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "chat_rooms" (
+    "id" UUID NOT NULL,
+    "workspace_id" UUID NOT NULL,
+    "name" TEXT,
+    "module_id" UUID NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "chat_rooms_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "chat_messages" (
+    "id" UUID NOT NULL,
+    "workspace_id" UUID NOT NULL,
+    "room_id" UUID NOT NULL,
+    "sender_id" UUID NOT NULL,
+    "content" TEXT NOT NULL,
+    "is_edited" BOOLEAN NOT NULL DEFAULT false,
+    "is_deleted" BOOLEAN NOT NULL DEFAULT false,
+    "is_pinned" BOOLEAN NOT NULL DEFAULT false,
+    "reply_to_id" UUID,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "chat_messages_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "idx_user_email" ON "users"("email");
 
@@ -163,6 +256,33 @@ CREATE INDEX "idx_workspace_invite_workspace_id" ON "workspace_invites"("workspa
 -- CreateIndex
 CREATE UNIQUE INDEX "idx_workspace_invite_unique" ON "workspace_invites"("invitee_id", "workspace_id");
 
+-- CreateIndex
+CREATE INDEX "idx_board_workspace_id" ON "boards"("workspace_id");
+
+-- CreateIndex
+CREATE INDEX "idx_board_column_board_id" ON "board_columns"("board_id");
+
+-- CreateIndex
+CREATE INDEX "idx_task_column_id" ON "tasks"("column_id");
+
+-- CreateIndex
+CREATE INDEX "idx_task_assignee_id" ON "tasks"("assignee_id");
+
+-- CreateIndex
+CREATE INDEX "idx_workspace_module_workspace_id" ON "workspace_modules"("workspace_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "idx_workspace_module_unique" ON "workspace_modules"("workspace_id", "reference_id");
+
+-- CreateIndex
+CREATE INDEX "chat_rooms_workspace_id_idx" ON "chat_rooms"("workspace_id");
+
+-- CreateIndex
+CREATE INDEX "chat_messages_room_id_created_at_idx" ON "chat_messages"("room_id", "created_at" DESC);
+
+-- CreateIndex
+CREATE INDEX "chat_messages_workspace_id_idx" ON "chat_messages"("workspace_id");
+
 -- AddForeignKey
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -186,3 +306,39 @@ ALTER TABLE "workspace_invites" ADD CONSTRAINT "workspace_invites_creator_id_fke
 
 -- AddForeignKey
 ALTER TABLE "workspace_invites" ADD CONSTRAINT "workspace_invites_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "boards" ADD CONSTRAINT "boards_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "boards" ADD CONSTRAINT "boards_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "board_columns" ADD CONSTRAINT "board_columns_board_id_fkey" FOREIGN KEY ("board_id") REFERENCES "boards"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_column_id_fkey" FOREIGN KEY ("column_id") REFERENCES "board_columns"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_assignee_id_fkey" FOREIGN KEY ("assignee_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "workspace_modules" ADD CONSTRAINT "workspace_modules_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "chat_rooms" ADD CONSTRAINT "chat_rooms_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_room_id_fkey" FOREIGN KEY ("room_id") REFERENCES "chat_rooms"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_sender_id_fkey" FOREIGN KEY ("sender_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_reply_to_id_fkey" FOREIGN KEY ("reply_to_id") REFERENCES "chat_messages"("id") ON DELETE SET NULL ON UPDATE CASCADE;

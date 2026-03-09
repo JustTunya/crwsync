@@ -8,6 +8,7 @@ export enum TaskPriorityEnum {
 
 export enum ModuleTypeEnum {
   BOARD = "BOARD",
+  CHAT = "CHAT",
 }
 
 export interface Board {

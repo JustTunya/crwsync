@@ -45,6 +45,7 @@ enum TaskPriorityEnum {
 
 enum ModuleTypeEnum {
   BOARD @map("board")
+  CHAT  @map("chat")
 
   @@map("module_type_enum")
 }
@@ -77,6 +78,9 @@ model User {
   boards_created      Board[]
   tasks_assigned      Task[]            @relation("TaskAssignee")
   tasks_created       Task[]            @relation("TaskCreator")
+  chat_messages       ChatMessage[]
+  mentioned_in        ChatMessage[]     @relation("MessageMentions")
+  message_reactions   MessageReaction[]
 
   @@map("users")
 }
@@ -135,10 +139,12 @@ model Workspace {
   created_at  DateTime @default(now()) @db.Timestamptz
   updated_at  DateTime @updatedAt @db.Timestamptz
 
-  members     WorkspaceMember[]
-  invites     WorkspaceInvite[]
-  boards      Board[]
-  modules     WorkspaceModule[]
+  members       WorkspaceMember[]
+  invites       WorkspaceInvite[]
+  boards        Board[]
+  modules       WorkspaceModule[]
+  chat_rooms    ChatRoom[]
+  chat_messages ChatMessage[]
 
   @@unique([slug], map: "idx_workspace_slug_unique")
   @@index([slug], map: "idx_workspace_slug_index")
@@ -251,4 +257,60 @@ model WorkspaceModule {
   @@unique([workspace_id, reference_id], map: "idx_workspace_module_unique")
   @@index([workspace_id], map: "idx_workspace_module_workspace_id")
   @@map("workspace_modules")
+}
+
+model ChatRoom {
+  id           String        @id @default(uuid()) @db.Uuid
+  workspace_id String        @db.Uuid
+  name         String?       @db.Text
+  created_at   DateTime      @default(now()) @db.Timestamptz
+  updated_at   DateTime      @updatedAt @db.Timestamptz
+
+  workspace    Workspace     @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  messages     ChatMessage[]
+
+  @@index([workspace_id], map: "idx_chatroom_workspace_id")
+  @@map("chat_rooms")
+}
+
+model ChatMessage {
+  id           String   @id @default(uuid()) @db.Uuid
+  workspace_id String   @db.Uuid
+  room_id      String   @db.Uuid
+  sender_id    String   @db.Uuid
+  content      String   @db.Text
+  created_at   DateTime @default(now()) @db.Timestamptz
+  updated_at   DateTime @updatedAt @db.Timestamptz
+  is_deleted   Boolean  @default(false)
+  is_edited    Boolean  @default(false)
+  is_pinned    Boolean  @default(false)
+  is_everyone_mention Boolean @default(false)
+  reply_to_id  String?  @db.Uuid
+
+  workspace    Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  room         ChatRoom  @relation(fields: [room_id], references: [id], onDelete: Cascade)
+  sender       User      @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+  mentions     User[]    @relation("MessageMentions")
+  reply_to     ChatMessage? @relation("MessageReplies", fields: [reply_to_id], references: [id], onDelete: SetNull)
+  replies      ChatMessage[] @relation("MessageReplies")
+  reactions    MessageReaction[]
+
+  @@index([room_id, created_at], map: "idx_chatmsg_room_created")
+  @@index([workspace_id], map: "idx_chatmsg_workspace_id")
+  @@map("chat_messages")
+}
+
+model MessageReaction {
+  id         String   @id @default(uuid()) @db.Uuid
+  message_id String   @db.Uuid
+  user_id    String   @db.Uuid
+  emoji      String   @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  message    ChatMessage @relation(fields: [message_id], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([message_id, user_id], map: "idx_message_reaction_unique")
+  @@index([message_id], map: "idx_message_reaction_message_id")
+  @@map("message_reactions")
 }

@@ -9,7 +9,7 @@ import { useWorkspace } from "@/providers/workspace.provider";
 import { KanbanCol, KanbanTaskOverlay, TaskDetailModal } from "@/components/kanban";
 import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/use-boards";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, ColumnDeleteIcon } from "@hugeicons/core-free-icons";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface BoardPageState {
@@ -176,7 +176,7 @@ export default function BoardPage() {
 
   return (
     <div className="size-full flex flex-col">
-      <div className="flex items-center justify-between pl-16 pr-24 py-4.5 border-b border-base-200">
+      <div className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200">
         <div className="w-0 flex-1">
           <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{board.name}</h1>
         </div>

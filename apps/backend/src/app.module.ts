@@ -14,6 +14,7 @@ import { EmailModule } from "src/email/email.module";
 import { WorkspaceModule } from "src/workspace/workspace.module";
 import { StatusModule } from "src/status/status.module";
 import { BoardModule } from "src/board/board.module";
+import { ChatModule } from "src/chat/chat.module";
 import { UserModule } from "src/user/user.module";
 import { AuthModule } from "src/auth/auth.module";
 // CONTROLLERS & SERVICES
@@ -54,6 +55,7 @@ import { BullModule } from "@nestjs/bullmq";
     WorkspaceModule,
     StatusModule,
     BoardModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [
