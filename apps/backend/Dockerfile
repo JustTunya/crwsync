@@ -22,8 +22,8 @@ COPY --from=builder /app/out/full/ .
 COPY turbo.json turbo.json
 COPY tsconfig.json tsconfig.json
 COPY tsconfig.base.json tsconfig.base.json
-RUN pnpx prisma generate --schema=apps/backend/prisma/schema.prisma
-RUN pnpm turbo run build --filter=@crwsync/backend...
+RUN pnpx prisma generate --schema=apps/backend/prisma/schema.prisma && \
+    pnpm turbo run build --filter=@crwsync/backend...
 
 # --- RUNNER STAGE ---
 FROM base AS runner
@@ -33,8 +33,8 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-RUN corepack enable
-RUN pnpm install --prod --frozen-lockfile
+RUN corepack enable && \
+    pnpm install --prod --frozen-lockfile
 
 COPY --from=installer /app/apps/backend/prisma ./apps/backend/prisma
 RUN pnpx prisma generate --schema=apps/backend/prisma/schema.prisma
