@@ -44,6 +44,8 @@ COPY --from=installer --chown=node:node /app/packages/types/dist ./node_modules/
 COPY --from=installer --chown=node:node /app/packages/types/package.json ./node_modules/@crwsync/types/package.json
 COPY --from=builder --chown=node:node /app/packages/templates ./packages/templates
 
+COPY --from=installer --chown=node:node /app/apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
+
 COPY --from=installer --chown=node:node /app/apps/backend/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
