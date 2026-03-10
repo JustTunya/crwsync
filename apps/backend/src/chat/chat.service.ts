@@ -2,7 +2,12 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { ModuleTypeEnum } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
-import { CreateChatRoomDto, SendMessageDto, EditMessageDto, DeleteMessageDto } from "src/chat/dto/chat.dto";
+import {
+  CreateChatRoomDto,
+  SendMessageDto,
+  EditMessageDto,
+  DeleteMessageDto,
+} from "src/chat/dto/chat.dto";
 import ogs from "open-graph-scraper";
 
 const POSITION_GAP = 1000;
@@ -21,7 +26,11 @@ export class ChatService {
     private statusGateway: StatusGateway,
   ) {}
 
-  async createRoom(workspaceId: string, userId: string, dto: CreateChatRoomDto) {
+  async createRoom(
+    workspaceId: string,
+    userId: string,
+    dto: CreateChatRoomDto,
+  ) {
     const lastModule = await this.prisma.workspaceModule.findFirst({
       where: { workspace_id: workspaceId },
       orderBy: { position: "desc" },
@@ -92,6 +101,7 @@ export class ChatService {
           select: {
             id: true,
             content: true,
+            is_deleted: true,
             sender: { select: { firstname: true, lastname: true } },
           },
         },
@@ -108,9 +118,10 @@ export class ChatService {
 
     const ordered = messages.reverse();
 
-    const nextCursor = hasMore && ordered.length > 0
-      ? ordered[0].created_at.toISOString()
-      : null;
+    const nextCursor =
+      hasMore && ordered.length > 0
+        ? ordered[0].created_at.toISOString()
+        : null;
 
     return {
       success: true,
@@ -160,6 +171,7 @@ export class ChatService {
           select: {
             id: true,
             content: true,
+            is_deleted: true,
             sender: { select: { firstname: true, lastname: true } },
           },
         },
@@ -174,13 +186,22 @@ export class ChatService {
     return message;
   }
 
-  async editMessage(workspaceId: string, roomId: string, senderId: string, dto: EditMessageDto) {
+  async editMessage(
+    workspaceId: string,
+    roomId: string,
+    senderId: string,
+    dto: EditMessageDto,
+  ) {
     const message = await this.prisma.chatMessage.findUnique({
       where: { id: dto.message_id },
       select: { id: true, sender_id: true, room_id: true, workspace_id: true },
     });
 
-    if (!message || message.room_id !== roomId || message.workspace_id !== workspaceId) {
+    if (
+      !message ||
+      message.room_id !== roomId ||
+      message.workspace_id !== workspaceId
+    ) {
       throw new NotFoundException("Message not found");
     }
 
@@ -202,13 +223,22 @@ export class ChatService {
     return updated;
   }
 
-  async deleteMessage(workspaceId: string, roomId: string, senderId: string, dto: DeleteMessageDto) {
+  async deleteMessage(
+    workspaceId: string,
+    roomId: string,
+    senderId: string,
+    dto: DeleteMessageDto,
+  ) {
     const message = await this.prisma.chatMessage.findUnique({
       where: { id: dto.message_id },
       select: { id: true, sender_id: true, room_id: true, workspace_id: true },
     });
 
-    if (!message || message.room_id !== roomId || message.workspace_id !== workspaceId) {
+    if (
+      !message ||
+      message.room_id !== roomId ||
+      message.workspace_id !== workspaceId
+    ) {
       throw new NotFoundException("Message not found");
     }
 
@@ -258,7 +288,11 @@ export class ChatService {
       select: { room_id: true, workspace_id: true },
     });
 
-    if (!message || message.room_id !== roomId || message.workspace_id !== workspaceId) {
+    if (
+      !message ||
+      message.room_id !== roomId ||
+      message.workspace_id !== workspaceId
+    ) {
       throw new NotFoundException("Message not found");
     }
 
@@ -301,6 +335,7 @@ export class ChatService {
           select: {
             id: true,
             content: true,
+            is_deleted: true,
             sender: { select: { firstname: true, lastname: true } },
           },
         },
@@ -325,8 +360,10 @@ export class ChatService {
         data: {
           url: result.requestUrl || url,
           title: result.ogTitle || result.twitterTitle || null,
-          description: result.ogDescription || result.twitterDescription || null,
-          image: result.ogImage?.[0]?.url || result.twitterImage?.[0]?.url || null,
+          description:
+            result.ogDescription || result.twitterDescription || null,
+          image:
+            result.ogImage?.[0]?.url || result.twitterImage?.[0]?.url || null,
         },
       };
     } catch {

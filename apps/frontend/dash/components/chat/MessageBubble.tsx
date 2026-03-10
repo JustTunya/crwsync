@@ -169,7 +169,14 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
               {message.reply_to.sender?.lastname ? ` ${message.reply_to.sender.lastname.charAt(0)}.` : ""}
             </span>
             <span className="text-muted-foreground/90 text-ellipsis line-clamp-2 overflow-hidden opacity-90 group-hover/reply:opacity-100 transition-opacity">
-              {message.reply_to.content.replace(/@\[(.*?)\]\(user:[a-zA-Z0-9-]+\)/g, '@$1')}
+              {message.reply_to.is_deleted ? (
+                <span className="italic flex items-center gap-1">
+                  <HugeiconsIcon icon={UnavailableIcon} strokeWidth={1.75} className="size-3" />
+                  This message was deleted.
+                </span>
+              ) : (
+                message.reply_to.content.replace(/@\[(.*?)\]\(user:[a-zA-Z0-9-]+\)/g, '@$1')
+              )}
             </span>
           </div>
         )}

@@ -130,10 +130,25 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
 
       let found = false;
       const updated = existing.map((m) => {
+        let newReplyTo = m.reply_to;
+        if (newReplyTo && newReplyTo.id === messageId) {
+          if (updates.content !== undefined || updates.is_deleted !== undefined) {
+             newReplyTo = { ...newReplyTo };
+             if (updates.content !== undefined) newReplyTo.content = updates.content as string;
+             if (updates.is_deleted !== undefined) newReplyTo.is_deleted = updates.is_deleted as boolean;
+             found = true;
+          }
+        }
+
         if (m.id === messageId) {
           found = true;
-          return { ...m, ...updates };
+          return { ...m, ...updates, reply_to: newReplyTo };
         }
+        
+        if (newReplyTo !== m.reply_to) {
+          return { ...m, reply_to: newReplyTo };
+        }
+
         return m;
       });
 

@@ -37,6 +37,7 @@ export interface ChatMessage {
   reply_to?: {
     id: string;
     content: string;
+    is_deleted?: boolean;
     sender: { firstname: string; lastname: string };
   } | null;
   sender?: ChatMessageSender;
