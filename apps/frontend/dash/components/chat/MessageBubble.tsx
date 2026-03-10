@@ -4,7 +4,6 @@ import { Edit03Icon, Delete02Icon, UnavailableIcon, ArrowTurnBackwardIcon, Happy
 import type { ChatMessage } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { useSession } from "@/hooks/use-session";
-import { useChatSocket } from "@/hooks/use-chat-socket";
 import { UserAvatar } from "@/components/user-avatar";
 import { LinkPreview } from "./LinkPreview";
 import EmojiPicker from "./EmojiPicker";
@@ -66,9 +65,10 @@ interface MessageBubbleProps {
   isPending: boolean;
   onEditMessage?: (id: string, newContent: string) => void;
   onDeleteMessage?: (id: string) => void;
+  onToggleReaction?: (id: string, emoji: string) => void;
 }
 
-export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, isPending, onEditMessage, onDeleteMessage }: MessageBubbleProps) {
+export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, isPending, onEditMessage, onDeleteMessage, onToggleReaction }: MessageBubbleProps) {
   const time = new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const ref = useRef<HTMLDivElement>(null);
@@ -77,11 +77,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
   const { data: sessionData } = useSession();
   const currentUserId = sessionData?.id || "";
 
-  const { toggleReaction } = useChatSocket({ 
-    workspaceId: message.workspace_id, 
-    roomId: message.room_id, 
-    currentUserId
-  });
+
 
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
@@ -264,7 +260,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                         <button
                           key={quickEmoji}
                           onClick={() => {
-                            toggleReaction(message.id, quickEmoji);
+                            onToggleReaction?.(message.id, quickEmoji);
                             setIsEmojiPickerOpen(false);
                           }}
                           className="p-1.5 text-lg leading-none hover:bg-base-200 rounded-xl transition-all hover:scale-110"
@@ -282,7 +278,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                     </div>
                   ) : (
                     <EmojiPicker onEmojiSelect={(emoji) => {
-                      toggleReaction(message.id, emoji.native);
+                      onToggleReaction?.(message.id, emoji.native);
                       setIsEmojiPickerOpen(false);
                     }} />
                   )}
@@ -317,7 +313,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
               <ReactionIndicator 
                 reactions={message.reactions} 
                 currentUserId={currentUserId} 
-                onToggleReaction={(emoji) => toggleReaction(message.id, emoji)}
+                onToggleReaction={(emoji) => onToggleReaction?.(message.id, emoji)}
               />
             </div>
           )}

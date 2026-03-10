@@ -14,10 +14,11 @@ interface MessageListProps {
   isLoadingMore?: boolean;
   onEditMessage: (id: string, newContent: string) => void;
   onDeleteMessage: (id: string) => void;
+  onToggleReaction?: (id: string, emoji: string) => void;
   typingUsers?: TypingUser[];
 }
 
-export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage, typingUsers }: MessageListProps) {
+export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage, onToggleReaction, typingUsers }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const wasAtBottomRef = useRef(true);
@@ -127,6 +128,7 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
               isPending={message.id.startsWith("pending_")}
               onEditMessage={onEditMessage}
               onDeleteMessage={onDeleteMessage}
+              onToggleReaction={onToggleReaction}
             />
           </Fragment>
         );

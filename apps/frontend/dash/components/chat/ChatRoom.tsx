@@ -25,7 +25,7 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
   const typingUsers = useChatStore((s) => s.typingUsers.get(roomId)) ?? [];
   const isConnected = useChatStore((s) => s.isConnected);
 
-  const { sendMessage, editMessage, deleteMessage, sendTypingStart, sendTypingStop } = useChatSocket({ workspaceId, roomId, currentUserId });
+  const { sendMessage, editMessage, deleteMessage, sendTypingStart, sendTypingStop, toggleReaction } = useChatSocket({ workspaceId, roomId, currentUserId });
 
   useEffect(() => {
     if (initialMessages?.messages && messages.length === 0) {
@@ -56,6 +56,7 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
         currentUserId={currentUserId}
         onEditMessage={editMessage}
         onDeleteMessage={deleteMessage}
+        onToggleReaction={toggleReaction}
         typingUsers={typingUsers}
       />
 
