@@ -40,7 +40,7 @@ COPY --from=installer /app/apps/backend/prisma ./apps/backend/prisma
 RUN pnpx prisma generate --schema=apps/backend/prisma/schema.prisma
 
 COPY --from=installer --chown=node:node /app/apps/backend/dist ./apps/backend/dist
-COPY --from=installer --chown=node:node /app/packages/types/dist ./node_modules/@crwsync/types
+COPY --from=installer --chown=node:node /app/packages/types/dist ./node_modules/@crwsync/types/dist
 COPY --from=installer --chown=node:node /app/packages/types/package.json ./node_modules/@crwsync/types/package.json
 COPY --from=builder --chown=node:node /app/packages/templates ./packages/templates
 
