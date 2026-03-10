@@ -4,7 +4,6 @@ import { Edit03Icon, Delete02Icon, UnavailableIcon, ArrowTurnBackwardIcon, Happy
 import type { ChatMessage } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { useSession } from "@/hooks/use-session";
-import { useChatSocket } from "@/hooks/use-chat-socket";
 import { UserAvatar } from "@/components/user-avatar";
 import { LinkPreview } from "./LinkPreview";
 import EmojiPicker from "./EmojiPicker";
@@ -66,9 +65,10 @@ interface MessageBubbleProps {
   isPending: boolean;
   onEditMessage?: (id: string, newContent: string) => void;
   onDeleteMessage?: (id: string) => void;
+  onToggleReaction?: (id: string, emoji: string) => void;
 }
 
-export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, isPending, onEditMessage, onDeleteMessage }: MessageBubbleProps) {
+export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, isPending, onEditMessage, onDeleteMessage, onToggleReaction }: MessageBubbleProps) {
   const time = new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const ref = useRef<HTMLDivElement>(null);
@@ -77,11 +77,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
   const { data: sessionData } = useSession();
   const currentUserId = sessionData?.id || "";
 
-  const { toggleReaction } = useChatSocket({ 
-    workspaceId: message.workspace_id, 
-    roomId: message.room_id, 
-    currentUserId
-  });
+
 
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
@@ -169,13 +165,20 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
               {message.reply_to.sender?.lastname ? ` ${message.reply_to.sender.lastname.charAt(0)}.` : ""}
             </span>
             <span className="text-muted-foreground/90 text-ellipsis line-clamp-2 overflow-hidden opacity-90 group-hover/reply:opacity-100 transition-opacity">
-              {message.reply_to.content.replace(/@\[(.*?)\]\(user:[a-zA-Z0-9-]+\)/g, '@$1')}
+              {message.reply_to.is_deleted ? (
+                <span className="italic flex items-center gap-1">
+                  <HugeiconsIcon icon={UnavailableIcon} strokeWidth={1.75} className="size-3" />
+                  This message was deleted.
+                </span>
+              ) : (
+                message.reply_to.content.replace(/@\[(.*?)\]\(user:[a-zA-Z0-9-]+\)/g, '@$1')
+              )}
             </span>
           </div>
         )}
 
-        <div className={cn("relative z-10 group/bubble flex items-center gap-2", isSelf ? "flex-row-reverse" : "flex-row")}>
-          <div className="flex flex-col gap-1 items-start">
+        <div className={cn("relative z-10 group/bubble flex flex-col gap-1", isSelf ? "items-end" : "items-start")}>
+          <div className={cn("flex items-center gap-2", isSelf ? "flex-row-reverse" : "flex-row")}>
             <div
               className={cn(
                 "message-highlight-target px-2.5 py-1.5 text-sm leading-relaxed whitespace-pre-wrap transition-colors duration-500",
@@ -232,17 +235,6 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                 </>
               )}
             </div>
-            
-            {!message.is_deleted && message.reactions && message.reactions.length > 0 && (
-              <div className={cn("flex", isSelf && "self-end")}>
-                <ReactionIndicator 
-                  reactions={message.reactions} 
-                  currentUserId={currentUserId} 
-                  onToggleReaction={(emoji) => toggleReaction(message.id, emoji)}
-                />
-              </div>
-            )}
-          </div>
 
           {!message.is_deleted && !isPending && !isEditing && (
             <div className={cn(
@@ -259,38 +251,36 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                 <PopoverContent 
                   side="top" 
                   align={isSelf ? "end" : "start"} 
-                  className={cn("p-0 shadow-none border-none bg-transparent outline-none z-50", !showFullPicker && "w-auto")} 
+                  className={cn("w-full p-0 shadow-none border-none bg-transparent outline-none z-50", !showFullPicker && "w-auto")} 
                   sideOffset={10}
                 >
                   {!showFullPicker ? (
-                    <div className="flex items-center bg-base-100 border border-base-200 shadow-md rounded-full px-1 py-0.5">
+                    <div className="flex items-center py-0.5 pl-1 bg-base-100 border border-base-200 rounded-full shadow-md">
                       {["👍", "❤️", "😂", "😮", "😢", "🔥"].map((quickEmoji) => (
                         <button
                           key={quickEmoji}
                           onClick={() => {
-                            toggleReaction(message.id, quickEmoji);
+                            onToggleReaction?.(message.id, quickEmoji);
                             setIsEmojiPickerOpen(false);
                           }}
-                          className="p-1.5 hover:bg-base-200 rounded-full transition-all hover:scale-110 text-xl leading-none"
+                          className="p-1.5 text-lg leading-none hover:bg-base-200 rounded-xl transition-all hover:scale-110"
                         >
                           {quickEmoji}
                         </button>
                       ))}
-                      <div className="w-px h-6 bg-base-300 mx-1" />
+                      <div className="w-px h-6 bg-base-300 mx-1.5" />
                       <button 
                         onClick={() => setShowFullPicker(true)} 
-                        className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-base-200 transition-colors rounded-full mr-0.5"
+                        className="flex items-center justify-center py-1.5 px-2 mr-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-base-200 transition-colors"
                       >
                         <HugeiconsIcon icon={HappyIcon} strokeWidth={2} className="size-5" />
                       </button>
                     </div>
                   ) : (
-                    <div className="bg-base-100 rounded-lg shadow-xl border border-base-200">
-                      <EmojiPicker onEmojiSelect={(emoji) => {
-                        toggleReaction(message.id, emoji.native);
-                        setIsEmojiPickerOpen(false);
-                      }} />
-                    </div>
+                    <EmojiPicker onEmojiSelect={(emoji) => {
+                      onToggleReaction?.(message.id, emoji.native);
+                      setIsEmojiPickerOpen(false);
+                    }} />
                   )}
                 </PopoverContent>
               </Popover>
@@ -310,11 +300,24 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
               )}
             </div>
           )}
-        </div>
+          </div>
 
-        {firstUrl && !message.is_deleted && !isEditing && (
-          <LinkPreview workspaceId={message.workspace_id} url={firstUrl} />
-        )}
+          {firstUrl && !message.is_deleted && !isEditing && (
+            <div className="flex">
+              <LinkPreview workspaceId={message.workspace_id} url={firstUrl} />
+            </div>
+          )}
+          
+          {!message.is_deleted && message.reactions && message.reactions.length > 0 && (
+            <div className="flex">
+              <ReactionIndicator 
+                reactions={message.reactions} 
+                currentUserId={currentUserId} 
+                onToggleReaction={(emoji) => onToggleReaction?.(message.id, emoji)}
+              />
+            </div>
+          )}
+        </div>
 
         {(isLastInGroup || isPending) && (
           <div className="flex items-center gap-1 mt-0.5">

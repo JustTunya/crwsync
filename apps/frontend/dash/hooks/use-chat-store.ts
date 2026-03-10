@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import type { ChatMessage } from "@crwsync/types";
+import type { TypingUser } from "@/components/chat/TypingIndicator";
 
 interface ChatStoreState {
   messages: Map<string, ChatMessage[]>;
   pendingMessages: Map<string, ChatMessage>;
   isConnected: boolean;
   replyingToMessage: ChatMessage | null;
+  typingUsers: Map<string, TypingUser[]>;
 }
 
 interface ChatStoreActions {
@@ -19,6 +21,8 @@ interface ChatStoreActions {
   setConnected: (connected: boolean) => void;
   clearRoom: (roomId: string) => void;
   setReplyingTo: (message: ChatMessage | null) => void;
+  addTypingUser: (roomId: string, user: TypingUser) => void;
+  removeTypingUser: (roomId: string, userId: string) => void;
 }
 
 export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => ({
@@ -26,6 +30,7 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
   pendingMessages: new Map(),
   isConnected: false,
   replyingToMessage: null,
+  typingUsers: new Map(),
 
   setReplyingTo: (message) => set({ replyingToMessage: message }),
 
@@ -125,10 +130,25 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
 
       let found = false;
       const updated = existing.map((m) => {
+        let newReplyTo = m.reply_to;
+        if (newReplyTo && newReplyTo.id === messageId) {
+          if (updates.content !== undefined || updates.is_deleted !== undefined) {
+             newReplyTo = { ...newReplyTo };
+             if (updates.content !== undefined) newReplyTo.content = updates.content as string;
+             if (updates.is_deleted !== undefined) newReplyTo.is_deleted = updates.is_deleted as boolean;
+             found = true;
+          }
+        }
+
         if (m.id === messageId) {
           found = true;
-          return { ...m, ...updates };
+          return { ...m, ...updates, reply_to: newReplyTo };
         }
+        
+        if (newReplyTo !== m.reply_to) {
+          return { ...m, reply_to: newReplyTo };
+        }
+
         return m;
       });
 
@@ -143,8 +163,31 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
 
   clearRoom: (roomId) =>
     set((state) => {
-      const next = new Map(state.messages);
-      next.delete(roomId);
-      return { messages: next };
+      const nextMessages = new Map(state.messages);
+      nextMessages.delete(roomId);
+      const nextTyping = new Map(state.typingUsers);
+      nextTyping.delete(roomId);
+      return { messages: nextMessages, typingUsers: nextTyping };
+    }),
+
+  addTypingUser: (roomId, user) =>
+    set((state) => {
+      const next = new Map(state.typingUsers);
+      const existing = next.get(roomId) || [];
+      if (!existing.find((u) => u.id === user.id)) {
+        next.set(roomId, [...existing, user]);
+      }
+      return { typingUsers: next };
+    }),
+
+  removeTypingUser: (roomId, userId) =>
+    set((state) => {
+      const next = new Map(state.typingUsers);
+      const existing = next.get(roomId) || [];
+      next.set(
+        roomId,
+        existing.filter((u) => u.id !== userId),
+      );
+      return { typingUsers: next };
     }),
 }));

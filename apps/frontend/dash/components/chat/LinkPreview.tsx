@@ -36,7 +36,7 @@ export function LinkPreview({ workspaceId, url }: LinkPreviewProps) {
 
   if (loading) {
     return (
-      <div className="mt-2 h-20 w-full max-w-sm rounded-xl border border-base-200 bg-muted/30 animate-pulse" />
+      <div className="h-20 w-full max-w-sm rounded-xl border border-base-200 bg-muted/30 animate-pulse" />
     );
   }
 
@@ -49,7 +49,7 @@ export function LinkPreview({ workspaceId, url }: LinkPreviewProps) {
       href={data.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col sm:flex-row mt-2 w-full max-w-sm border border-base-200 bg-base-100 text-left text-current rounded-xl hover:bg-base-100/60 hover:border-base-200/60 transition-colors overflow-hidden"
+      className="flex flex-col sm:flex-row w-full max-w-sm border border-base-200 bg-base-100 text-left text-current rounded-xl hover:bg-base-100/60 hover:border-base-200/60 transition-colors overflow-hidden"
       onClick={(e) => e.stopPropagation()}
     >
       {data.image && (

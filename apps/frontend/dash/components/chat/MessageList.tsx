@@ -4,6 +4,7 @@ import { useEffect, useRef, Fragment } from "react";
 import type { ChatMessage } from "@crwsync/types";
 import { format } from "date-fns";
 import { MessageBubble } from "@/components/chat/MessageBubble";
+import { TypingIndicator, type TypingUser } from "@/components/chat/TypingIndicator";
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -13,9 +14,11 @@ interface MessageListProps {
   isLoadingMore?: boolean;
   onEditMessage: (id: string, newContent: string) => void;
   onDeleteMessage: (id: string) => void;
+  onToggleReaction?: (id: string, emoji: string) => void;
+  typingUsers?: TypingUser[];
 }
 
-export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage }: MessageListProps) {
+export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage, onToggleReaction, typingUsers }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const wasAtBottomRef = useRef(true);
@@ -33,6 +36,12 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
     }
     prevLengthRef.current = messages.length;
   }, [messages.length]);
+
+  useEffect(() => {
+    if (typingUsers && typingUsers.length > 0 && wasAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [typingUsers]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "instant" });
@@ -119,10 +128,15 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
               isPending={message.id.startsWith("pending_")}
               onEditMessage={onEditMessage}
               onDeleteMessage={onDeleteMessage}
+              onToggleReaction={onToggleReaction}
             />
           </Fragment>
         );
       })}
+
+      {typingUsers && typingUsers.length > 0 && (
+        <TypingIndicator typingUsers={typingUsers} />
+      )}
 
       <div ref={bottomRef} />
     </div>

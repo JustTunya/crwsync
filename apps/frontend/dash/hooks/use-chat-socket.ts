@@ -6,6 +6,7 @@ import type { ChatMessage } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { getChatMessages } from "@/services/chat.service";
 import { useSession } from "@/hooks/use-session";
+import type { TypingUser } from "@/components/chat/TypingIndicator";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -28,6 +29,8 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
     rejectOptimistic,
     updateMessage,
     setConnected,
+    addTypingUser,
+    removeTypingUser,
   } = useChatStore();
 
   useEffect(() => {
@@ -81,6 +84,18 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       rejectOptimistic(err.client_id, roomId);
     });
 
+    socket.on("typing_start", ({ user, roomId: room }: { user: TypingUser; roomId: string }) => {
+      if (room === roomId && user.id !== currentUserId) {
+        addTypingUser(roomId, user);
+      }
+    });
+
+    socket.on("typing_stop", ({ userId, roomId: room }: { userId: string; roomId: string }) => {
+      if (room === roomId && userId !== currentUserId) {
+        removeTypingUser(roomId, userId);
+      }
+    });
+
     socket.io.on("reconnect", async () => {
       socket.emit("join_room", { roomId, workspaceId });
 
@@ -109,7 +124,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       setConnected(false);
       socketRef.current = null;
     };
-  }, [workspaceId, roomId, appendMessage, updateMessage, confirmOptimistic, rejectOptimistic, setConnected]);
+  }, [workspaceId, roomId, currentUserId, appendMessage, updateMessage, confirmOptimistic, rejectOptimistic, setConnected, addTypingUser, removeTypingUser]);
 
   const sendMessage = useCallback(
     (content: string) => {
@@ -253,5 +268,15 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
     [roomId, updateMessage, currentUserId],
   );
 
-  return { sendMessage, editMessage, deleteMessage, toggleReaction };
+  const sendTypingStart = useCallback(() => {
+    if (!socketRef.current) return;
+    socketRef.current.emit("typing_start", { roomId });
+  }, [roomId]);
+
+  const sendTypingStop = useCallback(() => {
+    if (!socketRef.current) return;
+    socketRef.current.emit("typing_stop", { roomId });
+  }, [roomId]);
+
+  return { sendMessage, editMessage, deleteMessage, toggleReaction, sendTypingStart, sendTypingStop };
 }
