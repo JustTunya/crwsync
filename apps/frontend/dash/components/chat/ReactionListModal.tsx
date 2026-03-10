@@ -33,7 +33,7 @@ export default function ReactionListModal({ isOpen, onClose, reactions, currentU
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden gap-0 bg-base-100/90 backdrop-blur-md border-base-300">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden gap-0 bg-base-100/90 backdrop-blur-md border-base-300 rounded-xl">
         <DialogHeader className="p-4 pb-2">
           <DialogTitle className="text-lg font-semibold">Reactions</DialogTitle>
         </DialogHeader>
