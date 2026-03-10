@@ -65,3 +65,9 @@ export class ToggleReactionDto {
   @MaxLength(50)
   emoji!: string;
 }
+
+export class MarkAsReadDto {
+  @IsString()
+  @IsNotEmpty()
+  message_id!: string;
+}

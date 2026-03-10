@@ -18,9 +18,10 @@ interface SidebarModuleProps {
   active?: boolean;
   extended?: boolean;
   isOverlay?: boolean;
+  unreadCount?: number;
 }
 
-export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active, extended, isOverlay }: SidebarModuleProps) {
+export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active, extended, isOverlay, unreadCount = 10 }: SidebarModuleProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: isOverlay });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -98,12 +99,20 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
         isOverlay ? "bg-base-200 shadow-2xl ring-1 ring-primary/20 scale-105" : "hover:bg-base-200"
       )}
     >
-      <div className={cn("flex-1 flex flex-row items-center gap-2 min-w-0", !extended && "justify-center")}>
+      <div className={cn("flex-1 flex flex-row items-center gap-2 min-w-0", !extended && "relative justify-center")}>
         <HugeiconsIcon
           icon={icon}
           strokeWidth={1.75}
           className="size-4.5 z-10"
         />
+
+        {!extended && unreadCount !== undefined && unreadCount > 0 && (
+          <div className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary border-[1.5px] border-base-100 z-20">
+            <span className="text-[9px] font-bold text-primary-foreground leading-none">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          </div>
+        )}
 
         <LazyMotion features={domAnimation} strict>
           <AnimatePresence>
@@ -147,11 +156,18 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
         </LazyMotion>
       </div>
 
-      {extended && showSettingsBtn && !rename && (
-        <button className="z-10 cursor-pointer" onClick={handleSettingsClick}>
-          <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} className="size-4" />
-        </button>
-      )}
+      <div className="z-10 flex items-center gap-1.5 shrink-0">
+        {extended && unreadCount !== undefined && unreadCount > 0 && (
+          <div className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1">
+            <span className="text-[10px] font-bold leading-none text-primary-foreground mt-px">{unreadCount > 99 ? "99+" : unreadCount}</span>
+          </div>
+        )}
+        {extended && showSettingsBtn && !rename && (
+          <button className="cursor-pointer" onClick={handleSettingsClick}>
+            <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} className="size-4" />
+          </button>
+        )}
+      </div>
 
       <LazyMotion features={domAnimation} strict>
         <AnimatePresence>

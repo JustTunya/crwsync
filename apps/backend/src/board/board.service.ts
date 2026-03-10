@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { ModuleTypeEnum } from "@prisma/client";
+import { ModuleTypeEnum, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
@@ -339,13 +339,46 @@ export class BoardService {
     return { success: true };
   }
 
-  async getWorkspaceModules(workspaceId: string) {
+  async getWorkspaceModules(workspaceId: string, userId: string) {
     const modules = await this.prisma.workspaceModule.findMany({
       where: { workspace_id: workspaceId },
       orderBy: { position: "asc" },
     });
 
-    return { success: true, data: modules };
+    const chatModules = modules.filter(
+      (m) => m.type === ModuleTypeEnum.CHAT && m.reference_id,
+    );
+
+    if (chatModules.length === 0) {
+      return { success: true, data: modules };
+    }
+
+    const roomIds = chatModules.map((m) => m.reference_id);
+
+    const unreadCounts = await this.prisma.$queryRaw<{ room_id: string; count: bigint }[]>`
+      SELECT m.room_id, COUNT(m.id) as count
+      FROM chat_messages m
+      LEFT JOIN chat_read_receipts r ON m.room_id = r.room_id AND r.user_id = ${userId}::uuid
+      WHERE m.room_id IN (${Prisma.join(roomIds)})
+        AND (r.last_read_at IS NULL OR m.created_at > r.last_read_at)
+      GROUP BY m.room_id
+    `;
+
+    const unreadMap = new Map(
+      unreadCounts.map((uc) => [uc.room_id, Number(uc.count)]),
+    );
+
+    const enrichedModules = modules.map((m) => {
+      if (m.type === ModuleTypeEnum.CHAT && m.reference_id) {
+        return {
+          ...m,
+          unreadCount: unreadMap.get(m.reference_id) || 0,
+        };
+      }
+      return m;
+    });
+
+    return { success: true, data: enrichedModules };
   }
 
   async reorderModules(workspaceId: string, dto: ReorderModulesDto) {

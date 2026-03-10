@@ -185,8 +185,9 @@ export class ModuleController {
   findAll(
     @Param("workspaceId", new ParseUUIDPipe({ version: "4" }))
     workspaceId: string,
+    @ActiveUserParam() user: ActiveUser,
   ) {
-    return this.boardService.getWorkspaceModules(workspaceId);
+    return this.boardService.getWorkspaceModules(workspaceId, user.userId);
   }
 
   @Put("reorder")

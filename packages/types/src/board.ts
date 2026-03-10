@@ -57,6 +57,7 @@ export interface WorkspaceModule {
   name: string;
   position: number;
   created_at: string;
+  unreadCount?: number;
 }
 
 export interface CreateBoardPayload {

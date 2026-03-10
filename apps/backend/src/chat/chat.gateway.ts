@@ -12,7 +12,7 @@ import { JwtService } from "@nestjs/jwt";
 import { Server, Socket } from "socket.io";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ChatService } from "src/chat/chat.service";
-import { SendMessageDto, EditMessageDto, DeleteMessageDto } from "src/chat/dto/chat.dto";
+import { SendMessageDto, EditMessageDto, DeleteMessageDto, MarkAsReadDto } from "src/chat/dto/chat.dto";
 
 @WebSocketGateway({
   cors: { origin: "*", methods: ["GET", "POST"], credentials: true },
@@ -41,6 +41,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const payload = this.jwtService.verify(token);
       client.data.userId = payload.sub;
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, firstname: true, lastname: true, avatar_key: true },
+      });
+      client.data.user = user;
 
       this.logger.debug(`Chat client connected: ${client.id} (User: ${payload.sub})`);
     } catch (error) {
@@ -227,27 +233,46 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage("mark_as_read")
+  async handleMarkAsRead(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() dto: MarkAsReadDto,
+  ) {
+    const userId = client.data.userId;
+    const roomId = client.data.currentRoom;
+    const workspaceId = client.data.workspaceId;
+
+    if (!userId || !roomId || !workspaceId) return;
+
+    try {
+      const receipt = await this.chatService.markAsRead(
+        workspaceId,
+        roomId,
+        userId,
+        dto.message_id,
+      );
+
+      this.server.to(`chat_${roomId}`).emit("message_read", receipt);
+    } catch (error) {
+      this.logger.error(`Mark as read error: ${error}`);
+    }
+  }
+
   @SubscribeMessage("typing_start")
   async handleTypingStart(
     @ConnectedSocket() client: Socket,
   ) {
     const userId = client.data.userId;
     const roomId = client.data.currentRoom;
+    const user = client.data.user;
 
-    if (!userId || !roomId) return;
+    if (!userId || !roomId || !user) return;
 
     try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, firstname: true, lastname: true, avatar_key: true },
+      this.server.to(`chat_${roomId}`).emit("typing_start", {
+        user,
+        roomId,
       });
-
-      if (user) {
-        this.server.to(`chat_${roomId}`).emit("typing_start", {
-          user,
-          roomId,
-        });
-      }
     } catch (error) {
       this.logger.error(`Typing start error: ${error}`);
     }

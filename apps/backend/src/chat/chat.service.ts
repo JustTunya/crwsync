@@ -110,6 +110,11 @@ export class ChatService {
             user: { select: SENDER_SELECT },
           },
         },
+        read_receipts: {
+          include: {
+            user: { select: SENDER_SELECT },
+          },
+        },
       },
     });
 
@@ -180,8 +185,16 @@ export class ChatService {
             user: { select: SENDER_SELECT },
           },
         },
+        read_receipts: {
+          include: {
+            user: { select: SENDER_SELECT },
+          },
+        },
       },
     });
+
+    const receipt = await this.markAsRead(workspaceId, roomId, senderId, message.id);
+    message.read_receipts = [receipt];
 
     return message;
   }
@@ -372,5 +385,48 @@ export class ChatService {
         data: null,
       };
     }
+  }
+
+  async markAsRead(
+    workspaceId: string,
+    roomId: string,
+    userId: string,
+    messageId: string,
+  ) {
+    const message = await this.prisma.chatMessage.findUnique({
+      where: { id: messageId },
+      select: { room_id: true, workspace_id: true },
+    });
+
+    if (
+      !message ||
+      message.room_id !== roomId ||
+      message.workspace_id !== workspaceId
+    ) {
+      throw new NotFoundException("Message not found");
+    }
+
+    const receipt = await this.prisma.chatReadReceipt.upsert({
+      where: {
+        room_id_user_id: {
+          room_id: roomId,
+          user_id: userId,
+        },
+      },
+      update: {
+        message_id: messageId,
+        last_read_at: new Date(),
+      },
+      create: {
+        room_id: roomId,
+        user_id: userId,
+        message_id: messageId,
+      },
+      include: {
+        user: { select: SENDER_SELECT },
+      },
+    });
+
+    return receipt;
   }
 }

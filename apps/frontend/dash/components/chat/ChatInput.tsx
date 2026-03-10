@@ -31,15 +31,20 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(false);
 
   const triggerTyping = () => {
-    if (onTypingStart) {
-      onTypingStart();
+    if (!isTypingRef.current) {
+      isTypingRef.current = true;
+      if (onTypingStart) {
+        onTypingStart();
+      }
     }
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
     typingTimeoutRef.current = setTimeout(() => {
+      isTypingRef.current = false;
       if (onTypingStop) onTypingStop();
     }, 3000);
   };
@@ -179,6 +184,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
     }
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    isTypingRef.current = false;
     if (onTypingStop) onTypingStop();
   };
 
@@ -232,6 +238,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
       triggerTyping();
     } else {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      isTypingRef.current = false;
       if (onTypingStop) onTypingStop();
     }
 

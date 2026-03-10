@@ -212,6 +212,7 @@ export function LSidebar() {
                         href={getModuleHref(slug, mod)}
                         active={isModuleActive(pathname, slug, mod)}
                         extended={open}
+                        unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
                       />
                     ))
                   ) : (
@@ -234,6 +235,7 @@ export function LSidebar() {
                         href={getModuleHref(slug, mod)}
                         active={isModuleActive(pathname, slug, mod)}
                         extended={open}
+                        unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
                         isOverlay
                       />
                     );

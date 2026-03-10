@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import type { ChatMessage } from "@crwsync/types";
+import type { ChatMessage, ChatReadReceipt } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { getChatMessages } from "@/services/chat.service";
 import { useSession } from "@/hooks/use-session";
@@ -31,6 +31,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
     setConnected,
     addTypingUser,
     removeTypingUser,
+    updateReadReceipt,
   } = useChatStore();
 
   useEffect(() => {
@@ -84,6 +85,10 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       rejectOptimistic(err.client_id, roomId);
     });
 
+    socket.on("message_read", (receipt: ChatReadReceipt) => {
+      updateReadReceipt(roomId, receipt);
+    });
+
     socket.on("typing_start", ({ user, roomId: room }: { user: TypingUser; roomId: string }) => {
       if (room === roomId && user.id !== currentUserId) {
         addTypingUser(roomId, user);
@@ -124,7 +129,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       setConnected(false);
       socketRef.current = null;
     };
-  }, [workspaceId, roomId, currentUserId, appendMessage, updateMessage, confirmOptimistic, rejectOptimistic, setConnected, addTypingUser, removeTypingUser]);
+  }, [workspaceId, roomId, currentUserId, appendMessage, updateMessage, confirmOptimistic, rejectOptimistic, setConnected, addTypingUser, removeTypingUser, updateReadReceipt]);
 
   const sendMessage = useCallback(
     (content: string) => {
@@ -278,5 +283,13 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
     socketRef.current.emit("typing_stop", { roomId });
   }, [roomId]);
 
-  return { sendMessage, editMessage, deleteMessage, toggleReaction, sendTypingStart, sendTypingStop };
+  const markAsRead = useCallback(
+    (messageId: string) => {
+      if (!socketRef.current) return;
+      socketRef.current.emit("mark_as_read", { message_id: messageId });
+    },
+    [],
+  );
+
+  return { sendMessage, editMessage, deleteMessage, toggleReaction, sendTypingStart, sendTypingStop, markAsRead };
 }

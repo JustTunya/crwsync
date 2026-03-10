@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatMessage } from "@crwsync/types";
+import type { ChatMessage, ChatReadReceipt } from "@crwsync/types";
 import type { TypingUser } from "@/components/chat/TypingIndicator";
 
 interface ChatStoreState {
@@ -8,6 +8,7 @@ interface ChatStoreState {
   isConnected: boolean;
   replyingToMessage: ChatMessage | null;
   typingUsers: Map<string, TypingUser[]>;
+  readReceipts: Map<string, Record<string, ChatReadReceipt>>;
 }
 
 interface ChatStoreActions {
@@ -23,6 +24,8 @@ interface ChatStoreActions {
   setReplyingTo: (message: ChatMessage | null) => void;
   addTypingUser: (roomId: string, user: TypingUser) => void;
   removeTypingUser: (roomId: string, userId: string) => void;
+  setReadReceipts: (roomId: string, receipts: ChatReadReceipt[]) => void;
+  updateReadReceipt: (roomId: string, receipt: ChatReadReceipt) => void;
 }
 
 export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => ({
@@ -31,6 +34,7 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
   isConnected: false,
   replyingToMessage: null,
   typingUsers: new Map(),
+  readReceipts: new Map(),
 
   setReplyingTo: (message) => set({ replyingToMessage: message }),
 
@@ -38,7 +42,24 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
     set((state) => {
       const next = new Map(state.messages);
       next.set(roomId, messages);
-      return { messages: next };
+
+      const nextReceipts = new Map(state.readReceipts);
+      const roomReceipts: Record<string, ChatReadReceipt> = nextReceipts.get(roomId) || {};
+      messages.forEach((m) => {
+        if (m.read_receipts) {
+          m.read_receipts.forEach((r) => {
+            if (
+              !roomReceipts[r.user_id] ||
+              new Date(r.last_read_at) > new Date(roomReceipts[r.user_id].last_read_at)
+            ) {
+              roomReceipts[r.user_id] = r;
+            }
+          });
+        }
+      });
+      nextReceipts.set(roomId, roomReceipts);
+
+      return { messages: next, readReceipts: nextReceipts };
     }),
 
   prependMessages: (roomId, older) =>
@@ -70,7 +91,20 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
       }
 
       next.set(roomId, [...existing, message]);
-      return { messages: next };
+
+      let nextReceipts = state.readReceipts;
+      if (message.read_receipts && message.read_receipts.length > 0) {
+        nextReceipts = new Map(state.readReceipts);
+        const roomReceipts = { ...(nextReceipts.get(roomId) || {}) };
+        message.read_receipts.forEach((r) => {
+          if (!roomReceipts[r.user_id] || new Date(r.last_read_at) > new Date(roomReceipts[r.user_id].last_read_at)) {
+            roomReceipts[r.user_id] = r;
+          }
+        });
+        nextReceipts.set(roomId, roomReceipts);
+      }
+
+      return { messages: next, readReceipts: nextReceipts };
     }),
 
   addOptimistic: (roomId, message, clientId) =>
@@ -167,7 +201,9 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
       nextMessages.delete(roomId);
       const nextTyping = new Map(state.typingUsers);
       nextTyping.delete(roomId);
-      return { messages: nextMessages, typingUsers: nextTyping };
+      const nextReceipts = new Map(state.readReceipts);
+      nextReceipts.delete(roomId);
+      return { messages: nextMessages, typingUsers: nextTyping, readReceipts: nextReceipts };
     }),
 
   addTypingUser: (roomId, user) =>
@@ -189,5 +225,30 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
         existing.filter((u) => u.id !== userId),
       );
       return { typingUsers: next };
+    }),
+
+  setReadReceipts: (roomId, receipts) =>
+    set((state) => {
+      const next = new Map(state.readReceipts);
+      const roomReceipts = { ...(next.get(roomId) || {}) };
+      receipts.forEach((r) => {
+        if (
+          !roomReceipts[r.user_id] ||
+          new Date(r.last_read_at) > new Date(roomReceipts[r.user_id].last_read_at)
+        ) {
+          roomReceipts[r.user_id] = r;
+        }
+      });
+      next.set(roomId, roomReceipts);
+      return { readReceipts: next };
+    }),
+
+  updateReadReceipt: (roomId, receipt) =>
+    set((state) => {
+      const next = new Map(state.readReceipts);
+      const roomReceipts = { ...(next.get(roomId) || {}) };
+      roomReceipts[receipt.user_id] = receipt;
+      next.set(roomId, roomReceipts);
+      return { readReceipts: next };
     }),
 }));
