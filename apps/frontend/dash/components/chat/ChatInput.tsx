@@ -18,9 +18,11 @@ interface ChatInputProps {
   workspaceId: string;
   onSend: (content: string) => void;
   disabled?: boolean;
+  onTypingStart?: () => void;
+  onTypingStop?: () => void;
 }
 
-export function ChatInput({ workspaceId, onSend, disabled }: ChatInputProps) {
+export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypingStop }: ChatInputProps) {
   const { replyingToMessage, setReplyingTo } = useChatStore();
   const [content, setContent] = useState("");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
@@ -28,6 +30,19 @@ export function ChatInput({ workspaceId, onSend, disabled }: ChatInputProps) {
   const backdropRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const triggerTyping = () => {
+    if (onTypingStart) {
+      onTypingStart();
+    }
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    typingTimeoutRef.current = setTimeout(() => {
+      if (onTypingStop) onTypingStop();
+    }, 3000);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -162,6 +177,9 @@ export function ChatInput({ workspaceId, onSend, disabled }: ChatInputProps) {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    if (onTypingStop) onTypingStop();
   };
 
   const insertMention = (option: MentionOption) => {
@@ -209,6 +227,13 @@ export function ChatInput({ workspaceId, onSend, disabled }: ChatInputProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setContent(value);
+
+    if (value.trim()) {
+      triggerTyping();
+    } else {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (onTypingStop) onTypingStop();
+    }
 
     if (!members) return;
 

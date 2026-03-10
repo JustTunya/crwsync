@@ -227,6 +227,47 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage("typing_start")
+  async handleTypingStart(
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = client.data.userId;
+    const roomId = client.data.currentRoom;
+
+    if (!userId || !roomId) return;
+
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, firstname: true, lastname: true, avatar_key: true },
+      });
+
+      if (user) {
+        this.server.to(`chat_${roomId}`).emit("typing_start", {
+          user,
+          roomId,
+        });
+      }
+    } catch (error) {
+      this.logger.error(`Typing start error: ${error}`);
+    }
+  }
+
+  @SubscribeMessage("typing_stop")
+  async handleTypingStop(
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = client.data.userId;
+    const roomId = client.data.currentRoom;
+
+    if (!userId || !roomId) return;
+
+    this.server.to(`chat_${roomId}`).emit("typing_stop", {
+      userId,
+      roomId,
+    });
+  }
+
   private extractToken(client: Socket): string | null {
     if (client.handshake.auth?.token) {
       return client.handshake.auth.token;
