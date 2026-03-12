@@ -23,18 +23,16 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
   const { isFetching } = useSession();
   const wasFetching = useRef(isFetching);
 
-  const {
-    appendMessage,
-    appendMissedMessages,
-    addOptimistic,
-    confirmOptimistic,
-    rejectOptimistic,
-    updateMessage,
-    setConnected,
-    addTypingUser,
-    removeTypingUser,
-    updateReadReceipt,
-  } = useChatStore();
+  const appendMessage = useChatStore((s) => s.appendMessage);
+  const appendMissedMessages = useChatStore((s) => s.appendMissedMessages);
+  const addOptimistic = useChatStore((s) => s.addOptimistic);
+  const confirmOptimistic = useChatStore((s) => s.confirmOptimistic);
+  const rejectOptimistic = useChatStore((s) => s.rejectOptimistic);
+  const updateMessage = useChatStore((s) => s.updateMessage);
+  const setConnected = useChatStore((s) => s.setConnected);
+  const addTypingUser = useChatStore((s) => s.addTypingUser);
+  const removeTypingUser = useChatStore((s) => s.removeTypingUser);
+  const updateReadReceipt = useChatStore((s) => s.updateReadReceipt);
 
   const user = useUser();
 
@@ -97,9 +95,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       }
     });
 
-    socket.io.on("reconnect", async () => {
-      socket.emit("join_room", { roomId, workspaceId });
-
+    const handleReconnect = async () => {
       const store = useChatStore.getState();
       const existing = store.messages.get(roomId) || [];
       const lastMessage = existing[existing.length - 1];
@@ -129,9 +125,12 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
           }
         }
       }
-    });
+    };
+
+    socket.io.on("reconnect", handleReconnect);
 
     return () => {
+      socket.io.off("reconnect", handleReconnect);
       socket.emit("leave_room", { roomId });
       socket.disconnect();
       setConnected(false);
@@ -269,8 +268,8 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
           created_at: new Date().toISOString(),
           user: {
             id: currentUserId,
-            firstname: store.replyingToMessage?.sender?.firstname || "",
-            lastname: store.replyingToMessage?.sender?.lastname || "",
+            firstname: user?.firstname || "",
+            lastname: user?.lastname || "",
             avatar_key: null,
           }
         };
@@ -286,7 +285,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
         emoji,
       });
     },
-    [roomId, updateMessage, currentUserId],
+    [roomId, updateMessage, currentUserId, user],
   );
 
   const sendTypingStart = useCallback(() => {
