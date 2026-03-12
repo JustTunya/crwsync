@@ -11,6 +11,15 @@ import type { TypingUser } from "@/components/chat/TypingIndicator";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
+// Bug 4 & 5 fix: Module-level singleton socket.
+// Prevents redundant TCP connections when switching rooms, and allows
+// leave_room to flush before the next join_room without severing the link.
+const chatSocket: Socket = io(`${SOCKET_URL}/chat`, {
+  withCredentials: true,
+  transports: ["websocket"],
+  autoConnect: false,
+});
+
 interface UseChatSocketOptions {
   workspaceId: string;
   roomId: string;
@@ -18,7 +27,7 @@ interface UseChatSocketOptions {
 }
 
 export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSocketOptions) {
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<Socket>(chatSocket);
   
   const { isFetching } = useSession();
   const wasFetching = useRef(isFetching);
@@ -38,62 +47,61 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
 
   useEffect(() => {
     if (wasFetching.current && !isFetching) {
-      if (socketRef.current?.disconnected) {
-        socketRef.current.connect();
+      if (chatSocket.disconnected) {
+        chatSocket.connect();
       }
     }
     wasFetching.current = isFetching;
   }, [isFetching]);
 
   useEffect(() => {
-    const socket = io(`${SOCKET_URL}/chat`, {
-      withCredentials: true,
-      transports: ["websocket"],
-      autoConnect: true,
-    });
+    const socket = chatSocket;
 
-    socketRef.current = socket;
+    // Connect the singleton if it isn't already
+    if (socket.disconnected) {
+      socket.connect();
+    }
 
-    socket.on("connect", () => {
+    const handleConnect = () => {
       setConnected(true);
       socket.emit("join_room", { roomId, workspaceId });
-    });
+    };
 
-    socket.on("disconnect", () => {
+    const handleDisconnect = () => {
       setConnected(false);
-    });
+    };
 
-    socket.on("new_message", (message: ChatMessage) => {
+    const handleNewMessage = (message: ChatMessage) => {
       appendMessage(roomId, message);
-    });
+    };
 
-    socket.on("message_updated", (message: ChatMessage) => {
+    const handleMessageUpdated = (message: ChatMessage) => {
       updateMessage(roomId, message.id, message);
-    });
+    };
 
-    socket.on("message_ack", (ack: { client_id: string; message: ChatMessage }) => {
+    const handleMessageAck = (ack: { client_id: string; message: ChatMessage }) => {
       confirmOptimistic(ack.client_id, ack.message);
-    });
+    };
 
-    socket.on("message_error", (err: { client_id: string }) => {
+    const handleMessageError = (err: { client_id: string }) => {
       rejectOptimistic(err.client_id, roomId);
-    });
+    };
 
-    socket.on("message_read", (receipt: ChatReadReceipt) => {
+    const handleMessageRead = (receipt: ChatReadReceipt) => {
       updateReadReceipt(roomId, receipt);
-    });
+    };
 
-    socket.on("typing_start", ({ user, roomId: room }: { user: TypingUser; roomId: string }) => {
+    const handleTypingStart = ({ user, roomId: room }: { user: TypingUser; roomId: string }) => {
       if (room === roomId && user.id !== currentUserId) {
         addTypingUser(roomId, user);
       }
-    });
+    };
 
-    socket.on("typing_stop", ({ userId, roomId: room }: { userId: string; roomId: string }) => {
+    const handleTypingStop = ({ userId, roomId: room }: { userId: string; roomId: string }) => {
       if (room === roomId && userId !== currentUserId) {
         removeTypingUser(roomId, userId);
       }
-    });
+    };
 
     const handleReconnect = async () => {
       const store = useChatStore.getState();
@@ -127,19 +135,43 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       }
     };
 
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("new_message", handleNewMessage);
+    socket.on("message_updated", handleMessageUpdated);
+    socket.on("message_ack", handleMessageAck);
+    socket.on("message_error", handleMessageError);
+    socket.on("message_read", handleMessageRead);
+    socket.on("typing_start", handleTypingStart);
+    socket.on("typing_stop", handleTypingStop);
     socket.io.on("reconnect", handleReconnect);
 
+    // If already connected (singleton was alive from a previous room),
+    // manually fire the join since "connect" won't re-fire.
+    if (socket.connected) {
+      socket.emit("join_room", { roomId, workspaceId });
+      setConnected(true);
+    }
+
     return () => {
-      socket.io.off("reconnect", handleReconnect);
+      // Bug 5 fix: Emit leave_room but do NOT disconnect the singleton socket.
+      // Removing listeners prevents stale closures for the previous room.
       socket.emit("leave_room", { roomId });
-      socket.disconnect();
-      setConnected(false);
-      socketRef.current = null;
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("new_message", handleNewMessage);
+      socket.off("message_updated", handleMessageUpdated);
+      socket.off("message_ack", handleMessageAck);
+      socket.off("message_error", handleMessageError);
+      socket.off("message_read", handleMessageRead);
+      socket.off("typing_start", handleTypingStart);
+      socket.off("typing_stop", handleTypingStop);
+      socket.io.off("reconnect", handleReconnect);
     };
   }, [workspaceId, roomId, currentUserId, appendMessage, appendMissedMessages, updateMessage, confirmOptimistic, rejectOptimistic, setConnected, addTypingUser, removeTypingUser, updateReadReceipt]);
 
   const sendMessage = useCallback(
-    (content: string) => {
+    (content: string, mentionedUserIds: string[] = [], isEveryoneMention: boolean = false) => {
       if (!socketRef.current || !content.trim()) return;
 
       const clientId = crypto.randomUUID();
@@ -187,6 +219,8 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
         content: content.trim(),
         client_id: clientId,
         reply_to_id: store.replyingToMessage?.id || undefined,
+        mentionedUserIds,
+        isEveryoneMention,
       });
 
       store.setReplyingTo(null);

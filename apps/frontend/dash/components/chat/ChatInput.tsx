@@ -16,7 +16,7 @@ type MentionOption =
 
 interface ChatInputProps {
   workspaceId: string;
-  onSend: (content: string) => void;
+  onSend: (content: string, mentionedUserIds: string[], isEveryoneMention: boolean) => void;
   disabled?: boolean;
   onTypingStart?: () => void;
   onTypingStop?: () => void;
@@ -176,7 +176,9 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
       });
     }
 
-    onSend(processedContent);
+    const mentionedUserIds = [...processedContent.matchAll(/@\[.*?\]\(user:([a-zA-Z0-9-]+)\)/g)].map(m => m[1]);
+    const isEveryoneMention = processedContent.includes("@everyone");
+    onSend(processedContent, mentionedUserIds, isEveryoneMention);
     setContent("");
     setMentionState({ active: false, text: "", startIndex: -1 });
     if (textareaRef.current) {

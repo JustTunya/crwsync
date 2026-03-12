@@ -89,7 +89,7 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
       if (message.client_id && state.pendingMessages.has(message.client_id)) {
         const pending = state.pendingMessages.get(message.client_id)!;
         const updated = existing.map((m) =>
-          m.id === pending.id ? message : m,
+          m.id === pending.id ? { ...message, reactions: m.reactions } : m,
         );
         next.set(roomId, updated);
 
