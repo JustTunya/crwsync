@@ -43,6 +43,7 @@ export interface ChatMessage {
   is_edited: boolean;
   is_pinned: boolean;
   reply_to_id: string | null;
+  client_id?: string;
   reply_to?: {
     id: string;
     content: string;

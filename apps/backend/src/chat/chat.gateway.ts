@@ -12,6 +12,7 @@ import { JwtService } from "@nestjs/jwt";
 import { Server, Socket } from "socket.io";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ChatService } from "src/chat/chat.service";
+import { StatusGateway } from "src/status/status.gateway";
 import { SendMessageDto, EditMessageDto, DeleteMessageDto, MarkAsReadDto } from "src/chat/dto/chat.dto";
 
 @WebSocketGateway({
@@ -28,6 +29,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly chatService: ChatService,
+    private readonly statusGateway: StatusGateway,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -129,23 +131,37 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         dto,
       );
 
-      this.server.to(`chat_${roomId}`).emit("new_message", message);
+      const socketPayload = { ...message, client_id: dto.client_id };
 
+      this.server.to(`chat_${roomId}`).emit("new_message", socketPayload);
+
+      // Emit mention notifications via the global /status namespace
+      // so users anywhere in the app receive them
       if (dto.isEveryoneMention) {
-        this.server.to(`chat_${roomId}`).emit("mention_notification", message);
+        const members = await this.prisma.workspaceMember.findMany({
+          where: { workspace_id: workspaceId },
+          select: { user_id: true },
+        });
+        for (const member of members) {
+          if (member.user_id !== userId) {
+            this.statusGateway.server
+              .to(`user_${member.user_id}`)
+              .emit("mention_notification", message);
+          }
+        }
       } else if (dto.mentionedUserIds?.length) {
-        const sockets = await this.server.in(`chat_${roomId}`).fetchSockets();
-        for (const socket of sockets) {
-          if (dto.mentionedUserIds.includes(socket.data.userId)) {
-            socket.emit("mention_notification", message);
+        for (const mentionedId of dto.mentionedUserIds) {
+          if (mentionedId !== userId) {
+            this.statusGateway.server
+              .to(`user_${mentionedId}`)
+              .emit("mention_notification", message);
           }
         }
       }
 
       client.emit("message_ack", {
         client_id: dto.client_id,
-        message_id: message.id,
-        created_at: message.created_at,
+        message: socketPayload,
       });
     } catch (error) {
       this.logger.error(`Send message error: ${error}`);

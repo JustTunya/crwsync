@@ -52,7 +52,8 @@ export class ChatController {
     @Param("roomId", new ParseUUIDPipe({ version: "4" })) roomId: string,
     @Query("cursor") cursor?: string,
     @Query("limit") limit?: number,
+    @Query("direction") direction?: "before" | "after",
   ) {
-    return this.chatService.getMessages(roomId, cursor, limit);
+    return this.chatService.getMessages(roomId, cursor, limit, direction);
   }
 }

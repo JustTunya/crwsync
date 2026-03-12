@@ -6,6 +6,7 @@ import type { ChatMessage, ChatReadReceipt } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { getChatMessages } from "@/services/chat.service";
 import { useSession } from "@/hooks/use-session";
+import { useUser } from "@/providers/user.provider";
 import type { TypingUser } from "@/components/chat/TypingIndicator";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
@@ -24,6 +25,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
 
   const {
     appendMessage,
+    appendMissedMessages,
     addOptimistic,
     confirmOptimistic,
     rejectOptimistic,
@@ -33,6 +35,8 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
     removeTypingUser,
     updateReadReceipt,
   } = useChatStore();
+
+  const user = useUser();
 
   useEffect(() => {
     if (wasFetching.current && !isFetching) {
@@ -69,16 +73,8 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       updateMessage(roomId, message.id, message);
     });
 
-    socket.on("message_ack", (ack: { client_id: string; message_id: string; created_at: string }) => {
-      const store = useChatStore.getState();
-      const pending = store.pendingMessages.get(ack.client_id);
-      if (pending) {
-        confirmOptimistic(ack.client_id, {
-          ...pending,
-          id: ack.message_id,
-          created_at: ack.created_at,
-        });
-      }
+    socket.on("message_ack", (ack: { client_id: string; message: ChatMessage }) => {
+      confirmOptimistic(ack.client_id, ack.message);
     });
 
     socket.on("message_error", (err: { client_id: string }) => {
@@ -109,16 +105,28 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       const lastMessage = existing[existing.length - 1];
 
       if (lastMessage) {
-        const result = await getChatMessages(
-          workspaceId,
-          roomId,
-          undefined,
-          50,
-        );
-        if (result.success && result.data) {
-          const currentIds = new Set(existing.map((m) => m.id));
-          const missed = result.data.messages.filter((m) => !currentIds.has(m.id));
-          missed.forEach((m) => appendMessage(roomId, m));
+        // Paginate forward from the last known message to close any gap
+        let cursor: string | undefined = lastMessage.created_at;
+        let hasMore = true;
+
+        while (hasMore && cursor) {
+          const result = await getChatMessages(
+            workspaceId,
+            roomId,
+            cursor,
+            100,
+            "after",
+          );
+
+          if (result.success && result.data) {
+            if (result.data.messages.length > 0) {
+              appendMissedMessages(roomId, result.data.messages);
+            }
+            hasMore = result.data.has_more;
+            cursor = result.data.next_cursor ?? undefined;
+          } else {
+            hasMore = false;
+          }
         }
       }
     });
@@ -129,7 +137,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       setConnected(false);
       socketRef.current = null;
     };
-  }, [workspaceId, roomId, currentUserId, appendMessage, updateMessage, confirmOptimistic, rejectOptimistic, setConnected, addTypingUser, removeTypingUser, updateReadReceipt]);
+  }, [workspaceId, roomId, currentUserId, appendMessage, appendMissedMessages, updateMessage, confirmOptimistic, rejectOptimistic, setConnected, addTypingUser, removeTypingUser, updateReadReceipt]);
 
   const sendMessage = useCallback(
     (content: string) => {
@@ -140,6 +148,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
 
       const optimisticMessage: ChatMessage = {
         id: `pending_${clientId}`,
+        client_id: clientId,
         workspace_id: workspaceId,
         room_id: roomId,
         sender_id: currentUserId,
@@ -151,6 +160,13 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
         is_pinned: false,
         reply_to_id: null,
         reply_to: null,
+        sender: user ? {
+          id: user.id,
+          firstname: user.firstname,
+          lastname: user.lastname,
+          avatar_key: user.avatar_key ?? null,
+        } : undefined,
+        reactions: [],
       };
 
       const store = useChatStore.getState();
@@ -183,7 +199,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
         }
       }, 10000);
     },
-    [workspaceId, roomId, currentUserId, addOptimistic, rejectOptimistic],
+    [workspaceId, roomId, currentUserId, user, addOptimistic, rejectOptimistic],
   );
 
   const editMessage = useCallback(

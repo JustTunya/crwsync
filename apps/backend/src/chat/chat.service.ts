@@ -79,7 +79,12 @@ export class ChatService {
     return { success: true, data: room };
   }
 
-  async getMessages(roomId: string, cursor?: string, limit: number = 50) {
+  async getMessages(
+    roomId: string,
+    cursor?: string,
+    limit: number = 50,
+    direction: "before" | "after" = "before",
+  ) {
     const take = Math.min(limit, 100);
 
     const where: Record<string, unknown> = {
@@ -87,12 +92,16 @@ export class ChatService {
     };
 
     if (cursor) {
-      where.created_at = { lt: new Date(cursor) };
+      where.created_at = direction === "after"
+        ? { gt: new Date(cursor) }
+        : { lt: new Date(cursor) };
     }
+
+    const orderDirection = direction === "after" ? "asc" : "desc";
 
     const messages = await this.prisma.chatMessage.findMany({
       where,
-      orderBy: { created_at: "desc" },
+      orderBy: { created_at: orderDirection },
       take: take + 1,
       include: {
         sender: { select: SENDER_SELECT },
@@ -121,11 +130,15 @@ export class ChatService {
     const hasMore = messages.length > take;
     if (hasMore) messages.pop();
 
-    const ordered = messages.reverse();
+    // For 'before' direction, reverse to chronological order
+    // For 'after' direction, already in chronological order
+    const ordered = direction === "after" ? messages : messages.reverse();
 
     const nextCursor =
       hasMore && ordered.length > 0
-        ? ordered[0].created_at.toISOString()
+        ? direction === "after"
+          ? ordered[ordered.length - 1].created_at.toISOString()
+          : ordered[0].created_at.toISOString()
         : null;
 
     return {
