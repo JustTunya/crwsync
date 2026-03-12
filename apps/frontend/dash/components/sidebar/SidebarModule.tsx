@@ -21,7 +21,7 @@ interface SidebarModuleProps {
   unreadCount?: number;
 }
 
-export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active, extended, isOverlay, unreadCount = 10 }: SidebarModuleProps) {
+export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active, extended, isOverlay, unreadCount }: SidebarModuleProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: isOverlay });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
