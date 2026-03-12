@@ -65,7 +65,8 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       socketInstance.disconnect();
       dispatch({ type: "DISCONNECT" });
     };
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally depend on user?.id, not user object reference (Bug 4 fix)
+  }, [user?.id]);
 
   return (
     <SocketContext.Provider value={state}>

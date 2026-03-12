@@ -66,9 +66,10 @@ interface MessageBubbleProps {
   onEditMessage?: (id: string, newContent: string) => void;
   onDeleteMessage?: (id: string) => void;
   onToggleReaction?: (id: string, emoji: string) => void;
+  readReceipts?: ChatMessage["read_receipts"];
 }
 
-export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, isPending, onEditMessage, onDeleteMessage, onToggleReaction }: MessageBubbleProps) {
+export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, isPending, onEditMessage, onDeleteMessage, onToggleReaction, readReceipts }: MessageBubbleProps) {
   const time = new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const ref = useRef<HTMLDivElement>(null);
@@ -327,6 +328,22 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
             {message.is_edited && !message.is_deleted && !isPending && (
               <span className="text-[10px] text-muted-foreground/50 font-medium">(edited)</span>
             )}
+          </div>
+        )}
+
+        {readReceipts && readReceipts.length > 0 && (
+          <div className={cn("flex items-center gap-0.5 mt-0.5 select-none", isSelf ? "justify-end" : "justify-start")}>
+            {readReceipts.map((r) => (
+              <UserAvatar
+                key={r.user_id}
+                user={{
+                  firstname: r.user?.firstname || "",
+                  lastname: r.user?.lastname || "",
+                  avatar_key: r.user?.avatar_key,
+                }}
+                size={4}
+              />
+            ))}
           </div>
         )}
       </div>

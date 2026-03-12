@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, Fragment } from "react";
-import type { ChatMessage } from "@crwsync/types";
+import type { ChatMessage, ChatReadReceipt } from "@crwsync/types";
 import { format } from "date-fns";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { TypingIndicator, type TypingUser } from "@/components/chat/TypingIndicator";
@@ -16,9 +16,11 @@ interface MessageListProps {
   onDeleteMessage: (id: string) => void;
   onToggleReaction?: (id: string, emoji: string) => void;
   typingUsers?: TypingUser[];
+  markAsRead?: (id: string) => void;
+  readReceipts?: Record<string, ChatReadReceipt>;
 }
 
-export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage, onToggleReaction, typingUsers }: MessageListProps) {
+export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage, onToggleReaction, typingUsers, markAsRead, readReceipts }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const wasAtBottomRef = useRef(true);
@@ -29,6 +31,46 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
     if (!el) return true;
     return el.scrollHeight - el.scrollTop - el.clientHeight < 80;
   };
+
+  useEffect(() => {
+    if (!markAsRead || messages.length === 0) return;
+
+    let latestOtherMessage: ChatMessage | null = null;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].sender_id !== currentUserId && !messages[i].id.startsWith("pending_")) {
+        latestOtherMessage = messages[i];
+        break;
+      }
+    }
+
+    if (!latestOtherMessage) return;
+
+    const myReceipt = readReceipts?.[currentUserId];
+    if (myReceipt) {
+      const myReadDate = new Date(myReceipt.last_read_at).getTime();
+      const msgDate = new Date(latestOtherMessage.created_at).getTime();
+      if (myReadDate >= msgDate) {
+        return;
+      }
+    }
+
+    const el = document.getElementById(`msg-${latestOtherMessage.id}`);
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          markAsRead(latestOtherMessage!.id);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, [messages, currentUserId, markAsRead, readReceipts]);
 
   useEffect(() => {
     if (messages.length > prevLengthRef.current && wasAtBottomRef.current) {
@@ -120,16 +162,21 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
                 <div className="w-full h-px bg-base-200 rounded-full" />
               </div>
             )}
-            <MessageBubble
-              message={message}
-              isSelf={message.sender_id === currentUserId}
-              isConsecutive={isConsecutive(index)}
-              isLastInGroup={isLastInGroup(index)}
-              isPending={message.id.startsWith("pending_")}
-              onEditMessage={onEditMessage}
-              onDeleteMessage={onDeleteMessage}
-              onToggleReaction={onToggleReaction}
-            />
+            <div id={`msg-${message.id}`} className="flex flex-col">
+              <MessageBubble
+                message={message}
+                isSelf={message.sender_id === currentUserId}
+                isConsecutive={isConsecutive(index)}
+                isLastInGroup={isLastInGroup(index)}
+                isPending={message.id.startsWith("pending_")}
+                onEditMessage={onEditMessage}
+                onDeleteMessage={onDeleteMessage}
+                onToggleReaction={onToggleReaction}
+                readReceipts={Object.values(readReceipts || {}).filter(
+                  (r) => r.message_id === message.id && r.user_id !== currentUserId
+                )}
+              />
+            </div>
           </Fragment>
         );
       })}

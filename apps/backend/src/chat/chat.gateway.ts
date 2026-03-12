@@ -12,7 +12,8 @@ import { JwtService } from "@nestjs/jwt";
 import { Server, Socket } from "socket.io";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ChatService } from "src/chat/chat.service";
-import { SendMessageDto, EditMessageDto, DeleteMessageDto } from "src/chat/dto/chat.dto";
+import { StatusGateway } from "src/status/status.gateway";
+import { SendMessageDto, EditMessageDto, DeleteMessageDto, MarkAsReadDto } from "src/chat/dto/chat.dto";
 
 @WebSocketGateway({
   cors: { origin: "*", methods: ["GET", "POST"], credentials: true },
@@ -28,6 +29,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly chatService: ChatService,
+    private readonly statusGateway: StatusGateway,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -41,6 +43,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const payload = this.jwtService.verify(token);
       client.data.userId = payload.sub;
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, firstname: true, lastname: true, avatar_key: true },
+      });
+      client.data.user = user;
 
       this.logger.debug(`Chat client connected: ${client.id} (User: ${payload.sub})`);
     } catch (error) {
@@ -123,23 +131,37 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         dto,
       );
 
-      this.server.to(`chat_${roomId}`).emit("new_message", message);
+      const socketPayload = { ...message, client_id: dto.client_id };
 
+      this.server.to(`chat_${roomId}`).emit("new_message", socketPayload);
+
+      // Emit mention notifications via the global /status namespace
+      // so users anywhere in the app receive them
       if (dto.isEveryoneMention) {
-        this.server.to(`chat_${roomId}`).emit("mention_notification", message);
+        const members = await this.prisma.workspaceMember.findMany({
+          where: { workspace_id: workspaceId },
+          select: { user_id: true },
+        });
+        for (const member of members) {
+          if (member.user_id !== userId) {
+            this.statusGateway.server
+              .to(`user_${member.user_id}`)
+              .emit("mention_notification", message);
+          }
+        }
       } else if (dto.mentionedUserIds?.length) {
-        const sockets = await this.server.in(`chat_${roomId}`).fetchSockets();
-        for (const socket of sockets) {
-          if (dto.mentionedUserIds.includes(socket.data.userId)) {
-            socket.emit("mention_notification", message);
+        for (const mentionedId of dto.mentionedUserIds) {
+          if (mentionedId !== userId) {
+            this.statusGateway.server
+              .to(`user_${mentionedId}`)
+              .emit("mention_notification", message);
           }
         }
       }
 
       client.emit("message_ack", {
         client_id: dto.client_id,
-        message_id: message.id,
-        created_at: message.created_at,
+        message: socketPayload,
       });
     } catch (error) {
       this.logger.error(`Send message error: ${error}`);
@@ -227,27 +249,46 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage("mark_as_read")
+  async handleMarkAsRead(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() dto: MarkAsReadDto,
+  ) {
+    const userId = client.data.userId;
+    const roomId = client.data.currentRoom;
+    const workspaceId = client.data.workspaceId;
+
+    if (!userId || !roomId || !workspaceId) return;
+
+    try {
+      const receipt = await this.chatService.markAsRead(
+        workspaceId,
+        roomId,
+        userId,
+        dto.message_id,
+      );
+
+      this.server.to(`chat_${roomId}`).emit("message_read", receipt);
+    } catch (error) {
+      this.logger.error(`Mark as read error: ${error}`);
+    }
+  }
+
   @SubscribeMessage("typing_start")
   async handleTypingStart(
     @ConnectedSocket() client: Socket,
   ) {
     const userId = client.data.userId;
     const roomId = client.data.currentRoom;
+    const user = client.data.user;
 
-    if (!userId || !roomId) return;
+    if (!userId || !roomId || !user) return;
 
     try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, firstname: true, lastname: true, avatar_key: true },
+      this.server.to(`chat_${roomId}`).emit("typing_start", {
+        user,
+        roomId,
       });
-
-      if (user) {
-        this.server.to(`chat_${roomId}`).emit("typing_start", {
-          user,
-          roomId,
-        });
-      }
     } catch (error) {
       this.logger.error(`Typing start error: ${error}`);
     }

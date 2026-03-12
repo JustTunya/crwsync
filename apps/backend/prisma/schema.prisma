@@ -81,6 +81,7 @@ model User {
   chat_messages       ChatMessage[]
   mentioned_in        ChatMessage[]     @relation("MessageMentions")
   message_reactions   MessageReaction[]
+  chat_read_receipts  ChatReadReceipt[]
 
   @@map("users")
 }
@@ -268,6 +269,7 @@ model ChatRoom {
 
   workspace    Workspace     @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   messages     ChatMessage[]
+  read_receipts ChatReadReceipt[]
 
   @@index([workspace_id], map: "idx_chatroom_workspace_id")
   @@map("chat_rooms")
@@ -294,6 +296,7 @@ model ChatMessage {
   reply_to     ChatMessage? @relation("MessageReplies", fields: [reply_to_id], references: [id], onDelete: SetNull)
   replies      ChatMessage[] @relation("MessageReplies")
   reactions    MessageReaction[]
+  read_receipts ChatReadReceipt[]
 
   @@index([room_id, created_at], map: "idx_chatmsg_room_created")
   @@index([workspace_id], map: "idx_chatmsg_workspace_id")
@@ -313,4 +316,22 @@ model MessageReaction {
   @@unique([message_id, user_id], map: "idx_message_reaction_unique")
   @@index([message_id], map: "idx_message_reaction_message_id")
   @@map("message_reactions")
+}
+
+model ChatReadReceipt {
+  id             String      @id @default(uuid()) @db.Uuid
+  room_id        String      @db.Uuid
+  user_id        String      @db.Uuid
+  message_id     String      @db.Uuid
+  last_read_at   DateTime    @default(now()) @db.Timestamptz
+
+  room           ChatRoom    @relation(fields: [room_id], references: [id], onDelete: Cascade)
+  user           User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  message        ChatMessage @relation(fields: [message_id], references: [id], onDelete: Cascade)
+
+  @@unique([room_id, user_id], map: "idx_chat_read_receipt_unique")
+  @@index([room_id], map: "idx_chat_read_receipt_room_id")
+  @@index([user_id], map: "idx_chat_read_receipt_user_id")
+  @@index([message_id], map: "idx_chat_read_receipt_message_id")
+  @@map("chat_read_receipts")
 }

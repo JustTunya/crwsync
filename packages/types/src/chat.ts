@@ -22,6 +22,15 @@ export interface MessageReaction {
   user?: ChatMessageSender;
 }
 
+export interface ChatReadReceipt {
+  id: string;
+  room_id: string;
+  user_id: string;
+  message_id: string;
+  last_read_at: string;
+  user?: ChatMessageSender;
+}
+
 export interface ChatMessage {
   id: string;
   workspace_id: string;
@@ -34,6 +43,7 @@ export interface ChatMessage {
   is_edited: boolean;
   is_pinned: boolean;
   reply_to_id: string | null;
+  client_id?: string;
   reply_to?: {
     id: string;
     content: string;
@@ -42,6 +52,7 @@ export interface ChatMessage {
   } | null;
   sender?: ChatMessageSender;
   reactions?: MessageReaction[];
+  read_receipts?: ChatReadReceipt[];
 }
 
 export interface CreateChatRoomPayload {

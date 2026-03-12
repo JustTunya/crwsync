@@ -76,12 +76,12 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const statuses: Record<string, string> = {};
 
-    await Promise.all(members.map(async (member) => {
-      const userSockets = await this.server.in(`user_${member.user_id}`).fetchSockets();
-      if (userSockets.length > 0) {
+    for (const member of members) {
+      const room = this.server.sockets.adapter.rooms.get(`user_${member.user_id}`);
+      if (room && room.size > 0) {
         statuses[member.user_id] = member.user.status_preference;
       }
-    }));
+    }
 
     client.emit("ws_statuses", statuses);
 

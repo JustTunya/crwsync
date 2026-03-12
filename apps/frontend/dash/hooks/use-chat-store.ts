@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatMessage } from "@crwsync/types";
+import type { ChatMessage, ChatReadReceipt } from "@crwsync/types";
 import type { TypingUser } from "@/components/chat/TypingIndicator";
 
 interface ChatStoreState {
@@ -8,12 +8,14 @@ interface ChatStoreState {
   isConnected: boolean;
   replyingToMessage: ChatMessage | null;
   typingUsers: Map<string, TypingUser[]>;
+  readReceipts: Map<string, Record<string, ChatReadReceipt>>;
 }
 
 interface ChatStoreActions {
   setMessages: (roomId: string, messages: ChatMessage[]) => void;
   prependMessages: (roomId: string, messages: ChatMessage[]) => void;
   appendMessage: (roomId: string, message: ChatMessage) => void;
+  appendMissedMessages: (roomId: string, messages: ChatMessage[]) => void;
   addOptimistic: (roomId: string, message: ChatMessage, clientId: string) => void;
   confirmOptimistic: (clientId: string, serverMessage: ChatMessage) => void;
   rejectOptimistic: (clientId: string, roomId: string) => void;
@@ -23,6 +25,8 @@ interface ChatStoreActions {
   setReplyingTo: (message: ChatMessage | null) => void;
   addTypingUser: (roomId: string, user: TypingUser) => void;
   removeTypingUser: (roomId: string, userId: string) => void;
+  setReadReceipts: (roomId: string, receipts: ChatReadReceipt[]) => void;
+  updateReadReceipt: (roomId: string, receipt: ChatReadReceipt) => void;
 }
 
 export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => ({
@@ -31,6 +35,7 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
   isConnected: false,
   replyingToMessage: null,
   typingUsers: new Map(),
+  readReceipts: new Map(),
 
   setReplyingTo: (message) => set({ replyingToMessage: message }),
 
@@ -38,7 +43,24 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
     set((state) => {
       const next = new Map(state.messages);
       next.set(roomId, messages);
-      return { messages: next };
+
+      const nextReceipts = new Map(state.readReceipts);
+      const roomReceipts: Record<string, ChatReadReceipt> = nextReceipts.get(roomId) || {};
+      messages.forEach((m) => {
+        if (m.read_receipts) {
+          m.read_receipts.forEach((r) => {
+            if (
+              !roomReceipts[r.user_id] ||
+              new Date(r.last_read_at) > new Date(roomReceipts[r.user_id].last_read_at)
+            ) {
+              roomReceipts[r.user_id] = r;
+            }
+          });
+        }
+      });
+      nextReceipts.set(roomId, roomReceipts);
+
+      return { messages: next, readReceipts: nextReceipts };
     }),
 
   prependMessages: (roomId, older) =>
@@ -56,21 +78,42 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
       const next = new Map(state.messages);
       const existing = next.get(roomId) || [];
 
+      // Exact ID match — already in the list
       if (existing.some((m) => m.id === message.id)) {
         return state;
       }
 
-      const pendingEntries = Array.from(state.pendingMessages.entries());
-      const matchingPending = pendingEntries.find(
-        ([, m]) => m.sender_id === message.sender_id && m.content === message.content && m.room_id === roomId,
-      );
+      // If the incoming message has a client_id that matches a pending
+      // optimistic message, replace the optimistic version with the
+      // fully-hydrated server version instead of appending a duplicate.
+      if (message.client_id && state.pendingMessages.has(message.client_id)) {
+        const pending = state.pendingMessages.get(message.client_id)!;
+        const updated = existing.map((m) =>
+          m.id === pending.id ? { ...message, reactions: m.reactions } : m,
+        );
+        next.set(roomId, updated);
 
-      if (matchingPending) {
-        return state;
+        const nextPending = new Map(state.pendingMessages);
+        nextPending.delete(message.client_id);
+
+        return { messages: next, pendingMessages: nextPending };
       }
 
       next.set(roomId, [...existing, message]);
-      return { messages: next };
+
+      let nextReceipts = state.readReceipts;
+      if (message.read_receipts && message.read_receipts.length > 0) {
+        nextReceipts = new Map(state.readReceipts);
+        const roomReceipts = { ...(nextReceipts.get(roomId) || {}) };
+        message.read_receipts.forEach((r) => {
+          if (!roomReceipts[r.user_id] || new Date(r.last_read_at) > new Date(roomReceipts[r.user_id].last_read_at)) {
+            roomReceipts[r.user_id] = r;
+          }
+        });
+        nextReceipts.set(roomId, roomReceipts);
+      }
+
+      return { messages: next, readReceipts: nextReceipts };
     }),
 
   addOptimistic: (roomId, message, clientId) =>
@@ -85,6 +128,23 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
       return { messages: nextMessages, pendingMessages: nextPending };
     }),
 
+  appendMissedMessages: (roomId, messages) =>
+    set((state) => {
+      const next = new Map(state.messages);
+      const existing = next.get(roomId) || [];
+      const existingIds = new Set(existing.map((m) => m.id));
+      const newMessages = messages.filter((m) => !existingIds.has(m.id));
+
+      if (newMessages.length === 0) return state;
+
+      // Merge and sort chronologically to prevent scrambled timelines
+      const merged = [...existing, ...newMessages].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      );
+      next.set(roomId, merged);
+      return { messages: next };
+    }),
+
   confirmOptimistic: (clientId, serverMessage) =>
     set((state) => {
       const pending = state.pendingMessages.get(clientId);
@@ -94,8 +154,12 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
       const nextMessages = new Map(state.messages);
       const existing = nextMessages.get(roomId) || [];
 
+      // Replace the optimistic shell but preserve any local reactions the user
+      // added while the message was still pending (e.g. reacting to own message).
       const updated = existing.map((m) =>
-        m.id === pending.id ? serverMessage : m,
+        m.id === pending.id
+          ? { ...serverMessage, reactions: m.reactions }
+          : m,
       );
       nextMessages.set(roomId, updated);
 
@@ -133,9 +197,12 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
         let newReplyTo = m.reply_to;
         if (newReplyTo && newReplyTo.id === messageId) {
           if (updates.content !== undefined || updates.is_deleted !== undefined) {
-             newReplyTo = { ...newReplyTo };
-             if (updates.content !== undefined) newReplyTo.content = updates.content as string;
-             if (updates.is_deleted !== undefined) newReplyTo.is_deleted = updates.is_deleted as boolean;
+             // Immutable update — no direct mutation
+             newReplyTo = {
+               ...newReplyTo,
+               ...(updates.content !== undefined && { content: updates.content as string }),
+               ...(updates.is_deleted !== undefined && { is_deleted: updates.is_deleted as boolean }),
+             };
              found = true;
           }
         }
@@ -167,7 +234,9 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
       nextMessages.delete(roomId);
       const nextTyping = new Map(state.typingUsers);
       nextTyping.delete(roomId);
-      return { messages: nextMessages, typingUsers: nextTyping };
+      const nextReceipts = new Map(state.readReceipts);
+      nextReceipts.delete(roomId);
+      return { messages: nextMessages, typingUsers: nextTyping, readReceipts: nextReceipts };
     }),
 
   addTypingUser: (roomId, user) =>
@@ -189,5 +258,30 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
         existing.filter((u) => u.id !== userId),
       );
       return { typingUsers: next };
+    }),
+
+  setReadReceipts: (roomId, receipts) =>
+    set((state) => {
+      const next = new Map(state.readReceipts);
+      const roomReceipts = { ...(next.get(roomId) || {}) };
+      receipts.forEach((r) => {
+        if (
+          !roomReceipts[r.user_id] ||
+          new Date(r.last_read_at) > new Date(roomReceipts[r.user_id].last_read_at)
+        ) {
+          roomReceipts[r.user_id] = r;
+        }
+      });
+      next.set(roomId, roomReceipts);
+      return { readReceipts: next };
+    }),
+
+  updateReadReceipt: (roomId, receipt) =>
+    set((state) => {
+      const next = new Map(state.readReceipts);
+      const roomReceipts = { ...(next.get(roomId) || {}) };
+      roomReceipts[receipt.user_id] = receipt;
+      next.set(roomId, roomReceipts);
+      return { readReceipts: next };
     }),
 }));

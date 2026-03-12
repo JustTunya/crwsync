@@ -16,7 +16,7 @@ type MentionOption =
 
 interface ChatInputProps {
   workspaceId: string;
-  onSend: (content: string) => void;
+  onSend: (content: string, mentionedUserIds: string[], isEveryoneMention: boolean) => void;
   disabled?: boolean;
   onTypingStart?: () => void;
   onTypingStop?: () => void;
@@ -31,15 +31,20 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(false);
 
   const triggerTyping = () => {
-    if (onTypingStart) {
-      onTypingStart();
+    if (!isTypingRef.current) {
+      isTypingRef.current = true;
+      if (onTypingStart) {
+        onTypingStart();
+      }
     }
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
     typingTimeoutRef.current = setTimeout(() => {
+      isTypingRef.current = false;
       if (onTypingStop) onTypingStop();
     }, 3000);
   };
@@ -171,7 +176,9 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
       });
     }
 
-    onSend(processedContent);
+    const mentionedUserIds = [...processedContent.matchAll(/@\[.*?\]\(user:([a-zA-Z0-9-]+)\)/g)].map(m => m[1]);
+    const isEveryoneMention = processedContent.includes("@everyone");
+    onSend(processedContent, mentionedUserIds, isEveryoneMention);
     setContent("");
     setMentionState({ active: false, text: "", startIndex: -1 });
     if (textareaRef.current) {
@@ -179,6 +186,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
     }
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    isTypingRef.current = false;
     if (onTypingStop) onTypingStop();
   };
 
@@ -232,6 +240,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
       triggerTyping();
     } else {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      isTypingRef.current = false;
       if (onTypingStop) onTypingStop();
     }
 

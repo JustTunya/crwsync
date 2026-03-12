@@ -50,11 +50,13 @@ export async function getChatMessages(
   roomId: string,
   cursor?: string,
   limit?: number,
+  direction?: "before" | "after",
 ): Promise<BoardOperationState<ChatMessagePage>> {
   try {
     const params: Record<string, string | number> = {};
     if (cursor) params.cursor = cursor;
     if (limit) params.limit = limit;
+    if (direction) params.direction = direction;
 
     const response = await api.get(
       `${CHAT_BASE(workspaceId)}/${roomId}/messages`,
