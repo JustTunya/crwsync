@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #0A0A0A;
+  --color-foreground: #FFFFFF;
+  --color-muted: #71717A;
+  --color-muted-foreground: #A1A1AA;
+  --color-border: #222222;
+  --color-card: rgba(15, 15, 15, 0.6);
+  --color-card-foreground: #FFFFFF;
+  --color-primary: #FF5F00;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #1A1A1A;
+  --color-secondary-foreground: #FFFFFF;
+  --color-accent: #FF5F00;
+  --color-accent-foreground: #FFFFFF;
+  --radius: 0.75rem;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* Ambient background animation */
+@keyframes ambient-shift {
+  0%, 100% {
+    transform: translate(0%, 0%) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(10%, -10%) scale(1.1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(-5%, 5%) scale(0.95);
+    opacity: 0.25;
+  }
+  75% {
+    transform: translate(-10%, -5%) scale(1.05);
+    opacity: 0.35;
+  }
+}
+
+.ambient-bg {
+  animation: ambient-shift 20s ease-in-out infinite;
+}
+
+.ambient-bg-delayed {
+  animation: ambient-shift 25s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+/* Glow effect for cards */
+@keyframes border-glow {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Fade up animation */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s ease-out forwards;
+}
+
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+
+.animation-delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Pulse glow for CTA */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 95, 0, 0.4), 0 0 40px rgba(255, 95, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 95, 0, 0.6), 0 0 60px rgba(255, 95, 0, 0.3);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Data flow animation */
+@keyframes data-flow {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-data-flow {
+  stroke-dasharray: 10, 5;
+  animation: data-flow 3s linear infinite;
+}
+
+/* Node pulse */
+@keyframes node-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.animate-node-pulse {
+  animation: node-pulse 2s ease-in-out infinite;
+}
+
+/* Tech logo hover effect */
+.tech-logo {
+  filter: grayscale(100%) brightness(0.5);
+  transition: all 0.3s ease;
+}
+
+.tech-logo:hover {
+  filter: grayscale(0%) brightness(1);
+  transform: translateY(-4px);
+}
