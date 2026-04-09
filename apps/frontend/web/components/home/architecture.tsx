@@ -37,8 +37,7 @@ export default function Architecture() {
         </span>
       </div>
 
-      <div ref={projectRef} className="relative flex flex-col lg:flex-row items-center justify-between gap-26 lg:gap-8 w-full py-8">
-        {/* Connectors */}
+      <div ref={projectRef} className="relative flex flex-col lg:flex-row items-center justify-between gap-26 lg:gap-8 max-w-7xl w-full py-8">
         <Connector delayOrder={0} from="card-browser" to="card-cloudflare" containerRef={projectRef} curve={0} />
         <Connector delayOrder={0.1} from="card-mobile" to="card-cloudflare" containerRef={projectRef} curve={0.9} />
         <Connector delayOrder={0.8} from="card-cloudflare" to="card-nginx" containerRef={projectRef} rightLoop curve={-1} />
