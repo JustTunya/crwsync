@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Ripple } from "../ui/ripple";
 
 export default function Hero() {
   return (
-    <section className="flex gap-12 px-6 sm:px-12 py-24 items-center justify-center min-h-screen">
+    <section className="flex gap-12 px-6 sm:px-12 py-24 items-center justify-center min-h-screen relative">
+      <Ripple />
       <div className="max-w-4xl space-y-4 flex flex-col items-center">
         <h1 className="text-balanced text-center text-5xl md:text-6xl text-foreground font-bold tracking-tight leading-tighter">
           Work in sync.{' '}<span className="text-primary">Not in silos.</span>
