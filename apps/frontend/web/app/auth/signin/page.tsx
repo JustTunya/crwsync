@@ -1,4 +1,5 @@
 import { SigninForm } from "@/components/signin-form";
+import { Ripple } from "@/components/ui/ripple";
 
 export default async function SigninPage({
   searchParams,
@@ -8,5 +9,10 @@ export default async function SigninPage({
   const params = await searchParams;
   const next = params.next ?? null;
 
-  return (<SigninForm next={next} />);
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <Ripple />
+      <SigninForm next={next} />
+    </div>
+  );
 }

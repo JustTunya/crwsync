@@ -20,16 +20,16 @@ function Input({ className, type, visible, setVisible, validation, error, ...pro
 
   return (
     <div className={cn(
-      "w-full flex bg-input/15 border-[1.5px] shadow-md/5 rounded-md transition-all", 
+      "w-full flex bg-foreground/10 border-[1.5px] shadow-lg/5 rounded-lg transition-all", 
       "focus-within:ring-3 focus-within:ring-primary/25 focus-within:border-primary",
-      error ? "border-error" : "border-border",
+      error ? "border-error" : "border-foreground/20",
       className
       )}>
       <input
         type={type === "password" && visible ? "text" : type}
         data-slot="input"
         className={cn(
-          "flex h-9 w-full px-3 py-1 text-xs sm:text-sm rounded-md",
+          "flex h-9 w-full px-3 text-xs sm:text-sm rounded-md",
           "placeholder:text-placeholder selection:bg-primary/25 outline-none",
           "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
           "file:text-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",

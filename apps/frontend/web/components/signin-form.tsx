@@ -78,9 +78,12 @@ export function SigninForm({ next } : { next: string | null }) {
         animate="center"
         exit="exit"
         transition={{ duration: 0.3 }}
-        className="w-full space-y-6"
+        className="w-full space-y-5"
       >
-        <form action={handleSignin} className="w-full space-y-6">
+        <form action={handleSignin} className="w-full space-y-5">
+          {(!state.success && state.message) && (
+            <Label error>{state.message}</Label>
+          )}
           <div className="space-y-2 sm:space-y-3">
             <Label htmlFor="identifier">Username or Email</Label>
             <Input
@@ -132,11 +135,7 @@ export function SigninForm({ next } : { next: string | null }) {
         </form>
       </motion.div>
 
-      {(!state.success && state.message) && (
-        <Label error className="w-full flex justify-center mt-2">{state.message}</Label>
-      )}
-
-      <p className="mt-6 text-center text-xs sm:text-sm text-muted-foreground">
+      <p className="mt-5 text-center text-xs sm:text-sm text-muted-foreground">
         Don&apos;t have an account yet?{' '}
         <Link href="/auth/signup" className="text-primary underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50 focus-visible:outline-none">
           Sign Up

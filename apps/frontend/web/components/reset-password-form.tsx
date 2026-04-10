@@ -87,10 +87,16 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
           animate="center"
           exit="exit"
           transition={{ duration: 0.3 }}
-          className="w-full space-y-6"
+          className="w-full space-y-5"
         >
-          <form action={handleReset} className="sm:min-w-sm space-y-6">
-            <div className="space-y-3">
+          <form action={handleReset} className="sm:min-w-sm space-y-5">
+            {state.message && !state.success && (
+              <p className="text-sm text-center text-error">
+                {state.message}
+              </p>
+            )}
+            
+            <div className="space-y-2 sm:space-y-3">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -105,7 +111,7 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
 
             <StrengthIndicator visible={hasPassword} level={validPassword?.meta?.level} />
 
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <Label htmlFor="confpassword">Confirm Password</Label>
               <Input
                 id="confpassword"
@@ -125,12 +131,6 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
             >
               Update Password
             </Button>
-
-            {state.message && state.errors && !state.success && (
-              <p className="text-sm text-center text-error">
-                {state.message}
-              </p>
-            )}
           </form>
         </motion.div>
       </GlassBox>

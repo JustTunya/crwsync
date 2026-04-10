@@ -43,21 +43,19 @@ export function StrengthIndicator({ visible, level }: StrengthIndicatorProps) {
           aria-live="polite"
         >
           <div className="flex flex-row items-center justify-between">
-            <div className="w-[70%]">
-              <div className="relative w-full h-[0.3rem] sm:h-[0.45rem] rounded-full bg-base-200 overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  initial={false}
-                  animate={{
-                    width: fillWidth,
-                    backgroundColor: color,
-                  }}
-                  transition={{ type: "spring", stiffness: 260, damping: 28 }}
-                />
-              </div>
+            <div className="relative w-full h-[0.3rem] sm:h-[0.45rem] rounded-full bg-base-200 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                initial={false}
+                animate={{
+                  width: fillWidth,
+                  backgroundColor: color,
+                }}
+                transition={{ type: "spring", stiffness: 260, damping: 28 }}
+              />
             </div>
 
-            <div className="min-w-[7rem] text-right flex items-center justify-end gap-2">
+            <div className="min-w-20 text-right flex items-center justify-end gap-2">
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
                   key={level ?? "none"}
@@ -73,9 +71,9 @@ export function StrengthIndicator({ visible, level }: StrengthIndicatorProps) {
                   className="text-xs font-medium inline-block text-shadow-xs text-shadow-foreground/10"
                 >
                   {!level && "Enter a password"}
-                  {level === "weak" && "Too weak"}
-                  {level === "medium" && "Could be stronger"}
-                  {level === "strong" && "Strong password"}
+                  {level === "weak" && "Weak"}
+                  {level === "medium" && "Medium"}
+                  {level === "strong" && "Strong"}
                 </motion.span>
               </AnimatePresence>
 
