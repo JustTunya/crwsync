@@ -30,19 +30,25 @@ export default function Architecture() {
   const infraRef = useRef<HTMLDivElement>(null);
 
   return (
-    <section id="architecture" className="flex flex-col items-center gap-8 px-6 sm:px-12 py-12 row-span-1">
+    <section id="architecture" className="flex flex-col items-center gap-8 px-6 sm:px-12 pt-6 pb-12">
       <div className="flex items-center justify-center px-3 py-1.5 bg-background/15 dark:bg-linear-to-br from-foreground/20 via-foreground/12 to-foreground/10 border-[1.5px] border-foreground/20 backdrop-saturate-100 shadow-md shadow-black/5 rounded-full">
         <span className="text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
           Architecture
         </span>
       </div>
 
-      <div ref={projectRef} className="relative flex flex-col lg:flex-row items-center justify-between gap-26 lg:gap-8 max-w-7xl w-full py-8">
+      <div className="flex flex-col items-center justify-center gap-2 w-full px-4">
+        <h1 className="text-4xl font-bold text-center">Runtime Architecture</h1>
+        <p className="text-sm sm:text-base text-muted-foreground text-center text-balance leading-tight max-w-3xl">This diagram illustrates the flow of user requests and data between key system components during typical runtime scenarios for crwsync.</p>
+      </div>
+
+      <div ref={projectRef} className="relative flex flex-col lg:flex-row items-center justify-between gap-20 lg:gap-8 max-w-7xl w-full py-8">
         <Connector delayOrder={0} from="card-browser" to="card-cloudflare" containerRef={projectRef} curve={0} />
-        <Connector delayOrder={0.1} from="card-mobile" to="card-cloudflare" containerRef={projectRef} curve={0.9} />
-        <Connector delayOrder={0.8} from="card-cloudflare" to="card-nginx" containerRef={projectRef} rightLoop curve={-1} />
-        <Connector delayOrder={1.6} from="card-nginx" to="card-web" containerRef={projectRef} curve={0.9} />
+        <Connector delayOrder={0.1} from="card-mobile" to="card-cloudflare" containerRef={projectRef} curve={0} />
+        <Connector delayOrder={0.8} from="card-cloudflare" to="card-nginx" containerRef={projectRef} curve={0} />
+        <Connector delayOrder={1.6} from="card-nginx" to="card-web" containerRef={projectRef} curve={0} />
         <Connector delayOrder={1.7} from="card-nginx" to="card-dash" containerRef={projectRef} curve={0} />
+        <Connector delayOrder={1.8} from="card-nginx" to="card-backend" containerRef={projectRef} rightLoop curve={-0.06} />
         <Connector delayOrder={2.4} from="card-web" to="card-backend" label="REST" containerRef={projectRef} curve={0} />
         <Connector delayOrder={2.5} from="card-dash" to="card-backend" label="REST" containerRef={projectRef} curve={0} />
         <Connector delayOrder={0} from="card-dash" to="card-backend" label="WS" containerRef={projectRef} curve={0} dashed offsetX={-16} offsetY={8} />
@@ -58,7 +64,7 @@ export default function Architecture() {
           ))}
         </div>
 
-        <div className="relative flex lg:flex-col gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
+        <div className="relative flex gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
           <div className="absolute inset-x-0 -top-2.75 text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
             <span className="px-1 bg-background">Infrastructure</span>
           </div>
@@ -67,7 +73,7 @@ export default function Architecture() {
           ))}
         </div>
 
-        <div className="relative flex lg:flex-col gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
+        <div className="relative flex lg:flex-col gap-16 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
           <div className="absolute inset-x-0 -top-2.75 text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
             <span className="px-1 bg-background">Frontend</span>
           </div>
@@ -76,16 +82,23 @@ export default function Architecture() {
           ))}
         </div>
 
-        <Card key="backend" id="card-backend" i={1 + clients.length + infra.length + frontend.length} icon={ServerStack03Icon} label="Backend" tech="NestJS • JWT Auth • REST • Socket.IO • Prisma ORM" />
+        <div className="p-4">
+          <Card key="backend" id="card-backend" i={1 + clients.length + infra.length + frontend.length} icon={ServerStack03Icon} label="Backend" tech="NestJS • JWT Auth • REST • Socket.IO • Prisma ORM" />
+        </div>
 
         <div className="relative flex lg:flex-col gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
           <div className="absolute inset-x-0 -top-2.75 text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
-            <span className="px-1 bg-background">Data Management</span>
+            <span className="px-1 bg-background">Data & Storage</span>
           </div>
           {data.map((node, i) => (
             <Card key={node.id} id={`card-${node.id}`} i={i + clients.length + infra.length + frontend.length + 1} icon={node.icon} label={node.label} tech={node.tech} />
           ))}
         </div>
+      </div>
+
+      <div className="flex flex-col items-center justify-center gap-2 w-full px-4 mt-16">
+        <h1 className="text-4xl font-bold text-center">CI/CD Pipeline</h1>
+        <p className="text-sm sm:text-base text-muted-foreground text-center text-balance leading-tight max-w-3xl">Automated testing and deployment pipeline of the project.</p>
       </div>
 
       <div ref={infraRef} className="relative flex flex-col lg:flex-row items-center justify-around gap-16 lg:gap-8 max-w-4xl w-full py-8">
@@ -114,11 +127,11 @@ export default function Architecture() {
           </div>
 
           <Card key="build" id="card-build" i={1 + frontend.length + data.length} icon="./docker.svg" label="Docker Build" desc="Container images are built." />
-          <Card key="ghcr" id="card-ghcr" i={1 + frontend.length + data.length} icon="./github.svg" label="Container Registry" desc="Container images are pushed to the GitHub Container Registry." />
+          <Card key="ghcr" id="card-ghcr" i={1 + frontend.length + data.length} icon="./github.svg" label="Container Registry" desc="Container images are pushed to the GHCR." />
           <Card key="deploy" id="card-deploy" i={1 + frontend.length + data.length} icon={Rocket01Icon} fillIcon label="Deploy" desc="Images are deployed to the server." />
         </div>
 
-        <div className="relative flex flex-col gap-4">
+        <div className="relative flex flex-col gap-4 p-4">
           <Card key="health" id="card-health" i={1 + frontend.length + data.length} icon={FavouriteIcon} fillIcon label="Health Check" desc="Health check is performed to ensure the services are running." />
           <Card key="notify" id="card-notify" i={1 + frontend.length + data.length} icon={Notification01Icon} fillIcon label="Notify" desc="Notify users about the deployment." />
         </div>
@@ -153,7 +166,7 @@ function Card({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: i * 0.15 }}
-      className="flex flex-col items-center justify-center min-h-24 lg:min-h-26 h-full w-30 lg:w-40 p-2 text-center rounded-2xl shadow-xl border-[1.5px] border-foreground/10 bg-linear-to-br from-foreground/10 via-foreground/6 to-foreground/5 backdrop-blur-md"
+      className="flex flex-col items-center justify-center min-h-24 lg:min-h-26 h-full w-30 lg:w-36 p-2 text-center rounded-2xl shadow-xl border-[1.5px] border-foreground/10 bg-linear-to-br from-foreground/10 via-foreground/6 to-foreground/5 backdrop-blur-md"
     >
       <div className="p-2 mb-2 bg-foreground/10 text-foreground rounded-full">
         {typeof icon === "string" ? (
@@ -178,12 +191,12 @@ function Card({
         {label}
       </span>
       {tech && (
-        <span className="text-[11px] text-muted-foreground text-balance tracking-tight leading-tight line-clamp-2">
+        <span className="text-[10px] text-muted-foreground text-balance tracking-tight leading-tight line-clamp-2">
           {tech}
         </span>
       )}
       {desc && (
-        <span className="text-[11px] text-muted-foreground text-balance tracking-tight leading-tight line-clamp-2">
+        <span className="text-[10px] text-muted-foreground text-balance tracking-tight leading-tight line-clamp-2">
           {desc}
         </span>
       )}
