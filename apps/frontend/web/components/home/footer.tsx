@@ -87,7 +87,7 @@ export default function Footer() {
           <Image src="/logo@white.svg" alt="crwsync" width={3250} height={512} className="h-7 xl:h-8 md:w-auto" priority />
         </Link>
 
-        <p className="text-xs text-foreground font-light">© 2026 crwsync.com. All rights reserved.</p>
+        <p className="text-xs text-foreground font-light">© 2026 Tunya Lénárd-Sándor. All rights reserved.</p>
       </div>
 
       {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-16 sm:gap-x-32 lg:gap-32">

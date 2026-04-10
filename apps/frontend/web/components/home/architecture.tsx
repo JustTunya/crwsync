@@ -51,7 +51,7 @@ export default function Architecture() {
         <Connector delayOrder={1.8} from="card-nginx" to="card-backend" containerRef={projectRef} rightLoop curve={-0.06} />
         <Connector delayOrder={2.4} from="card-web" to="card-backend" label="REST" containerRef={projectRef} curve={0} />
         <Connector delayOrder={2.5} from="card-dash" to="card-backend" label="REST" containerRef={projectRef} curve={0} />
-        <Connector delayOrder={0} from="card-dash" to="card-backend" label="WS" containerRef={projectRef} curve={0} dashed offsetX={-16} offsetY={8} />
+        <Connector delayOrder={0} from="card-dash" to="card-backend" label="WS" containerRef={projectRef} curve={0} dashed offsetX={-16} offsetY={12} />
         <Connector delayOrder={3.2} from="card-backend" to="card-db" label="Prisma ORM" containerRef={projectRef} curve={0} />
         <Connector delayOrder={3.3} from="card-backend" to="card-redis" label="R/W" containerRef={projectRef} curve={0} />
 
@@ -69,7 +69,7 @@ export default function Architecture() {
             <span className="px-1 bg-background">Infrastructure</span>
           </div>
           {infra.map((node, i) => (
-            <Card key={node.id} id={`card-${node.id}`} i={i + clients.length} icon={node.icon} label={node.label} tech={node.tech} />
+            <Card key={node.id} id={`card-${node.id}`} i={i + 1} icon={node.icon} label={node.label} tech={node.tech} />
           ))}
         </div>
 
@@ -78,12 +78,12 @@ export default function Architecture() {
             <span className="px-1 bg-background">Frontend</span>
           </div>
           {frontend.map((node, i) => (
-            <Card key={node.id} id={`card-${node.id}`} i={i + clients.length + infra.length} icon={node.icon} label={node.label} tech={node.tech} />
+            <Card key={node.id} id={`card-${node.id}`} i={i + 2} icon={node.icon} label={node.label} tech={node.tech} />
           ))}
         </div>
 
         <div className="p-4">
-          <Card key="backend" id="card-backend" i={1 + clients.length + infra.length + frontend.length} icon={ServerStack03Icon} label="Backend" tech="NestJS • JWT Auth • REST • Socket.IO • Prisma ORM" />
+          <Card key="backend" id="card-backend" i={3} icon={ServerStack03Icon} label="Backend" tech="NestJS • JWT Auth • REST • Socket.IO • Prisma ORM" />
         </div>
 
         <div className="relative flex lg:flex-col gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
@@ -91,7 +91,7 @@ export default function Architecture() {
             <span className="px-1 bg-background">Data & Storage</span>
           </div>
           {data.map((node, i) => (
-            <Card key={node.id} id={`card-${node.id}`} i={i + clients.length + infra.length + frontend.length + 1} icon={node.icon} label={node.label} tech={node.tech} />
+            <Card key={node.id} id={`card-${node.id}`} i={i + 4} icon={node.icon} label={node.label} tech={node.tech} />
           ))}
         </div>
       </div>
@@ -116,9 +116,9 @@ export default function Architecture() {
             <span className="px-1 bg-background">CI Phase</span>
           </div>
 
-          <Card key="git" id="card-git" i={1 + frontend.length + data.length} icon="./github.svg" label="Git Push & Merge" desc="Pushing changes to the main branch triggers the pipeline." />
-          <Card key="lint" id="card-lint" i={1 + frontend.length + data.length} icon="./eslint.svg" label="Lint" desc="Linting each package." />
-          <Card key="test" id="card-test" i={1 + frontend.length + data.length} icon="./jest.svg" label="Unit Test" desc="Running unit tests for each package." />
+          <Card key="git" id="card-git" i={0} icon="./github.svg" label="Git Push & Merge" desc="Pushing changes to the main branch triggers the pipeline." />
+          <Card key="lint" id="card-lint" i={1} icon="./eslint.svg" label="Lint" desc="Linting each package." />
+          <Card key="test" id="card-test" i={2} icon="./jest.svg" label="Unit Test" desc="Running unit tests for each package." />
         </div>
 
         <div className="relative flex flex-col gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
@@ -126,14 +126,14 @@ export default function Architecture() {
             <span className="px-1 bg-background">CD Phase</span>
           </div>
 
-          <Card key="build" id="card-build" i={1 + frontend.length + data.length} icon="./docker.svg" label="Docker Build" desc="Container images are built." />
-          <Card key="ghcr" id="card-ghcr" i={1 + frontend.length + data.length} icon="./github.svg" label="Container Registry" desc="Container images are pushed to the GHCR." />
-          <Card key="deploy" id="card-deploy" i={1 + frontend.length + data.length} icon={Rocket01Icon} fillIcon label="Deploy" desc="Images are deployed to the server." />
+          <Card key="build" id="card-build" i={1} icon="./docker.svg" label="Docker Build" desc="Container images are built." />
+          <Card key="ghcr" id="card-ghcr" i={2} icon="./github.svg" label="Container Registry" desc="Container images are pushed to the GHCR." />
+          <Card key="deploy" id="card-deploy" i={3} icon={Rocket01Icon} fillIcon label="Deploy" desc="Images are deployed to the server." />
         </div>
 
         <div className="relative flex flex-col gap-4 p-4">
-          <Card key="health" id="card-health" i={1 + frontend.length + data.length} icon={FavouriteIcon} fillIcon label="Health Check" desc="Health check is performed to ensure the services are running." />
-          <Card key="notify" id="card-notify" i={1 + frontend.length + data.length} icon={Notification01Icon} fillIcon label="Notify" desc="Notify users about the deployment." />
+          <Card key="health" id="card-health" i={2} icon={FavouriteIcon} fillIcon label="Health Check" desc="Health check is performed to ensure the services are running." />
+          <Card key="notify" id="card-notify" i={3} icon={Notification01Icon} fillIcon label="Notify" desc="Notify users about the deployment." />
         </div>
       </div>
     </section>
@@ -282,6 +282,15 @@ function Connector({
   const data = rightLoop 
     ? `M ${x1} ${y1} C ${x1 + h + offsetX} ${y1}, ${x2 + h + offsetX} ${y2}, ${x2} ${y2}`
     : `M ${x1} ${y1} C ${x1 + h - offsetX} ${y1}, ${x2 - h - offsetX} ${y2}, ${x2} ${y2}`;
+  const dyValue = rightLoop ? 12 : -4;
+  const isReversed = x1 > x2;
+  const finalDy = isReversed ? -dyValue : dyValue;
+
+  const textData = isReversed
+    ? (rightLoop
+        ? `M ${x2} ${y2} C ${x2 + h + offsetX} ${y2}, ${x1 + h + offsetX} ${y1}, ${x1} ${y1}`
+        : `M ${x2} ${y2} C ${x2 - h - offsetX} ${y2}, ${x1 + h - offsetX} ${y1}, ${x1} ${y1}`)
+    : data;
 
   const beamDuration = 2;
   const initialDelay = (delayOrder || 0) * beamDuration;
@@ -289,7 +298,7 @@ function Connector({
   
   return (
     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
-      {label && <path id={pathId} d={data} fill="none" stroke="none" />}
+      {label && <path id={pathId} d={textData} fill="none" stroke="none" />}
       {/* Background static line */}
       <motion.path
         d={data}
@@ -334,7 +343,10 @@ function Connector({
       )}
 
       {label && (
-        <text className="text-[10px] font-medium fill-muted-foreground" dy="-2">
+        <text 
+          className="text-[10px] font-medium fill-muted-foreground" 
+          dy={finalDy}
+        >
           <textPath href={`#${pathId}`} startOffset="50%" textAnchor="middle">
             {label}
           </textPath>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { submitContactMessage } from "../../services/contact.service";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { CancelCircleIcon, CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 
 export default function Contact() {
   const [name, setName] = useState("");
@@ -68,7 +70,8 @@ export default function Contact() {
             {isSubmitting ? "Sending..." : "Send"}
           </button>
           {feedback && (
-            <p className={`text-sm text-center ${feedback.type === "error" ? "text-error bg-error/10 border-[1.5px] border-error/10 backdrop-saturate-100 shadow-md shadow-black/5 rounded-md" : "text-success bg-success/10 border-[1.5px] border-success/10 backdrop-saturate-100 shadow-md shadow-black/5 rounded-md"}`}>
+            <p className={`flex items-center justify-center gap-2 text-sm text-center py-1 border backdrop-saturate-100 rounded-md ${feedback.type === "error" ? "text-error bg-error/10 border-error" : "text-success bg-success/10 border-success"}`}>
+              <HugeiconsIcon icon={feedback.type === "error" ? CancelCircleIcon : CheckmarkCircle02Icon} strokeWidth={2} className="size-4" />
               {feedback.text}
             </p>
           )}

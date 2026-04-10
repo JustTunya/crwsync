@@ -45,6 +45,7 @@ const BentoCard = ({
     {...props}
   >
     <div>
+      <div className="absolute size-full bg-[radial-gradient(color-mix(in_srgb,var(--muted-foreground)_30%,transparent)_1px,transparent_1px)] bg-size-[16px_16px] mask-[radial-gradient(ellipse_50%_50%_at_50%_50%,#000_10%,transparent_100%)]" />
       {background}
     </div>
     <div className="p-4">
