@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Figtree } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import Background from "@/components/ui/background";
 import { UserProvider } from "@/providers/user.provider";
 import { getSession } from "@/lib/auth.server";
 import "@crwsync/styles";
@@ -40,8 +39,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${figtree.variable} font-figtree antialiased`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <Background />
-          <Suspense fallback={<div className="min-h-screen bg-background" />}>
+          <Suspense fallback={<div className="min-h-screen w-screen bg-background overflow-x-hidden" />}>
             <UserSession>{children}</UserSession>
           </Suspense>
         </ThemeProvider>

@@ -24,6 +24,7 @@ import { AppService } from "src/app.service";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { RolesGuard } from "src/common/guards/roles.guard";
 import { BullModule } from "@nestjs/bullmq";
+import { ContactModule } from "src/contact/contact.module";
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { BullModule } from "@nestjs/bullmq";
     StatusModule,
     BoardModule,
     ChatModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [
