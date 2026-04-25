@@ -74,11 +74,13 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
       select: { user_id: true, user: { select: { status_preference: true } } },
     });
 
+    const activeSockets = await this.server.in(`workspace_${workspaceId}`).fetchSockets();
+    const activeUserIds = new Set(activeSockets.map(s => s.data.userId).filter(Boolean));
+
     const statuses: Record<string, string> = {};
 
     for (const member of members) {
-      const room = this.server.sockets.adapter.rooms.get(`user_${member.user_id}`);
-      if (room && room.size > 0) {
+      if (activeUserIds.has(member.user_id)) {
         statuses[member.user_id] = member.user.status_preference;
       }
     }

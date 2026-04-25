@@ -52,6 +52,9 @@ jobs:
       - name: Lint project
         run: pnpm run lint
 
+      - name: Test project
+        run: pnpm run test
+
       - name: Lint web (frontend) Dockerfiles
         uses: hadolint/hadolint-action@master
         with:

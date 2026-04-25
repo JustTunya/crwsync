@@ -109,7 +109,6 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       const lastMessage = existing[existing.length - 1];
 
       if (lastMessage) {
-        // Paginate forward from the last known message to close any gap
         let cursor: string | undefined = lastMessage.created_at;
         let hasMore = true;
 

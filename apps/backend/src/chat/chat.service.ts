@@ -289,6 +289,8 @@ export class ChatService {
   async deleteRoom(workspaceId: string, roomId: string) {
     await this.prisma.$transaction(async (tx) => {
       await tx.chatMessage.deleteMany({ where: { room_id: roomId } });
+      await tx.chatReadReceipt.deleteMany({ where: { message: { room_id: roomId } } });
+      await tx.messageReaction.deleteMany({ where: { message: { room_id: roomId } } });
       await tx.chatRoom.delete({ where: { id: roomId } });
       await tx.workspaceModule.deleteMany({
         where: { workspace_id: workspaceId, reference_id: roomId },
