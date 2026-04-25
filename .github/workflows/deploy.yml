@@ -210,9 +210,12 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - name: Deploy stack
+      - name: Run Database Migrations
         run: |
-          docker stack deploy --with-registry-auth --detach=false -c stack.yml crwsync
+          docker run --rm \
+            -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+            ${BACKEND_IMAGE} \
+            npx prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma
 
       - name: Verify services
         run: docker service ls
