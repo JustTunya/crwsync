@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { ModuleTypeEnum, Prisma } from "@prisma/client";
+import { ModuleTypeEnum } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
@@ -355,14 +355,25 @@ export class BoardService {
 
     const roomIds = chatModules.map((m) => m.reference_id);
 
-    const unreadCounts = await this.prisma.$queryRaw<{ room_id: string; count: bigint }[]>`
-      SELECT m.room_id, COUNT(m.id) as count
-      FROM chat_messages m
-      LEFT JOIN chat_read_receipts r ON m.room_id = r.room_id AND r.user_id = ${userId}::uuid
-      WHERE m.room_id IN (${Prisma.join(roomIds)})
-        AND (r.last_read_at IS NULL OR m.created_at > r.last_read_at)
-      GROUP BY m.room_id
-    `;
+    const unreadCounts = await Promise.all(
+      roomIds.map(async (roomId) => {
+        const receipt = await this.prisma.chatReadReceipt.findFirst({
+          where: {
+            room_id: roomId,
+            user_id: userId,
+          },
+        });
+
+        const count = await this.prisma.chatMessage.count({
+          where: {
+            room_id: roomId,
+            ...(receipt ? { created_at: { gt: receipt.last_read_at } } : {}),
+          },
+        });
+
+        return { room_id: roomId, count };
+      }),
+    );
 
     const unreadMap = new Map(
       unreadCounts.map((uc) => [uc.room_id, Number(uc.count)]),
