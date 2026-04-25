@@ -206,12 +206,6 @@ jobs:
 
       - name: Run Database Migrations
         run: |
-          pnpm prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-      - name: Run Database Migrations
-        run: |
           docker run --rm \
             -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
             ${BACKEND_IMAGE} \
