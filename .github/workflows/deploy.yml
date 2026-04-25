@@ -204,6 +204,19 @@ jobs:
           docker network inspect crwsync_net >/dev/null 2>&1 || \
           docker network create --driver overlay --attachable crwsync_net
 
+      - name: Run Database Migrations
+        run: |
+          for i in $(seq 1 10); do
+            if docker run --rm -e DATABASE_URL="${DATABASE_URL}" ${BACKEND_IMAGE} pnpx prisma migrate deploy --config=apps/backend/prisma.config.ts; then
+              echo "Migrations applied successfully!"
+              exit 0
+            fi
+            echo "Migrations failed, retrying in 5s ($i/10)..."
+            sleep 5
+          done
+          echo "Migrations failed after 10 attempts."
+          exit 1
+
       - name: Deploy stack
         run: |
           docker stack deploy --with-registry-auth --detach=false -c stack.yml crwsync

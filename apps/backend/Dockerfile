@@ -46,10 +46,7 @@ COPY --from=builder --chown=node:node /app/packages/templates ./packages/templat
 
 COPY --from=installer --chown=node:node /app/apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
 
-COPY --from=installer --chown=node:node /app/apps/backend/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
 USER node
 
 EXPOSE 8080
-CMD ["/usr/local/bin/entrypoint.sh"]
+CMD ["node", "apps/backend/dist/main.js"]
