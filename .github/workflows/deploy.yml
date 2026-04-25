@@ -206,16 +206,9 @@ jobs:
 
       - name: Run Database Migrations
         run: |
-          for i in $(seq 1 10); do
-            if docker run --rm -e DATABASE_URL="${DATABASE_URL}" ${BACKEND_IMAGE} pnpx prisma migrate deploy --config=apps/backend/prisma.config.ts; then
-              echo "Migrations applied successfully!"
-              exit 0
-            fi
-            echo "Migrations failed, retrying in 5s ($i/10)..."
-            sleep 5
-          done
-          echo "Migrations failed after 10 attempts."
-          exit 1
+          pnpm prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Deploy stack
         run: |
