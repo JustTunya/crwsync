@@ -206,10 +206,21 @@ jobs:
 
       - name: Run Database Migrations
         run: |
-          docker run --rm \
-            -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-            ${BACKEND_IMAGE} \
-            npx prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma
+          for i in $(seq 1 10); do
+            echo "Attempting migration ($i/10)..."
+            if docker run --rm -e DATABASE_URL="${DATABASE_URL}" ${BACKEND_IMAGE} npx prisma migrate deploy --schema=apps/backend/prisma/schema.prisma; then
+              echo "Migrations applied successfully!"
+              exit 0
+            fi
+            echo "Migrations failed, retrying in 5s..."
+            sleep 5
+          done
+          echo "Migrations failed after 10 attempts."
+          exit 1
+
+      - name: Deploy stack
+        run: |
+          docker stack deploy --with-registry-auth --detach=false -c stack.yml crwsync
 
       - name: Verify services
         run: docker service ls
