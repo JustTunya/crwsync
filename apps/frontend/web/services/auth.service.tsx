@@ -94,10 +94,25 @@ export async function signin(_prev: SigninState, data: SigninPayload): Promise<S
     return { success: true, errors: {}, message: resp.data.message || "Signin successful" };
   } catch (error) {
     if (isAxiosError(error)) {
-      const resp = error.response?.data as SigninState;
-      return { success: false, errors: resp.errors, message: resp.message };
+      const data = error.response?.data;
+      let msg = data?.message || data?.error || "Invalid credentials.";
+      
+      if (typeof msg === 'object' && msg !== null) {
+        if (Array.isArray(msg)) {
+          msg = msg.join(", ");
+        } else {
+          msg = msg.message || msg.error || "An unexpected error occurred.";
+          if (Array.isArray(msg)) msg = msg.join(", ");
+        }
+      }
+      
+      return { 
+        success: false, 
+        errors: data?.errors || {}, 
+        message: String(msg)
+      };
     }
-    return { success: false, errors: {}, message: "An unexpected error occurred" };
+    return { success: false, errors: {}, message: "An unexpected network error occurred." };
   }
 }
 

@@ -1,8 +1,8 @@
-import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
-import { MailerService } from "@nestjs-modules/mailer";
 import { Logger } from "@nestjs/common";
-import { SendEmailDto } from "./dto/send-email.dto";
+import { Processor, WorkerHost } from "@nestjs/bullmq";
+import { MailerService } from "@nestjs-modules/mailer";
+import { SendEmailDto } from "src/email/dto/send-email.dto";
 
 @Processor("email")
 export class EmailProcessor extends WorkerHost {

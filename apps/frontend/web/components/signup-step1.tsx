@@ -45,43 +45,46 @@ export default function SignupStep1(props: SignupStep1Props) {
     <>
       <div className="space-y-2 sm:space-y-3">
         <Label htmlFor="email">Email Address</Label>
-        <Input
-          id="email"
-          type="email"
-          value={props.form.email}
-          placeholder="johndoe@example.com"
-          validation={validEmail?.available}
-          onChange={(e) => props.updateForm("email", e.target.value)}
-          error={validEmail?.available === false}
-          autoFocus
-        />
         {(validEmail?.available === false && validEmail?.message) && (
           <div className="w-full flex justify-center">
             <Label error>{validEmail.message}</Label>
           </div>
         )}
+        <Input
+          id="email"
+          type="email"
+          value={props.form.email}
+          placeholder="johndoe@example.com"
+          onChange={(e) => props.updateForm("email", e.target.value)}
+          error={validEmail?.available === false}
+          autoFocus
+        />
       </div>
 
       <div className="space-y-2 sm:space-y-3">
         <Label htmlFor="username">Username</Label>
-        <Input
-          id="username"
-          type="text"
-          value={props.form.username}
-          placeholder="johndoe"
-          validation={validUsername?.available}
-          onChange={(e) => props.updateForm("username", e.target.value)}
-          error={validUsername?.available === false}
-        />
         {(validUsername?.available === false && validUsername?.message) && (
           <div className="w-full flex justify-center">
             <Label error>{validUsername.message}</Label>
           </div>
         )}
+        <Input
+          id="username"
+          type="text"
+          value={props.form.username}
+          placeholder="johndoe"
+          onChange={(e) => props.updateForm("username", e.target.value)}
+          error={validUsername?.available === false}
+        />
       </div>
 
       <div className="space-y-2 sm:space-y-3">
         <Label htmlFor="password">Password</Label>
+        {(validPassword?.legit === false) && (
+          <div className="w-full flex justify-center">
+            <Label error>The password contains invalid characters.</Label>
+          </div>
+        )}
         <Input
           id="password"
           type="password"
@@ -91,18 +94,19 @@ export default function SignupStep1(props: SignupStep1Props) {
           onChange={(e) => props.updateForm("password", e.target.value)}
           error={matchingPasswords === false && validPassword?.value === true}
         />
-        {(validPassword?.legit ? (
+        {validPassword?.legit && (
           <StrengthIndicator visible={hasPassword} level={validPassword?.meta?.level} />
-        ) : validPassword?.legit === false && (
-          <div className="w-full flex justify-center">
-            <Label error>The password contains invalid characters.</Label>
-          </div>
-        ))}
+        )}
 
       </div>
 
       <div className="space-y-2 sm:space-y-3">
         <Label htmlFor="confpassword">Confirm Password</Label>
+        {(matchingPasswords === false) && (
+          <div className="w-full flex justify-center">
+            <Label error>Passwords do not match</Label>
+          </div>
+        )}
         <Input
           id="confpassword"
           type="password"
@@ -112,11 +116,6 @@ export default function SignupStep1(props: SignupStep1Props) {
           onChange={(e) => props.updateForm("confpassword", e.target.value)}
           error={matchingPasswords === false && validPassword?.value === true}
         />
-        {(matchingPasswords === false) && (
-          <div className="w-full flex justify-center">
-            <Label error>Passwords do not match</Label>
-          </div>
-        )}
       </div>
 
       <Button

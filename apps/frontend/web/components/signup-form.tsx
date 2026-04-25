@@ -4,12 +4,10 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useCallback, useActionState, useEffect } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Tick02Icon } from "@hugeicons/core-free-icons";
 import { SignupState, SignupPayload } from "@crwsync/types";
 import { GlassBox } from "@/components/ui/glassbox";
 import { signup } from "@/services/auth.service";
-import { cn, variants } from "@/lib/utils";
+import { variants } from "@/lib/utils";
 import { Lead } from "./ui/lead";
 
 const SignupStep1 = dynamic(() => import("@/components/signup-step1"), { ssr: false });
@@ -23,7 +21,6 @@ const initState: SignupState = {
 };
 
 export function SignupForm() {
-  const steps = 3;
   const [step, setStep] = useState(1);
   const [state, dispatch, pending] = useActionState(signup, initState);
   const [userId, setUserId] = useState<string | undefined>(undefined);
@@ -70,7 +67,7 @@ export function SignupForm() {
       <Lead title="Create Your Account" description="Please fill in the details below to create your account." />
 
       <form action={handleSubmit} className="w-full flex flex-col items-center">
-        <div className="w-2/3 sm:w-1/2 flex justify-between items-center gap-1 sm:gap-2 mb-8 sm:mb-12">
+        {/* <div className="w-2/3 sm:w-1/2 flex justify-between items-center gap-1 sm:gap-2 mb-8 sm:mb-12">
           {Array.from({ length: steps }, (_, i) => (
             <div
               key={i}
@@ -97,7 +94,7 @@ export function SignupForm() {
               )}
             </div>
           ))}
-        </div>
+        </div> */}
 
         <AnimatePresence mode="wait">
           {step === 1 && (
@@ -108,7 +105,7 @@ export function SignupForm() {
               animate="center"
               exit="exit"
               transition={{ duration: 0.3 }}
-              className="w-full space-y-6"
+              className="w-full space-y-5"
             >
               <SignupStep1
                 form={form}
@@ -127,7 +124,7 @@ export function SignupForm() {
               animate="center"
               exit="exit"
               transition={{ duration: 0.3 }}
-              className="w-full space-y-6"
+              className="w-full space-y-5"
             >
               <SignupStep2
                 form={form}
@@ -147,7 +144,7 @@ export function SignupForm() {
               animate="center"
               exit="exit"
               transition={{ duration: 0.3 }}
-              className="w-full space-y-6"
+              className="w-full space-y-5"
             >
               <SignupStep3 email={form.email} userId={userId!} />
             </motion.div>
@@ -156,7 +153,7 @@ export function SignupForm() {
       </form>
 
       {step < 3 && (
-        <div className="mt-6">
+        <div className="mt-5">
           <p className="w-full text-center text-xs sm:text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link

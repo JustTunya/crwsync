@@ -153,9 +153,7 @@ export const useChatStore = create<ChatStoreState & ChatStoreActions>((set) => (
       const roomId = pending.room_id;
       const nextMessages = new Map(state.messages);
       const existing = nextMessages.get(roomId) || [];
-
-      // Replace the optimistic shell but preserve any local reactions the user
-      // added while the message was still pending (e.g. reacting to own message).
+      
       const updated = existing.map((m) =>
         m.id === pending.id
           ? { ...serverMessage, reactions: m.reactions }

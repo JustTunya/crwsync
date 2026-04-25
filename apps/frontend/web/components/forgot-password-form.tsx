@@ -47,11 +47,19 @@ export function ForgotPasswordForm() {
         animate="center"
         exit="exit"
         transition={{ duration: 0.3 }}
-        className="w-full space-y-6"
+        className="w-full space-y-5"
       >
-        <form action={handleSubmit} className="w-full space-y-6">
-          <div className="space-y-3">
+        <form action={handleSubmit} className="w-full space-y-5">
+          <div className="space-y-2 sm:space-y-3">
             <Label htmlFor="email">Email Address</Label>
+
+            {(validEmail?.available === true) && (
+              <Label error>This email address is not linked to any account.</Label>
+            )}
+            {(validEmail?.valid === false && validEmail?.message) && (
+              <Label error>{validEmail.message}</Label>
+            )}
+
             <Input
               id="email"
               type="email"
@@ -66,12 +74,6 @@ export function ForgotPasswordForm() {
               )}
               autoFocus
             />
-            {(validEmail?.available === true) && (
-              <Label error>This email address is not linked to any account.</Label>
-            )}
-            {(validEmail?.valid === false && validEmail?.message) && (
-              <Label error>{validEmail.message}</Label>
-            )}
           </div>
 
           <Button
@@ -84,7 +86,7 @@ export function ForgotPasswordForm() {
         </form>
       </motion.div>
 
-      <p className="mt-6 text-center text-xs sm:text-sm text-muted-foreground">
+      <p className="mt-5 text-center text-xs sm:text-sm text-muted-foreground">
         Remembered your password?{' '}
         <Link
           href="/auth/signin"

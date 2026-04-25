@@ -38,8 +38,9 @@ export function isBirthdateValid(birthdate: string | Date, minAge = 13): boolean
 
 export function isPasswordStrong(password: string): { legit: boolean, level: "weak" | "medium" | "strong" } {
   const allowedRegex = /^[A-Za-z\d@$!%*?&]+$/; // Only allows letters, numbers, and specified special characters
+  const medium1Regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,}$/; // At least 6 characters, including uppercase, lowercase, and either numbers or special characters
+  const medium2Regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/; // At least 6 characters, including uppercase, lowercase, and either numbers or special characters
   const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/; // At least 8 characters, including uppercase, lowercase, numbers, and special characters
-  const mediumRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,}$/; // At least 6 characters, including uppercase, lowercase, and numbers
 
   if (!allowedRegex.test(password)) {
     return { legit: false, level: "weak" };
@@ -47,7 +48,7 @@ export function isPasswordStrong(password: string): { legit: boolean, level: "we
   if (strongRegex.test(password)) {
     return { legit: true, level: "strong" };
   }
-  if (mediumRegex.test(password)) {
+  if (medium1Regex.test(password) || medium2Regex.test(password)) {
     return { legit: true, level: "medium" };
   }
   return { legit: true, level: "weak" };

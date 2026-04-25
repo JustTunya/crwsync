@@ -65,10 +65,13 @@ export default function SignupStep2(props: SignupStep2Props) {
 
   return (
     <>
-      <div className="space-y-4">
-        <div className="flex flex-row justify-between gap-4">
-          <div className="w-full space-y-4">
+      <div className="space-y-2 sm:space-y-3">
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <div className="w-full space-y-2 sm:space-y-3">
             <Label htmlFor="firstname">First Name</Label>
+            {(validFirstName?.value === false) && (
+              <Label error>This first name is invalid</Label>
+            )}
             <Input
               id="firstname"
               type="text"
@@ -80,8 +83,11 @@ export default function SignupStep2(props: SignupStep2Props) {
             />
           </div>
 
-          <div className="w-full space-y-4">
+          <div className="w-full space-y-2 sm:space-y-3">
             <Label htmlFor="lastname">Last Name</Label>
+            {(validLastName?.value === false) && (
+              <Label error>This last name is invalid</Label>
+            )}
             <Input
               id="lastname"
               type="text"
@@ -92,15 +98,9 @@ export default function SignupStep2(props: SignupStep2Props) {
             />
           </div>
         </div>
-        {(validFirstName?.value === false) && (
-          <Label error>This first name is invalid</Label>
-        )}
-        {(validLastName?.value === false) && (
-          <Label error>This last name is invalid</Label>
-        )}
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2 sm:space-y-3">
         <Label htmlFor="birthdate">Birthdate</Label>
         <div className="flex flex-row justify-center items-center gap-4">
           <Select value={props.form.birthyear} onValueChange={(value) => props.updateForm("birthyear", value)}>
@@ -153,7 +153,7 @@ export default function SignupStep2(props: SignupStep2Props) {
         )}
       </div>
 
-      <div className="mx-auto max-w-xs text-xs text-center text-muted-foreground text-pretty">
+      <div className="text-xs text-center text-muted-foreground text-pretty">
         By creating an account, you agree to our{" "}
         <Link href="/legal/terms" className="text-accent underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50 focus-visible:outline-none">
           Terms of Service
@@ -172,7 +172,7 @@ export default function SignupStep2(props: SignupStep2Props) {
           disabled={props.pending}
           className="w-[calc(25%-0.5rem)] text-xs sm:text-sm"
         >
-          <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2.5} className="size-3 sm:size-4"/>
+          <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={3} className="size-3 sm:size-4"/>
           Back
         </Button>
 
