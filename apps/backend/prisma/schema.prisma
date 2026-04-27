@@ -335,13 +335,3 @@ model ChatReadReceipt {
   @@index([message_id], map: "idx_chat_read_receipt_message_id")
   @@map("chat_read_receipts")
 }
-
-// ER Diagram
-
-// generator erd {
-//   provider = "prisma-erd-generator"
-//   output   = "erd.svg"
-//   theme    = "neutral"
-//   mmdcPath = "../../node_modules/.bin"
-//   puppeteerPath = "../../node_modules/puppeteer"
-// }
