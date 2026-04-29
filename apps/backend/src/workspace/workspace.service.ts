@@ -185,6 +185,34 @@ export class WorkspaceService {
     return result;
   }
 
+  async getPendingInvites(workspaceId: string) {
+    return this.prisma.workspaceInvite.findMany({
+      where: { workspace_id: workspaceId, status: WorkspaceInviteStatusEnum.PENDING },
+      include: {
+        invitee: {
+          select: {
+            id: true,
+            username: true,
+            firstname: true,
+            lastname: true,
+            avatar_key: true,
+            email: true,
+          },
+        },
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            firstname: true,
+            lastname: true,
+            avatar_key: true,
+          },
+        },
+      },
+      orderBy: { created_at: "desc" },
+    });
+  }
+
   async sendInvite(workspaceId: string, creatorId: string, dto: InviteMemberDto) {
     if (await this.prisma.user.findUnique({ where: { id: dto.invitee_id } }) === null) {
       throw new NotFoundException("Invitee user not found");

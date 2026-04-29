@@ -73,6 +73,28 @@ export interface WorkspaceInvite {
   };
 }
 
+export interface WorkspacePendingInvite {
+  id: string;
+  role: WorkspaceRoleEnum;
+  status: WorkspaceInviteStatusEnum;
+  created_at: string;
+  invitee: {
+    id: string;
+    username: string;
+    firstname: string;
+    lastname: string;
+    avatar_key: string | null;
+    email: string;
+  };
+  creator: {
+    id: string;
+    username: string;
+    firstname: string;
+    lastname: string;
+    avatar_key: string | null;
+  };
+}
+
 export interface WorkspaceOperationState<T = undefined> {
   success: boolean;
   message?: string;
