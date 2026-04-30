@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { m, Transition, LazyMotion, domAnimation } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
-import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon } from "@hugeicons/core-free-icons";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon, Door01Icon, Message01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Workspace, WorkspaceMember, WorkspaceUser } from "@crwsync/types";
 import { useSocket } from "@/providers/socket.provider";
 import { useWorkspace } from "@/providers/workspace.provider";
-import { getWorkspaceMembers } from "@/services/workspace.service";
+import { getWorkspaceMembers, kickWorkspaceMember } from "@/services/workspace.service";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { UserAvatar } from "@/components/user-avatar";
@@ -336,16 +336,123 @@ interface SidebarProfileProps {
 }
 
 export function SidebarProfile({ user, status, className }: SidebarProfileProps) {
+  const [open, setOpen] = useState(false);
+  const [contextPos, setContextPos] = useState<{ x: number; y: number } | null>(null);
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    setContextPos({ x: e.clientX, y: e.clientY });
+    setOpen(true);
+  };
+
+  const handleContextClose = () => {
+    setOpen(false);
+    setContextPos(null);
+  };
+
   return (
-    <div className={cn("relative flex flex-col items-center py-1.5 rounded-lg hover:bg-base-300/75 transition-colors cursor-pointer", className)}>
-      <div className="px-2 flex-nowrap flex flex-row items-center gap-3 w-full">
-        <div className="relative">
-          <UserAvatar key={"user-avatar"} user={user} status={status?.toLowerCase()} />
+    <>
+      <div 
+        onContextMenu={handleContextMenu}
+        onClick={handleContextClose}
+        className={cn("relative flex flex-col items-center py-1.5 rounded-lg hover:bg-base-300/75 transition-colors cursor-pointer", className)}
+      >
+        <div className="px-2 flex-nowrap flex flex-row items-center gap-3 w-full">
+          <div className="relative">
+            <UserAvatar key={"user-avatar"} user={user} status={status?.toLowerCase()} />
+          </div>
+
+          <div className="flex flex-col">
+            <p className="text-foreground text-sm leading-tight whitespace-nowrap">{user?.firstname} {user?.lastname}</p>
+            <p className="text-muted-foreground text-xs leading-0 whitespace-nowrap h-4 flex items-center truncate">{user?.username}</p>
+          </div>
+        </div>
+      </div>
+
+      {
+        open && contextPos && user && (
+          <ContextMenu
+            isOpen={open}
+            onClose={handleContextClose}
+            position={contextPos}
+            user={user}
+          />
+        )
+      }
+    </>
+  );
+}
+
+function ContextMenu({ isOpen, onClose, position, user }: { isOpen: boolean; onClose: () => void; position: { x: number; y: number }; user: WorkspaceUser }) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const { activeWorkspace: workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+
+  const kickMutation = useMutation({
+    mutationFn: () => kickWorkspaceMember(workspace!.id, user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ws-members", workspace?.id] });
+      onClose();
+    },
+    onError: (error) => {
+      console.error(error);
+      onClose();
+    }
+  });
+
+  const handleMessageUser = () => {
+    onClose();
+  };
+
+  const handleKickUser = () => {
+    if (workspace && !kickMutation.isPending) {
+      const sure = window.confirm(`Are you sure you want to kick ${user.username}?`);
+      if (!sure) return;
+      
+      kickMutation.mutate();
+    } else if (!workspace) {
+      onClose();
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, onClose]);
+
+  return (
+    <div
+      ref={menuRef}
+      className={cn(
+        "fixed top-0 left-0 z-50 bg-base-100 border border-base-200 rounded-md shadow-xl",
+        isOpen ? "block" : "hidden"
+      )}
+      style={{ left: position.x, top: position.y }}
+    >
+      <div className="flex flex-col justify-center items-center gap-1 p-1">
+        <div 
+          className="flex flex-row items-center gap-2 w-full hover:bg-foreground/10 px-2 py-1 rounded-sm transition-colors cursor-pointer"
+          onClick={handleMessageUser}
+        >
+          <HugeiconsIcon icon={Message01Icon} className="size-4 text-foreground" />
+          <p className="text-foreground text-xs leading-tight whitespace-nowrap">Message {user.username}</p>
         </div>
 
-        <div className="flex flex-col">
-          <p className="text-foreground text-sm leading-tight whitespace-nowrap">{user?.firstname} {user?.lastname}</p>
-          <p className="text-muted-foreground text-xs leading-0 whitespace-nowrap h-4 flex items-center truncate">{user?.username}</p>
+        <div 
+          className="flex flex-row items-center gap-2 w-full hover:bg-error/10 px-2 py-1 rounded-sm transition-colors cursor-pointer"
+          onClick={handleKickUser}
+        >
+          <HugeiconsIcon icon={Door01Icon} className="size-4 text-error" />
+          <p className="text-error text-xs leading-tight whitespace-nowrap">Kick {user.username}</p>
         </div>
       </div>
     </div>

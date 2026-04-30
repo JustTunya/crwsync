@@ -144,3 +144,16 @@ export async function declineInvite(workspaceId: string): Promise<WorkspaceOpera
     return { success: false, message: "An unexpected error occurred" };
   }
 }
+
+export async function kickWorkspaceMember(workspaceId: string, memberId: string): Promise<WorkspaceOperationState> {
+  try {
+    await api.delete(`/workspaces/${workspaceId}/members/${memberId}`);
+    return { success: true, message: "Member kicked successfully" };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to kick member" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
