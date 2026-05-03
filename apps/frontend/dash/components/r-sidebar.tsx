@@ -16,6 +16,7 @@ import InviteMemberModal from "@/components/inv-modal";
 import { useInvites } from "@/hooks/use-invites";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { InviteNotification } from "@/components/notifications";
+import { useUser } from "@/providers/user.provider";
 
 import { cn } from "@/lib/utils";
 
@@ -339,6 +340,8 @@ export function SidebarProfile({ user, status, className }: SidebarProfileProps)
   const [open, setOpen] = useState(false);
   const [contextPos, setContextPos] = useState<{ x: number; y: number } | null>(null);
 
+  const self = useUser();
+
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
 
@@ -371,7 +374,7 @@ export function SidebarProfile({ user, status, className }: SidebarProfileProps)
       </div>
 
       {
-        open && contextPos && user && (
+        open && contextPos && user && self && self.id !== user.id && (
           <ContextMenu
             isOpen={open}
             onClose={handleContextClose}
