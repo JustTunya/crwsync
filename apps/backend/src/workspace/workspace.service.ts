@@ -22,6 +22,29 @@ export class WorkspaceService {
     ]);
   }
 
+  private generateWorkspaceKey(name: string): string {
+    const sanitized = name.replace(/[^a-zA-Z0-9\s]/g, "").trim();
+    const words = sanitized.split(/\s+/).filter(w => w.length > 0);
+    let key = "";
+
+    if (words.length > 1) {
+      const wordCount = Math.min(words.length, 4);
+      for (let i = 0; i < wordCount; i++) {
+        key += words[i][0];
+      }
+    } else if (words.length === 1) {
+      const word = words[0];
+      const consonants = word.match(/[^aeiouAEIOU\W0-9]/g);
+      if (consonants && consonants.length >= 3) {
+        key = consonants.slice(0, 3).join("");
+      } else {
+        key = word.slice(0, 3);
+      }
+    }
+
+    return key.toUpperCase() || "WS";
+  }
+
   async getMembers(workspaceId: string) {
     const members = await this.prisma.workspaceMember.findMany({
       where: { workspace_id: workspaceId },
@@ -70,9 +93,17 @@ export class WorkspaceService {
         if (existing) throw new BadRequestException("Workspace slug already taken");
     }
 
+    const baseKey = this.generateWorkspaceKey(dto.name);
+    let workspaceKey = baseKey;
+    let keyCounter = 1;
+    while (await this.prisma.workspace.findUnique({ where: { workspaceKey } })) {
+      workspaceKey = `${baseKey}${keyCounter}`;
+      keyCounter++;
+    }
+
     const result = await this.prisma.$transaction(async (tx) => {
       const workspace = await tx.workspace.create({
-        data: { name: dto.name, slug },
+        data: { name: dto.name, slug, workspaceKey },
       });
 
       await tx.workspaceMember.create({

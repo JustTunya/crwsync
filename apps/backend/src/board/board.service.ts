@@ -227,9 +227,18 @@ export class BoardService {
 
     const nextPosition = (lastTask?.position ?? 0) + POSITION_GAP;
 
+    const updatedWorkspace = await this.prisma.workspace.update({
+      where: { id: workspaceId },
+      data: { taskSequenceCounter: { increment: 1 } },
+      select: { workspaceKey: true, taskSequenceCounter: true },
+    });
+
+    const shortId = `${updatedWorkspace.workspaceKey}-${updatedWorkspace.taskSequenceCounter}`;
+
     const task = await this.prisma.task.create({
       data: {
         column_id: dto.column_id,
+        shortId,
         title: dto.title,
         description: dto.description,
         priority: dto.priority,
@@ -442,6 +451,45 @@ export class BoardService {
       .emit("module:updated", { moduleId, data: dto });
 
     return { success: true, data: wsModule };
+  }
+
+  async searchTasks(workspaceId: string, query: string) {
+    const boards = await this.prisma.board.findMany({
+      where: { workspace_id: workspaceId },
+      select: { id: true },
+    });
+
+    const boardIds = boards.map((b) => b.id);
+
+    const tasks = await this.prisma.task.findMany({
+      where: {
+        column: { board_id: { in: boardIds } },
+        OR: [
+          { title: { contains: query, mode: "insensitive" } },
+          { shortId: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        id: true,
+        shortId: true,
+        title: true,
+        priority: true,
+        column: { select: { board_id: true } },
+      },
+      take: 10,
+      orderBy: { created_at: "desc" },
+    });
+
+    return {
+      success: true,
+      data: tasks.map((t) => ({
+        id: t.id,
+        shortId: t.shortId,
+        title: t.title,
+        priority: t.priority,
+        boardId: t.column.board_id,
+      })),
+    };
   }
 
   async deleteModule(workspaceId: string, moduleId: string) {

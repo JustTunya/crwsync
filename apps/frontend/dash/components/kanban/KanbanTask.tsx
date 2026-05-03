@@ -6,11 +6,10 @@ import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
 import { Calendar04Icon, Flag02Icon } from "@hugeicons/core-free-icons";
 import type { Task } from "@crwsync/types";
 import { UserAvatar } from "@/components/user-avatar";
+import { ReadOnlyDescription } from "@/components/kanban/RichTextEditor";
 import { useWorkspaceMembers } from "@/hooks/use-workspaces";
+import { PRIORITY_STYLES, DEADLINE_STYLES, formatChipDate } from "@/lib/kanban.utils";
 import { cn } from "@/lib/utils";
-
-import { PRIORITY_STYLES, DEADLINE_STYLES, formatChipDate } from "../../lib/kanban.utils";
-import { ReadOnlyDescription } from "./RichTextEditor";
 
 export function KanbanTask({ task, onClick, workspaceId }: { task: Task; onClick: () => void; workspaceId: string }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id, data: { type: "task", task } });
@@ -36,6 +35,7 @@ export function KanbanTask({ task, onClick, workspaceId }: { task: Task; onClick
       tabIndex={0}
       className="bg-background dark:bg-base-200 rounded-lg p-3 border-[1.5px] border-base-200 dark:border-base-300 hover:border-base-300 transition-colors cursor-grab active:cursor-grabbing"
     >
+      <p className="text-[10px] text-muted-foreground font-medium mb-1 tracking-wider uppercase">{task.shortId}</p>
       <h3 className="text-sm text-foreground font-medium leading-tight truncate">{task.title}</h3>
       {task.description && (
         <div className="mt-2"><ReadOnlyDescription content={task.description} /></div>

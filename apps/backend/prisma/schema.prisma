@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
 }
 
@@ -9,8 +9,8 @@ datasource db {
 }
 
 enum RoleEnum {
-  MEMBER @map("member")
-  ADMIN @map("admin")
+  MEMBER      @map("member")
+  ADMIN       @map("admin")
   SUPER_ADMIN @map("super_admin")
 
   @@map("users_role_enum")
@@ -73,13 +73,13 @@ model User {
   email_verifications EmailVerification[]
   password_resets     PasswordReset[]
   ws_memberships      WorkspaceMember[]
-  ws_sent_invites     WorkspaceInvite[] @relation("InvCreator")
-  ws_received_invites WorkspaceInvite[] @relation("InvitedUser")
+  ws_sent_invites     WorkspaceInvite[]   @relation("InvCreator")
+  ws_received_invites WorkspaceInvite[]   @relation("InvitedUser")
   boards_created      Board[]
-  tasks_assigned      Task[]            @relation("TaskAssignee")
-  tasks_created       Task[]            @relation("TaskCreator")
+  tasks_assigned      Task[]              @relation("TaskAssignee")
+  tasks_created       Task[]              @relation("TaskCreator")
   chat_messages       ChatMessage[]
-  mentioned_in        ChatMessage[]     @relation("MessageMentions")
+  mentioned_in        ChatMessage[]       @relation("MessageMentions")
   message_reactions   MessageReaction[]
   chat_read_receipts  ChatReadReceipt[]
 
@@ -87,30 +87,30 @@ model User {
 }
 
 model Session {
-  id                 String   @id @db.Uuid
-  user_id            String   @db.Uuid
-  user               User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  refresh_token_hash String   @db.Text
-  persistent         Boolean  @default(false)
-  created_at         DateTime @default(now()) @db.Timestamptz
+  id                 String    @id @db.Uuid
+  user_id            String    @db.Uuid
+  user               User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  refresh_token_hash String    @db.Text
+  persistent         Boolean   @default(false)
+  created_at         DateTime  @default(now()) @db.Timestamptz
   expires_at         DateTime? @db.Timestamptz
   revoked_at         DateTime? @db.Timestamptz
-  ua                 String?  @db.Text
-  ip                 String?  @db.Text
+  ua                 String?   @db.Text
+  ip                 String?   @db.Text
 
   @@index([user_id], map: "idx_session_user_id")
   @@map("sessions")
 }
 
 model EmailVerification {
-  id         String   @id @default(uuid()) @db.Uuid
-  email      String   @unique(map: "idx_verification_email") @db.Text
-  user_id    String?  @db.Uuid
-  user       User?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  token_hash String   @unique(map: "idx_verification_token") @db.Text
-  status     String   @default("pending") @db.Text
-  created_at DateTime @default(now()) @db.Timestamptz
-  expires_at DateTime? @db.Timestamptz
+  id          String    @id @default(uuid()) @db.Uuid
+  email       String    @unique(map: "idx_verification_email") @db.Text
+  user_id     String?   @db.Uuid
+  user        User?     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  token_hash  String    @unique(map: "idx_verification_token") @db.Text
+  status      String    @default("pending") @db.Text
+  created_at  DateTime  @default(now()) @db.Timestamptz
+  expires_at  DateTime? @db.Timestamptz
   verified_at DateTime? @db.Timestamptz
 
   @@index([user_id], map: "idx_verification_user_id")
@@ -118,13 +118,13 @@ model EmailVerification {
 }
 
 model PasswordReset {
-  id         String   @id @default(uuid()) @db.Uuid
-  email      String   @unique(map: "idx_password_reset_email") @db.Text
-  user_id    String?  @db.Uuid
-  user       User?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  token_hash String   @unique(map: "idx_password_reset_token") @db.Text
-  status     String   @default("pending") @db.Text
-  created_at DateTime @default(now()) @db.Timestamptz
+  id         String    @id @default(uuid()) @db.Uuid
+  email      String    @unique(map: "idx_password_reset_email") @db.Text
+  user_id    String?   @db.Uuid
+  user       User?     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  token_hash String    @unique(map: "idx_password_reset_token") @db.Text
+  status     String    @default("pending") @db.Text
+  created_at DateTime  @default(now()) @db.Timestamptz
   expires_at DateTime? @db.Timestamptz
   reset_at   DateTime? @db.Timestamptz
 
@@ -133,12 +133,14 @@ model PasswordReset {
 }
 
 model Workspace {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @db.Text
-  slug        String   @db.Citext
-  logo_key    String?  @db.Text
-  created_at  DateTime @default(now()) @db.Timestamptz
-  updated_at  DateTime @updatedAt @db.Timestamptz
+  id                  String   @id @default(uuid()) @db.Uuid
+  name                String   @db.Text
+  slug                String   @db.Citext
+  workspaceKey        String   @unique(map: "idx_workspace_key_unique") @map("workspace_key") @db.Text
+  taskSequenceCounter Int      @default(0) @map("task_sequence_counter")
+  logo_key            String?  @db.Text
+  created_at          DateTime @default(now()) @db.Timestamptz
+  updated_at          DateTime @updatedAt @db.Timestamptz
 
   members       WorkspaceMember[]
   invites       WorkspaceInvite[]
@@ -159,8 +161,8 @@ model WorkspaceMember {
   role         WorkspaceRoleEnum @default(MEMBER)
   joined_at    DateTime          @default(now()) @db.Timestamptz
 
-  workspace    Workspace         @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
-  user         User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([workspace_id, user_id], map: "idx_workspace_member_unique")
   @@index([user_id], map: "idx_workspace_member_user_id")
@@ -176,9 +178,9 @@ model WorkspaceInvite {
   created_at   DateTime          @default(now()) @db.Timestamptz
   status       String            @default("pending") @db.Text
 
-  invitee      User              @relation("InvitedUser", fields: [invitee_id], references: [id], onDelete: Cascade)
-  creator      User?             @relation("InvCreator", fields: [creator_id], references: [id], onDelete: SetNull)
-  workspace    Workspace         @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  invitee   User      @relation("InvitedUser", fields: [invitee_id], references: [id], onDelete: Cascade)
+  creator   User?     @relation("InvCreator", fields: [creator_id], references: [id], onDelete: SetNull)
+  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
 
   @@unique([invitee_id, workspace_id], map: "idx_workspace_invite_unique")
   @@index([invitee_id], map: "idx_workspace_invite_invitee_id")
@@ -188,17 +190,17 @@ model WorkspaceInvite {
 }
 
 model Board {
-  id           String    @id @default(uuid()) @db.Uuid
-  workspace_id String    @db.Uuid
-  name         String    @db.Text
-  description  String?   @db.Text
-  created_by   String    @db.Uuid
-  created_at   DateTime  @default(now()) @db.Timestamptz
-  updated_at   DateTime  @updatedAt @db.Timestamptz
+  id           String   @id @default(uuid()) @db.Uuid
+  workspace_id String   @db.Uuid
+  name         String   @db.Text
+  description  String?  @db.Text
+  created_by   String   @db.Uuid
+  created_at   DateTime @default(now()) @db.Timestamptz
+  updated_at   DateTime @updatedAt @db.Timestamptz
 
-  workspace    Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
-  creator      User      @relation(fields: [created_by], references: [id], onDelete: Cascade)
-  columns      BoardColumn[]
+  workspace Workspace     @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  creator   User          @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  columns   BoardColumn[]
 
   @@index([workspace_id], map: "idx_board_workspace_id")
   @@map("boards")
@@ -213,8 +215,8 @@ model BoardColumn {
   created_at DateTime @default(now()) @db.Timestamptz
   updated_at DateTime @updatedAt @db.Timestamptz
 
-  board      Board    @relation(fields: [board_id], references: [id], onDelete: Cascade)
-  tasks      Task[]
+  board Board  @relation(fields: [board_id], references: [id], onDelete: Cascade)
+  tasks Task[]
 
   @@index([board_id], map: "idx_board_column_board_id")
   @@map("board_columns")
@@ -223,6 +225,7 @@ model BoardColumn {
 model Task {
   id          String           @id @default(uuid()) @db.Uuid
   column_id   String           @db.Uuid
+  shortId     String           @unique(map: "idx_task_short_id") @map("short_id") @db.Text
   title       String           @db.Text
   description String?          @db.Text
   priority    TaskPriorityEnum @default(NONE)
@@ -235,9 +238,9 @@ model Task {
   created_at  DateTime         @default(now()) @db.Timestamptz
   updated_at  DateTime         @updatedAt @db.Timestamptz
 
-  column      BoardColumn      @relation(fields: [column_id], references: [id], onDelete: Cascade)
-  assignee    User?            @relation("TaskAssignee", fields: [assignee_id], references: [id], onDelete: SetNull)
-  creator     User             @relation("TaskCreator", fields: [created_by], references: [id], onDelete: Cascade)
+  column   BoardColumn @relation(fields: [column_id], references: [id], onDelete: Cascade)
+  assignee User?       @relation("TaskAssignee", fields: [assignee_id], references: [id], onDelete: SetNull)
+  creator  User        @relation("TaskCreator", fields: [created_by], references: [id], onDelete: Cascade)
 
   @@index([column_id], map: "idx_task_column_id")
   @@index([assignee_id], map: "idx_task_assignee_id")
@@ -253,7 +256,7 @@ model WorkspaceModule {
   position     Int            @default(0)
   created_at   DateTime       @default(now()) @db.Timestamptz
 
-  workspace    Workspace      @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
 
   @@unique([workspace_id, reference_id], map: "idx_workspace_module_unique")
   @@index([workspace_id], map: "idx_workspace_module_workspace_id")
@@ -261,14 +264,14 @@ model WorkspaceModule {
 }
 
 model ChatRoom {
-  id           String        @id @default(uuid()) @db.Uuid
-  workspace_id String        @db.Uuid
-  name         String?       @db.Text
-  created_at   DateTime      @default(now()) @db.Timestamptz
-  updated_at   DateTime      @updatedAt @db.Timestamptz
+  id           String   @id @default(uuid()) @db.Uuid
+  workspace_id String   @db.Uuid
+  name         String?  @db.Text
+  created_at   DateTime @default(now()) @db.Timestamptz
+  updated_at   DateTime @updatedAt @db.Timestamptz
 
-  workspace    Workspace     @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
-  messages     ChatMessage[]
+  workspace     Workspace         @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  messages      ChatMessage[]
   read_receipts ChatReadReceipt[]
 
   @@index([workspace_id], map: "idx_chatroom_workspace_id")
@@ -276,26 +279,26 @@ model ChatRoom {
 }
 
 model ChatMessage {
-  id           String   @id @default(uuid()) @db.Uuid
-  workspace_id String   @db.Uuid
-  room_id      String   @db.Uuid
-  sender_id    String   @db.Uuid
-  content      String   @db.Text
-  created_at   DateTime @default(now()) @db.Timestamptz
-  updated_at   DateTime @updatedAt @db.Timestamptz
-  is_deleted   Boolean  @default(false)
-  is_edited    Boolean  @default(false)
-  is_pinned    Boolean  @default(false)
-  is_everyone_mention Boolean @default(false)
-  reply_to_id  String?  @db.Uuid
+  id                  String   @id @default(uuid()) @db.Uuid
+  workspace_id        String   @db.Uuid
+  room_id             String   @db.Uuid
+  sender_id           String   @db.Uuid
+  content             String   @db.Text
+  created_at          DateTime @default(now()) @db.Timestamptz
+  updated_at          DateTime @updatedAt @db.Timestamptz
+  is_deleted          Boolean  @default(false)
+  is_edited           Boolean  @default(false)
+  is_pinned           Boolean  @default(false)
+  is_everyone_mention Boolean  @default(false)
+  reply_to_id         String?  @db.Uuid
 
-  workspace    Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
-  room         ChatRoom  @relation(fields: [room_id], references: [id], onDelete: Cascade)
-  sender       User      @relation(fields: [sender_id], references: [id], onDelete: Cascade)
-  mentions     User[]    @relation("MessageMentions")
-  reply_to     ChatMessage? @relation("MessageReplies", fields: [reply_to_id], references: [id], onDelete: SetNull)
-  replies      ChatMessage[] @relation("MessageReplies")
-  reactions    MessageReaction[]
+  workspace     Workspace         @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  room          ChatRoom          @relation(fields: [room_id], references: [id], onDelete: Cascade)
+  sender        User              @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+  mentions      User[]            @relation("MessageMentions")
+  reply_to      ChatMessage?      @relation("MessageReplies", fields: [reply_to_id], references: [id], onDelete: SetNull)
+  replies       ChatMessage[]     @relation("MessageReplies")
+  reactions     MessageReaction[]
   read_receipts ChatReadReceipt[]
 
   @@index([room_id, created_at], map: "idx_chatmsg_room_created")
@@ -310,8 +313,8 @@ model MessageReaction {
   emoji      String   @db.Text
   created_at DateTime @default(now()) @db.Timestamptz
 
-  message    ChatMessage @relation(fields: [message_id], references: [id], onDelete: Cascade)
-  user       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  message ChatMessage @relation(fields: [message_id], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([message_id, user_id], map: "idx_message_reaction_unique")
   @@index([message_id], map: "idx_message_reaction_message_id")
@@ -319,15 +322,15 @@ model MessageReaction {
 }
 
 model ChatReadReceipt {
-  id             String      @id @default(uuid()) @db.Uuid
-  room_id        String      @db.Uuid
-  user_id        String      @db.Uuid
-  message_id     String      @db.Uuid
-  last_read_at   DateTime    @default(now()) @db.Timestamptz
+  id           String   @id @default(uuid()) @db.Uuid
+  room_id      String   @db.Uuid
+  user_id      String   @db.Uuid
+  message_id   String   @db.Uuid
+  last_read_at DateTime @default(now()) @db.Timestamptz
 
-  room           ChatRoom    @relation(fields: [room_id], references: [id], onDelete: Cascade)
-  user           User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  message        ChatMessage @relation(fields: [message_id], references: [id], onDelete: Cascade)
+  room    ChatRoom    @relation(fields: [room_id], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  message ChatMessage @relation(fields: [message_id], references: [id], onDelete: Cascade)
 
   @@unique([room_id, user_id], map: "idx_chat_read_receipt_unique")
   @@index([room_id], map: "idx_chat_read_receipt_room_id")
