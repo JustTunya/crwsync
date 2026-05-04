@@ -50,8 +50,6 @@ export function RSidebar() {
   useEffect(() => {
     if (!socket || !workspace?.id || !isConnected) return;
 
-    socket.emit("sub_ws", workspace.id);
-
     const handleStatusUpdate = ({
       userId,
       status,
@@ -70,6 +68,8 @@ export function RSidebar() {
 
     socket.on("status:update", handleStatusUpdate);
     socket.on("ws_statuses", handleWorkspaceStatuses);
+
+    socket.emit("sub_ws", workspace.id);
 
     return () => {
       socket.off("status:update", handleStatusUpdate);
