@@ -107,7 +107,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
           className="size-4.5 z-10"
         />
 
-        {extended && unreadCount !== undefined && unreadCount > 0 && (
+        {!extended && unreadCount !== undefined && unreadCount > 0 && (
           <div className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary border-[1.5px] border-base-100 z-20">
             <span className="text-[9px] font-bold text-primary-foreground leading-none">
               {unreadCount > 99 ? "99+" : unreadCount}
@@ -163,7 +163,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
         </div>
       )}
       {extended && showSettingsBtn && !rename && (
-        <button className="cursor-pointer" onClick={handleSettingsClick}>
+        <button className="cursor-pointer z-10" onClick={handleSettingsClick}>
           <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} className="size-4" />
         </button>
       )}

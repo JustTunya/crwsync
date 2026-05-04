@@ -135,6 +135,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       this.server.to(`chat_${roomId}`).emit("new_message", socketPayload);
 
+      // Tell all workspace members to increment their unread counter if they aren't the sender
+      this.statusGateway.server
+        .to(`workspace_${workspaceId}`)
+        .emit("chat:unread_increment", { roomId, senderId: userId });
+
       // Emit mention notifications via the global /status namespace
       // so users anywhere in the app receive them
       if (dto.isEveryoneMention) {
