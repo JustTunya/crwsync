@@ -332,7 +332,7 @@ export class WorkspaceService {
       });
     });
 
-    await this.statusGateway.emitInviteHandled(userId, invite.id, "ACCEPTED");
+    await this.statusGateway.emitInviteHandled(userId, invite.id, WorkspaceInviteStatusEnum.ACCEPTED);
 
     await this.invMembershipCaches(workspaceId, userId);
   }
@@ -349,7 +349,7 @@ export class WorkspaceService {
       data: { status: WorkspaceInviteStatusEnum.DECLINED },
     });
 
-    await this.statusGateway.emitInviteHandled(userId, invite.id, "DECLINED");
+    await this.statusGateway.emitInviteHandled(userId, invite.id, WorkspaceInviteStatusEnum.DECLINED);
 
     return result;
   }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { WorkspaceInvite } from "@crwsync/types";
 import { acceptInvite, declineInvite } from "@/services/workspace.service";
+import { useRouter } from "next/navigation";
 import { UserAvatar } from "@/components/user-avatar";
 import { GlassBox } from "@/components/ui/glassbox";
 import { useTimeAgo } from "@/hooks/use-time-ago";
@@ -16,6 +17,7 @@ export function InviteNotification({ invite }: InviteNotificationProps) {
   const status = invite.status;
   const timeAgo = useTimeAgo(invite.created_at);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleAction = async (action: "accept" | "decline") => {
     setLoading(true);
@@ -23,6 +25,7 @@ export function InviteNotification({ invite }: InviteNotificationProps) {
     try {
       if (action === "accept") {
         await acceptInvite(invite.workspace.id);
+        router.push(`/${invite.workspace.slug}`);
       } else {
         await declineInvite(invite.workspace.id);
       }

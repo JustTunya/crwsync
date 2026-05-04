@@ -6,9 +6,9 @@ import type { ChatMessage } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { useSession } from "@/hooks/use-session";
 import { UserAvatar } from "@/components/user-avatar";
-import { LinkPreview } from "./LinkPreview";
-import EmojiPicker from "./EmojiPicker";
-import { ReactionIndicator } from "./ReactionIndicator";
+import EmojiPicker from "@/components/chat/EmojiPicker";
+import { LinkPreview } from "@/components/chat/LinkPreview";
+import { ReactionIndicator } from "@/components/chat/ReactionIndicator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -68,7 +68,7 @@ function renderMessageContent(text: string, onNavigateToBoard: (boardId: string)
 
     if (part === "@everyone") {
       return (
-        <span key={i} className="font-bold cursor-pointer hover:underline">
+        <span key={i} className="font-semibold cursor-pointer hover:underline">
           @everyone
         </span>
       );
