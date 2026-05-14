@@ -14,8 +14,9 @@ import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { UserAvatar } from "@/components/user-avatar";
 import InviteMemberModal from "@/components/inv-modal";
 import { useInvites } from "@/hooks/use-invites";
+import { useMentions } from "@/hooks/use-mentions";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { InviteNotification } from "@/components/notifications";
+import { InviteNotification, MentionNotificationCard } from "@/components/notifications";
 import { useUser } from "@/providers/user.provider";
 
 import { cn } from "@/lib/utils";
@@ -159,32 +160,13 @@ export function RSidebar() {
               isMobile && open ? "fixed right-4" : "absolute"
             )}
           >
-            <div
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (open && view === "NOTIFICATIONS") toggleOpen();
-                  else setView("NOTIFICATIONS");
-                }
-              }}
-              onClick={() =>
-                open && view === "NOTIFICATIONS"
-                  ? toggleOpen()
-                  : setView("NOTIFICATIONS")
-              }
-              className={cn(
-                "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
-                isMobile && open && view === "NOTIFICATIONS" && "bg-base-200"
-              )}
-            >
-              <HugeiconsIcon
-                icon={Notification01Icon}
-                fill={view === "NOTIFICATIONS" && open ? "currentColor" : "none"}
-                strokeWidth={2}
-                className="size-5 text-foreground"
-              />
-            </div>
+            <NotificationBellButton
+              open={open}
+              view={view}
+              isMobile={isMobile}
+              toggleOpen={toggleOpen}
+              setView={setView}
+            />
             <div
               role="button"
               tabIndex={0}
@@ -243,6 +225,9 @@ export function RSidebar() {
 
 export function SidebarNotifications() {
   const { invites, isLoading } = useInvites();
+  const { mentions, dismissMention } = useMentions();
+
+  const isEmpty = invites.length === 0 && mentions.length === 0;
 
   if (isLoading) {
     return (
@@ -252,7 +237,7 @@ export function SidebarNotifications() {
     );
   }
 
-  if (invites.length === 0) {
+  if (isEmpty) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <HugeiconsIcon icon={InboxIcon} className="size-12 text-muted-foreground mb-4" />
@@ -263,10 +248,69 @@ export function SidebarNotifications() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 w-full">
+    <div className="flex flex-col gap-3 w-full">
+      {mentions.map((notification) => (
+        <MentionNotificationCard
+          key={notification.notificationId}
+          notification={notification}
+          onDismiss={dismissMention}
+        />
+      ))}
       {invites.map((invite) => (
         <InviteNotification key={invite.id} invite={invite} />
       ))}
+    </div>
+  );
+}
+
+// ─── Notification Bell with Badge ────────────────────────────────────────────
+
+interface NotificationBellButtonProps {
+  open: boolean;
+  view: string;
+  isMobile: boolean;
+  toggleOpen: () => void;
+  setView: (v: "MEMBERS" | "NOTIFICATIONS") => void;
+}
+
+function NotificationBellButton({ open, view, isMobile, toggleOpen, setView }: NotificationBellButtonProps) {
+  const { invites } = useInvites();
+  const { mentions } = useMentions();
+
+  const pendingInvites = invites.filter((i) => i.status === "pending").length;
+  const totalBadge = pendingInvites + mentions.length;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          if (open && view === "NOTIFICATIONS") toggleOpen();
+          else setView("NOTIFICATIONS");
+        }
+      }}
+      onClick={() =>
+        open && view === "NOTIFICATIONS"
+          ? toggleOpen()
+          : setView("NOTIFICATIONS")
+      }
+      className={cn(
+        "relative flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
+        isMobile && open && view === "NOTIFICATIONS" && "bg-base-200"
+      )}
+    >
+      <HugeiconsIcon
+        icon={Notification01Icon}
+        fill={view === "NOTIFICATIONS" && open ? "currentColor" : "none"}
+        strokeWidth={2}
+        className="size-5 text-foreground"
+      />
+      {totalBadge > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[14px] h-[14px] px-0.5 text-[9px] font-bold bg-primary text-primary-foreground rounded-full leading-none">
+          {totalBadge > 99 ? "99+" : totalBadge}
+        </span>
+      )}
     </div>
   );
 }
