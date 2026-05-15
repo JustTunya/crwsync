@@ -135,26 +135,48 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       this.server.to(`chat_${roomId}`).emit("new_message", socketPayload);
 
-      // Emit mention notifications via the global /status namespace
-      // so users anywhere in the app receive them
-      if (dto.isEveryoneMention) {
-        const members = await this.prisma.workspaceMember.findMany({
-          where: { workspace_id: workspaceId },
-          select: { user_id: true },
+      this.statusGateway.server
+        .to(`workspace_${workspaceId}`)
+        .emit("chat:unread_increment", { roomId, senderId: userId });
+
+      if (dto.isEveryoneMention || dto.mentionedUserIds?.length) {
+        // Fetch room name + workspace slug once for the notification payload
+        const roomWithWorkspace = await this.prisma.chatRoom.findUnique({
+          where: { id: roomId },
+          select: {
+            name: true,
+            workspace: { select: { slug: true, name: true } },
+          },
         });
-        for (const member of members) {
-          if (member.user_id !== userId) {
-            this.statusGateway.server
-              .to(`user_${member.user_id}`)
-              .emit("mention_notification", message);
+
+        const mentionPayload = {
+          ...message,
+          room: { id: roomId, name: roomWithWorkspace?.name ?? null },
+          workspace: {
+            slug: roomWithWorkspace?.workspace.slug ?? workspaceId,
+            name: roomWithWorkspace?.workspace.name ?? "",
+          },
+        };
+
+        if (dto.isEveryoneMention) {
+          const members = await this.prisma.workspaceMember.findMany({
+            where: { workspace_id: workspaceId },
+            select: { user_id: true },
+          });
+          for (const member of members) {
+            if (member.user_id !== userId) {
+              this.statusGateway.server
+                .to(`user_${member.user_id}`)
+                .emit("mention_notification", mentionPayload);
+            }
           }
-        }
-      } else if (dto.mentionedUserIds?.length) {
-        for (const mentionedId of dto.mentionedUserIds) {
-          if (mentionedId !== userId) {
-            this.statusGateway.server
-              .to(`user_${mentionedId}`)
-              .emit("mention_notification", message);
+        } else if (dto.mentionedUserIds?.length) {
+          for (const mentionedId of dto.mentionedUserIds) {
+            if (mentionedId !== userId) {
+              this.statusGateway.server
+                .to(`user_${mentionedId}`)
+                .emit("mention_notification", mentionPayload);
+            }
           }
         }
       }

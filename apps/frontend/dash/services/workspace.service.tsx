@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import { CreateWorkspacePayload, InviteMemberPayload, UpdateWorkspacePayload, Workspace, WorkspaceMember, WorkspaceOperationState } from "@crwsync/types";
+import { CreateWorkspacePayload, InviteMemberPayload, UpdateWorkspacePayload, Workspace, WorkspaceMember, WorkspaceOperationState, WorkspacePendingInvite } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
 export async function getWorkspaceMembers(workspaceId: string): Promise<WorkspaceOperationState<(WorkspaceMember)[]>> {
@@ -80,6 +80,32 @@ export async function deleteWorkspace(id: string): Promise<WorkspaceOperationSta
   }
 }
 
+export async function getWorkspacePendingInvites(workspaceId: string): Promise<WorkspaceOperationState<WorkspacePendingInvite[]>> {
+  try {
+    const response = await api.get(`/workspaces/${workspaceId}/invites`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to fetch pending invites" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function revokeInvite(workspaceId: string, inviteId: string): Promise<WorkspaceOperationState> {
+  try {
+    await api.delete(`/workspaces/${workspaceId}/invites/${inviteId}`);
+    return { success: true, message: "Invitation revoked successfully" };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to revoke invitation" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
 export async function inviteMember(workspaceId: string, data: InviteMemberPayload): Promise<WorkspaceOperationState> {
   try {
     await api.post(`/workspaces/${workspaceId}/invites`, data);
@@ -118,3 +144,16 @@ export async function declineInvite(workspaceId: string): Promise<WorkspaceOpera
     return { success: false, message: "An unexpected error occurred" };
   }
 }
+
+export async function kickWorkspaceMember(workspaceId: string, memberId: string): Promise<WorkspaceOperationState> {
+  try {
+    await api.delete(`/workspaces/${workspaceId}/members/${memberId}`);
+    return { success: true, message: "Member kicked successfully" };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to kick member" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}

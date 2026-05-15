@@ -1,21 +1,23 @@
 import { useState, useRef } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Edit03Icon, Delete02Icon, UnavailableIcon, ArrowTurnBackwardIcon, HappyIcon } from "@hugeicons/core-free-icons";
 import type { ChatMessage } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { useSession } from "@/hooks/use-session";
 import { UserAvatar } from "@/components/user-avatar";
-import { LinkPreview } from "./LinkPreview";
-import EmojiPicker from "./EmojiPicker";
-import { ReactionIndicator } from "./ReactionIndicator";
+import EmojiPicker from "@/components/chat/EmojiPicker";
+import { LinkPreview } from "@/components/chat/LinkPreview";
+import { ReactionIndicator } from "@/components/chat/ReactionIndicator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-const COMBINED_REGEX = /(@\[.*?\]\(user:[a-zA-Z0-9-]+\)|https?:\/\/[^\s]+|@everyone)/g;
+const COMBINED_REGEX = /(@\[.*?\]\(user:[a-zA-Z0-9-]+\)|#\[.*?\]\(task:[a-zA-Z0-9-]+:[a-zA-Z0-9-]+\)|https?:\/\/[^\s]+|@everyone)/g;
 const URL_REGEX_EXACT = /^(https?:\/\/[^\s]+)$/;
 const MENTION_REGEX_EXACT = /^@\[(.*?)\]\(user:([a-zA-Z0-9-]+)\)$/;
+const TASK_MENTION_REGEX_EXACT = /^#\[(.*?)\]\(task:([a-zA-Z0-9-]+):([a-zA-Z0-9-]+)\)$/;
 
-function renderMessageContent(text: string) {
+function renderMessageContent(text: string, onNavigateToBoard: (boardId: string) => void) {
   const parts = text.split(COMBINED_REGEX);
   return parts.map((part, i) => {
     if (!part) return null;
@@ -45,9 +47,28 @@ function renderMessageContent(text: string) {
       );
     }
 
+    const taskMentionMatch = part.match(TASK_MENTION_REGEX_EXACT);
+    if (taskMentionMatch) {
+      const label = taskMentionMatch[1]; // e.g. "PROJ-3: Fix bug"
+      const boardId = taskMentionMatch[2];
+      return (
+        <button
+          key={i}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigateToBoard(boardId);
+          }}
+          className="font-semibold cursor-pointer hover:underline text-inherit align-baseline"
+        >
+          #{label}
+        </button>
+      );
+    }
+
     if (part === "@everyone") {
       return (
-        <span key={i} className="font-bold cursor-pointer hover:underline">
+        <span key={i} className="font-semibold cursor-pointer hover:underline">
           @everyone
         </span>
       );
@@ -74,11 +95,18 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
 
   const ref = useRef<HTMLDivElement>(null);
   const { setReplyingTo } = useChatStore();
+  const router = useRouter();
+  const params = useParams();
   
   const { data: sessionData } = useSession();
   const currentUserId = sessionData?.id || "";
 
-
+  const handleNavigateToBoard = (boardId: string) => {
+    const slug = params?.slug as string | undefined;
+    if (slug && boardId) {
+      router.push(`/${slug}/board/${boardId}`);
+    }
+  };
 
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
@@ -172,7 +200,9 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                   This message was deleted.
                 </span>
               ) : (
-                message.reply_to.content.replace(/@\[(.*?)\]\(user:[a-zA-Z0-9-]+\)/g, '@$1')
+                message.reply_to.content
+                  .replace(/@\[(.*?)\]\(user:[a-zA-Z0-9-]+\)/g, '@$1')
+                  .replace(/#\[(.*?)\]\(task:[a-zA-Z0-9-]+:[a-zA-Z0-9-]+\)/g, '#$1')
               )}
             </span>
           </div>
@@ -231,7 +261,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                       <p className="text-muted-foreground italic">This message was deleted.</p>
                     </div>
                   ) : (
-                    renderMessageContent(message.content)
+                    renderMessageContent(message.content, handleNavigateToBoard)
                   )}
                 </>
               )}

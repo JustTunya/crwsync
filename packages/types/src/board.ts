@@ -35,6 +35,7 @@ export interface BoardColumn {
 
 export interface Task {
   id: string;
+  shortId: string;
   column_id: string;
   title: string;
   description: string | null;

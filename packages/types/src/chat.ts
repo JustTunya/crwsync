@@ -77,3 +77,16 @@ export interface ChatMessagePage {
   next_cursor: string | null;
   has_more: boolean;
 }
+
+export interface MentionNotification {
+  /** Unique ID derived from the underlying ChatMessage id + a local uuid */
+  notificationId: string;
+  /** The chat message that contained the mention */
+  message: ChatMessage;
+  /** Room metadata so the frontend can build a link */
+  room: { id: string; name: string | null };
+  /** Workspace metadata for the navigation path */
+  workspace: { slug: string; name: string };
+  /** When the notification was received on the client */
+  receivedAt: string;
+}

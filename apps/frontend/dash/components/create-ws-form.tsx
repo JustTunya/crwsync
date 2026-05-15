@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+
 import { useWorkspace } from "@/providers/workspace.provider";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 export function CreateWorkspaceForm() {
   const [name, setName] = useState("");
@@ -11,7 +13,7 @@ export function CreateWorkspaceForm() {
 
   const { createWorkspace } = useWorkspace();
 
-  const router = useRouter();
+
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,48 +22,51 @@ export function CreateWorkspaceForm() {
       await createWorkspace({ name, slug }).then(() => {
         setName("");
         setSlug("");
-        router.push("/");
       });
     });
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="space-y-1">
-        <label htmlFor="ws-name" className="text-sm text-muted-foreground">
+    <form onSubmit={onSubmit} className="w-full space-y-4">
+      <div className="space-y-2 sm:space-y-3">
+        <label 
+          htmlFor="ws-name" 
+          className="flex items-center gap-2 text-xs sm:text-[13px] font-light tracking-wider leading-none select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+        >
           Workspace name
         </label>
-        <input
+        <Input
           id="ws-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
           placeholder="Acme Inc."
           required
         />
       </div>
 
-      <div className="space-y-1">
-        <label htmlFor="ws-slug" className="text-sm text-muted-foreground">
+      <div className="space-y-2 sm:space-y-3">
+        <label 
+          htmlFor="ws-slug" 
+          className="flex items-center gap-2 text-xs sm:text-[13px] font-light tracking-wider leading-none select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+        >
           Workspace slug
         </label>
-        <input
+        <Input
           id="ws-slug"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
-          className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
           placeholder="acme"
           required
         />
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={pending || !name || !slug}
-        className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-60"
+        className="w-full"
       >
         {pending ? "Creating..." : "Create Workspace"}
-      </button>
+      </Button>
     </form>
   );
 }

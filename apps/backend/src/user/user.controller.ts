@@ -40,8 +40,11 @@ export class UserController {
   @Public()
   @Get("search")
   @HttpCode(HttpStatus.OK)
-  searchByIdentifier(@Query("identifier") identifier: string): Promise<UserPublic[]> {
-    return this.userService.searchByEmailOrUsername(identifier);
+  searchByIdentifier(
+    @Query("identifier") identifier: string,
+    @Query("workspaceId") workspaceId?: string,
+  ): Promise<UserPublic[]> {
+    return this.userService.searchByEmailOrUsername(identifier, workspaceId);
   }
 
   @UseGuards(new OwnershipGuard("userId"))

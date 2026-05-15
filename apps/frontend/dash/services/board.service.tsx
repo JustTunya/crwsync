@@ -336,3 +336,31 @@ export async function deleteModule(
     return { success: false, message: "An unexpected error occurred" };
   }
 }
+
+export interface TaskSearchResult {
+  id: string;
+  shortId: string;
+  title: string;
+  priority: string;
+  boardId: string;
+}
+
+export async function searchWorkspaceTasks(
+  workspaceId: string,
+  query: string,
+): Promise<BoardOperationState<TaskSearchResult[]>> {
+  try {
+    const response = await api.get(`${BASE(workspaceId)}/tasks/search`, {
+      params: { q: query },
+    });
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to search tasks",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}

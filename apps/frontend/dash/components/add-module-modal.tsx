@@ -123,7 +123,7 @@ export function AddModuleModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
               ))}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="w-full space-y-4">
               <div className="space-y-2">
                 <label htmlFor="module-name" className="text-xs text-muted-foreground font-medium">Name</label>
                 <Input
@@ -135,11 +135,12 @@ export function AddModuleModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                 />
               </div>
               
-              <div className="flex justify-end gap-3 pt-2">
-                <Button variant="outline" onClick={() => setStep("select")}>
+              <div className="w-full flex justify-end gap-3 pt-2">
+                <Button className="w-auto px-8" variant="outline" onClick={() => setStep("select")}>
                   Back
                 </Button>
                 <Button 
+                  className="w-auto flex-1"
                   onClick={handleCreate} 
                   disabled={!name.trim() || createBoard.isPending || createChatRoom.isPending}
                 >

@@ -65,9 +65,22 @@ export class UserService {
     return user;
   }
 
-  async searchByEmailOrUsername(identifier: string): Promise<UserPublic[]> {
+  async searchByEmailOrUsername(identifier: string, workspaceId?: string): Promise<UserPublic[]> {
+    const where: Prisma.UserWhereInput = {
+      OR: [{ email: { contains: identifier } }, { username: { contains: identifier } }],
+    };
+
+    if (workspaceId) {
+      where.NOT = {
+        OR: [
+          { ws_memberships: { some: { workspace_id: workspaceId } } },
+          { ws_received_invites: { some: { workspace_id: workspaceId, status: "pending" } } },
+        ],
+      };
+    }
+
     const users = await this.prisma.user.findMany({
-      where: { OR: [{ email: { contains: identifier } }, { username: { contains: identifier } }] },
+      where,
       select: userPublicSelect,
       take: 5,
     });

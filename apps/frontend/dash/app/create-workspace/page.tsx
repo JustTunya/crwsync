@@ -1,10 +1,18 @@
 import { CreateWorkspaceForm } from "@/components/create-ws-form";
+import { GlassBox } from "@/components/ui/glassbox";
+import { Lead } from "@/components/ui/lead";
+import { Ripple } from "@/components/ui/ripple";
 
 export default function CreateWorkspacePage() {
   return (
-    <div className="min-h-screen max-w-md mx-auto p-6 bg-card rounded-lg shadow">
-      <h1 className="text-2xl font-semibold mb-6">Create a New Workspace</h1>
-      <CreateWorkspaceForm />
-    </div>
+    <>
+      <Ripple />
+      <div className="flex items-center justify-center min-h-screen px-4">
+        <GlassBox>
+          <Lead title="Create Workspace" description="Please enter the details for your new workspace." />
+          <CreateWorkspaceForm />
+        </GlassBox>
+      </div>
+    </>
   );
 }

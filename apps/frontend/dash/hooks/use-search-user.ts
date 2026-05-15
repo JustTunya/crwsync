@@ -3,7 +3,7 @@ import { useDebounce } from "use-debounce";
 import { UserType } from "@crwsync/types";
 import { getUsersByIdentifier } from "@/services/user.service";
 
-export function useSearchUsers(identifier: string): { users: UserType[]; } {
+export function useSearchUsers(identifier: string, workspaceId?: string): { users: UserType[]; } {
   const [debounced] = useDebounce(identifier, 500);
   const [users, setUsers] = useState<UserType[]>([]);
 
@@ -16,7 +16,7 @@ export function useSearchUsers(identifier: string): { users: UserType[]; } {
 
     const search = async () => {
       try {
-        const result = await getUsersByIdentifier(term);
+        const result = await getUsersByIdentifier(term, workspaceId);
         if (!isCancelled && result.success) {
           setUsers(result.data || []);
         }
@@ -32,7 +32,7 @@ export function useSearchUsers(identifier: string): { users: UserType[]; } {
     return () => {
       isCancelled = true;
     };
-  }, [term]);
+  }, [term, workspaceId]);
 
   if (!term) {
     return { users: [] };

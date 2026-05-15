@@ -7,6 +7,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   ParseUUIDPipe,
 } from "@nestjs/common";
@@ -53,6 +54,15 @@ export class BoardController {
     workspaceId: string,
   ) {
     return this.boardService.getBoards(workspaceId);
+  }
+
+  @Get("tasks/search")
+  searchTasks(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" }))
+    workspaceId: string,
+    @Query("q") q: string,
+  ) {
+    return this.boardService.searchTasks(workspaceId, q || "");
   }
 
   @Get(":boardId")

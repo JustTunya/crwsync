@@ -51,6 +51,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       withCredentials: true,
       transports: ["websocket"],
       autoConnect: true,
+      forceNew: true,
     });
 
     socketInstance.on("connect", () => {

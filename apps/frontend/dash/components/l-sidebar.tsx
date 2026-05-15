@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { m, AnimatePresence, Transition, LazyMotion, domAnimation } from "framer-motion";
@@ -17,15 +17,18 @@ import { SidebarProject } from "@/components/sidebar/SidebarProject";
 import { SectionHeader } from "@/components/sidebar/SectionHeader";
 import { AddModuleModal } from "@/components/add-module-modal";
 import { Input } from "@/components/ui/input";
-import { Shortcut } from "@/components/ui/shortcut";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
 import { useUserStatus } from "@/hooks/use-user-status";
 import { useModuleDnd } from "@/hooks/use-module-dnd";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useWorkspaceModules, useReorderModules } from "@/hooks/use-workspace-modules";
+import { useUser } from "@/providers/user.provider";
+import { useSocket } from "@/providers/socket.provider";
+import { useQueryClient } from "@tanstack/react-query";
+import { useWorkspaceModules, useReorderModules, moduleKeys } from "@/hooks/use-workspace-modules";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
+import { WorkspaceModule } from "@crwsync/types";
 
 const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 const fading: Transition = { duration: 0.15, ease: [0.4, 0, 0.2, 1] };
@@ -41,6 +44,9 @@ export function LSidebar() {
   const { open, toggleOpen, setOpen } = useLSidebar();
 
   const { status, handleStatusChange } = useUserStatus();
+  const user = useUser();
+  const { socket } = useSocket();
+  const queryClient = useQueryClient();
 
   const slug = activeWorkspace?.slug || "";
   const [addModuleOpen, setAddModuleOpen] = useState(false);
@@ -54,6 +60,59 @@ export function LSidebar() {
     setPrevWsModules(wsModules);
     setLocalModules(wsModules);
   }
+
+  useEffect(() => {
+    if (!socket || !activeWorkspace?.id) return;
+
+    const handleUnreadIncrement = ({ roomId, senderId }: { roomId: string; senderId: string }) => {
+      if (senderId === user?.id) return;
+      queryClient.setQueryData(
+        moduleKeys.list(activeWorkspace.id),
+        (old: { data: WorkspaceModule[] } | undefined) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((m) => {
+              if (m.type === "CHAT" && m.reference_id === roomId) {
+                // If the user is currently looking at this exact chat module, don't increment
+                const moduleHref = getModuleHref(slug, m);
+                if (pathname === moduleHref) return m;
+                return { ...m, unreadCount: (m.unreadCount || 0) + 1 };
+              }
+              return m;
+            }),
+          };
+        }
+      );
+    };
+
+    socket.on("chat:unread_increment", handleUnreadIncrement);
+
+    return () => {
+      socket.off("chat:unread_increment", handleUnreadIncrement);
+    };
+  }, [socket, activeWorkspace?.id, queryClient, user?.id, pathname, slug]);
+
+  useEffect(() => {
+    if (!activeWorkspace?.id || !localModules) return;
+
+    const currentModule = localModules.find(
+      (m) => m.type === "CHAT" && getModuleHref(slug, m) === pathname,
+    );
+
+    if (currentModule && currentModule.unreadCount && currentModule.unreadCount > 0) {
+      queryClient.setQueryData(
+        moduleKeys.list(activeWorkspace.id),
+        (old: { data: WorkspaceModule[] } | undefined) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((m) => (m.id === currentModule.id ? { ...m, unreadCount: 0 } : m)),
+          };
+        },
+      );
+    }
+  }, [pathname, localModules, activeWorkspace?.id, queryClient, slug]);
 
   const { activeId, sensors, handleDragStart, handleDragEnd } = useModuleDnd(
     localModules,
@@ -138,14 +197,14 @@ export function LSidebar() {
                 ref={searchRef}
                 placeholder="Search..."
                 className="bg-base-200"
-                prefix={
-                  <HugeiconsIcon
-                    icon={Search01Icon}
-                    strokeWidth={1.75}
-                    className="size-4 text-placeholder"
-                  />
-                }
-                suffix={<Shortcut chars={["ctrl", "K"]} />}
+                // prefix={
+                //   <HugeiconsIcon
+                //     icon={Search01Icon}
+                //     strokeWidth={1.75}
+                //     className="size-4 text-placeholder"
+                //   />
+                // }
+                // suffix={<Shortcut chars={["ctrl", "K"]} />}
               />
             </m.div>
           ) : (

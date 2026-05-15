@@ -15,9 +15,13 @@ export async function getUserById(userId: string): Promise<UserOperationState<Us
   }
 } 
 
-export async function getUsersByIdentifier(identifier: string): Promise<UserOperationState<UserType[]>> {
+export async function getUsersByIdentifier(identifier: string, workspaceId?: string): Promise<UserOperationState<UserType[]>> {
   try {
-    const response = await api.get(`/users/search?identifier=${encodeURIComponent(identifier)}`);
+    const url = new URLSearchParams();
+    url.append("identifier", identifier);
+    if (workspaceId) url.append("workspaceId", workspaceId);
+
+    const response = await api.get(`/users/search?${url.toString()}`);
     return { success: true, data: response.data };
   } catch (error) {
     if (isAxiosError(error)) {

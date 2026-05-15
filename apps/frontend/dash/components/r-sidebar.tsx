@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { m, Transition, LazyMotion, domAnimation } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
-import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon } from "@hugeicons/core-free-icons";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon, Door01Icon, Message01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Workspace, WorkspaceMember, WorkspaceUser } from "@crwsync/types";
 import { useSocket } from "@/providers/socket.provider";
 import { useWorkspace } from "@/providers/workspace.provider";
-import { getWorkspaceMembers } from "@/services/workspace.service";
+import { getWorkspaceMembers, kickWorkspaceMember } from "@/services/workspace.service";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { UserAvatar } from "@/components/user-avatar";
 import InviteMemberModal from "@/components/inv-modal";
 import { useInvites } from "@/hooks/use-invites";
+import { useMentions } from "@/hooks/use-mentions";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { InviteNotification } from "@/components/notifications";
+import { InviteNotification, MentionNotificationCard } from "@/components/notifications";
+import { useUser } from "@/providers/user.provider";
 
 import { cn } from "@/lib/utils";
 
@@ -49,8 +51,6 @@ export function RSidebar() {
   useEffect(() => {
     if (!socket || !workspace?.id || !isConnected) return;
 
-    socket.emit("sub_ws", workspace.id);
-
     const handleStatusUpdate = ({
       userId,
       status,
@@ -69,6 +69,8 @@ export function RSidebar() {
 
     socket.on("status:update", handleStatusUpdate);
     socket.on("ws_statuses", handleWorkspaceStatuses);
+
+    socket.emit("sub_ws", workspace.id);
 
     return () => {
       socket.off("status:update", handleStatusUpdate);
@@ -158,32 +160,13 @@ export function RSidebar() {
               isMobile && open ? "fixed right-4" : "absolute"
             )}
           >
-            <div
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (open && view === "NOTIFICATIONS") toggleOpen();
-                  else setView("NOTIFICATIONS");
-                }
-              }}
-              onClick={() =>
-                open && view === "NOTIFICATIONS"
-                  ? toggleOpen()
-                  : setView("NOTIFICATIONS")
-              }
-              className={cn(
-                "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
-                isMobile && open && view === "NOTIFICATIONS" && "bg-base-200"
-              )}
-            >
-              <HugeiconsIcon
-                icon={Notification01Icon}
-                fill={view === "NOTIFICATIONS" && open ? "currentColor" : "none"}
-                strokeWidth={2}
-                className="size-5 text-foreground"
-              />
-            </div>
+            <NotificationBellButton
+              open={open}
+              view={view}
+              isMobile={isMobile}
+              toggleOpen={toggleOpen}
+              setView={setView}
+            />
             <div
               role="button"
               tabIndex={0}
@@ -242,6 +225,9 @@ export function RSidebar() {
 
 export function SidebarNotifications() {
   const { invites, isLoading } = useInvites();
+  const { mentions, dismissMention } = useMentions();
+
+  const isEmpty = invites.length === 0 && mentions.length === 0;
 
   if (isLoading) {
     return (
@@ -251,7 +237,7 @@ export function SidebarNotifications() {
     );
   }
 
-  if (invites.length === 0) {
+  if (isEmpty) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <HugeiconsIcon icon={InboxIcon} className="size-12 text-muted-foreground mb-4" />
@@ -262,10 +248,69 @@ export function SidebarNotifications() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 w-full">
+    <div className="flex flex-col gap-3 w-full">
+      {mentions.map((notification) => (
+        <MentionNotificationCard
+          key={notification.notificationId}
+          notification={notification}
+          onDismiss={dismissMention}
+        />
+      ))}
       {invites.map((invite) => (
         <InviteNotification key={invite.id} invite={invite} />
       ))}
+    </div>
+  );
+}
+
+// ─── Notification Bell with Badge ────────────────────────────────────────────
+
+interface NotificationBellButtonProps {
+  open: boolean;
+  view: string;
+  isMobile: boolean;
+  toggleOpen: () => void;
+  setView: (v: "MEMBERS" | "NOTIFICATIONS") => void;
+}
+
+function NotificationBellButton({ open, view, isMobile, toggleOpen, setView }: NotificationBellButtonProps) {
+  const { invites } = useInvites();
+  const { mentions } = useMentions();
+
+  const pendingInvites = invites.filter((i) => i.status === "pending").length;
+  const totalBadge = pendingInvites + mentions.length;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          if (open && view === "NOTIFICATIONS") toggleOpen();
+          else setView("NOTIFICATIONS");
+        }
+      }}
+      onClick={() =>
+        open && view === "NOTIFICATIONS"
+          ? toggleOpen()
+          : setView("NOTIFICATIONS")
+      }
+      className={cn(
+        "relative flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
+        isMobile && open && view === "NOTIFICATIONS" && "bg-base-200"
+      )}
+    >
+      <HugeiconsIcon
+        icon={Notification01Icon}
+        fill={view === "NOTIFICATIONS" && open ? "currentColor" : "none"}
+        strokeWidth={2}
+        className="size-5 text-foreground"
+      />
+      {totalBadge > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[14px] h-[14px] px-0.5 text-[9px] font-bold bg-primary text-primary-foreground rounded-full leading-none">
+          {totalBadge > 99 ? "99+" : totalBadge}
+        </span>
+      )}
     </div>
   );
 }
@@ -336,16 +381,125 @@ interface SidebarProfileProps {
 }
 
 export function SidebarProfile({ user, status, className }: SidebarProfileProps) {
+  const [open, setOpen] = useState(false);
+  const [contextPos, setContextPos] = useState<{ x: number; y: number } | null>(null);
+
+  const self = useUser();
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    setContextPos({ x: e.clientX, y: e.clientY });
+    setOpen(true);
+  };
+
+  const handleContextClose = () => {
+    setOpen(false);
+    setContextPos(null);
+  };
+
   return (
-    <div className={cn("relative flex flex-col items-center py-1.5 rounded-lg hover:bg-base-300/75 transition-colors cursor-pointer", className)}>
-      <div className="px-2 flex-nowrap flex flex-row items-center gap-3 w-full">
-        <div className="relative">
-          <UserAvatar key={"user-avatar"} user={user} status={status?.toLowerCase()} />
+    <>
+      <div 
+        onContextMenu={handleContextMenu}
+        onClick={handleContextClose}
+        className={cn("relative flex flex-col items-center py-1.5 rounded-lg hover:bg-base-300/75 transition-colors cursor-pointer", className)}
+      >
+        <div className="px-2 flex-nowrap flex flex-row items-center gap-3 w-full">
+          <div className="relative">
+            <UserAvatar key={"user-avatar"} user={user} status={status?.toLowerCase()} />
+          </div>
+
+          <div className="flex flex-col">
+            <p className="text-foreground text-sm leading-tight whitespace-nowrap">{user?.firstname} {user?.lastname}</p>
+            <p className="text-muted-foreground text-xs leading-0 whitespace-nowrap h-4 flex items-center truncate">{user?.username}</p>
+          </div>
+        </div>
+      </div>
+
+      {
+        open && contextPos && user && self && self.id !== user.id && (
+          <ContextMenu
+            isOpen={open}
+            onClose={handleContextClose}
+            position={contextPos}
+            user={user}
+          />
+        )
+      }
+    </>
+  );
+}
+
+function ContextMenu({ isOpen, onClose, position, user }: { isOpen: boolean; onClose: () => void; position: { x: number; y: number }; user: WorkspaceUser }) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const { activeWorkspace: workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+
+  const kickMutation = useMutation({
+    mutationFn: () => kickWorkspaceMember(workspace!.id, user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ws-members", workspace?.id] });
+      onClose();
+    },
+    onError: (error) => {
+      console.error(error);
+      onClose();
+    }
+  });
+
+  const handleMessageUser = () => {
+    onClose();
+  };
+
+  const handleKickUser = () => {
+    if (workspace && !kickMutation.isPending) {
+      const sure = window.confirm(`Are you sure you want to kick ${user.username}?`);
+      if (!sure) return;
+      
+      kickMutation.mutate();
+    } else if (!workspace) {
+      onClose();
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, onClose]);
+
+  return (
+    <div
+      ref={menuRef}
+      className={cn(
+        "fixed top-0 left-0 z-50 bg-base-100 border border-base-200 rounded-md shadow-xl",
+        isOpen ? "block" : "hidden"
+      )}
+      style={{ left: position.x, top: position.y }}
+    >
+      <div className="flex flex-col justify-center items-center gap-1 p-1">
+        <div 
+          className="flex flex-row items-center gap-2 w-full hover:bg-foreground/10 px-2 py-1 rounded-sm transition-colors cursor-pointer"
+          onClick={handleMessageUser}
+        >
+          <HugeiconsIcon icon={Message01Icon} className="size-4 text-foreground" />
+          <p className="text-foreground text-xs leading-tight whitespace-nowrap">Message {user.username}</p>
         </div>
 
-        <div className="flex flex-col">
-          <p className="text-foreground text-sm leading-tight whitespace-nowrap">{user?.firstname} {user?.lastname}</p>
-          <p className="text-muted-foreground text-xs leading-0 whitespace-nowrap h-4 flex items-center truncate">{user?.username}</p>
+        <div 
+          className="flex flex-row items-center gap-2 w-full hover:bg-error/10 px-2 py-1 rounded-sm transition-colors cursor-pointer"
+          onClick={handleKickUser}
+        >
+          <HugeiconsIcon icon={Door01Icon} className="size-4 text-error" />
+          <p className="text-error text-xs leading-tight whitespace-nowrap">Kick {user.username}</p>
         </div>
       </div>
     </div>

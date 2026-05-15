@@ -87,6 +87,16 @@ export class WorkspaceController {
     return this.workspaceService.sendInvite(workspaceId, user.userId, dto);
   }
 
+  @Get(":workspaceId/invites")
+  @SkipThrottle()
+  @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
+  @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER, WorkspaceRoleEnum.ADMIN)
+  getInvites(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+  ) {
+    return this.workspaceService.getPendingInvites(workspaceId);
+  }
+
   @Delete(":workspaceId/invites/:inviteId")
   @Throttle({ default: { ttl: 3600, limit: 50 } })
   @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
