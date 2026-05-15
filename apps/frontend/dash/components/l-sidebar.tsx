@@ -17,7 +17,6 @@ import { SidebarProject } from "@/components/sidebar/SidebarProject";
 import { SectionHeader } from "@/components/sidebar/SectionHeader";
 import { AddModuleModal } from "@/components/add-module-modal";
 import { Input } from "@/components/ui/input";
-import { Shortcut } from "@/components/ui/shortcut";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
 import { useUserStatus } from "@/hooks/use-user-status";
@@ -198,14 +197,14 @@ export function LSidebar() {
                 ref={searchRef}
                 placeholder="Search..."
                 className="bg-base-200"
-                prefix={
-                  <HugeiconsIcon
-                    icon={Search01Icon}
-                    strokeWidth={1.75}
-                    className="size-4 text-placeholder"
-                  />
-                }
-                suffix={<Shortcut chars={["ctrl", "K"]} />}
+                // prefix={
+                //   <HugeiconsIcon
+                //     icon={Search01Icon}
+                //     strokeWidth={1.75}
+                //     className="size-4 text-placeholder"
+                //   />
+                // }
+                // suffix={<Shortcut chars={["ctrl", "K"]} />}
               />
             </m.div>
           ) : (

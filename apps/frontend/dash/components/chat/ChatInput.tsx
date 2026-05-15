@@ -222,10 +222,8 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
 
   // Debounced task search
   useEffect(() => {
-    if (!taskMentionState.active) {
-      setTaskResults([]);
-      return;
-    }
+    if (!taskMentionState.active) return;
+    
     if (taskDebounceRef.current) clearTimeout(taskDebounceRef.current);
     taskDebounceRef.current = setTimeout(async () => {
       setTaskSearchLoading(true);
@@ -278,6 +276,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
     setContent("");
     setMentionState({ active: false, text: "", startIndex: -1 });
     setTaskMentionState({ active: false, text: "", startIndex: -1 });
+    setTaskResults([]);
     setMentionedTasks({});
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -333,7 +332,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
         textareaRef.current.setSelectionRange(pos, pos);
       }
     }, 0);
-  }, [content, taskMentionState.startIndex, mentionedTasks]);
+  }, [content, taskMentionState.startIndex]);
 
   const handleEmojiSelect = (emoji: { native: string }) => {
     const cursorPosition = textareaRef.current?.selectionStart || content.length;
@@ -388,6 +387,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
     if (!members) {
       setMentionState({ active: false, text: "", startIndex: -1 });
       setTaskMentionState({ active: false, text: "", startIndex: -1 });
+      setTaskResults([]);
       return;
     }
 
@@ -398,6 +398,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
         if (!textAfterAt.startsWith(" ") && !/\n/.test(textAfterAt) && textAfterAt.length < 50) {
           setMentionState({ active: true, text: textAfterAt, startIndex: lastAtSymbolIndex });
           setTaskMentionState({ active: false, text: "", startIndex: -1 });
+          setTaskResults([]);
           return;
         }
       }
@@ -405,6 +406,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
     
     setMentionState({ active: false, text: "", startIndex: -1 });
     setTaskMentionState({ active: false, text: "", startIndex: -1 });
+    setTaskResults([]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -434,6 +436,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
       if (e.key === "Escape") {
         e.preventDefault();
         setTaskMentionState({ active: false, text: "", startIndex: -1 });
+        setTaskResults([]);
         return;
       }
     }
@@ -468,8 +471,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
     }
   };
 
-  const anyMenuOpen = (taskMentionState.active && (taskResults.length > 0 || taskSearchLoading)) ||
-    (mentionState.active && filteredOptions.length > 0);
+
 
   return (
     <>

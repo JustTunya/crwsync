@@ -131,10 +131,8 @@ export function MentionNotificationCard({ notification, onDismiss }: MentionNoti
 
 
   return (
-    <GlassBox
-      className="cursor-pointer hover:bg-foreground/5 transition-colors group"
-      onClick={handleNavigate}
-    >
+    <div onClick={handleNavigate}>
+    <GlassBox>
       {/* Header row */}
       <div className="flex items-center gap-2 w-full">
         <div className="flex items-center justify-center size-5 rounded-full bg-primary/10 shrink-0">
@@ -151,7 +149,7 @@ export function MentionNotificationCard({ notification, onDismiss }: MentionNoti
         <UserAvatar user={message.sender} size={7} />
         <div className="flex flex-col min-w-0 flex-1">
           <span className="text-xs font-semibold text-foreground leading-tight">{senderName}</span>
-          <p className="text-xs text-muted-foreground font-thin line-clamp-2 leading-relaxed mt-0.5 break-words">
+          <p className="text-xs text-muted-foreground font-thin line-clamp-2 leading-relaxed mt-0.5 wrap-break-word">
             {previewText}
           </p>
         </div>
@@ -163,5 +161,6 @@ export function MentionNotificationCard({ notification, onDismiss }: MentionNoti
         <span className="text-[10px] text-muted-foreground">Click to jump to message</span>
       </div>
     </GlassBox>
+    </div>
   );
 }
