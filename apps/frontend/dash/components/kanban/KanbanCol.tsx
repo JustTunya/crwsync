@@ -182,18 +182,18 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                   </p>
                   <div className="flex flex-col gap-1.5">
                     {([
-                      { value: "UPCOMING" as ColumnType, label: "Upcoming", icon: Progress01Icon, bg: "bg-alert/10 text-alert hover:bg-alert/20" },
-                      { value: "ONGOING" as ColumnType, label: "Ongoing", icon: CircleArrowReload01Icon, bg: "bg-info/10 text-info hover:bg-info/20" },
-                      { value: "COMPLETE" as ColumnType, label: "Complete", icon: CheckmarkCircle02Icon, bg: "bg-success/10 text-success hover:bg-success/20" },
+                      { value: "UPCOMING" as ColumnType, label: "Upcoming", icon: Progress01Icon, bg: "bg-alert/10 text-alert hover:bg-alert/20 border-alert" },
+                      { value: "ONGOING" as ColumnType, label: "Ongoing", icon: CircleArrowReload01Icon, bg: "bg-info/10 text-info hover:bg-info/20 border-info" },
+                      { value: "COMPLETE" as ColumnType, label: "Complete", icon: CheckmarkCircle02Icon, bg: "bg-success/10 text-success hover:bg-success/20 border-success" },
                     ] as const).map((t) => (
                       <button
                         key={t.value}
                         onClick={() => handleTypeChange(t.value)}
                         className={cn(
-                          "w-full px-1.5 py-1 text-left text-xs font-semibold rounded-md transition-all cursor-pointer border border-transparent",
+                          "w-full px-1.5 py-1 text-left text-xs font-semibold rounded-md transition-all cursor-pointer",
                           t.bg,
                           {
-                            "ring-2 ring-primary": column.type === t.value,
+                            "border-[1.5px]": column.type === t.value,
                           }
                         )}
                       >
