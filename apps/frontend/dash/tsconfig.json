@@ -3,6 +3,7 @@
     "target": "es2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "types": ["next", "react", "react-dom"],
+    "ignoreDeprecations": "6.0",
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
