@@ -193,7 +193,19 @@ export function useDeleteTask(workspaceId: string, boardId: string) {
 
   return useMutation({
     mutationFn: (taskId: string) =>
-      boardService.deleteTask(workspaceId, boardId, taskId),
+      boardService.deleteTask(workspaceId, taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
+    },
+  });
+}
+
+export function useArchiveTask(workspaceId: string, boardId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (taskId: string) =>
+      boardService.archiveTask(workspaceId, taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
     },

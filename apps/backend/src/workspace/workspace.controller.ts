@@ -172,4 +172,22 @@ export class WorkspaceController {
   ) {
     return this.workspaceService.transferOwnership(workspaceId, user.userId, newOwnerId);
   }
+
+  @Delete(":workspaceId/tasks/:taskId")
+  @UseGuards(IsMemberGuard)
+  deleteTask(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+  ) {
+    return this.workspaceService.deleteTask(workspaceId, taskId);
+  }
+
+  @Post(":workspaceId/tasks/:taskId/archive")
+  @UseGuards(IsMemberGuard)
+  archiveTask(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+  ) {
+    return this.workspaceService.archiveTask(workspaceId, taskId);
+  }
 }

@@ -228,17 +228,34 @@ export async function updateTask(
 
 export async function deleteTask(
   workspaceId: string,
-  boardId: string,
   taskId: string,
 ): Promise<BoardOperationState> {
   try {
-    await api.delete(`${BASE(workspaceId)}/${boardId}/tasks/${taskId}`);
+    await api.delete(`/workspaces/${workspaceId}/tasks/${taskId}`);
     return { success: true };
   } catch (error) {
     if (isAxiosError(error)) {
       return {
         success: false,
         message: error.response?.data?.message || "Failed to delete task",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function archiveTask(
+  workspaceId: string,
+  taskId: string,
+): Promise<BoardOperationState> {
+  try {
+    await api.post(`/workspaces/${workspaceId}/tasks/${taskId}/archive`);
+    return { success: true };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to archive task",
       };
     }
     return { success: false, message: "An unexpected error occurred" };

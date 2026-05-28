@@ -156,16 +156,6 @@ export class BoardController {
     return this.boardService.updateTask(workspaceId, boardId, taskId, dto);
   }
 
-  @Delete(":boardId/tasks/:taskId")
-  deleteTask(
-    @Param("workspaceId", new ParseUUIDPipe({ version: "4" }))
-    workspaceId: string,
-    @Param("boardId", new ParseUUIDPipe({ version: "4" })) boardId: string,
-    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
-  ) {
-    return this.boardService.deleteTask(workspaceId, boardId, taskId);
-  }
-
   @Put(":boardId/tasks/:taskId/move")
   moveTask(
     @Param("workspaceId", new ParseUUIDPipe({ version: "4" }))

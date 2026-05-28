@@ -2,12 +2,12 @@
 
 import { useReducer, useEffect, useRef, KeyboardEvent } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, Delete02Icon, UserIcon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Delete02Icon, UserIcon, ArchiveIcon } from "@hugeicons/core-free-icons";
 import type { Task } from "@crwsync/types";
 import { UserAvatar } from "@/components/user-avatar";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
-import { useUpdateTask, useDeleteTask } from "@/hooks/use-boards";
+import { useUpdateTask, useDeleteTask, useBoard, useArchiveTask } from "@/hooks/use-boards";
 import { useWorkspaceMembers } from "@/hooks/use-workspaces";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
@@ -41,9 +41,14 @@ function reducer(state: TaskDetailState, updates: Partial<TaskDetailState>): Tas
 
 export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDetailModalProps) {
   const { data: members } = useWorkspaceMembers(workspaceId);
+  const { data: board } = useBoard(workspaceId, boardId);
   const updateTask = useUpdateTask(workspaceId, boardId);
   const deleteTask = useDeleteTask(workspaceId, boardId);
+  const archiveTask = useArchiveTask(workspaceId, boardId);
   const isMobile = useMediaQuery("(max-width: 768px)");
+
+  const currentColumn = board?.columns?.find((c) => c.id === task.column_id);
+  const isCompleteColumn = currentColumn?.type === "COMPLETE";
 
   const assigneeRef = useRef<HTMLDivElement>(null);
 
@@ -107,6 +112,11 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
     onClose();
   };
 
+  const handleArchive = async () => {
+    await archiveTask.mutateAsync(task.id);
+    onClose();
+  };
+
   return (
     <div
       className="fixed inset-0 z-100 flex items-center justify-center bg-background/50 p-4 sm:p-0"
@@ -131,16 +141,27 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
             <p className="text-xs text-muted-foreground leading-tight">Change the details of this task</p>
           </div>
           <div className="flex items-center gap-2">
-            <button title="Delete task" onClick={handleDelete} className="size-7 p-0 rounded-md inline-flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-muted-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-base-300 data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap">
+            {isCompleteColumn && (
+              <button title="Archive task" onClick={handleArchive} className="size-7 p-0 rounded-md inline-flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-muted-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-base-300 data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap cursor-pointer">
+                <HugeiconsIcon
+                  icon={ArchiveIcon}
+                  strokeWidth={2}
+                  className="size-4.5 text-muted-foreground hover:text-primary transition-colors"
+                />
+              </button>
+            )}
+            <button title="Delete task" onClick={handleDelete} className="size-7 p-0 rounded-md inline-flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-muted-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-base-300 data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap cursor-pointer">
               <HugeiconsIcon
                 icon={Delete02Icon}
-                className="size-4 text-muted-foreground hover:text-error transition-colors"
+                strokeWidth={2}
+                className="size-4.5 text-muted-foreground hover:text-error transition-colors"
               />
             </button>
-            <button title="Close" onClick={onClose} className="size-7 p-0 rounded-md inline-flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-muted-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-base-300 data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap">
+            <button title="Close" onClick={onClose} className="size-7 p-0 rounded-md inline-flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-muted-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-base-300 data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap cursor-pointer">
               <HugeiconsIcon
                 icon={Cancel01Icon}
-                className="size-4 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                strokeWidth={2}
+                className="size-4.5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
               />
             </button>
           </div>
@@ -169,7 +190,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
             </div>
           </div>
 
-          <div className={cn("shrink-0 flex flex-col gap-4", isMobile ? "w-full" : "w-[280px]")}>
+          <div className={cn("shrink-0 flex flex-col gap-4", isMobile ? "w-full" : "w-70")}>
             <div>
               <label htmlFor="task-priority" className="text-xs text-muted-foreground mb-2 block">
                 Priority

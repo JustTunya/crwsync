@@ -451,4 +451,50 @@ export class WorkspaceService {
       this.cache.del(CacheKeys.workspaceMember(workspaceId, newOwnerId)),
     ]);
   }
+
+  async deleteTask(workspaceId: string, taskId: string) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      include: { column: { select: { board_id: true } } },
+    });
+    if (!task) throw new NotFoundException("Task not found");
+
+    await this.prisma.task.update({
+      where: { id: taskId },
+      data: { is_deleted: true },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("board:task:deleted", { boardId: task.column.board_id, taskId });
+
+    return { success: true };
+  }
+
+  async archiveTask(workspaceId: string, taskId: string) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      include: { column: { select: { board_id: true, type: true } } },
+    });
+    if (!task) throw new NotFoundException("Task not found");
+
+    if (task.column.type !== "COMPLETE") {
+      throw new BadRequestException("Task can only be archived from a COMPLETE column");
+    }
+
+    const updatedTask = await this.prisma.task.update({
+      where: { id: taskId },
+      data: { is_archived: true },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("board:task:updated", {
+        boardId: task.column.board_id,
+        taskId,
+        data: { is_archived: true },
+      });
+
+    return { success: true, data: updatedTask };
+  }
 }

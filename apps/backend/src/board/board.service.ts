@@ -307,19 +307,6 @@ export class BoardService {
     return { success: true, data: task };
   }
 
-  async deleteTask(workspaceId: string, boardId: string, taskId: string) {
-    await this.prisma.task.update({
-      where: { id: taskId },
-      data: { is_deleted: true },
-    });
-
-    this.statusGateway.server
-      .to(`workspace_${workspaceId}`)
-      .emit("board:task:deleted", { boardId, taskId });
-
-    return { success: true };
-  }
-
   async moveTask(
     workspaceId: string,
     boardId: string,
