@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, MoreHorizontalIcon, FileEmpty02Icon } from "@hugeicons/core-free-icons";
-import type { Task, BoardColumn } from "@crwsync/types";
+import { Add01Icon, MoreHorizontalIcon, FileEmpty02Icon, Progress01Icon, CircleArrowReload01Icon, CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
+import type { Task, BoardColumn, ColumnType } from "@crwsync/types";
 import { useUpdateColumn, useDeleteColumn } from "@/hooks/use-boards";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +61,11 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
 
   const handleColorChange = async (color: string) => {
     await updateColumn.mutateAsync({ columnId: column.id, data: { color } });
+    setShowMenu(false);
+  };
+
+  const handleTypeChange = async (type: ColumnType) => {
+    await updateColumn.mutateAsync({ columnId: column.id, data: { type } });
     setShowMenu(false);
   };
 
@@ -166,6 +171,38 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                     >
                       <div className="w-full h-px bg-base-300 -rotate-45" />
                     </button>
+                  </div>
+                </div>
+
+                <div className="w-full h-px bg-base-200 rounded-full my-0.5" />
+
+                <div className="px-0 py-1.5">
+                  <p className="text-xs font-medium text-muted-foreground mb-2 px-2">
+                    Type
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {([
+                      { value: "UPCOMING" as ColumnType, label: "Upcoming", icon: Progress01Icon, bg: "bg-alert/10 text-alert hover:bg-alert/20" },
+                      { value: "ONGOING" as ColumnType, label: "Ongoing", icon: CircleArrowReload01Icon, bg: "bg-info/10 text-info hover:bg-info/20" },
+                      { value: "COMPLETE" as ColumnType, label: "Complete", icon: CheckmarkCircle02Icon, bg: "bg-success/10 text-success hover:bg-success/20" },
+                    ] as const).map((t) => (
+                      <button
+                        key={t.value}
+                        onClick={() => handleTypeChange(t.value)}
+                        className={cn(
+                          "w-full px-1.5 py-1 text-left text-xs font-semibold rounded-md transition-all cursor-pointer border border-transparent",
+                          t.bg,
+                          {
+                            "ring-2 ring-primary": column.type === t.value,
+                          }
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          <HugeiconsIcon icon={t.icon} strokeWidth={2.5} className="size-3.5" />
+                          {t.label}
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 

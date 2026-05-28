@@ -8,7 +8,7 @@ import {
   IsDateString,
   IsInt,
 } from "class-validator";
-import { TaskPriorityEnum } from "@prisma/client";
+import { TaskPriorityEnum, ColumnType } from "@prisma/client";
 
 export class CreateBoardDto {
   @IsString()
@@ -38,6 +38,10 @@ export class CreateColumnDto {
   @IsString()
   @IsOptional()
   color?: string;
+
+  @IsEnum(ColumnType)
+  @IsOptional()
+  type?: ColumnType;
 }
 
 export class UpdateColumnDto {
@@ -48,6 +52,10 @@ export class UpdateColumnDto {
   @IsString()
   @IsOptional()
   color?: string;
+
+  @IsEnum(ColumnType)
+  @IsOptional()
+  type?: ColumnType;
 }
 
 export class CreateTaskDto {

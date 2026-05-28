@@ -153,6 +153,7 @@ export class BoardService {
         board_id: boardId,
         name: dto.name,
         color: dto.color,
+        type: dto.type,
         position: nextPosition,
       },
     });

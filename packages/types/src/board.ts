@@ -11,6 +11,8 @@ export enum ModuleTypeEnum {
   CHAT = "CHAT",
 }
 
+export type ColumnType = "UPCOMING" | "ONGOING" | "COMPLETE";
+
 export interface Board {
   id: string;
   workspace_id: string;
@@ -28,6 +30,7 @@ export interface BoardColumn {
   name: string;
   position: number;
   color: string | null;
+  type: ColumnType;
   created_at: string;
   updated_at: string;
   tasks?: Task[];
@@ -74,11 +77,13 @@ export interface UpdateBoardPayload {
 export interface CreateColumnPayload {
   name: string;
   color?: string;
+  type?: ColumnType;
 }
 
 export interface UpdateColumnPayload {
   name?: string;
   color?: string;
+  type?: ColumnType;
 }
 
 export interface CreateTaskPayload {
