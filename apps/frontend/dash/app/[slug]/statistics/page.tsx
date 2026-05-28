@@ -1,8 +1,27 @@
-export default function StatsPage() {
+import { Suspense } from "react";
+import { StatisticsDashboard } from "./statistics-dashboard";
+
+export const metadata = {
+  title: "Statistics | crwsync",
+  description: "View workspace performance metrics, task velocity, and team productivity insights.",
+};
+
+export default async function StatisticsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ interval?: string }>;
+}) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+
   return (
-    <div className="size-full flex flex-col items-center justify-center">
-      <h1 className="text-2xl font-semibold mb-4">Statistics</h1>
-      <p>This is the statistics page.</p>
-    </div>
+    <Suspense>
+      <StatisticsDashboard 
+        slug={resolvedParams.slug}
+        initialInterval={resolvedSearchParams.interval} 
+      />
+    </Suspense>
   );
 }

@@ -452,6 +452,82 @@ export class WorkspaceService {
     ]);
   }
 
+  async getStatistics(workspaceId: string, userId: string, interval?: string) {
+    const intervalMap: Record<string, number> = {
+      "1w": 7, "2w": 14, "1m": 30, "3m": 90, "6m": 180, "1y": 365,
+    };
+    const days = intervalMap[interval ?? "1m"] ?? 30;
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    // 1. Personal Active Workload — tasks assigned to user in ONGOING columns
+    const personalWorkload = await this.prisma.task.count({
+      where: {
+        assignee_id: userId,
+        is_deleted: false,
+        column: {
+          type: "ONGOING",
+          board: { workspace_id: workspaceId },
+        },
+      },
+    });
+
+    // 2. Personal Velocity — tasks completed by user within the interval
+    const personalVelocity = await this.prisma.task.count({
+      where: {
+        assignee_id: userId,
+        is_deleted: false,
+        completed_at: { gte: startDate },
+        column: {
+          board: { workspace_id: workspaceId },
+        },
+      },
+    });
+
+    // 3. Personal Cycle Time — average seconds from in_progress_at to completed_at
+    const cycleTimeResult = await this.prisma.$queryRaw<
+      { avg_seconds: number | null }[]
+    >`
+      SELECT AVG(EXTRACT(EPOCH FROM (t.completed_at - t.in_progress_at))) as avg_seconds
+      FROM tasks t
+      JOIN board_columns bc ON t.column_id = bc.id
+      JOIN boards b ON bc.board_id = b.id
+      WHERE b.workspace_id = ${workspaceId}::uuid
+        AND t.assignee_id = ${userId}::uuid
+        AND t.is_deleted = false
+        AND t.completed_at IS NOT NULL
+        AND t.in_progress_at IS NOT NULL
+        AND t.completed_at >= ${startDate}
+        AND EXTRACT(EPOCH FROM (t.completed_at - t.in_progress_at)) >= 5
+    `;
+
+    const personalCycleTime = cycleTimeResult[0]?.avg_seconds
+      ? Number(cycleTimeResult[0].avg_seconds)
+      : null;
+
+    // 4. Workspace Velocity Timeline — completed tasks grouped by date
+    const velocityTimeline = await this.prisma.$queryRaw<
+      { date: string; count: number }[]
+    >`
+      SELECT DATE(t.completed_at)::text as date, COUNT(*)::int as count
+      FROM tasks t
+      JOIN board_columns bc ON t.column_id = bc.id
+      JOIN boards b ON bc.board_id = b.id
+      WHERE b.workspace_id = ${workspaceId}::uuid
+        AND t.is_deleted = false
+        AND t.completed_at IS NOT NULL
+        AND t.completed_at >= ${startDate}
+      GROUP BY DATE(t.completed_at)
+      ORDER BY date ASC
+    `;
+
+    return {
+      personalWorkload,
+      personalVelocity,
+      personalCycleTime,
+      velocityTimeline,
+    };
+  }
+
   async deleteTask(workspaceId: string, taskId: string) {
     const task = await this.prisma.task.findUnique({
       where: { id: taskId },
