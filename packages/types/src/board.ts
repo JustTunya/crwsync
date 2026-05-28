@@ -48,6 +48,10 @@ export interface Task {
   assignee_id: string | null;
   due_date: string | null;
   position: number;
+  is_deleted: boolean;
+  is_archived: boolean;
+  in_progress_at: string | null;
+  completed_at: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -104,6 +108,10 @@ export interface UpdateTaskPayload {
   tags?: string[];
   assignee_id?: string | null;
   due_date?: string | null;
+  is_deleted?: boolean;
+  is_archived?: boolean;
+  in_progress_at?: string | null;
+  completed_at?: string | null;
 }
 
 export interface MoveTaskPayload {

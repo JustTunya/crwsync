@@ -7,6 +7,7 @@ import {
   IsUUID,
   IsDateString,
   IsInt,
+  IsBoolean,
 } from "class-validator";
 import { TaskPriorityEnum, ColumnType } from "@prisma/client";
 
@@ -124,6 +125,22 @@ export class UpdateTaskDto {
   @IsDateString()
   @IsOptional()
   due_date?: string | null;
+
+  @IsBoolean()
+  @IsOptional()
+  is_deleted?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  is_archived?: boolean;
+
+  @IsDateString()
+  @IsOptional()
+  in_progress_at?: string | null;
+
+  @IsDateString()
+  @IsOptional()
+  completed_at?: string | null;
 }
 
 export class MoveTaskDto {

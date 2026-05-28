@@ -241,9 +241,13 @@ model Task {
   assignee_id String?          @db.Uuid
   due_date    DateTime?        @db.Timestamptz
   position    Int              @default(0)
-  created_by  String           @db.Uuid
-  created_at  DateTime         @default(now()) @db.Timestamptz
-  updated_at  DateTime         @updatedAt @db.Timestamptz
+  is_deleted     Boolean          @default(false)
+  is_archived    Boolean          @default(false)
+  in_progress_at DateTime?        @db.Timestamptz
+  completed_at   DateTime?        @db.Timestamptz
+  created_by     String           @db.Uuid
+  created_at     DateTime         @default(now()) @db.Timestamptz
+  updated_at     DateTime         @updatedAt @db.Timestamptz
 
   column   BoardColumn @relation(fields: [column_id], references: [id], onDelete: Cascade)
   assignee User?       @relation("TaskAssignee", fields: [assignee_id], references: [id], onDelete: SetNull)
