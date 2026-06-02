@@ -184,9 +184,10 @@ jobs:
           docker run --rm \
             -e DATABASE_URL="${DATABASE_URL}" \
             -v ${{ github.workspace }}/apps/backend/prisma/migrations:/app/apps/backend/prisma/migrations \
+            -w /app/apps/backend \
             ${BACKEND_IMAGE} /bin/sh -c '
             echo "Attempting to run database migrations..."
-            OUTPUT=$(npx prisma migrate deploy --config apps/backend/prisma.config.ts 2>&1)
+            OUTPUT=$(npx prisma migrate deploy --config prisma.config.ts 2>&1)
             STATUS=$?
             echo "$OUTPUT"
             
@@ -194,9 +195,9 @@ jobs:
               echo "Warning: Database has existing tables but is untracked by Prisma (_prisma_migrations is missing)."
               echo "Dynamically resolving the baseline migration to establish tracking..."
               
-              FIRST_PATH=$(ls -d apps/backend/prisma/migrations/*/ 2>/dev/null | head -n 1)
+              FIRST_PATH=$(ls -d prisma/migrations/*/ 2>/dev/null | head -n 1)
               if [ -z "$FIRST_PATH" ]; then
-                echo "Error: No migrations found in apps/backend/prisma/migrations to baseline."
+                echo "Error: No migrations found in prisma/migrations to baseline."
                 exit 1
               fi
               
@@ -205,10 +206,10 @@ jobs:
               echo "Earliest migration identified: $FIRST_MIGRATION"
               
               echo "Resolving baseline migration: $FIRST_MIGRATION"
-              npx prisma migrate resolve --applied "$FIRST_MIGRATION" --config apps/backend/prisma.config.ts || exit $?
+              npx prisma migrate resolve --applied "$FIRST_MIGRATION" --config prisma.config.ts || exit $?
               
               echo "Retrying migration deployment..."
-              npx prisma migrate deploy --config apps/backend/prisma.config.ts || exit $?
+              npx prisma migrate deploy --config prisma.config.ts || exit $?
             elif [ $STATUS -ne 0 ]; then
               echo "Error: Migration failed with exit code $STATUS (not a P3005/untracked database error)."
               exit $STATUS
