@@ -37,6 +37,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=installer --chown=node:node /app/node_modules ./node_modules
+COPY --from=installer --chown=node:node /app/apps/backend/node_modules ./apps/backend/node_modules
+
 COPY --from=installer --chown=node:node /app/packages ./packages
 COPY --from=installer --chown=node:node /app/apps/backend/dist ./apps/backend/dist
 COPY --from=installer --chown=node:node /app/apps/backend/prisma ./apps/backend/prisma
