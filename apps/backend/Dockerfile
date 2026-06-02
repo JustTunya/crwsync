@@ -5,6 +5,7 @@ FROM base AS builder
 WORKDIR /app
 RUN corepack enable
 COPY . .
+RUN mkdir -p .turbo/cache
 RUN pnpm dlx turbo prune @crwsync/backend --docker
 
 # --- INSTALLER STAGE ---
@@ -19,6 +20,7 @@ RUN pnpm install --frozen-lockfile
 
 # Build the project and its dependencies
 COPY --from=builder /app/out/full/ .
+COPY --from=builder /app/.turbo/cache /app/.turbo/cache
 COPY turbo.json turbo.json
 COPY tsconfig.json tsconfig.json
 COPY tsconfig.base.json tsconfig.base.json

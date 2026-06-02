@@ -7,6 +7,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from "@nestjs/websockets";
+import { randomUUID } from "crypto";
 import { Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Server, Socket } from "socket.io";
@@ -14,6 +15,8 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { ChatService } from "src/chat/chat.service";
 import { StatusGateway } from "src/status/status.gateway";
 import { SendMessageDto, EditMessageDto, DeleteMessageDto, MarkAsReadDto } from "src/chat/dto/chat.dto";
+import { InjectQueue } from "@nestjs/bullmq";
+import { Queue } from "bullmq";
 
 @WebSocketGateway({
   cors: { origin: "*", methods: ["GET", "POST"], credentials: true },
@@ -30,6 +33,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly prisma: PrismaService,
     private readonly chatService: ChatService,
     private readonly statusGateway: StatusGateway,
+    @InjectQueue("chat_messages") private readonly messageQueue: Queue,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -124,67 +128,105 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     try {
-      const message = await this.chatService.createMessage(
-        workspaceId,
-        roomId,
-        userId,
-        dto,
-      );
+      const messageId = randomUUID();
+      const now = new Date();
 
-      const socketPayload = { ...message, client_id: dto.client_id };
-
-      this.server.to(`chat_${roomId}`).emit("new_message", socketPayload);
-
-      this.statusGateway.server
-        .to(`workspace_${workspaceId}`)
-        .emit("chat:unread_increment", { roomId, senderId: userId });
-
-      if (dto.isEveryoneMention || dto.mentionedUserIds?.length) {
-        // Fetch room name + workspace slug once for the notification payload
-        const roomWithWorkspace = await this.prisma.chatRoom.findUnique({
-          where: { id: roomId },
-          select: {
-            name: true,
-            workspace: { select: { slug: true, name: true } },
-          },
-        });
-
-        const mentionPayload = {
-          ...message,
-          room: { id: roomId, name: roomWithWorkspace?.name ?? null },
-          workspace: {
-            slug: roomWithWorkspace?.workspace.slug ?? workspaceId,
-            name: roomWithWorkspace?.workspace.name ?? "",
-          },
-        };
-
-        if (dto.isEveryoneMention) {
-          const members = await this.prisma.workspaceMember.findMany({
-            where: { workspace_id: workspaceId },
-            select: { user_id: true },
-          });
-          for (const member of members) {
-            if (member.user_id !== userId) {
-              this.statusGateway.server
-                .to(`user_${member.user_id}`)
-                .emit("mention_notification", mentionPayload);
-            }
-          }
-        } else if (dto.mentionedUserIds?.length) {
-          for (const mentionedId of dto.mentionedUserIds) {
-            if (mentionedId !== userId) {
-              this.statusGateway.server
-                .to(`user_${mentionedId}`)
-                .emit("mention_notification", mentionPayload);
-            }
-          }
-        }
-      }
+      const socketPayload = {
+        id: messageId,
+        workspace_id: workspaceId,
+        room_id: roomId,
+        sender_id: userId,
+        content: dto.content,
+        reply_to_id: dto.reply_to_id || null,
+        is_everyone_mention: dto.isEveryoneMention || false,
+        created_at: now,
+        updated_at: now,
+        is_deleted: false,
+        is_edited: false,
+        is_pinned: false,
+        sender: client.data.user,
+        mentions: dto.mentionedUserIds?.map(id => ({ id, firstname: "", lastname: "", avatar_key: null })) || [],
+        reply_to: dto.reply_to_id ? { id: dto.reply_to_id, content: "", is_deleted: false, sender: { firstname: "", lastname: "" } } : null,
+        reactions: [],
+        read_receipts: [{
+          id: randomUUID(),
+          room_id: roomId,
+          user_id: userId,
+          message_id: messageId,
+          last_read_at: now,
+          created_at: now,
+          user: client.data.user,
+        }],
+        client_id: dto.client_id,
+      };
 
       client.emit("message_ack", {
         client_id: dto.client_id,
         message: socketPayload,
       });
+
+      this.server.to(`chat_${roomId}`).emit("new_message", socketPayload);
+
+      // Decouple secondary logic so it does not block the event loop or the client.
+      (async () => {
+        try {
+          await this.messageQueue.add("persist_message", {
+            workspaceId,
+            roomId,
+            senderId: userId,
+            dto,
+            preGeneratedId: messageId,
+          });
+
+          this.statusGateway.server
+            .to(`workspace_${workspaceId}`)
+            .emit("chat:unread_increment", { roomId, senderId: userId });
+
+          if (dto.isEveryoneMention || dto.mentionedUserIds?.length) {
+            // Fetch room name + workspace slug once for the notification payload
+            const roomWithWorkspace = await this.prisma.chatRoom.findUnique({
+              where: { id: roomId },
+              select: {
+                name: true,
+                workspace: { select: { slug: true, name: true } },
+              },
+            });
+
+            const mentionPayload = {
+              ...socketPayload,
+              room: { id: roomId, name: roomWithWorkspace?.name ?? null },
+              workspace: {
+                slug: roomWithWorkspace?.workspace.slug ?? workspaceId,
+                name: roomWithWorkspace?.workspace.name ?? "",
+              },
+            };
+
+            if (dto.isEveryoneMention) {
+              const members = await this.prisma.workspaceMember.findMany({
+                where: { workspace_id: workspaceId },
+                select: { user_id: true },
+              });
+              for (const member of members) {
+                if (member.user_id !== userId) {
+                  this.statusGateway.server
+                    .to(`user_${member.user_id}`)
+                    .emit("mention_notification", mentionPayload);
+                }
+              }
+            } else if (dto.mentionedUserIds?.length) {
+              for (const mentionedId of dto.mentionedUserIds) {
+                if (mentionedId !== userId) {
+                  this.statusGateway.server
+                    .to(`user_${mentionedId}`)
+                    .emit("mention_notification", mentionPayload);
+                }
+              }
+            }
+          }
+        } catch (err) {
+          this.logger.error(`Secondary messaging logic error: ${err}`);
+        }
+      })();
     } catch (error) {
       this.logger.error(`Send message error: ${error}`);
       client.emit("message_error", {
