@@ -182,6 +182,8 @@ jobs:
           platforms: linux/amd64
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
+          build-args: |
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
           tags: ghcr.io/${{ secrets.GH_REPO }}/backend:${{ github.sha }}
 
       - name: Rotate cache
