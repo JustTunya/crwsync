@@ -187,7 +187,7 @@ jobs:
             -w /app/apps/backend \
             ${BACKEND_IMAGE} /bin/sh -c '
             echo "Attempting to run database migrations..."
-            OUTPUT=$(node node_modules/prisma/build/index.js migrate deploy --config prisma.config.ts 2>&1)
+            OUTPUT=$(npx prisma migrate deploy --config prisma.config.ts 2>&1)
             STATUS=$?
             echo "$OUTPUT"
             
@@ -206,10 +206,10 @@ jobs:
               echo "Earliest migration identified: $FIRST_MIGRATION"
               
               echo "Resolving baseline migration: $FIRST_MIGRATION"
-              node node_modules/prisma/build/index.js migrate resolve --applied "$FIRST_MIGRATION" --config prisma.config.ts || exit $?
+              npx prisma migrate resolve --applied "$FIRST_MIGRATION" --config prisma.config.ts || exit $?
               
               echo "Retrying migration deployment..."
-              node node_modules/prisma/build/index.js migrate deploy --config prisma.config.ts || exit $?
+              npx prisma migrate deploy --config prisma.config.ts || exit $?
             elif [ $STATUS -ne 0 ]; then
               echo "Error: Migration failed with exit code $STATUS (not a P3005/untracked database error)."
               exit $STATUS
