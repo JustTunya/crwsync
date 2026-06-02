@@ -47,6 +47,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "prisma": "^7.3.0",
     "zustand": "^5.0.10"
   }
 }
