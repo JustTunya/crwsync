@@ -28,7 +28,7 @@ RUN --mount=type=secret,id=DATABASE_URL \
     pnpm --filter @crwsync/backend run prisma:generate && \
     pnpm turbo run build --filter=@crwsync/backend...
 
-RUN pnpm deploy --filter=@crwsync/backend --prod /app/pruned
+RUN pnpm deploy --filter=@crwsync/backend --prod --legacy /app/pruned
 
 # --- RUNNER STAGE ---
 FROM base AS runner
