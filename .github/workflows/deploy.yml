@@ -49,6 +49,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
+        env:
+          DATABASE_URL: "postgresql://mock:mock@localhost:5432/mock"
         run: pnpm --filter @crwsync/backend run prisma:generate
 
       - name: Build common package
@@ -114,6 +116,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm --filter @crwsync/backend run prisma:generate
 
       - name: Build packages and apps on host
