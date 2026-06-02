@@ -1,4 +1,5 @@
 FROM node:20-alpine AS base
+ENV CI=true
 
 # --- BUILDER STAGE ---
 FROM base AS builder
