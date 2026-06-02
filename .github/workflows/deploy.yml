@@ -121,7 +121,9 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ (matrix.app == 'web' || matrix.app == 'dash') && secrets.NEXT_PUBLIC_API_URL || '' }}
             NEXT_PUBLIC_DASH_URL=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DASH_URL || '' }}
             NEXT_PUBLIC_WEB_URL=${{ matrix.app == 'dash' && secrets.NEXT_PUBLIC_WEB_URL || '' }}
-            DATABASE_URL=${{ matrix.app == 'backend' && secrets.DATABASE_URL || '' }}
+          # Expose the database URL using build-time secure context isolation
+          secrets: |
+            ${{ matrix.app == 'backend' && format('DATABASE_URL={0}', secrets.DATABASE_URL) || '' }}
           tags: ghcr.io/${{ secrets.GH_REPO }}/${{ matrix.app }}:${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
