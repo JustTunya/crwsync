@@ -28,24 +28,16 @@ RUN --mount=type=secret,id=DATABASE_URL \
     pnpm --filter @crwsync/backend run prisma:generate && \
     pnpm turbo run build --filter=@crwsync/backend...
 
-RUN pnpm prune --prod --no-optional
+RUN pnpm deploy --filter=@crwsync/backend --prod /app/pruned
 
 # --- RUNNER STAGE ---
 FROM base AS runner
 WORKDIR /app
-
 ENV NODE_ENV=production
 
-COPY --from=installer --chown=node:node /app/node_modules ./node_modules
-COPY --from=installer --chown=node:node /app/apps/backend/node_modules ./apps/backend/node_modules
-
-COPY --from=installer --chown=node:node /app/packages ./packages
-COPY --from=installer --chown=node:node /app/apps/backend/dist ./apps/backend/dist
-COPY --from=installer --chown=node:node /app/apps/backend/prisma ./apps/backend/prisma
-COPY --from=installer --chown=node:node /app/apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
-COPY --from=installer --chown=node:node /app/apps/backend/package.json ./apps/backend/package.json
+COPY --from=installer --chown=node:node /app/pruned ./
 
 USER node
-
 EXPOSE 8080
-CMD ["node", "apps/backend/dist/main.js"]
+
+CMD ["node", "dist/main.js"]
