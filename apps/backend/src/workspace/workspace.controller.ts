@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseUUIDPipe, Req } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseUUIDPipe, Req, Query } from "@nestjs/common";
 import { Request as ExpressRequest } from "express";
 import { Throttle, SkipThrottle } from "@nestjs/throttler";
 import { WorkspaceRoleEnum, Workspace, WorkspaceMember } from "@prisma/client";
@@ -171,5 +171,34 @@ export class WorkspaceController {
     @Body("newOwnerId", new ParseUUIDPipe({ version: "4" })) newOwnerId: string
   ) {
     return this.workspaceService.transferOwnership(workspaceId, user.userId, newOwnerId);
+  }
+
+  @Get(":workspaceId/statistics")
+  @SkipThrottle()
+  @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
+  getStatistics(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Query("interval") interval: string,
+    @ActiveUserParam() user: ActiveUser,
+  ) {
+    return this.workspaceService.getStatistics(workspaceId, user.userId, interval);
+  }
+
+  @Delete(":workspaceId/tasks/:taskId")
+  @UseGuards(IsMemberGuard)
+  deleteTask(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+  ) {
+    return this.workspaceService.deleteTask(workspaceId, taskId);
+  }
+
+  @Post(":workspaceId/tasks/:taskId/archive")
+  @UseGuards(IsMemberGuard)
+  archiveTask(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+  ) {
+    return this.workspaceService.archiveTask(workspaceId, taskId);
   }
 }

@@ -51,7 +51,8 @@ ehthumbs.db
 **/build/**
 **/*.tsbuildinfo
 # Tool caches
-**/.turbo/**
+**/.turbo/cookies/**
+**/.turbo/daemon/**
 **/.nx/**
 **/.cache/**
 **/.parcel-cache/**

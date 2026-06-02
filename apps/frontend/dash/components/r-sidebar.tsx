@@ -307,7 +307,7 @@ function NotificationBellButton({ open, view, isMobile, toggleOpen, setView }: N
         className="size-5 text-foreground"
       />
       {totalBadge > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[14px] h-[14px] px-0.5 text-[9px] font-bold bg-primary text-primary-foreground rounded-full leading-none">
+        <span className="absolute -top-0.75 -right-0.75 flex items-center justify-center min-w-3.5 h-3.5 px-1 text-[10px] font-bold bg-primary text-primary-foreground rounded-full leading-none">
           {totalBadge > 99 ? "99+" : totalBadge}
         </span>
       )}

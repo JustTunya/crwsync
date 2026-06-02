@@ -1,17 +1,18 @@
-import * as React from "react"
+import { ReactNode, ComponentProps } from "react";
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ViewIcon, ViewOffSlashIcon, CheckmarkCircle02Icon, CancelCircleIcon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 
-interface InputProps extends React.ComponentProps<"input"> {
+interface InputProps extends Omit<ComponentProps<"input">, "prefix" | "suffix"> {
   className?: string;
   visible?: boolean;
   setVisible?: () => void;
   validation?: boolean;
   error?: boolean;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
 }
-
-function Input({ className, type, visible, setVisible, validation, error, ...props }: InputProps) {
+function Input({ className, type, visible, setVisible, validation, error, prefix, suffix, ...props }: InputProps) {
   const hasVisibilityIcon = type === "password" && visible !== undefined && setVisible;
   const hasValidationIcon = validation !== undefined;
 
@@ -25,22 +26,26 @@ function Input({ className, type, visible, setVisible, validation, error, ...pro
       error ? "border-error" : "border-foreground/20",
       className
       )}>
-      <input
-        type={type === "password" && visible ? "text" : type}
-        data-slot="input"
-        className={cn(
-          "flex h-9 w-full px-3 text-xs sm:text-sm rounded-md",
-          "placeholder:text-placeholder selection:bg-primary/25 outline-none",
-          "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
-          "file:text-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
-          "aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
-        )}
-        {...props}
-      />
-      <div className={cn("h-9 flex justify-center items-center", (hasVisibilityIcon || hasValidationIcon) && "px-3")}>
-        {hasVisibilityIcon && <HugeiconsIcon icon={visible ? ViewOffSlashIcon : ViewIcon} size={iconSize} strokeWidth={iconWidth} onClick={setVisible} className="cursor-pointer text-primary" />}
-        {hasValidationIcon && <HugeiconsIcon icon={validation ? CheckmarkCircle02Icon : CancelCircleIcon} size={iconSize} strokeWidth={iconWidth} className={cn(validation ? "text-success" : "text-error")} />}
-      </div>
+        {prefix && <div className="h-9 flex justify-center items-center pl-2">{prefix}</div>}
+        <input
+          type={type === "password" && visible ? "text" : type}
+          data-slot="input"
+          className={cn(
+            "flex h-9 w-full px-3 text-xs sm:text-sm rounded-md",
+            "placeholder:text-placeholder selection:bg-primary/25 outline-none",
+            "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+            "file:text-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
+            "aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
+            suffix || hasVisibilityIcon || hasValidationIcon ? "pr-2" : "pr-3",
+            prefix ? "pl-2" : "pl-3"
+          )}
+          {...props}
+        />
+        <div className={cn("h-9 flex justify-center items-center", (hasVisibilityIcon || hasValidationIcon) && "px-3")}>
+          {hasVisibilityIcon && <HugeiconsIcon icon={visible ? ViewOffSlashIcon : ViewIcon} size={iconSize} strokeWidth={iconWidth} onClick={setVisible} className="cursor-pointer text-primary" />}
+          {hasValidationIcon && <HugeiconsIcon icon={validation ? CheckmarkCircle02Icon : CancelCircleIcon} size={iconSize} strokeWidth={iconWidth} className={cn(validation ? "text-success" : "text-error")} />}
+        </div>
+        {suffix && <div className="h-9 flex justify-center items-center pr-2">{suffix}</div>}
     </div>
   )
 }

@@ -16,6 +16,7 @@ import { SidebarProfile } from "@/components/sidebar/SidebarProfile";
 import { SidebarProject } from "@/components/sidebar/SidebarProject";
 import { SectionHeader } from "@/components/sidebar/SectionHeader";
 import { AddModuleModal } from "@/components/add-module-modal";
+import { Shortcut } from "@/components/ui/shortcut";
 import { Input } from "@/components/ui/input";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
@@ -124,8 +125,7 @@ export function LSidebar() {
   const modules = getModules(slug);
 
   useHotkey(["ctrl", "1"], () => router.push(`/${slug}`));
-  useHotkey(["ctrl", "2"], () => router.push(`/${slug}/tasks`));
-  useHotkey(["ctrl", "3"], () => router.push(`/${slug}/schedule`));
+  useHotkey(["ctrl", "2"], () => router.push(`/${slug}/statistics`));
 
   useHotkey(["ctrl", "k"], (e) => {
     e.preventDefault();
@@ -197,14 +197,14 @@ export function LSidebar() {
                 ref={searchRef}
                 placeholder="Search..."
                 className="bg-base-200"
-                // prefix={
-                //   <HugeiconsIcon
-                //     icon={Search01Icon}
-                //     strokeWidth={1.75}
-                //     className="size-4 text-placeholder"
-                //   />
-                // }
-                // suffix={<Shortcut chars={["ctrl", "K"]} />}
+                prefix={
+                  <HugeiconsIcon
+                    icon={Search01Icon}
+                    strokeWidth={1.75}
+                    className="size-4 text-placeholder"
+                  />
+                }
+                suffix={<Shortcut chars={["ctrl", "K"]} />}
               />
             </m.div>
           ) : (

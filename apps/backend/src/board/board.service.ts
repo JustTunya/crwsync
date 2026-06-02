@@ -82,6 +82,10 @@ export class BoardService {
           orderBy: { position: "asc" },
           include: {
             tasks: {
+              where: {
+                is_deleted: false,
+                is_archived: false,
+              },
               orderBy: { position: "asc" },
             },
           },
@@ -153,6 +157,7 @@ export class BoardService {
         board_id: boardId,
         name: dto.name,
         color: dto.color,
+        type: dto.type,
         position: nextPosition,
       },
     });
@@ -235,6 +240,14 @@ export class BoardService {
 
     const shortId = `${updatedWorkspace.workspaceKey}-${updatedWorkspace.taskSequenceCounter}`;
 
+    const targetColumn = await this.prisma.boardColumn.findUnique({
+      where: { id: dto.column_id },
+      select: { type: true },
+    });
+
+    const in_progress_at = targetColumn?.type === "ONGOING" ? new Date() : null;
+    const completed_at = targetColumn?.type === "COMPLETE" ? new Date() : null;
+
     const task = await this.prisma.task.create({
       data: {
         column_id: dto.column_id,
@@ -247,6 +260,8 @@ export class BoardService {
         assignee_id: dto.assignee_id,
         due_date: dto.due_date ? new Date(dto.due_date) : undefined,
         position: nextPosition,
+        in_progress_at,
+        completed_at,
         created_by: userId,
       },
     });
@@ -273,6 +288,12 @@ export class BoardService {
     if (dto.assignee_id !== undefined) data.assignee_id = dto.assignee_id;
     if (dto.due_date !== undefined)
       data.due_date = dto.due_date ? new Date(dto.due_date) : null;
+    if (dto.is_deleted !== undefined) data.is_deleted = dto.is_deleted;
+    if (dto.is_archived !== undefined) data.is_archived = dto.is_archived;
+    if (dto.in_progress_at !== undefined)
+      data.in_progress_at = dto.in_progress_at ? new Date(dto.in_progress_at) : null;
+    if (dto.completed_at !== undefined)
+      data.completed_at = dto.completed_at ? new Date(dto.completed_at) : null;
 
     const task = await this.prisma.task.update({
       where: { id: taskId },
@@ -286,16 +307,6 @@ export class BoardService {
     return { success: true, data: task };
   }
 
-  async deleteTask(workspaceId: string, boardId: string, taskId: string) {
-    await this.prisma.task.delete({ where: { id: taskId } });
-
-    this.statusGateway.server
-      .to(`workspace_${workspaceId}`)
-      .emit("board:task:deleted", { boardId, taskId });
-
-    return { success: true };
-  }
-
   async moveTask(
     workspaceId: string,
     boardId: string,
@@ -305,15 +316,42 @@ export class BoardService {
   ) {
     const task = await this.prisma.task.findUnique({
       where: { id: taskId },
-      select: { column_id: true },
+      select: { column_id: true, in_progress_at: true, completed_at: true },
     });
 
     if (!task) throw new NotFoundException("Task not found");
 
     const fromColumnId = task.column_id;
 
+    // Fetch column types to handle transitions
+    const columns = await this.prisma.boardColumn.findMany({
+      where: { id: { in: [fromColumnId, dto.column_id] } },
+      select: { id: true, type: true },
+    });
+
+    const sourceColumn = columns.find((c) => c.id === fromColumnId);
+    const targetColumn = columns.find((c) => c.id === dto.column_id);
+
+    let in_progress_at = task.in_progress_at;
+    let completed_at = task.completed_at;
+
+    if (targetColumn) {
+      if (targetColumn.type === "ONGOING" && !in_progress_at) {
+        in_progress_at = new Date();
+      }
+      if (targetColumn.type === "COMPLETE") {
+        completed_at = new Date();
+      }
+      if (
+        sourceColumn?.type === "COMPLETE" &&
+        (targetColumn.type === "ONGOING" || targetColumn.type === "UPCOMING")
+      ) {
+        completed_at = null;
+      }
+    }
+
     const tasksInTarget = await this.prisma.task.findMany({
-      where: { column_id: dto.column_id },
+      where: { column_id: dto.column_id, is_deleted: false, is_archived: false },
       orderBy: { position: "asc" },
       select: { id: true },
     });
@@ -324,7 +362,11 @@ export class BoardService {
     await this.prisma.$transaction([
       this.prisma.task.update({
         where: { id: taskId },
-        data: { column_id: dto.column_id },
+        data: {
+          column_id: dto.column_id,
+          in_progress_at,
+          completed_at,
+        },
       }),
       ...filtered.map((t, index) =>
         this.prisma.task.update({
@@ -464,6 +506,8 @@ export class BoardService {
     const tasks = await this.prisma.task.findMany({
       where: {
         column: { board_id: { in: boardIds } },
+        is_deleted: false,
+        is_archived: false,
         OR: [
           { title: { contains: query, mode: "insensitive" } },
           { shortId: { contains: query, mode: "insensitive" } },

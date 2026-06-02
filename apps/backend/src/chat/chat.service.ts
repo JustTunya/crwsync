@@ -156,18 +156,11 @@ export class ChatService {
     roomId: string,
     senderId: string,
     dto: SendMessageDto,
+    messageId?: string,
   ) {
-    const room = await this.prisma.chatRoom.findUnique({
-      where: { id: roomId },
-      select: { id: true, workspace_id: true },
-    });
-
-    if (!room || room.workspace_id !== workspaceId) {
-      throw new NotFoundException("Chat room not found");
-    }
-
     const message = await this.prisma.chatMessage.create({
       data: {
+        ...(messageId ? { id: messageId } : {}),
         workspace_id: workspaceId,
         room_id: roomId,
         sender_id: senderId,
@@ -408,19 +401,6 @@ export class ChatService {
     userId: string,
     messageId: string,
   ) {
-    const message = await this.prisma.chatMessage.findUnique({
-      where: { id: messageId },
-      select: { room_id: true, workspace_id: true },
-    });
-
-    if (
-      !message ||
-      message.room_id !== roomId ||
-      message.workspace_id !== workspaceId
-    ) {
-      throw new NotFoundException("Message not found");
-    }
-
     const receipt = await this.prisma.chatReadReceipt.upsert({
       where: {
         room_id_user_id: {
