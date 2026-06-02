@@ -23,6 +23,7 @@ COPY --from=builder /app/.turbo/cache /app/.turbo/cache
 COPY turbo.json turbo.json
 COPY tsconfig.json tsconfig.json
 COPY tsconfig.base.json tsconfig.base.json
+
 RUN pnpx prisma generate --schema=apps/backend/prisma/schema.prisma && \
     pnpm turbo run build --filter=@crwsync/backend...
 
