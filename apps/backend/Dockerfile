@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:26-alpine AS base
 ENV CI=true
 
 # --- BUILDER STAGE ---
@@ -29,6 +29,12 @@ RUN --mount=type=secret,id=DATABASE_URL \
     pnpm turbo run build --filter=@crwsync/backend...
 
 RUN pnpm deploy --filter=@crwsync/backend --prod --legacy /app/pruned
+
+RUN rm -f pnpm-workspace.yaml
+RUN --mount=type=secret,id=DATABASE_URL \
+    cd /app/pruned && \
+    DATABASE_URL=$(cat /run/secrets/DATABASE_URL) \
+    npx prisma generate --config=prisma.config.ts
 
 # --- RUNNER STAGE ---
 FROM base AS runner
