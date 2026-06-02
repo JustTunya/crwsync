@@ -12,12 +12,10 @@ FROM base AS installer
 WORKDIR /app
 RUN corepack enable
 
-# First install dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN pnpm install --frozen-lockfile
 
-# Build the project and its dependencies
 COPY --from=builder /app/out/full/ .
 COPY --from=builder /app/.turbo/cache /app/.turbo/cache
 COPY turbo.json turbo.json
@@ -29,24 +27,20 @@ RUN --mount=type=secret,id=DATABASE_URL \
     pnpm --filter @crwsync/backend run prisma:generate && \
     pnpm turbo run build --filter=@crwsync/backend...
 
+RUN pnpm prune --prod --no-optional
+
 # --- RUNNER STAGE ---
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/out/json/ .
-COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-RUN corepack enable && \
-    pnpm install --prod --frozen-lockfile
-
+COPY --from=installer --chown=node:node /app/node_modules ./node_modules
+COPY --from=installer --chown=node:node /app/packages ./packages
+COPY --from=installer --chown=node:node /app/apps/backend/dist ./apps/backend/dist
 COPY --from=installer --chown=node:node /app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=installer --chown=node:node /app/apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
-
-COPY --from=installer --chown=node:node /app/apps/backend/dist ./apps/backend/dist
-COPY --from=installer --chown=node:node /app/packages/types/dist ./packages/types/dist
-COPY --from=installer --chown=node:node /app/packages/types/package.json ./packages/types/package.json
-COPY --from=builder --chown=node:node /app/packages/templates ./packages/templates
+COPY --from=installer --chown=node:node /app/apps/backend/package.json ./apps/backend/package.json
 
 USER node
 
