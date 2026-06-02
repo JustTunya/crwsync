@@ -42,7 +42,6 @@ RUN corepack enable && \
 
 COPY --from=installer --chown=node:node /app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=installer --chown=node:node /app/apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
-RUN pnpm --filter @crwsync/backend run prisma:generate
 
 COPY --from=installer --chown=node:node /app/apps/backend/dist ./apps/backend/dist
 COPY --from=installer --chown=node:node /app/packages/types/dist ./packages/types/dist
