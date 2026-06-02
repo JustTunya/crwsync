@@ -24,7 +24,9 @@ COPY turbo.json turbo.json
 COPY tsconfig.json tsconfig.json
 COPY tsconfig.base.json tsconfig.base.json
 
-RUN pnpm --filter @crwsync/backend run prisma:generate && \
+RUN --mount=type=secret,id=DATABASE_URL \
+    DATABASE_URL=$(cat /run/secrets/DATABASE_URL) \
+    pnpm --filter @crwsync/backend run prisma:generate && \
     pnpm turbo run build --filter=@crwsync/backend...
 
 # --- RUNNER STAGE ---
