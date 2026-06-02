@@ -241,39 +241,7 @@ jobs:
           docker pull ${BACKEND_IMAGE} || true
 
       - name: Run database migrations
-        run: |
-          docker run --rm -e DATABASE_URL="${DATABASE_URL}" ${BACKEND_IMAGE} /bin/sh -c '
-            echo "Attempting to run database migrations..."
-            OUTPUT=$(npx prisma migrate deploy --config apps/backend/prisma.config.ts 2>&1)
-            STATUS=$?
-            echo "$OUTPUT"
-            
-            if [ $STATUS -ne 0 ] && (echo "$OUTPUT" | grep -q "P3005" || echo "$OUTPUT" | grep -q "The database schema is not empty"); then
-              echo "Warning: Database has existing tables but is untracked by Prisma (_prisma_migrations is missing)."
-              echo "Dynamically resolving the baseline migration to establish tracking..."
-              
-              FIRST_PATH=$(ls -d apps/backend/prisma/migrations/*/ 2>/dev/null | head -n 1)
-              if [ -z "$FIRST_PATH" ]; then
-                echo "Error: No migrations found in apps/backend/prisma/migrations to baseline."
-                exit 1
-              fi
-              
-              FIRST_MIGRATION=${FIRST_PATH%/}
-              FIRST_MIGRATION=${FIRST_MIGRATION##*/}
-              echo "Earliest migration identified: $FIRST_MIGRATION"
-              
-              echo "Resolving baseline migration: $FIRST_MIGRATION"
-              npx prisma migrate resolve --applied "$FIRST_MIGRATION" --config apps/backend/prisma.config.ts || exit $?
-              
-              echo "Retrying migration deployment..."
-              npx prisma migrate deploy --config apps/backend/prisma.config.ts || exit $?
-            elif [ $STATUS -ne 0 ]; then
-              echo "Error: Migration failed with exit code $STATUS (not a P3005/untracked database error)."
-              exit $STATUS
-            else
-              echo "Migrations applied successfully."
-            fi
-          '
+        run: docker run --rm -e DATABASE_URL="${DATABASE_URL}" ${BACKEND_IMAGE} npx prisma migrate deploy --config apps/backend/prisma.config.ts
 
       - name: Remove old stack if exists
         run: docker stack rm crwsync || true
