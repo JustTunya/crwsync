@@ -1,17 +1,16 @@
 FROM node:26-alpine AS base
 ENV CI=true
+RUN npm install -g pnpm
 
 # --- BUILDER STAGE ---
 FROM base AS builder
 WORKDIR /app
-RUN corepack enable
 COPY . .
 RUN mkdir -p .turbo/cache && pnpm dlx turbo prune @crwsync/backend --docker
 
 # --- INSTALLER STAGE ---
 FROM base AS installer
 WORKDIR /app
-RUN corepack enable
 
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
