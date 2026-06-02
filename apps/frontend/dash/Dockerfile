@@ -5,8 +5,7 @@ FROM base AS builder
 WORKDIR /app
 RUN corepack enable
 COPY . .
-RUN mkdir -p .turbo/cache
-RUN pnpm dlx turbo prune @crwsync/dash --docker
+RUN mkdir -p .turbo/cache && pnpm dlx turbo prune @crwsync/dash --docker
 
 # --- INSTALLER STAGE ---
 FROM base AS installer
