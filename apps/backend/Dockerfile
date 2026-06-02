@@ -30,11 +30,10 @@ RUN --mount=type=secret,id=DATABASE_URL \
 
 RUN pnpm deploy --filter=@crwsync/backend --prod --legacy /app/pruned
 
-RUN rm -f pnpm-workspace.yaml
+WORKDIR /app/pruned
 RUN --mount=type=secret,id=DATABASE_URL \
-    cd /app/pruned && \
-    DATABASE_URL=$(cat /run/secrets/DATABASE_URL) \
-    npx prisma generate --config=prisma.config.ts
+    rm -f /app/pnpm-workspace.yaml && \
+    DATABASE_URL=$(cat /run/secrets/DATABASE_URL) npx prisma generate --config=prisma.config.ts
 
 # --- RUNNER STAGE ---
 FROM base AS runner
