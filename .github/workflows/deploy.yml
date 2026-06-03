@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   test:
-    name: 🧪 Lint, Test & Scan
+    name: 🧪 Lint & Test (Node)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,30 +54,37 @@ jobs:
         run: pnpm --filter @crwsync/backend run prisma:generate
 
       - name: Build common package
-        run: pnpm run build --filter="@crwsync/types" --filter="@crwsync/styles"
+        run: pnpm turbo run build --filter="@crwsync/types" --filter="@crwsync/styles"
 
-      - name: Lint project
-        run: pnpm run lint
+      - name: Lint & Test project
+        run: pnpm turbo run lint test
 
-      - name: Test project
-        run: pnpm run test
-
-      - name: Lint web (frontend) Dockerfiles
-        uses: hadolint/hadolint-action@master
+  lint-docker:
+    name: 🐳 Lint Dockerfiles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
         with:
-          dockerfile: apps/frontend/web/Dockerfile
+          fetch-depth: 1
 
-      - name: Lint dash (frontend) Dockerfiles
-        uses: hadolint/hadolint-action@master
+      - name: Install Hadolint
+        run: |
+          sudo curl -L -o /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-amd64
+          sudo chmod +x /usr/local/bin/hadolint
+
+      - name: Lint all Dockerfiles
+        run: |
+          hadolint apps/frontend/web/Dockerfile apps/frontend/dash/Dockerfile apps/backend/Dockerfile
+
+  scan-security:
+    name: 🛡️ Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
         with:
-          dockerfile: apps/frontend/dash/Dockerfile
+          fetch-depth: 1
 
-      - name: Lint backend Dockerfiles
-        uses: hadolint/hadolint-action@master
-        with:
-          dockerfile: apps/backend/Dockerfile
-
-      - name: Scan images for vulnerabilities
+      - name: Scan codebase for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
@@ -86,7 +93,7 @@ jobs:
   build:
     name: 🛠️ Build & Push ${{ matrix.app }}
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, lint-docker, scan-security]
     strategy:
       fail-fast: false
       matrix:
@@ -175,9 +182,10 @@ jobs:
 
       - name: Pull images (warm)
         run: |
-          docker pull ${WEB_IMAGE} || true
-          docker pull ${DASH_IMAGE} || true
-          docker pull ${BACKEND_IMAGE} || true
+          docker pull ${WEB_IMAGE} &
+          docker pull ${DASH_IMAGE} &
+          docker pull ${BACKEND_IMAGE} &
+          wait
 
       - name: Run database migrations
         run: |
