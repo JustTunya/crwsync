@@ -1,23 +1,20 @@
-FROM node:20-alpine AS base
+FROM node:26-alpine AS base
+RUN npm install -g pnpm@11.5.1
 
 # --- BUILDER STAGE ---
 FROM base AS builder
 WORKDIR /app
-RUN corepack enable
 COPY . .
 RUN mkdir -p .turbo/cache && pnpm dlx turbo prune @crwsync/dash --docker
 
 # --- INSTALLER STAGE ---
 FROM base AS installer
 WORKDIR /app
-RUN corepack enable
 
-# First install dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN pnpm install --frozen-lockfile
 
-# Build the project and its dependencies
 COPY --from=builder /app/out/full/ .
 COPY --from=builder /app/.turbo/cache /app/.turbo/cache
 COPY turbo.json turbo.json

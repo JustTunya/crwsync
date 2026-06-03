@@ -1,6 +1,6 @@
 FROM node:26-alpine AS base
+RUN npm install -g pnpm@11.5.1
 ENV CI=true
-RUN npm install -g pnpm@10.29.3
 
 # --- BUILDER STAGE ---
 FROM base AS builder
