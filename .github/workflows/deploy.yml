@@ -46,7 +46,7 @@ jobs:
             ${{ runner.os }}-turbo-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Generate Prisma Client
         env:
@@ -116,6 +116,44 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Cache Next/Turbo build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next-cache-${{ matrix.app }}
+            .turbo-cache-${{ matrix.app }}
+          key: ${{ runner.os }}-build-cache-${{ matrix.app }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-cache-${{ matrix.app }}-
+
+      - name: Inject Cache Mounts into Docker Buildx
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.1
+        with:
+          cache-map: |
+            {
+              "~/.pnpm-store": {
+                "target": "/pnpm/store",
+                "id": "pnpm"
+              },
+              ".turbo-cache-${{ matrix.app }}": {
+                "target": "/app/node_modules/.cache/turbo",
+                "id": "turbo"
+              },
+              ".next-cache-${{ matrix.app }}": {
+                "target": "/app/apps/frontend/${{ matrix.app }}/.next/cache",
+                "id": "next-${{ matrix.app }}"
+              }
+            }
+          skip-extraction: false
 
       - name: Build & Push Image
         uses: docker/build-push-action@v5
