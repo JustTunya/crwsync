@@ -243,7 +243,7 @@ jobs:
 
       - name: Deploy stack
         run: |
-          docker stack deploy --with-registry-auth --detach=false -c stack.yml crwsync
+          docker stack deploy --with-registry-auth --detach=true -c stack.yml crwsync
 
       - name: Verify services
         run: docker service ls
