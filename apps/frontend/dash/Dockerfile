@@ -1,11 +1,15 @@
 FROM node:26-alpine AS base
 RUN npm install -g pnpm@11.5.1
+ENV PNPM_HOME="/pnpm"
+ENV PATH="${PNPM_HOME}:${PATH}"
+RUN pnpm config set store-dir /pnpm/store
 
 # --- BUILDER STAGE ---
 FROM base AS builder
 WORKDIR /app
 COPY . .
-RUN mkdir -p .turbo/cache && pnpm dlx turbo prune @crwsync/dash --docker
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    mkdir -p .turbo/cache && pnpm dlx turbo prune @crwsync/dash --docker
 
 # --- INSTALLER STAGE ---
 FROM base AS installer
@@ -13,7 +17,8 @@ WORKDIR /app
 
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 COPY --from=builder /app/.turbo/cache /app/.turbo/cache
@@ -27,7 +32,9 @@ ENV NODE_ENV=production
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL}
 
-RUN pnpm turbo run build --filter=@crwsync/dash...
+RUN --mount=type=cache,id=turbo,target=/app/node_modules/.cache/turbo \
+    --mount=type=cache,id=next-dash,target=/app/apps/frontend/dash/.next/cache \
+    pnpm turbo run build --filter=@crwsync/dash...
 
 # --- RUNNER STAGE ---
 FROM base AS runner

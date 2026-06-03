@@ -1,12 +1,16 @@
 FROM node:26-alpine AS base
 RUN npm install -g pnpm@11.5.1
 ENV CI=true
+ENV PNPM_HOME="/pnpm"
+ENV PATH="${PNPM_HOME}:${PATH}"
+RUN pnpm config set store-dir /pnpm/store
 
 # --- BUILDER STAGE ---
 FROM base AS builder
 WORKDIR /app
 COPY . .
-RUN mkdir -p .turbo/cache && pnpm dlx turbo prune @crwsync/backend --docker
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    mkdir -p .turbo/cache && pnpm dlx turbo prune @crwsync/backend --docker
 
 # --- INSTALLER STAGE ---
 FROM base AS installer
@@ -14,7 +18,8 @@ WORKDIR /app
 
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 COPY --from=builder /app/.turbo/cache /app/.turbo/cache
@@ -23,14 +28,17 @@ COPY tsconfig.json tsconfig.json
 COPY tsconfig.base.json tsconfig.base.json
 
 RUN --mount=type=secret,id=DATABASE_URL \
+    --mount=type=cache,id=turbo,target=/app/node_modules/.cache/turbo \
     DATABASE_URL=$(cat /run/secrets/DATABASE_URL) \
     pnpm --filter @crwsync/backend run prisma:generate && \
     pnpm turbo run build --filter=@crwsync/backend...
 
-RUN pnpm deploy --filter=@crwsync/backend --prod --legacy /app/pruned
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm deploy --filter=@crwsync/backend --prod --legacy /app/pruned
 
 WORKDIR /app/pruned
 RUN --mount=type=secret,id=DATABASE_URL \
+    --mount=type=cache,id=pnpm,target=/pnpm/store \
     rm -f /app/pnpm-workspace.yaml && \
     DATABASE_URL=$(cat /run/secrets/DATABASE_URL) npx prisma generate --config=prisma.config.ts
 
