@@ -95,7 +95,7 @@ jobs:
 
   build:
     name: 🛠️ Build & Push ${{ matrix.app }}
-    runs-on: [ self-hosted, linux, x64 ]
+    runs-on: ubuntu-latest
     needs: [test, lint-docker, scan-security]
     strategy:
       fail-fast: false
