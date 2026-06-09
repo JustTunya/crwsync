@@ -1,8 +1,15 @@
+import { Suspense } from "react";
+import { HomeDashboard } from "./home-dashboard";
+
+export const metadata = {
+  title: "Home | crwsync",
+  description: "Your workspace dashboard — personal metrics, shared modules, and boards at a glance.",
+};
+
 export default function HomePage() {
   return (
-    <div className="size-full flex flex-col items-center justify-center">
-      <h1 className="text-2xl font-semibold mb-4">Home</h1>
-      <p>This is the home page.</p>
-    </div>
+    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground animate-pulse">Loading dashboard...</div>}>
+      <HomeDashboard />
+    </Suspense>
   );
 }

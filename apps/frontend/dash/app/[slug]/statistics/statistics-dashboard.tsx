@@ -194,7 +194,7 @@ export function StatisticsDashboard({
       <header className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200">
         <div>
           <h1 className="text-lg font-semibold text-foreground">Statistics</h1>
-          <p className="text-sm text-muted-foreground leading-tight">
+          <p className="text-sm text-muted-foreground leading-4 font-mono">
             Personal metrics &amp; workspace activity
           </p>
         </div>
