@@ -8,7 +8,9 @@ import {
   IsDateString,
   IsInt,
   IsBoolean,
+  ValidateNested,
 } from "class-validator";
+import { Type } from "class-transformer";
 import { TaskPriorityEnum, ColumnType } from "@prisma/client";
 
 export class CreateBoardDto {
@@ -19,6 +21,10 @@ export class CreateBoardDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsUUID("4")
+  @IsOptional()
+  project_id?: string;
 }
 
 export class UpdateBoardDto {
@@ -158,10 +164,39 @@ export class ReorderColumnsDto {
   column_ids!: string[];
 }
 
+export class ReorderModuleUpdateDto {
+  @IsUUID("4")
+  id!: string;
+
+  @IsUUID("4")
+  @IsOptional()
+  project_id?: string | null;
+
+  @IsInt()
+  position!: number;
+}
+
 export class ReorderModulesDto {
   @IsArray()
-  @IsUUID("4", { each: true })
-  module_ids!: string[];
+  @ValidateNested({ each: true })
+  @Type(() => ReorderModuleUpdateDto)
+  updates!: ReorderModuleUpdateDto[];
+}
+
+export class CreateProjectDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+}
+
+export class UpdateProjectDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsInt()
+  @IsOptional()
+  position?: number;
 }
 
 export class UpdateModuleDto {

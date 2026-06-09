@@ -36,7 +36,15 @@ const MODULE_OPTIONS: ModuleOption[] = [
   },
 ];
 
-export function AddModuleModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function AddModuleModal({ 
+  isOpen, 
+  onClose,
+  projectId
+}: { 
+  isOpen: boolean; 
+  onClose: () => void;
+  projectId?: string;
+}) {
   const { activeWorkspace } = useWorkspace();
   const createBoard = useCreateBoard(activeWorkspace?.id || "");
   const createChatRoom = useCreateChatRoom(activeWorkspace?.id || "");
@@ -62,9 +70,9 @@ export function AddModuleModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
     try {
       if (selectedType === ModuleType.BOARD) {
-        await createBoard.mutateAsync({ name: name.trim() });
+        await createBoard.mutateAsync({ name: name.trim(), project_id: projectId });
       } else if (selectedType === ModuleType.CHAT) {
-        await createChatRoom.mutateAsync({ name: name.trim() });
+        await createChatRoom.mutateAsync({ name: name.trim(), project_id: projectId });
       }
       handleClose();
     } catch (error) {

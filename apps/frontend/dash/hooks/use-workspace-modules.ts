@@ -34,9 +34,14 @@ export function useReorderModules(workspaceId: string) {
         (old: { data: WorkspaceModule[] } | undefined) => {
           if (!old?.data) return old;
           const moduleMap = new Map(old.data.map((m) => [m.id, m]));
-          const reordered = data.module_ids
-            .map((id) => moduleMap.get(id))
-            .filter(Boolean) as WorkspaceModule[];
+          data.updates.forEach((update) => {
+            const mod = moduleMap.get(update.id);
+            if (mod) {
+              mod.position = update.position;
+              mod.project_id = update.project_id;
+            }
+          });
+          const reordered = Array.from(moduleMap.values()).sort((a, b) => a.position - b.position);
           return { ...old, data: reordered };
         },
       );

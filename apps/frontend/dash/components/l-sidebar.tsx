@@ -7,7 +7,7 @@ import { m, AnimatePresence, Transition, LazyMotion, domAnimation } from "framer
 import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon, Menu05Icon, ZapIcon } from "@hugeicons/core-free-icons";
+import { Search01Icon, Menu05Icon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { getModules, getModuleIcon, getModuleHref, isModuleActive } from "@/lib/sidebar.utils";
 import { SidebarModule, SidebarGlobalModule, SidebarNoModule } from "@/components/sidebar/SidebarModule";
@@ -22,6 +22,8 @@ import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
 import { useUserStatus } from "@/hooks/use-user-status";
 import { useModuleDnd } from "@/hooks/use-module-dnd";
+import { useWorkspaceProjects, useCreateProject } from "@/hooks/use-workspace-projects";
+import { SidebarDroppable } from "@/components/sidebar/SidebarDroppable";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useUser } from "@/providers/user.provider";
 import { useSocket } from "@/providers/socket.provider";
@@ -29,7 +31,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useWorkspaceModules, useReorderModules, moduleKeys } from "@/hooks/use-workspace-modules";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
-import { WorkspaceModule } from "@crwsync/types";
+import { WorkspaceModule, WorkspaceProject } from "@crwsync/types";
 
 const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 const fading: Transition = { duration: 0.15, ease: [0.4, 0, 0.2, 1] };
@@ -51,16 +53,28 @@ export function LSidebar() {
 
   const slug = activeWorkspace?.slug || "";
   const [addModuleOpen, setAddModuleOpen] = useState(false);
+  const [addModuleProjectId, setAddModuleProjectId] = useState<string | undefined>();
   const { data: wsModules } = useWorkspaceModules(activeWorkspace?.id);
+  const { data: projects } = useWorkspaceProjects(activeWorkspace?.id);
+  const createProject = useCreateProject(activeWorkspace?.id || "");
   const reorderModules = useReorderModules(activeWorkspace?.id || "");
 
   const [prevWsModules, setPrevWsModules] = useState(wsModules);
   const [localModules, setLocalModules] = useState(wsModules);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
 
   if (wsModules !== prevWsModules) {
     setPrevWsModules(wsModules);
     setLocalModules(wsModules);
   }
+
+  const handleCreateProject = () => {
+    createProject.mutate({ name: "New Project" }, {
+      onSuccess: (res) => {
+        setEditingProjectId(res.data.id);
+      }
+    });
+  };
 
   useEffect(() => {
     if (!socket || !activeWorkspace?.id) return;
@@ -115,7 +129,7 @@ export function LSidebar() {
     }
   }, [pathname, localModules, activeWorkspace?.id, queryClient, slug]);
 
-  const { activeId, sensors, handleDragStart, handleDragEnd } = useModuleDnd(
+  const { activeId, sensors, handleDragStart, handleDragOver, handleDragEnd } = useModuleDnd(
     localModules,
     setLocalModules,
     activeWorkspace?.id,
@@ -242,44 +256,109 @@ export function LSidebar() {
           {/* DIVIDER */}
           <div className="h-px w-full bg-base-200 rounded-full" />
 
-          {/* SHARED */}
-          <div className="flex flex-col">
-            <SectionHeader
-              label="Shared"
-              extended={open}
-              onAdd={() => setAddModuleOpen(true)}
-            />
+          {/* MODULES & PROJECTS WITH SHARED DND CONTEXT */}
+          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden min-h-0">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
-              <SortableContext
-                items={localModules?.map((m) => m.id) || []}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="flex flex-col">
-                  {localModules && localModules.length > 0 ? (
-                    localModules.map((mod) => (
-                      <SidebarModule
-                        key={mod.id}
-                        id={mod.id}
-                        activeWorkspaceId={activeWorkspace!.id}
-                        icon={getModuleIcon(mod.type)}
-                        name={mod.name}
-                        href={getModuleHref(slug, mod)}
-                        active={isModuleActive(pathname, slug, mod)}
-                        extended={open}
-                        unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
-                      />
-                    ))
-                  ) : (
-                    <SidebarNoModule message="No shared modules yet." extended={open} />
-                  )}
-                </div>
-              </SortableContext>
-              
+              <div className="flex flex-col shrink-0">
+                <SectionHeader
+                  label="Shared"
+                  extended={open}
+                  onAdd={() => {
+                    setAddModuleProjectId(undefined);
+                    setAddModuleOpen(true);
+                  }}
+                />
+                <SidebarDroppable id="shared" className="flex flex-col min-h-[10px]">
+                  <SortableContext
+                    items={localModules?.filter(m => m.project_id === null).map((m) => m.id) || []}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {localModules && localModules.filter(m => m.project_id === null).length > 0 ? (
+                      localModules
+                        .filter(m => m.project_id === null)
+                        .map((mod) => (
+                        <SidebarModule
+                          key={mod.id}
+                          id={mod.id}
+                          activeWorkspaceId={activeWorkspace!.id}
+                          icon={getModuleIcon(mod.type)}
+                          name={mod.name}
+                          href={getModuleHref(slug, mod)}
+                          active={isModuleActive(pathname, slug, mod)}
+                          extended={open}
+                          unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
+                        />
+                      ))
+                    ) : (
+                      <SidebarNoModule message="Drag modules here" extended={open} />
+                    )}
+                  </SortableContext>
+                </SidebarDroppable>
+              </div>
+
+              {/* DIVIDER */}
+              <div className="h-px w-full bg-base-200 rounded-full my-4 shrink-0" />
+
+              {/* PROJECTS */}
+              <div className="flex flex-col pb-4">
+                <SectionHeader 
+                  label="Projects" 
+                  extended={open} 
+                  onAdd={handleCreateProject} 
+                />
+                {projects?.map((project: WorkspaceProject) => {
+                  const projectModules = localModules?.filter(m => m.project_id === project.id) || [];
+                  const isActiveContext = projectModules.some(m => isModuleActive(pathname, slug, m));
+                  
+                  return (
+                    <SidebarProject 
+                      key={project.id} 
+                      project={project} 
+                      activeWorkspaceId={activeWorkspace!.id}
+                      extended={open}
+                      isActiveContext={isActiveContext}
+                      isNewlyCreated={editingProjectId === project.id}
+                      onEditComplete={() => {
+                        if (editingProjectId === project.id) setEditingProjectId(null);
+                      }}
+                      onAddModule={() => {
+                        setAddModuleProjectId(project.id);
+                        setAddModuleOpen(true);
+                      }}
+                    >
+                      <SortableContext
+                        items={projectModules.map(m => m.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {projectModules.length > 0 ? (
+                          projectModules.map((mod) => (
+                            <SidebarModule
+                              key={mod.id}
+                              id={mod.id}
+                              activeWorkspaceId={activeWorkspace!.id}
+                              icon={getModuleIcon(mod.type)}
+                              name={mod.name}
+                              href={getModuleHref(slug, mod)}
+                              active={isModuleActive(pathname, slug, mod)}
+                              extended={open}
+                              unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
+                            />
+                          ))
+                        ) : (
+                          <SidebarNoModule message="Empty project" extended={open} />
+                        )}
+                      </SortableContext>
+                    </SidebarProject>
+                  );
+                })}
+              </div>
+
               {typeof window !== "undefined" && createPortal(
                 <DragOverlay dropAnimation={null}>
                   {activeId ? (() => {
@@ -308,16 +387,8 @@ export function LSidebar() {
           <AddModuleModal
             isOpen={addModuleOpen}
             onClose={() => setAddModuleOpen(false)}
+            projectId={addModuleProjectId}
           />
-
-          {/* DIVIDER */}
-          <div className="h-px w-full bg-base-200 rounded-full" />
-
-          {/* PROJECTS */}
-          <div className="flex flex-col">
-            <SectionHeader label="Projects" extended={open} />
-            <SidebarProject icon={ZapIcon} name="Demo project" extended={open} />
-          </div>
 
           {/* PROFILE */}
           <SidebarProfile

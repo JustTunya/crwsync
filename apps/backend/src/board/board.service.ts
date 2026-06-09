@@ -48,6 +48,7 @@ export class BoardService {
       const wsModule = await tx.workspaceModule.create({
         data: {
           workspace_id: workspaceId,
+          project_id: dto.project_id || null,
           type: ModuleTypeEnum.BOARD,
           reference_id: board.id,
           name: dto.name,
@@ -445,17 +446,20 @@ export class BoardService {
 
   async reorderModules(workspaceId: string, dto: ReorderModulesDto) {
     await this.prisma.$transaction(
-      dto.module_ids.map((id, index) =>
+      dto.updates.map((update) =>
         this.prisma.workspaceModule.update({
-          where: { id },
-          data: { position: (index + 1) * POSITION_GAP },
+          where: { id: update.id },
+          data: {
+            position: update.position * POSITION_GAP,
+            project_id: update.project_id || null,
+          },
         }),
       ),
     );
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
-      .emit("module:reordered", { moduleIds: dto.module_ids });
+      .emit("module:reordered", { updates: dto.updates });
 
     return { success: true };
   }
@@ -564,6 +568,77 @@ export class BoardService {
         .to(`workspace_${workspaceId}`)
         .emit("module:deleted", { moduleId });
     }
+
+    return { success: true };
+  }
+
+  async createProject(workspaceId: string, dto: { name: string }) {
+    const lastProject = await this.prisma.workspaceProject.findFirst({
+      where: { workspace_id: workspaceId },
+      orderBy: { position: "desc" },
+      select: { position: true },
+    });
+
+    const nextPosition = (lastProject?.position ?? 0) + POSITION_GAP;
+
+    const project = await this.prisma.workspaceProject.create({
+      data: {
+        workspace_id: workspaceId,
+        name: dto.name,
+        position: nextPosition,
+      },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("project:created", project);
+
+    return { success: true, data: project };
+  }
+
+  async getWorkspaceProjects(workspaceId: string) {
+    const projects = await this.prisma.workspaceProject.findMany({
+      where: { workspace_id: workspaceId },
+      orderBy: { position: "asc" },
+    });
+
+    return { success: true, data: projects };
+  }
+
+  async updateProject(
+    workspaceId: string,
+    projectId: string,
+    dto: { name?: string; position?: number },
+  ) {
+    const project = await this.prisma.workspaceProject.update({
+      where: { id: projectId },
+      data: dto,
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("project:updated", { projectId, data: dto });
+
+    return { success: true, data: project };
+  }
+
+  async deleteProject(workspaceId: string, projectId: string) {
+    const modulesInProject = await this.prisma.workspaceModule.findMany({
+      where: { project_id: projectId },
+      select: { id: true },
+    });
+
+    for (const mod of modulesInProject) {
+      await this.deleteModule(workspaceId, mod.id);
+    }
+
+    await this.prisma.workspaceProject.delete({
+      where: { id: projectId },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("project:deleted", { projectId });
 
     return { success: true };
   }

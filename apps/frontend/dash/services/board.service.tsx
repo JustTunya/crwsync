@@ -304,7 +304,7 @@ export async function reorderModules(
   data: ReorderModulesPayload,
 ): Promise<BoardOperationState> {
   try {
-    await api.put(`${MODULE_BASE(workspaceId)}/reorder`, data);
+    await api.put(`/workspaces/${workspaceId}/modules/reorder`, data);
     return { success: true };
   } catch (error) {
     if (isAxiosError(error)) {

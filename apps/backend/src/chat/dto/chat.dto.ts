@@ -12,6 +12,10 @@ export class CreateChatRoomDto {
   @IsString()
   @IsNotEmpty()
   name!: string;
+
+  @IsUUID("4")
+  @IsOptional()
+  project_id?: string;
 }
 
 export class SendMessageDto {

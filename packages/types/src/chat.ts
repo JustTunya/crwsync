@@ -57,6 +57,7 @@ export interface ChatMessage {
 
 export interface CreateChatRoomPayload {
   name: string;
+  project_id?: string;
 }
 
 export interface SendMessagePayload {
