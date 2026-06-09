@@ -7,19 +7,16 @@ export const metadata = {
 };
 
 export default async function StatisticsPage({
-  params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ interval?: string }>;
 }) {
-  const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
 
   return (
-    <Suspense>
+    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground animate-pulse">Loading statistics...</div>}>
       <StatisticsDashboard 
-        slug={resolvedParams.slug}
         initialInterval={resolvedSearchParams.interval} 
       />
     </Suspense>
