@@ -88,6 +88,7 @@ model User {
   mentioned_in        ChatMessage[]       @relation("MessageMentions")
   message_reactions   MessageReaction[]
   chat_read_receipts  ChatReadReceipt[]
+  pinned_modules      UserPinnedModule[]
 
   @@map("users")
 }
@@ -273,6 +274,8 @@ model WorkspaceModule {
   project_id   String?        @db.Uuid
   project      WorkspaceProject? @relation(fields: [project_id], references: [id], onDelete: Cascade)
 
+  pinned_by_users UserPinnedModule[]
+
   @@unique([workspace_id, reference_id], map: "idx_workspace_module_unique")
   @@index([workspace_id], map: "idx_workspace_module_workspace_id")
   @@map("workspace_modules")
@@ -367,4 +370,18 @@ model ChatReadReceipt {
   @@index([user_id], map: "idx_chat_read_receipt_user_id")
   @@index([message_id], map: "idx_chat_read_receipt_message_id")
   @@map("chat_read_receipts")
+}
+
+model UserPinnedModule {
+  id           String   @id @default(uuid()) @db.Uuid
+  user_id      String   @db.Uuid
+  module_id    String   @db.Uuid
+  created_at   DateTime @default(now()) @db.Timestamptz
+
+  user         User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  module       WorkspaceModule @relation(fields: [module_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, module_id], map: "idx_user_pinned_module_unique")
+  @@index([user_id], map: "idx_user_pinned_module_user_id")
+  @@map("user_pinned_modules")
 }

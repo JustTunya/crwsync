@@ -223,6 +223,16 @@ export class ModuleController {
   ) {
     return this.boardService.deleteModule(workspaceId, moduleId);
   }
+
+  @Post(":moduleId/pin")
+  togglePin(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("moduleId", new ParseUUIDPipe({ version: "4" })) moduleId: string,
+    @ActiveUserParam() user: ActiveUser,
+    @Body("isPinned") isPinned: boolean,
+  ) {
+    return this.boardService.togglePinModule(workspaceId, moduleId, user.userId, isPinned);
+  }
 }
 
 @Controller("workspaces/:workspaceId/projects")

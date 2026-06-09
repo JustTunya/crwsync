@@ -395,6 +395,12 @@ export class BoardService {
     const modules = await this.prisma.workspaceModule.findMany({
       where: { workspace_id: workspaceId },
       orderBy: { position: "asc" },
+      include: {
+        pinned_by_users: {
+          where: { user_id: userId },
+          select: { id: true },
+        },
+      },
     });
 
     const chatModules = modules.filter(
@@ -402,7 +408,13 @@ export class BoardService {
     );
 
     if (chatModules.length === 0) {
-      return { success: true, data: modules };
+      return { 
+        success: true, 
+        data: modules.map(({ pinned_by_users, ...m }) => ({
+          ...m,
+          isPinned: pinned_by_users.length > 0,
+        }))
+      };
     }
 
     const roomIds = chatModules.map((m) => m.reference_id);
@@ -431,17 +443,46 @@ export class BoardService {
       unreadCounts.map((uc) => [uc.room_id, Number(uc.count)]),
     );
 
-    const enrichedModules = modules.map((m) => {
+    const enrichedModules = modules.map(({ pinned_by_users, ...m }) => {
+      const isPinned = pinned_by_users.length > 0;
       if (m.type === ModuleTypeEnum.CHAT && m.reference_id) {
         return {
           ...m,
+          isPinned,
           unreadCount: unreadMap.get(m.reference_id) || 0,
         };
       }
-      return m;
+      return { ...m, isPinned };
     });
 
     return { success: true, data: enrichedModules };
+  }
+
+  async togglePinModule(workspaceId: string, moduleId: string, userId: string, isPinned: boolean) {
+    if (isPinned) {
+      await this.prisma.userPinnedModule.upsert({
+        where: {
+          user_id_module_id: {
+            user_id: userId,
+            module_id: moduleId,
+          },
+        },
+        create: {
+          user_id: userId,
+          module_id: moduleId,
+        },
+        update: {},
+      });
+    } else {
+      await this.prisma.userPinnedModule.deleteMany({
+        where: {
+          user_id: userId,
+          module_id: moduleId,
+        },
+      });
+    }
+    
+    return { success: true };
   }
 
   async reorderModules(workspaceId: string, dto: ReorderModulesDto) {

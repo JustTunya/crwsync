@@ -354,6 +354,25 @@ export async function deleteModule(
   }
 }
 
+export async function togglePinModule(
+  workspaceId: string,
+  moduleId: string,
+  isPinned: boolean,
+): Promise<BoardOperationState> {
+  try {
+    await api.post(`${MODULE_BASE(workspaceId)}/${moduleId}/pin`, { isPinned });
+    return { success: true };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to toggle pin",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
 export interface TaskSearchResult {
   id: string;
   shortId: string;

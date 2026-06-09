@@ -293,6 +293,7 @@ export function LSidebar() {
                           active={isModuleActive(pathname, slug, mod)}
                           extended={open}
                           unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
+                          isPinned={mod.isPinned}
                         />
                       ))
                     ) : (
@@ -348,6 +349,7 @@ export function LSidebar() {
                               active={isModuleActive(pathname, slug, mod)}
                               extended={open}
                               unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
+                              isPinned={mod.isPinned}
                             />
                           ))
                         ) : (
@@ -374,6 +376,7 @@ export function LSidebar() {
                         active={isModuleActive(pathname, slug, mod)}
                         extended={open}
                         unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
+                        isPinned={mod.isPinned}
                         isOverlay
                       />
                     );

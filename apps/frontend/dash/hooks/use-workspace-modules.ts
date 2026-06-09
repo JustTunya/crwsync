@@ -165,3 +165,41 @@ export function useDeleteModule(workspaceId: string) {
     },
   });
 }
+
+export function useTogglePinModule(workspaceId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ moduleId, isPinned }: { moduleId: string; isPinned: boolean }) =>
+      boardService.togglePinModule(workspaceId, moduleId, isPinned),
+    onMutate: async ({ moduleId, isPinned }) => {
+      await queryClient.cancelQueries({
+        queryKey: moduleKeys.list(workspaceId),
+      });
+      const previous = queryClient.getQueryData(moduleKeys.list(workspaceId));
+
+      queryClient.setQueryData(
+        moduleKeys.list(workspaceId),
+        (old: { data: WorkspaceModule[] } | undefined) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((m) =>
+              m.id === moduleId ? { ...m, isPinned } : m,
+            ),
+          };
+        },
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(moduleKeys.list(workspaceId), context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
+    },
+  });
+}

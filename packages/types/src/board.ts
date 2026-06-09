@@ -77,6 +77,7 @@ export interface WorkspaceModule {
   position: number;
   created_at: string;
   unreadCount?: number;
+  isPinned?: boolean;
 }
 
 export interface CreateBoardPayload {
