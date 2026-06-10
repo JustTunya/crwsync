@@ -45,6 +45,7 @@ export function useCreateProject(workspaceId: string) {
         projectKeys.list(workspaceId),
         (old: { data: WorkspaceProject[] } | undefined) => {
           if (!old?.data) return old;
+          if (old.data.some((p) => p.id === res.data.id)) return old;
           return { ...old, data: [...old.data, res.data] };
         }
       );
