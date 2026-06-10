@@ -20,6 +20,35 @@ import {
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useStatistics } from "@/hooks/use-statistics";
 import { cn } from "@/lib/utils";
+import { motion, Variants } from "framer-motion";
+
+/* ------------------------------------------------------------------ */
+/*  Animations                                                         */
+/* ------------------------------------------------------------------ */
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 15, filter: "blur(4px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      type: "spring",
+      stiffness: 350,
+      damping: 30,
+    },
+  },
+};
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -201,8 +230,13 @@ export function StatisticsDashboard({
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        <div className="flex justify-end">
+      <motion.div 
+        className="flex-1 overflow-y-auto p-6 space-y-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants} className="flex justify-end">
           {/* Interval toggle */}
           <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5 w-fit">
             {INTERVALS.map((opt) => (
@@ -220,10 +254,10 @@ export function StatisticsDashboard({
               </button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
             label="Active Workload"
             value={data?.personalWorkload ?? 0}
@@ -241,10 +275,10 @@ export function StatisticsDashboard({
             value={formatCycleTime(data?.personalCycleTime ?? null)}
             loading={isLoading}
           />
-        </div>
+        </motion.div>
 
         {/* Chart */}
-        <div className="rounded-xl border border-border bg-card p-6">
+        <motion.div variants={itemVariants} className="rounded-xl border border-border bg-card p-6">
           <p className="text-sm font-medium text-card-foreground mb-4">
             Workspace Velocity
           </p>
@@ -332,8 +366,8 @@ export function StatisticsDashboard({
               </p>
             </div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

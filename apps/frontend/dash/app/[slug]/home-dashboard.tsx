@@ -14,6 +14,7 @@ import { getModuleIcon, getModuleHref } from "@/lib/sidebar.utils";
 import Link from "next/link";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useStatistics } from "@/hooks/use-statistics";
+import { motion, Variants } from "framer-motion";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
@@ -33,6 +34,34 @@ function getTodayFormatted(): string {
     day: "numeric",
   });
 }
+
+/* ------------------------------------------------------------------ */
+/*  Animations                                                        */
+/* ------------------------------------------------------------------ */
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 15, filter: "blur(4px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      type: "spring",
+      stiffness: 350,
+      damping: 30,
+    },
+  },
+};
 
 /* ------------------------------------------------------------------ */
 /*  Stat Card                                                         */
@@ -99,7 +128,7 @@ export function HomeDashboard({ slug }: { slug: string }) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200">
+      <header className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200 shrink-0">
         <div>
           <h1 className="text-lg font-semibold text-foreground">Home</h1>
           <p className="text-sm text-muted-foreground leading-4 font-mono">
@@ -109,18 +138,23 @@ export function HomeDashboard({ slug }: { slug: string }) {
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-12">
-        <section className="flex flex-col justify-center items-center gap-0.5 w-full">
+      <motion.div 
+        className="flex-1 overflow-y-auto p-6 space-y-12"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.section variants={itemVariants} className="flex flex-col justify-center items-center gap-0.5 w-full">
           <h1 className="text-3xl text-center text-balance font-semibold text-foreground">
             {greeting}, {firstname}
           </h1>
           <p className="text-lg text-muted-foreground font-mono tracking-tighter">
             <span className="text-muted-foreground/75">Today is</span> {today}
           </p>
-        </section>
+        </motion.section>
 
         {/* Quick Stats */}
-        <section className="flex flex-col gap-2">
+        <motion.section variants={itemVariants} className="flex flex-col gap-2">
           <div className="flex items-center gap-1">
             <h2 className="text-sm font-medium text-muted-foreground">Quick Stats</h2>
             <div title="Statistics are calculated based on the last 2 weeks of activity.">
@@ -132,10 +166,10 @@ export function HomeDashboard({ slug }: { slug: string }) {
             <StatCard label="Completed" value={stats?.personalVelocity ?? 0} unit="tasks" loading={isStatsLoading} />
             <StatCard label="In Progress" value={stats?.personalWorkload ?? 0} unit="tasks" loading={isStatsLoading} />
           </div>
-        </section>
+        </motion.section>
 
         {/* Pinned Modules */}
-        <section className="flex flex-col gap-4">
+        <motion.section variants={itemVariants} className="flex flex-col gap-4">
           <div className="flex items-center gap-1">
             <h2 className="text-sm font-medium text-muted-foreground">Pinned Modules</h2>
           </div>
@@ -143,31 +177,33 @@ export function HomeDashboard({ slug }: { slug: string }) {
             <div className="text-sm text-muted-foreground">Loading...</div>
           ) : pinnedModules.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pinnedModules.map(mod => {
+              {pinnedModules.map((mod) => {
                 const Icon = getModuleIcon(mod.type);
                 return (
-                  <GlassBox key={mod.id} className="relative group flex flex-row items-center gap-3 py-3 px-4 w-full! hover:bg-base-200/30 transition-colors">
-                    <Link href={getModuleHref(slug, mod)} className="flex-1 min-w-0 flex items-center gap-3 outline-none">
-                      <div className="flex items-center justify-center size-8 rounded-md bg-base-200 text-foreground shrink-0">
-                        <HugeiconsIcon icon={Icon} strokeWidth={2} className="size-4" />
-                      </div>
-                      <div className="flex-1 flex flex-col min-w-0">
-                        <h3 className="text-sm font-medium text-foreground truncate">{mod.name}</h3>
-                        <p className="text-xs text-muted-foreground capitalize truncate">{mod.type.toLowerCase()}</p>
-                      </div>
-                    </Link>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        togglePinModule.mutate({ moduleId: mod.id, isPinned: false });
-                      }}
-                      className="opacity-0 group-hover:opacity-100 flex items-center justify-center size-8 rounded-md hover:bg-base-300 text-muted-foreground hover:text-foreground transition-all cursor-pointer"
-                      title="Unpin module"
-                    >
-                      <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
-                    </button>
-                  </GlassBox>
+                  <motion.div variants={itemVariants} key={mod.id}>
+                    <GlassBox className="relative group flex flex-row items-center gap-3 py-3 px-4 w-full! hover:bg-base-200/30 transition-colors">
+                      <Link href={getModuleHref(slug, mod)} className="flex-1 min-w-0 flex items-center gap-3 outline-none">
+                        <div className="flex items-center justify-center size-8 rounded-md bg-base-200 text-foreground shrink-0">
+                          <HugeiconsIcon icon={Icon} strokeWidth={2} className="size-4" />
+                        </div>
+                        <div className="flex-1 flex flex-col min-w-0">
+                          <h3 className="text-sm font-medium text-foreground truncate">{mod.name}</h3>
+                          <p className="text-xs text-muted-foreground capitalize truncate">{mod.type.toLowerCase()}</p>
+                        </div>
+                      </Link>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          togglePinModule.mutate({ moduleId: mod.id, isPinned: false });
+                        }}
+                        className="opacity-0 group-hover:opacity-100 flex items-center justify-center size-8 rounded-md hover:bg-base-300 text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                        title="Unpin module"
+                      >
+                        <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
+                      </button>
+                    </GlassBox>
+                  </motion.div>
                 );
               })}
             </div>
@@ -176,8 +212,8 @@ export function HomeDashboard({ slug }: { slug: string }) {
               <p className="text-sm text-muted-foreground">No pinned modules yet. Pin a module from the sidebar to see it here.</p>
             </div>
           )}
-        </section>
-      </div>
+        </motion.section>
+      </motion.div>
     </div>
   );
 }
