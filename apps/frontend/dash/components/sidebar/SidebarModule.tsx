@@ -108,6 +108,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
           listeners.onKeyDown(e);
         }
       }}
+      draggable={false}
       href={href}
       onMouseEnter={() => handleMouseEvent(true)}
       onMouseLeave={() => handleMouseEvent(false)}
