@@ -13,6 +13,7 @@ import { useWorkspaceModules, useTogglePinModule } from "@/hooks/use-workspace-m
 import { getModuleIcon, getModuleHref } from "@/lib/sidebar.utils";
 import Link from "next/link";
 import { useWorkspace } from "@/providers/workspace.provider";
+import { useStatistics } from "@/hooks/use-statistics";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
@@ -85,8 +86,9 @@ function StatCard({
 export function HomeDashboard({ slug }: { slug: string }) {
   const user = useUser();
   const { activeWorkspace } = useWorkspace();
-  const { data: modules, isLoading } = useWorkspaceModules(activeWorkspace?.id);
+  const { data: modules, isLoading: isModulesLoading } = useWorkspaceModules(activeWorkspace?.id);
   const togglePinModule = useTogglePinModule(activeWorkspace?.id || "");
+  const { data: stats, isLoading: isStatsLoading } = useStatistics(activeWorkspace?.id, "2w");
 
   const pinnedModules = modules?.filter(m => m.isPinned) || [];
 
@@ -121,12 +123,14 @@ export function HomeDashboard({ slug }: { slug: string }) {
         <section className="flex flex-col gap-2">
           <div className="flex items-center gap-1">
             <h2 className="text-sm font-medium text-muted-foreground">Quick Stats</h2>
-            <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2.5} className="size-3.5 text-muted-foreground cursor-pointer" />
+            <div title="Statistics are calculated based on the last 2 weeks of activity.">
+              <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2.5} className="size-3.5 text-muted-foreground cursor-help" />
+            </div>
           </div>
           <div className="flex gap-2">
-            <StatCard label="Total Tasks" value="0" unit="tasks" loading={false} />
-            <StatCard label="Completed" value="0" unit="tasks" loading={false} />
-            <StatCard label="In Progress" value="0" unit="tasks" loading={false} />
+            <StatCard label="Total Tasks" value={(stats?.personalWorkload ?? 0) + (stats?.personalVelocity ?? 0)} unit="tasks" loading={isStatsLoading} />
+            <StatCard label="Completed" value={stats?.personalVelocity ?? 0} unit="tasks" loading={isStatsLoading} />
+            <StatCard label="In Progress" value={stats?.personalWorkload ?? 0} unit="tasks" loading={isStatsLoading} />
           </div>
         </section>
 
@@ -135,7 +139,7 @@ export function HomeDashboard({ slug }: { slug: string }) {
           <div className="flex items-center gap-1">
             <h2 className="text-sm font-medium text-muted-foreground">Pinned Modules</h2>
           </div>
-          {isLoading ? (
+          {isModulesLoading ? (
             <div className="text-sm text-muted-foreground">Loading...</div>
           ) : pinnedModules.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
