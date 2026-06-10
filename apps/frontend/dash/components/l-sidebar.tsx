@@ -62,6 +62,15 @@ export function LSidebar() {
   const [prevWsModules, setPrevWsModules] = useState(wsModules);
   const [localModules, setLocalModules] = useState(wsModules);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [prevOpen, setPrevOpen] = useState(open);
+
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (!open) {
+      setSearchQuery("");
+    }
+  }
 
   if (wsModules !== prevWsModules) {
     setPrevWsModules(wsModules);
@@ -137,6 +146,11 @@ export function LSidebar() {
   );
 
   const modules = getModules(slug);
+
+  const searchQueryLower = searchQuery.toLowerCase();
+  const filteredModules = modules.filter(m => m.name.toLowerCase().includes(searchQueryLower));
+  const filteredLocalModules = localModules?.filter(m => m.name.toLowerCase().includes(searchQueryLower));
+  const sharedModules = filteredLocalModules?.filter(m => m.project_id === null) || [];
 
   useHotkey(["ctrl", "1"], () => router.push(`/${slug}`));
   useHotkey(["ctrl", "2"], () => router.push(`/${slug}/statistics`));
@@ -215,6 +229,8 @@ export function LSidebar() {
             >
               <Input
                 ref={searchRef}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search..."
                 className="bg-base-200"
                 prefix={
@@ -246,7 +262,7 @@ export function LSidebar() {
 
           {/* GLOBAL MODULES */}
           <div className="flex flex-col">
-            {modules.map((module) => (
+            {filteredModules.map((module) => (
               <SidebarGlobalModule
                 key={module.name}
                 icon={module.icon}
@@ -271,43 +287,43 @@ export function LSidebar() {
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
-              <div className="flex flex-col shrink-0">
-                <SectionHeader
-                  label="Shared"
-                  extended={open}
-                  onAdd={() => {
-                    setAddModuleProjectId(undefined);
-                    setAddModuleOpen(true);
-                  }}
-                />
-                <SidebarDroppable id="shared" className="flex flex-col min-h-[10px]">
-                  <SortableContext
-                    items={localModules?.filter(m => m.project_id === null).map((m) => m.id) || []}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {localModules && localModules.filter(m => m.project_id === null).length > 0 ? (
-                      localModules
-                        .filter(m => m.project_id === null)
-                        .map((mod) => (
-                        <SidebarModule
-                          key={mod.id}
-                          id={mod.id}
-                          activeWorkspaceId={activeWorkspace!.id}
-                          icon={getModuleIcon(mod.type)}
-                          name={mod.name}
-                          href={getModuleHref(slug, mod)}
-                          active={isModuleActive(pathname, slug, mod)}
-                          extended={open}
-                          unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
-                          isPinned={mod.isPinned}
-                        />
-                      ))
-                    ) : (
-                      <SidebarNoModule message="No modules yet." extended={open} />
-                    )}
-                  </SortableContext>
-                </SidebarDroppable>
-              </div>
+              {(!searchQuery || sharedModules.length > 0) && (
+                <div className="flex flex-col shrink-0">
+                  <SectionHeader
+                    label="Shared"
+                    extended={open}
+                    onAdd={() => {
+                      setAddModuleProjectId(undefined);
+                      setAddModuleOpen(true);
+                    }}
+                  />
+                  <SidebarDroppable id="shared" className="flex flex-col min-h-[10px]">
+                    <SortableContext
+                      items={sharedModules.map((m) => m.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {sharedModules.length > 0 ? (
+                        sharedModules.map((mod) => (
+                          <SidebarModule
+                            key={mod.id}
+                            id={mod.id}
+                            activeWorkspaceId={activeWorkspace!.id}
+                            icon={getModuleIcon(mod.type)}
+                            name={mod.name}
+                            href={getModuleHref(slug, mod)}
+                            active={isModuleActive(pathname, slug, mod)}
+                            extended={open}
+                            unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
+                            isPinned={mod.isPinned}
+                          />
+                        ))
+                      ) : (
+                        <SidebarNoModule message="No modules yet." extended={open} />
+                      )}
+                    </SortableContext>
+                  </SidebarDroppable>
+                </div>
+              )}
 
               {/* DIVIDER */}
               <div className="h-px w-full bg-base-200 rounded-full my-4 shrink-0" />
@@ -320,7 +336,8 @@ export function LSidebar() {
                   onAdd={handleCreateProject} 
                 />
                 {projects?.map((project: WorkspaceProject) => {
-                  const projectModules = localModules?.filter(m => m.project_id === project.id) || [];
+                  const projectModules = filteredLocalModules?.filter(m => m.project_id === project.id) || [];
+                  if (searchQuery && projectModules.length === 0) return null;
                   const isActiveContext = projectModules.some(m => isModuleActive(pathname, slug, m));
                   
                   return (
