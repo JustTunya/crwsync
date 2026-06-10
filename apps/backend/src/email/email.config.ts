@@ -1,6 +1,6 @@
 import { MailerOptions } from "@nestjs-modules/mailer";
 import { HandlebarsAdapter } from "@nestjs-modules/mailer/adapters/handlebars.adapter";
-import { resolve } from "path";
+import { dirname } from "path";
 
 export const emailConfig = (): MailerOptions => ({
   transport: {
@@ -22,7 +22,7 @@ export const emailConfig = (): MailerOptions => ({
     from: `"crwsync" <${process.env.MAIL_USER}>`,
   },
   template: {
-    dir: resolve(__dirname, "../../../../packages/templates"),
+    dir: dirname(require.resolve("@crwsync/templates/package.json")),
     adapter: new HandlebarsAdapter(),
     options: {
       strict: true,

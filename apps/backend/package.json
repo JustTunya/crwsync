@@ -23,6 +23,7 @@
     "prisma:studio": "prisma studio --config=prisma.config.ts"
   },
   "dependencies": {
+    "@crwsync/templates": "workspace:*",
     "@crwsync/types": "workspace:*",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/bullmq": "^11.0.4",
