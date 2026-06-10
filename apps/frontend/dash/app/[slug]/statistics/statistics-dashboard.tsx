@@ -195,31 +195,33 @@ export function StatisticsDashboard({
         <div>
           <h1 className="text-lg font-semibold text-foreground">Statistics</h1>
           <p className="text-sm text-muted-foreground leading-4 font-mono">
-            Personal metrics &amp; workspace activity
+            Personal metrics
           </p>
-        </div>
-
-        {/* Interval toggle */}
-        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5">
-          {INTERVALS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setInterval(opt.value)}
-              className={cn(
-                "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
-                interval === opt.value
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
         </div>
       </header>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex justify-end">
+          {/* Interval toggle */}
+          <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5 w-fit">
+            {INTERVALS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setInterval(opt.value)}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
+                  interval === opt.value
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
