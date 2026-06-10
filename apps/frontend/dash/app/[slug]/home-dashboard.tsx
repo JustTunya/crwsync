@@ -109,7 +109,7 @@ export function HomeDashboard({ slug }: { slug: string }) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-12">
         <section className="flex flex-col justify-center items-center gap-0.5 w-full">
-          <h1 className="text-3xl font-semibold text-foreground">
+          <h1 className="text-3xl text-center text-balance font-semibold text-foreground">
             {greeting}, {firstname}
           </h1>
           <p className="text-lg text-muted-foreground font-mono tracking-tighter">

@@ -36,8 +36,14 @@ export function RSidebar() {
   const { socket, isConnected } = useSocket();
 
   const { open, toggleOpen, view, setView, setOpen } = useRSidebar();
-  const { open: lOpen } = useLSidebar();
+  const { open: lOpen, setOpen: setLOpen } = useLSidebar();
   const isMobile = useMediaQuery("(max-width: 768px)");
+
+  useEffect(() => {
+    if (isMobile && open) {
+      setLOpen(false);
+    }
+  }, [isMobile, open, setLOpen]);
 
   const [statuses, setStatuses] = useState<Record<string, UserStatus>>({});
   const [openInviteModal, setOpenInviteModal] = useState(false);

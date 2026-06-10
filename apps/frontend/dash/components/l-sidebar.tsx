@@ -166,7 +166,13 @@ export function LSidebar() {
     },
   };
 
-  const { open: rOpen } = useRSidebar();
+  const { open: rOpen, setOpen: setROpen } = useRSidebar();
+
+  useEffect(() => {
+    if (isMobile && open) {
+      setROpen(false);
+    }
+  }, [isMobile, open, setROpen]);
 
   return (
     <>
