@@ -56,9 +56,6 @@ export function useReorderModules(workspaceId: string) {
         );
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
-    },
   });
 }
 

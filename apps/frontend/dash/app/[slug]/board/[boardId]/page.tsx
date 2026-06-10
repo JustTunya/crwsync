@@ -8,6 +8,7 @@ import type { Task, BoardColumn } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { KanbanCol, KanbanTaskOverlay, TaskDetailModal } from "@/components/kanban";
 import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/use-boards";
+import { useBoardSocket } from "@/hooks/use-board-socket";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -68,6 +69,8 @@ export default function BoardPage() {
 
   const { activeWorkspace } = useWorkspace();
   const workspaceId = activeWorkspace?.id || "";
+
+  useBoardSocket(workspaceId, boardId);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 

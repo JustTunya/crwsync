@@ -31,6 +31,7 @@ import { useSocket } from "@/providers/socket.provider";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWorkspaceModules, useReorderModules, moduleKeys } from "@/hooks/use-workspace-modules";
 import { useHotkey } from "@/hooks/use-hotkey";
+import { useWorkspaceSocket } from "@/hooks/use-workspace-socket";
 import { cn } from "@/lib/utils";
 import { WorkspaceModule, WorkspaceProject } from "@crwsync/types";
 
@@ -59,6 +60,9 @@ export function LSidebar() {
   const { data: projects } = useWorkspaceProjects(activeWorkspace?.id);
   const createProject = useCreateProject(activeWorkspace?.id || "");
   const reorderModules = useReorderModules(activeWorkspace?.id || "");
+
+  useWorkspaceSocket(activeWorkspace?.id);
+
 
   const [prevWsModules, setPrevWsModules] = useState(wsModules);
   const [localModules, setLocalModules] = useState(wsModules);
