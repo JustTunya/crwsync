@@ -115,6 +115,7 @@ export function SidebarProject({
     <div className="flex flex-col mb-1 relative" ref={setNodeRef}>
       <div
         tabIndex={0}
+        title={!extended ? project.name : undefined}
         className={cn(
           "group flex flex-row items-center gap-2 p-2 mx-0.5 rounded-lg cursor-pointer hover:bg-base-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-base-200 transition-colors",
           !extended && "justify-center"
@@ -202,8 +203,11 @@ export function SidebarProject({
         )}
       </div>
 
-      {!collapsed && extended && (
-        <div className="flex flex-col ml-3 pl-2 border-l-2 border-base-200 mt-1">
+      {!collapsed && (
+        <div className={cn(
+          "flex flex-col mt-1",
+          extended ? "ml-3 pl-2 border-l-2 border-base-200" : "items-center gap-1 w-full bg-base-200/50 rounded-xl py-2 my-1"
+        )}>
           {children}
         </div>
       )}

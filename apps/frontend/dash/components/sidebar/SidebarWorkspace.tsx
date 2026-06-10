@@ -20,7 +20,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
   useOutclick(wsRef, () => setOpenWorkspaces(false), openWorkspaces);
 
   const toggleMenu = () => {
-    if (extended && !loading.active) setOpenWorkspaces(!openWorkspaces);
+    if (!loading.active) setOpenWorkspaces(!openWorkspaces);
   };
 
   const handleSwitch = (slug: string) => {
@@ -104,13 +104,16 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
 
       <LazyMotion features={domAnimation} strict>
         <AnimatePresence>
-          {extended && openWorkspaces && (
+          {openWorkspaces && (
             <m.div
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={spring}
-              className="absolute top-12 left-0 z-50 flex flex-col w-full p-2 bg-base-100 border border-base-200 rounded-xl shadow-xl"
+              className={cn(
+                "absolute z-50 flex flex-col p-2 bg-base-100 border border-base-200 rounded-xl shadow-xl",
+                extended ? "top-12 left-0 w-full" : "top-0 left-[72px] w-64"
+              )}
             >
               <p className="px-2 py-1.5 text-xs text-muted-foreground">
                 Workspaces

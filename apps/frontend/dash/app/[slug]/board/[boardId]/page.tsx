@@ -207,6 +207,11 @@ export default function BoardPage() {
         >
           <SortableContext items={allSortableIds}>
             <div className="flex gap-4 h-full">
+              {(!board.columns || board.columns.length === 0) && !addingColumn && (
+                <div className="flex flex-col items-center justify-center w-full h-full text-muted-foreground">
+                  <p className="text-sm">No columns yet. Create one to begin.</p>
+                </div>
+              )}
               {board.columns?.map((column) => (
                 <KanbanCol
                   key={column.id}

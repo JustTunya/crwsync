@@ -97,6 +97,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
   return (
     <Link
       ref={!isOverlay ? setNodeRef : undefined}
+      title={!extended ? name : undefined}
       {...(!isOverlay ? attributes : {})}
       {...(!isOverlay ? { ...listeners, onKeyDown: undefined } : {})}
       onKeyDown={(e) => {
@@ -237,6 +238,7 @@ export function SidebarGlobalModule({ icon, name, href, shortcut, active, extend
   return (
     <Link
       href={href}
+      title={!extended ? name : undefined}
       className="relative flex flex-row items-center justify-between gap-2 p-2 mx-0.5 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-base-200"
     >
       <div className={cn("flex flex-row items-center gap-2 w-full", !extended && "justify-center")}>
