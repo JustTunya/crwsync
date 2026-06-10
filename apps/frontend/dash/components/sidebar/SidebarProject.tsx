@@ -114,8 +114,9 @@ export function SidebarProject({
   return (
     <div className="flex flex-col mb-1 relative" ref={setNodeRef}>
       <div
+        tabIndex={0}
         className={cn(
-          "group flex flex-row items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
+          "group flex flex-row items-center gap-2 p-2 mx-0.5 rounded-lg cursor-pointer hover:bg-base-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-base-200 transition-colors",
           !extended && "justify-center"
         )}
         onMouseEnter={() => {
@@ -127,6 +128,13 @@ export function SidebarProject({
           setShowSettings(false);
         }}
         onClick={() => !isEditing && setCollapsed(!collapsed)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !isEditing) {
+            e.preventDefault();
+            e.stopPropagation();
+            setCollapsed(!collapsed);
+          }
+        }}
       >
         <div className="flex items-center justify-center shrink-0">
           <HugeiconsIcon icon={Folder02Icon} className="size-5 text-foreground" />

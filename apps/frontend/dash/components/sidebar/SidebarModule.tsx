@@ -98,13 +98,21 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
     <Link
       ref={!isOverlay ? setNodeRef : undefined}
       {...(!isOverlay ? attributes : {})}
-      {...(!isOverlay ? listeners : {})}
+      {...(!isOverlay ? { ...listeners, onKeyDown: undefined } : {})}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          return;
+        }
+        if (!isOverlay && listeners?.onKeyDown) {
+          listeners.onKeyDown(e);
+        }
+      }}
       href={href}
       onMouseEnter={() => handleMouseEvent(true)}
       onMouseLeave={() => handleMouseEvent(false)}
       style={style}
       className={cn(
-        "relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer transition-colors outline-none",
+        "relative flex flex-row items-center justify-between gap-2 p-2 mx-0.5 rounded-lg cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-base-200",
         isOverlay ? "bg-base-200 shadow-2xl ring-1 ring-primary/20 scale-105" : "hover:bg-base-200",
         !extended && "justify-center"
       )}
@@ -229,7 +237,7 @@ export function SidebarGlobalModule({ icon, name, href, shortcut, active, extend
   return (
     <Link
       href={href}
-      className="relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden"
+      className="relative flex flex-row items-center justify-between gap-2 p-2 mx-0.5 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-base-200"
     >
       <div className={cn("flex flex-row items-center gap-2 w-full", !extended && "justify-center")}>
         <HugeiconsIcon
