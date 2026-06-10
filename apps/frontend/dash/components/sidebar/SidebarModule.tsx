@@ -141,7 +141,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
                 animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.15, ease: "easeInOut" }}
-                className="text-foreground text-xs font-medium truncate z-10 max-w-40"
+                className="text-foreground text-xs font-medium truncate z-10 max-w-38"
               >
                 {name}
               </m.p>
