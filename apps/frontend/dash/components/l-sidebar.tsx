@@ -297,7 +297,7 @@ export function LSidebar() {
                         />
                       ))
                     ) : (
-                      <SidebarNoModule message="Drag modules here" extended={open} />
+                      <SidebarNoModule message="No modules yet." extended={open} />
                     )}
                   </SortableContext>
                 </SidebarDroppable>
