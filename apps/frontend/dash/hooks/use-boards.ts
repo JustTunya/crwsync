@@ -153,9 +153,6 @@ export function useReorderColumns(workspaceId: string, boardId: string) {
         queryClient.setQueryData(boardKeys.detail(boardId), context.previous);
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
-    },
   });
 }
 
@@ -255,9 +252,6 @@ export function useMoveTask(workspaceId: string, boardId: string) {
       if (context?.previous) {
         queryClient.setQueryData(boardKeys.detail(boardId), context.previous);
       }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
     },
   });
 }

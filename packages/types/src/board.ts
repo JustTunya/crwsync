@@ -57,20 +57,33 @@ export interface Task {
   updated_at: string;
 }
 
+export interface WorkspaceProject {
+  id: string;
+  workspace_id: string;
+  name: string;
+  position: number;
+  created_at: string;
+  updated_at: string;
+  modules?: WorkspaceModule[];
+}
+
 export interface WorkspaceModule {
   id: string;
   workspace_id: string;
+  project_id: string | null;
   type: ModuleTypeEnum;
   reference_id: string;
   name: string;
   position: number;
   created_at: string;
   unreadCount?: number;
+  isPinned?: boolean;
 }
 
 export interface CreateBoardPayload {
   name: string;
   description?: string;
+  project_id?: string;
 }
 
 export interface UpdateBoardPayload {
@@ -123,8 +136,17 @@ export interface ReorderColumnsPayload {
   column_ids: string[];
 }
 
+export interface CreateProjectPayload {
+  name: string;
+}
+
+export interface UpdateProjectPayload {
+  name?: string;
+  position?: number;
+}
+
 export interface ReorderModulesPayload {
-  module_ids: string[];
+  updates: { id: string; project_id: string | null; position: number }[];
 }
 
 export interface BoardOperationState<T = undefined> {

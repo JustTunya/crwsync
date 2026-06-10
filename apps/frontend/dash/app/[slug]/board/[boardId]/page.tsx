@@ -8,6 +8,7 @@ import type { Task, BoardColumn } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { KanbanCol, KanbanTaskOverlay, TaskDetailModal } from "@/components/kanban";
 import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/use-boards";
+import { useBoardSocket } from "@/hooks/use-board-socket";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -68,6 +69,8 @@ export default function BoardPage() {
 
   const { activeWorkspace } = useWorkspace();
   const workspaceId = activeWorkspace?.id || "";
+
+  useBoardSocket(workspaceId, boardId);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -207,6 +210,11 @@ export default function BoardPage() {
         >
           <SortableContext items={allSortableIds}>
             <div className="flex gap-4 h-full">
+              {(!board.columns || board.columns.length === 0) && !addingColumn && (
+                <div className="flex flex-col items-center justify-center w-full h-full text-muted-foreground">
+                  <p className="text-sm">No columns yet. Create one to begin.</p>
+                </div>
+              )}
               {board.columns?.map((column) => (
                 <KanbanCol
                   key={column.id}

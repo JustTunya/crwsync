@@ -11,9 +11,9 @@ export const statisticsKeys = {
 
 export function useStatistics(workspaceId?: string, interval: string = "1m") {
   return useQuery({
-    queryKey: statisticsKeys.detail(workspaceId!, interval),
+    queryKey: statisticsKeys.detail(workspaceId || "unknown", interval),
     queryFn: () => getWorkspaceStatistics(workspaceId!, interval),
     enabled: !!workspaceId,
-    staleTime: 1000 * 60 * 15, // 15 minutes
+    staleTime: 0,
   });
 }

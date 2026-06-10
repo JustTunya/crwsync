@@ -30,6 +30,8 @@ import {
   ReorderColumnsDto,
   ReorderModulesDto,
   UpdateModuleDto,
+  CreateProjectDto,
+  UpdateProjectDto,
 } from "src/board/dto/board.dto";
 
 @Controller("workspaces/:workspaceId/boards")
@@ -220,5 +222,54 @@ export class ModuleController {
     @Param("moduleId", new ParseUUIDPipe({ version: "4" })) moduleId: string,
   ) {
     return this.boardService.deleteModule(workspaceId, moduleId);
+  }
+
+  @Post(":moduleId/pin")
+  togglePin(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("moduleId", new ParseUUIDPipe({ version: "4" })) moduleId: string,
+    @ActiveUserParam() user: ActiveUser,
+    @Body("isPinned") isPinned: boolean,
+  ) {
+    return this.boardService.togglePinModule(workspaceId, moduleId, user.userId, isPinned);
+  }
+}
+
+@Controller("workspaces/:workspaceId/projects")
+@UseGuards(IsMemberGuard)
+@SkipThrottle()
+export class ProjectController {
+  constructor(private readonly boardService: BoardService) {}
+
+  @Post()
+  create(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Body() dto: CreateProjectDto,
+  ) {
+    return this.boardService.createProject(workspaceId, dto);
+  }
+
+  @Get()
+  findAll(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+  ) {
+    return this.boardService.getWorkspaceProjects(workspaceId);
+  }
+
+  @Patch(":projectId")
+  update(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("projectId", new ParseUUIDPipe({ version: "4" })) projectId: string,
+    @Body() dto: UpdateProjectDto,
+  ) {
+    return this.boardService.updateProject(workspaceId, projectId, dto);
+  }
+
+  @Delete(":projectId")
+  remove(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("projectId", new ParseUUIDPipe({ version: "4" })) projectId: string,
+  ) {
+    return this.boardService.deleteProject(workspaceId, projectId);
   }
 }

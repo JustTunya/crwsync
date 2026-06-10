@@ -304,7 +304,7 @@ export async function reorderModules(
   data: ReorderModulesPayload,
 ): Promise<BoardOperationState> {
   try {
-    await api.put(`${MODULE_BASE(workspaceId)}/reorder`, data);
+    await api.put(`/workspaces/${workspaceId}/modules/reorder`, data);
     return { success: true };
   } catch (error) {
     if (isAxiosError(error)) {
@@ -348,6 +348,25 @@ export async function deleteModule(
       return {
         success: false,
         message: error.response?.data?.message || "Failed to delete module",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function togglePinModule(
+  workspaceId: string,
+  moduleId: string,
+  isPinned: boolean,
+): Promise<BoardOperationState> {
+  try {
+    await api.post(`${MODULE_BASE(workspaceId)}/${moduleId}/pin`, { isPinned });
+    return { success: true };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to toggle pin",
       };
     }
     return { success: false, message: "An unexpected error occurred" };

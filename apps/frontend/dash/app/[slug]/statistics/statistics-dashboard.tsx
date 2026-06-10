@@ -20,6 +20,35 @@ import {
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useStatistics } from "@/hooks/use-statistics";
 import { cn } from "@/lib/utils";
+import { motion, Variants } from "framer-motion";
+
+/* ------------------------------------------------------------------ */
+/*  Animations                                                         */
+/* ------------------------------------------------------------------ */
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 15, filter: "blur(4px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      type: "spring",
+      stiffness: 350,
+      damping: 30,
+    },
+  },
+};
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -42,15 +71,23 @@ const DEFAULT_INTERVAL = "1m";
 
 function formatCycleTime(seconds: number | null): string {
   if (seconds === null) return "—";
-  if (seconds < 60) return `${Math.round(seconds)}s`;
-  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
-  if (seconds < 86400) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.round((seconds % 3600) / 60);
+  
+  const totalSeconds = Math.round(seconds);
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  
+  if (totalSeconds < 3600) {
+    const m = Math.floor(totalSeconds / 60);
+    return `${m}m`;
+  }
+  
+  if (totalSeconds < 86400) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
-  const d = Math.floor(seconds / 86400);
-  const h = Math.round((seconds % 86400) / 3600);
+  
+  const d = Math.floor(totalSeconds / 86400);
+  const h = Math.floor((totalSeconds % 86400) / 3600);
   return h > 0 ? `${d}d ${h}h` : `${d}d`;
 }
 
@@ -76,7 +113,7 @@ function ChartTooltip({
 
   return (
     <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-lg">
-      <p className="text-xs text-muted-foreground">{label ? formatDate(label) : ""}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-sm font-semibold tabular-nums text-popover-foreground">
         {payload[0].value} {payload[0].value === 1 ? "task" : "tasks"}
       </p>
@@ -138,10 +175,8 @@ function StatCard({
 /* ------------------------------------------------------------------ */
 
 export function StatisticsDashboard({
-  slug,
   initialInterval,
 }: {
-  slug?: string;
   initialInterval?: string;
 }) {
   const router = useRouter();
@@ -185,37 +220,44 @@ export function StatisticsDashboard({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
+      <header className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200">
         <div>
           <h1 className="text-lg font-semibold text-foreground">Statistics</h1>
-          <p className="text-sm text-muted-foreground">
-            Personal metrics &amp; workspace activity
+          <p className="text-sm text-muted-foreground leading-4 font-mono">
+            Personal metrics
           </p>
-        </div>
-
-        {/* Interval toggle */}
-        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5">
-          {INTERVALS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setInterval(opt.value)}
-              className={cn(
-                "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
-                interval === opt.value
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
         </div>
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <motion.div 
+        className="flex-1 overflow-y-auto p-6 space-y-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants} className="flex justify-end">
+          {/* Interval toggle */}
+          <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5 w-fit">
+            {INTERVALS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setInterval(opt.value)}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
+                  interval === opt.value
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
             label="Active Workload"
             value={data?.personalWorkload ?? 0}
@@ -233,10 +275,10 @@ export function StatisticsDashboard({
             value={formatCycleTime(data?.personalCycleTime ?? null)}
             loading={isLoading}
           />
-        </div>
+        </motion.div>
 
         {/* Chart */}
-        <div className="rounded-xl border border-border bg-card p-6">
+        <motion.div variants={itemVariants} className="rounded-xl border border-border bg-card p-6">
           <p className="text-sm font-medium text-card-foreground mb-4">
             Workspace Velocity
           </p>
@@ -324,8 +366,8 @@ export function StatisticsDashboard({
               </p>
             </div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

@@ -48,6 +48,7 @@ export class BoardService {
       const wsModule = await tx.workspaceModule.create({
         data: {
           workspace_id: workspaceId,
+          project_id: dto.project_id || null,
           type: ModuleTypeEnum.BOARD,
           reference_id: board.id,
           name: dto.name,
@@ -394,6 +395,12 @@ export class BoardService {
     const modules = await this.prisma.workspaceModule.findMany({
       where: { workspace_id: workspaceId },
       orderBy: { position: "asc" },
+      include: {
+        pinned_by_users: {
+          where: { user_id: userId },
+          select: { id: true },
+        },
+      },
     });
 
     const chatModules = modules.filter(
@@ -401,7 +408,13 @@ export class BoardService {
     );
 
     if (chatModules.length === 0) {
-      return { success: true, data: modules };
+      return { 
+        success: true, 
+        data: modules.map(({ pinned_by_users, ...m }) => ({
+          ...m,
+          isPinned: pinned_by_users.length > 0,
+        }))
+      };
     }
 
     const roomIds = chatModules.map((m) => m.reference_id);
@@ -430,32 +443,64 @@ export class BoardService {
       unreadCounts.map((uc) => [uc.room_id, Number(uc.count)]),
     );
 
-    const enrichedModules = modules.map((m) => {
+    const enrichedModules = modules.map(({ pinned_by_users, ...m }) => {
+      const isPinned = pinned_by_users.length > 0;
       if (m.type === ModuleTypeEnum.CHAT && m.reference_id) {
         return {
           ...m,
+          isPinned,
           unreadCount: unreadMap.get(m.reference_id) || 0,
         };
       }
-      return m;
+      return { ...m, isPinned };
     });
 
     return { success: true, data: enrichedModules };
   }
 
+  async togglePinModule(workspaceId: string, moduleId: string, userId: string, isPinned: boolean) {
+    if (isPinned) {
+      await this.prisma.userPinnedModule.upsert({
+        where: {
+          user_id_module_id: {
+            user_id: userId,
+            module_id: moduleId,
+          },
+        },
+        create: {
+          user_id: userId,
+          module_id: moduleId,
+        },
+        update: {},
+      });
+    } else {
+      await this.prisma.userPinnedModule.deleteMany({
+        where: {
+          user_id: userId,
+          module_id: moduleId,
+        },
+      });
+    }
+    
+    return { success: true };
+  }
+
   async reorderModules(workspaceId: string, dto: ReorderModulesDto) {
     await this.prisma.$transaction(
-      dto.module_ids.map((id, index) =>
+      dto.updates.map((update) =>
         this.prisma.workspaceModule.update({
-          where: { id },
-          data: { position: (index + 1) * POSITION_GAP },
+          where: { id: update.id },
+          data: {
+            position: update.position * POSITION_GAP,
+            project_id: update.project_id || null,
+          },
         }),
       ),
     );
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
-      .emit("module:reordered", { moduleIds: dto.module_ids });
+      .emit("module:reordered", { updates: dto.updates });
 
     return { success: true };
   }
@@ -564,6 +609,77 @@ export class BoardService {
         .to(`workspace_${workspaceId}`)
         .emit("module:deleted", { moduleId });
     }
+
+    return { success: true };
+  }
+
+  async createProject(workspaceId: string, dto: { name: string }) {
+    const lastProject = await this.prisma.workspaceProject.findFirst({
+      where: { workspace_id: workspaceId },
+      orderBy: { position: "desc" },
+      select: { position: true },
+    });
+
+    const nextPosition = (lastProject?.position ?? 0) + POSITION_GAP;
+
+    const project = await this.prisma.workspaceProject.create({
+      data: {
+        workspace_id: workspaceId,
+        name: dto.name,
+        position: nextPosition,
+      },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("project:created", project);
+
+    return { success: true, data: project };
+  }
+
+  async getWorkspaceProjects(workspaceId: string) {
+    const projects = await this.prisma.workspaceProject.findMany({
+      where: { workspace_id: workspaceId },
+      orderBy: { position: "asc" },
+    });
+
+    return { success: true, data: projects };
+  }
+
+  async updateProject(
+    workspaceId: string,
+    projectId: string,
+    dto: { name?: string; position?: number },
+  ) {
+    const project = await this.prisma.workspaceProject.update({
+      where: { id: projectId },
+      data: dto,
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("project:updated", { projectId, data: dto });
+
+    return { success: true, data: project };
+  }
+
+  async deleteProject(workspaceId: string, projectId: string) {
+    const modulesInProject = await this.prisma.workspaceModule.findMany({
+      where: { project_id: projectId },
+      select: { id: true },
+    });
+
+    for (const mod of modulesInProject) {
+      await this.deleteModule(workspaceId, mod.id);
+    }
+
+    await this.prisma.workspaceProject.delete({
+      where: { id: projectId },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("project:deleted", { projectId });
 
     return { success: true };
   }

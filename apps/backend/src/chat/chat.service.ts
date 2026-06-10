@@ -50,6 +50,7 @@ export class ChatService {
       const wsModule = await tx.workspaceModule.create({
         data: {
           workspace_id: workspaceId,
+          project_id: dto.project_id || null,
           type: ModuleTypeEnum.CHAT,
           reference_id: room.id,
           name: dto.name,

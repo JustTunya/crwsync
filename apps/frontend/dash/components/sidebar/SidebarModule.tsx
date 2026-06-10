@@ -5,7 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
 import { Settings02Icon } from "@hugeicons/core-free-icons";
-import { useUpdateModule, useDeleteModule } from "@/hooks/use-workspace-modules";
+import { useUpdateModule, useDeleteModule, useTogglePinModule } from "@/hooks/use-workspace-modules";
 import { Shortcut } from "@/components/ui/shortcut";
 import { cn } from "@/lib/utils";
 
@@ -19,14 +19,16 @@ interface SidebarModuleProps {
   extended?: boolean;
   isOverlay?: boolean;
   unreadCount?: number;
+  isPinned?: boolean;
 }
 
-export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active, extended, isOverlay, unreadCount }: SidebarModuleProps) {
+export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active, extended, isOverlay, unreadCount, isPinned }: SidebarModuleProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: isOverlay });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   const updateModule = useUpdateModule(activeWorkspaceId);
   const deleteModule = useDeleteModule(activeWorkspaceId);
+  const togglePinModule = useTogglePinModule(activeWorkspaceId);
 
   const [showSettingsBtn, setShowSettingsBtn] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -73,6 +75,13 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
     }
   };
 
+  const handleTogglePin = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowSettings(false);
+    await togglePinModule.mutateAsync({ moduleId: id, isPinned: !isPinned });
+  };
+
   if (isDragging && !isOverlay) {
     return (
       <div
@@ -88,14 +97,23 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
   return (
     <Link
       ref={!isOverlay ? setNodeRef : undefined}
+      title={!extended ? name : undefined}
       {...(!isOverlay ? attributes : {})}
-      {...(!isOverlay ? listeners : {})}
+      {...(!isOverlay ? { ...listeners, onKeyDown: undefined } : {})}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          return;
+        }
+        if (!isOverlay && listeners?.onKeyDown) {
+          listeners.onKeyDown(e);
+        }
+      }}
       href={href}
       onMouseEnter={() => handleMouseEvent(true)}
       onMouseLeave={() => handleMouseEvent(false)}
       style={style}
       className={cn(
-        "relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer transition-colors outline-none",
+        "relative flex flex-row items-center justify-between gap-2 p-2 mx-0.5 rounded-lg cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-base-200",
         isOverlay ? "bg-base-200 shadow-2xl ring-1 ring-primary/20 scale-105" : "hover:bg-base-200",
         !extended && "justify-center"
       )}
@@ -123,7 +141,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
                 animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.15, ease: "easeInOut" }}
-                className="text-foreground text-xs font-medium truncate z-10"
+                className="text-foreground text-xs font-medium truncate z-10 max-w-38"
               >
                 {name}
               </m.p>
@@ -184,6 +202,12 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
       {extended && showSettings && (
         <div className="absolute right-0 top-6 flex flex-col gap-1 z-30 p-1 bg-base-100 border border-base-200 rounded-lg shadow-lg">
           <button
+            onClick={handleTogglePin}
+            className="w-full px-2 py-1 text-xs text-left hover:bg-base-200 rounded-md transition-colors cursor-pointer"
+          >
+            {isPinned ? "Unpin" : "Pin"}
+          </button>
+          <button
             onClick={handleRenameClick}
             className="w-full px-2 py-1 text-xs text-left hover:bg-base-200 rounded-md transition-colors cursor-pointer"
           >
@@ -214,7 +238,8 @@ export function SidebarGlobalModule({ icon, name, href, shortcut, active, extend
   return (
     <Link
       href={href}
-      className="relative flex flex-row items-center justify-between gap-2 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden"
+      title={!extended ? name : undefined}
+      className="relative flex flex-row items-center justify-between gap-2 p-2 mx-0.5 rounded-lg cursor-pointer hover:bg-base-200 transition-colors overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-base-200"
     >
       <div className={cn("flex flex-row items-center gap-2 w-full", !extended && "justify-center")}>
         <HugeiconsIcon

@@ -34,9 +34,14 @@ export function useReorderModules(workspaceId: string) {
         (old: { data: WorkspaceModule[] } | undefined) => {
           if (!old?.data) return old;
           const moduleMap = new Map(old.data.map((m) => [m.id, m]));
-          const reordered = data.module_ids
-            .map((id) => moduleMap.get(id))
-            .filter(Boolean) as WorkspaceModule[];
+          data.updates.forEach((update) => {
+            const mod = moduleMap.get(update.id);
+            if (mod) {
+              mod.position = update.position;
+              mod.project_id = update.project_id;
+            }
+          });
+          const reordered = Array.from(moduleMap.values()).sort((a, b) => a.position - b.position);
           return { ...old, data: reordered };
         },
       );
@@ -50,9 +55,6 @@ export function useReorderModules(workspaceId: string) {
           context.previous,
         );
       }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
     },
   });
 }
@@ -144,6 +146,44 @@ export function useDeleteModule(workspaceId: string) {
           return {
             ...old,
             data: old.data.filter((m) => m.id !== moduleId),
+          };
+        },
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(moduleKeys.list(workspaceId), context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
+    },
+  });
+}
+
+export function useTogglePinModule(workspaceId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ moduleId, isPinned }: { moduleId: string; isPinned: boolean }) =>
+      boardService.togglePinModule(workspaceId, moduleId, isPinned),
+    onMutate: async ({ moduleId, isPinned }) => {
+      await queryClient.cancelQueries({
+        queryKey: moduleKeys.list(workspaceId),
+      });
+      const previous = queryClient.getQueryData(moduleKeys.list(workspaceId));
+
+      queryClient.setQueryData(
+        moduleKeys.list(workspaceId),
+        (old: { data: WorkspaceModule[] } | undefined) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((m) =>
+              m.id === moduleId ? { ...m, isPinned } : m,
+            ),
           };
         },
       );

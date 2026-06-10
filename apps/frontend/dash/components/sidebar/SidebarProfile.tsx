@@ -62,7 +62,7 @@ export function SidebarProfile({ status, setStatus, extended }: SidebarProfilePr
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
-        "mt-auto cursor-pointer flex flex-col items-center",
+        "mt-auto cursor-pointer flex flex-col items-center relative",
         !extended && "mb-3",
         extended && [
           "p-2 rounded-lg bg-base-200 shadow-md",
@@ -126,16 +126,19 @@ export function SidebarProfile({ status, setStatus, extended }: SidebarProfilePr
 
       <LazyMotion features={domAnimation} strict>
         <AnimatePresence>
-          {extended && openMenu && (
+          {openMenu && (
             <m.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={spring}
-              className="w-full flex flex-col overflow-hidden"
+              className={cn(
+                "flex flex-col overflow-hidden",
+                extended ? "w-full" : "absolute bottom-0 left-[72px] w-64 bg-base-100 border border-base-200 rounded-xl shadow-xl p-2 z-50"
+              )}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-full h-0.5 bg-base-300 rounded-full mb-2 mt-4" />
+              {extended && <div className="w-full h-0.5 bg-base-300 rounded-full mb-2 mt-4" />}
 
               <AnimatePresence mode="wait" initial={false}>
                 {editStatus ? (
