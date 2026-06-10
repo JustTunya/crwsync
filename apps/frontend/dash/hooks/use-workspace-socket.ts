@@ -11,7 +11,7 @@ import type { WorkspaceModule, WorkspaceProject } from "@crwsync/types";
 // Payload types matching board.service.ts emissions
 // ---------------------------------------------------------------------------
 
-interface ModuleCreatedPayload extends WorkspaceModule {}
+type ModuleCreatedPayload = WorkspaceModule;
 
 interface ModuleUpdatedPayload {
   moduleId: string;
@@ -28,7 +28,7 @@ interface ModuleReorderedPayload {
   updates: Array<{ id: string; position: number; project_id?: string | null }>;
 }
 
-interface ProjectCreatedPayload extends WorkspaceProject {}
+type ProjectCreatedPayload = WorkspaceProject;
 
 interface ProjectUpdatedPayload {
   projectId: string;
