@@ -83,6 +83,8 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
   return (
     <div
       ref={setNodeRef}
+      data-testid="kanban-column"
+      data-column-name={column.name}
       className="flex flex-col gap-3 w-xs p-3 bg-base-100 rounded-xl shrink-0"
     >
       <div className="flex flex-row items-center justify-between p-1 rounded-lg">
@@ -137,7 +139,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                   className="size-4.5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
                 />
               </button>
-              <button type="button" title="More" onClick={() => setShowMenu(!showMenu)}>
+              <button type="button" title="More" data-testid="column-menu" onClick={() => setShowMenu(!showMenu)}>
                 <HugeiconsIcon
                   icon={MoreHorizontalIcon}
                   className="size-4.5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"

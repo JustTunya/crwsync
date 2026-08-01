@@ -21,6 +21,8 @@ export function KanbanTask({ task, onClick, workspaceId }: { task: Task; onClick
   return (
     <div
       ref={setNodeRef}
+      data-testid="kanban-task"
+      data-task-short-id={task.shortId}
       {...attributes}
       {...listeners}
       onClick={onClick}

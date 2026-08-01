@@ -22,11 +22,13 @@ export function SectionHeader({
             className="flex items-center justify-between overflow-hidden px-2"
           >
             <p className="text-xs text-muted-foreground">{label}</p>
-            <HugeiconsIcon
-              icon={Add01Icon}
-              className="size-4 text-muted-foreground hover:text-foreground cursor-pointer"
-              onClick={onAdd}
-            />
+            <span data-testid={`section-add-${label.toLowerCase()}`} className="inline-flex">
+              <HugeiconsIcon
+                icon={Add01Icon}
+                className="size-4 text-muted-foreground hover:text-foreground cursor-pointer"
+                onClick={onAdd}
+              />
+            </span>
           </m.div>
         )}
       </AnimatePresence>

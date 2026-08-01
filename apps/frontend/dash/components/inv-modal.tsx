@@ -76,8 +76,9 @@ export default function InviteMemberModal({ workspace, isOpen, onClose }: Invite
       }}
       role="presentation"
     >
-      <div 
-        className="flex flex-col gap-4 bg-base-100 rounded-lg p-6 w-full max-w-md" 
+      <div
+        data-testid="invite-modal"
+        className="flex flex-col gap-4 bg-base-100 rounded-lg p-6 w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         role="presentation"
@@ -92,6 +93,7 @@ export default function InviteMemberModal({ workspace, isOpen, onClose }: Invite
 
           <button
             type="button"
+            data-testid="invite-pending-toggle"
             onClick={() => {
               setShowPending((v) => !v);
               setUser(null);
@@ -124,7 +126,8 @@ export default function InviteMemberModal({ workspace, isOpen, onClose }: Invite
               </>
             ) : (
               <>
-                <Input 
+                <Input
+                  data-testid="invite-search"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="Enter username or email"
@@ -134,8 +137,9 @@ export default function InviteMemberModal({ workspace, isOpen, onClose }: Invite
                 {users.length > 0 && (
                   <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
                     {users.map((u) => (
-                      <div 
-                        key={u.id} 
+                      <div
+                        key={u.id}
+                        data-testid="invite-user-result"
                         onClick={() => setUser(u)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") setUser(u);
@@ -159,7 +163,8 @@ export default function InviteMemberModal({ workspace, isOpen, onClose }: Invite
                 Cancel
               </button>
 
-              <button 
+              <button
+                data-testid="invite-send"
                 disabled={!user}
                 onClick={handleInvite}
                 className="w-full py-1 bg-primary text-foreground rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors cursor-pointer"
@@ -269,7 +274,7 @@ interface SelectMemberRoleProps {
 export function SelectMemberRole({ role, setRole }: SelectMemberRoleProps) {
   return (
     <Select defaultValue={role} value={role} onValueChange={(value) => setRole(value as WorkspaceRoleEnum)}>
-      <SelectTrigger className="flex items-center justify-center gap-1 border-none bg-transparent dark:bg-transparent hover:bg-base-200 dark:hover:bg-base-200">
+      <SelectTrigger data-testid="invite-role-select" className="flex items-center justify-center gap-1 border-none bg-transparent dark:bg-transparent hover:bg-base-200 dark:hover:bg-base-200">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

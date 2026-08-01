@@ -112,7 +112,12 @@ export function SidebarProject({
   };
 
   return (
-    <div className="flex flex-col mb-1 relative" ref={setNodeRef}>
+    <div
+      className="flex flex-col mb-1 relative"
+      ref={setNodeRef}
+      data-testid="sidebar-project"
+      data-project-name={project.name}
+    >
       <div
         tabIndex={0}
         title={!extended ? project.name : undefined}

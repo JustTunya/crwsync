@@ -31,6 +31,7 @@ packages/*/package-lock.json
 # === Environment ===
 .env
 .env.*
+!.env.demo.example
 
 # === Logs & Cache ===
 *.log
@@ -45,6 +46,10 @@ npm-debug.log*
 
 # === Other ===
 *.bat
+
+# === Demo capture ===
+apps/demo/raw/
+apps/demo/raw-light/
 
 # === Testing ===
 banchmark.js

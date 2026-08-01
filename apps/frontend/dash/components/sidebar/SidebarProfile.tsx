@@ -53,6 +53,7 @@ export function SidebarProfile({ status, setStatus, extended }: SidebarProfilePr
   return (
     <div
       ref={profRef}
+      data-testid="sidebar-profile"
       role="button"
       tabIndex={0}
       onClick={handleMenuToggle}

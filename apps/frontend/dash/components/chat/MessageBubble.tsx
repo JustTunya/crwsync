@@ -144,6 +144,8 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
     <div
       id={`message-${message.id}`}
       ref={ref}
+      data-testid="message-bubble"
+      data-self={isSelf}
       className={cn(
         "flex gap-2",
         isSelf ? "justify-end" : "justify-start",
@@ -275,7 +277,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
             )}>
               <Popover open={isEmojiPickerOpen} onOpenChange={handlePickerOpenChange}>
                 <PopoverTrigger asChild>
-                  <button className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer">
+                  <button data-testid="message-react" className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer">
                     <HugeiconsIcon icon={HappyIcon} strokeWidth={2} className="size-4" />
                   </button>
                 </PopoverTrigger>
@@ -290,6 +292,8 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                       {["👍", "❤️", "😂", "😮", "😢", "🔥"].map((quickEmoji) => (
                         <button
                           key={quickEmoji}
+                          data-testid="quick-reaction"
+                          data-emoji={quickEmoji}
                           onClick={() => {
                             onToggleReaction?.(message.id, quickEmoji);
                             setIsEmojiPickerOpen(false);

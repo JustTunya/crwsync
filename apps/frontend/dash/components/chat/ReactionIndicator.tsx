@@ -45,6 +45,7 @@ export function ReactionIndicator({ reactions, currentUserId, onToggleReaction }
   return (
     <>
       <button
+        data-testid="reaction-indicator"
         onClick={() => setIsModalOpen(true)}
         className={cn(
           "flex items-center justify-center gap-0.5 px-1 py-0.5 rounded-full text-xs font-medium transition-colors border cursor-pointer",

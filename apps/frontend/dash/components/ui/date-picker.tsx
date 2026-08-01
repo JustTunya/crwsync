@@ -19,6 +19,7 @@ export function DatePicker({ date, setDate }: { date: Date | undefined; setDate:
           <PopoverTrigger asChild>
             <Button
               variant="outline"
+              data-testid="deadline-trigger"
               className="w-32 justify-between font-normal"
             >
               {date ? format(date, "PPP") : "Select date"}
