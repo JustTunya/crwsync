@@ -48,3 +48,6 @@ npm-debug.log*
 
 # === Testing ===
 banchmark.js
+
+# == Graphify ===
+graphify-out/
