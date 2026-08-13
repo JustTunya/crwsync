@@ -6,7 +6,7 @@ import { HugeiconsIcon, IconSvgElement } from "@hugeicons/react";
 import { ComputerPhoneSyncIcon, Globe02Icon, DashboardSquare01Icon, ServerStack03Icon, DatabaseIcon, Layers01Icon, Rocket01Icon, FavouriteIcon, Notification01Icon } from "@hugeicons/core-free-icons";
 
 const clients = [
-  { id: "browser", label: "Browser", desc: "crwsync.com", icon: ComputerPhoneSyncIcon },
+  { id: "browser", label: "Browser", desc: "crwsync.xyz", icon: ComputerPhoneSyncIcon },
   { id: "mobile", label: "Mobile", desc: "Future PWA / Native", icon: ComputerPhoneSyncIcon },
 ];
 

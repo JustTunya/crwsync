@@ -162,8 +162,8 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
             </p>
             <p className="text-sm text-center text-primary/75">
               If you believe this is an error, please contact support at{" "}
-              <a className="underline underline-offset-2 text-info" href="mailto:support@crwsync.com">
-                support@crwsync.com
+              <a className="underline underline-offset-2 text-info" href="mailto:support@crwsync.xyz">
+                support@crwsync.xyz
               </a>
             </p>
           </>
