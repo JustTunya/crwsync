@@ -519,7 +519,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
 
         {/* User mention dropdown */}
         {mentionState.active && filteredOptions.length > 0 && (
-          <div className="mb-3 w-full max-w-2xl max-h-36 overflow-y-auto bg-base-100 backdrop-blur-md border border-base-300 rounded-xl shadow-lg z-50 p-1 flex flex-col gap-0.5 scrollbar-thin">
+          <div data-testid="mention-dropdown" className="mb-3 w-full max-w-2xl max-h-36 overflow-y-auto bg-base-100 backdrop-blur-md border border-base-300 rounded-xl shadow-lg z-50 p-1 flex flex-col gap-0.5 scrollbar-thin">
             {filteredOptions.map((option, idx) => (
               <button
                 key={option.type === "everyone" ? "everyone" : option.user.id}
@@ -603,6 +603,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
               </div>
               <textarea
                 ref={textareaRef}
+                data-testid="chat-input"
                 value={content}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
@@ -645,6 +646,7 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
               </div>
               <button
                 type="button"
+                data-testid="chat-send"
                 onClick={handleSubmit}
                 disabled={!content.trim() || disabled}
                 className={cn(

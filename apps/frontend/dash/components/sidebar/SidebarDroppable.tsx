@@ -11,7 +11,7 @@ export function SidebarDroppable({
 }) {
   const { setNodeRef } = useDroppable({ id });
   return (
-    <div ref={setNodeRef} className={className}>
+    <div ref={setNodeRef} className={className} data-testid={`sidebar-droppable-${id}`}>
       {children}
     </div>
   );

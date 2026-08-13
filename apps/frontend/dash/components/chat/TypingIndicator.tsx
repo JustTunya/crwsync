@@ -20,7 +20,7 @@ export function TypingIndicator({ typingUsers }: TypingIndicatorProps) {
   const remainingCount = typingUsers.length - visibleUsers.length;
 
   return (
-    <div className="flex items-end gap-2 pt-4 py-2 mt-2 mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div data-testid="typing-indicator" className="flex items-end gap-2 pt-4 py-2 mt-2 mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex -space-x-3">
         {visibleUsers.map((user, i) => (
           <div key={user.id} style={{ zIndex: visibleUsers.length - i }}>

@@ -112,7 +112,7 @@ export function EmailVerification({ token }: { token: string | null }) {
             Please check if you entered the link correctly.
           </p>
           <p className="text-sm text-center text-primary/75">
-            If you believe this is an error, please contact support at <a className="underline underline-offset-2 text-info" href="mailto:support@crwsync.com">support@crwsync.com</a>
+            If you believe this is an error, please contact support at <a className="underline underline-offset-2 text-info" href="mailto:support@crwsync.xyz">support@crwsync.xyz</a>
           </p>
         </>
       )}

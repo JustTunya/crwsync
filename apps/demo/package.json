@@ -1,0 +1,12 @@
+{
+  "name": "@crwsync/demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "record": "node --env-file=../../.env.demo scripts/record.ts"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

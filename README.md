@@ -74,7 +74,7 @@
 ### ⚙️ Infrastructure
 
 * **Caching & Pub/Sub:** Alpine-based Redis 7 with persistent volume claims and strict authentication.
-* **Domain & Routing:** In production, the applications share a root domain via subdomains (crwsync.com for the Web Portal and dash.crwsync.com for the Dashboard), orchestrated by a reverse proxy to handle SSL termination and cross-subdomain cookie persistence.
+* **Domain & Routing:** In production, the applications share a root domain via subdomains (crwsync.xyz for the Web Portal and dash.crwsync.xyz for the Dashboard), orchestrated by a reverse proxy to handle SSL termination and cross-subdomain cookie persistence.
 * **Orchestration:** Built-in stack.yml definitions featuring parallel rollback configurations, CPU/Memory reservations (e.g., strict 1.0 CPU / 1GB RAM limits per core service).
 
 ---

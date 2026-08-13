@@ -97,6 +97,8 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
   return (
     <Link
       ref={!isOverlay ? setNodeRef : undefined}
+      data-testid={isOverlay ? "sidebar-module-overlay" : "sidebar-module"}
+      data-module-name={name}
       title={!extended ? name : undefined}
       {...(!isOverlay ? attributes : {})}
       {...(!isOverlay ? { ...listeners, onKeyDown: undefined } : {})}

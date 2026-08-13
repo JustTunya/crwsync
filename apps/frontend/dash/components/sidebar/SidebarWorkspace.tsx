@@ -39,6 +39,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
     >
       {activeWorkspace ? (
         <button
+          data-testid="workspace-switcher"
           onClick={toggleMenu}
           className={cn(
             "flex flex-row items-center gap-3 w-full h-10 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",

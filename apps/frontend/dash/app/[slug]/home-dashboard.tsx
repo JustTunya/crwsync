@@ -72,15 +72,17 @@ function StatCard({
   value,
   unit,
   loading,
+  testId,
 }: {
   label: string;
   value: string | number;
   unit?: string;
   loading?: boolean;
+  testId: string;
 }) {
   if (loading) {
     return (
-      <Card className="animate-pulse">
+      <Card data-testid={testId} className="animate-pulse">
         <CardHeader className="pb-2">
           <div className="h-4 w-24 rounded bg-muted" />
         </CardHeader>
@@ -93,7 +95,7 @@ function StatCard({
 
   return (
     <GlassBox className="flex flex-1 gap-2 py-2 px-4 w-full!">
-      <h1 className="text-sm font-medium text-muted-foreground">
+      <h1 data-testid={testId} className="text-sm font-medium text-muted-foreground">
         {label}
       </h1>
       <div className="flex items-baseline gap-1.5">
@@ -162,9 +164,9 @@ export function HomeDashboard({ slug }: { slug: string }) {
             </div>
           </div>
           <div className="flex gap-2">
-            <StatCard label="Total Tasks" value={(stats?.personalWorkload ?? 0) + (stats?.personalVelocity ?? 0)} unit="tasks" loading={isStatsLoading} />
-            <StatCard label="Completed" value={stats?.personalVelocity ?? 0} unit="tasks" loading={isStatsLoading} />
-            <StatCard label="In Progress" value={stats?.personalWorkload ?? 0} unit="tasks" loading={isStatsLoading} />
+            <StatCard testId="quickstat-total" label="Total Tasks" value={(stats?.personalWorkload ?? 0) + (stats?.personalVelocity ?? 0)} unit="tasks" loading={isStatsLoading} />
+            <StatCard testId="quickstat-completed" label="Completed" value={stats?.personalVelocity ?? 0} unit="tasks" loading={isStatsLoading} />
+            <StatCard testId="quickstat-in-progress" label="In Progress" value={stats?.personalWorkload ?? 0} unit="tasks" loading={isStatsLoading} />
           </div>
         </motion.section>
 
@@ -180,7 +182,7 @@ export function HomeDashboard({ slug }: { slug: string }) {
               {pinnedModules.map((mod) => {
                 const Icon = getModuleIcon(mod.type);
                 return (
-                  <motion.div variants={itemVariants} key={mod.id}>
+                  <motion.div data-testid="pinned-module" data-module-name={mod.name} variants={itemVariants} key={mod.id}>
                     <GlassBox className="relative group flex flex-row items-center gap-3 py-3 px-4 w-full! hover:bg-base-200/30 transition-colors">
                       <Link href={getModuleHref(slug, mod)} className="flex-1 min-w-0 flex items-center gap-3 outline-none">
                         <div className="flex items-center justify-center size-8 rounded-md bg-base-200 text-foreground shrink-0">

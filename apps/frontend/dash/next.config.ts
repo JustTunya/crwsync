@@ -5,6 +5,8 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 const nextConfig: NextConfig = {
   typescript: { ignoreBuildErrors: true },
 
+  devIndicators: false,
+
   compress: true,
 
   images: {
@@ -33,7 +35,9 @@ const nextConfig: NextConfig = {
     ];
   },
   
-  output: 'standalone',
+  // Standalone output symlinks node_modules, which needs Developer Mode on
+  // Windows. NEXT_NO_STANDALONE=1 skips it for local production builds.
+  output: process.env.NEXT_NO_STANDALONE ? undefined : 'standalone',
 };
 
 export default nextConfig;

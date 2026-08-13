@@ -130,15 +130,17 @@ function StatCard({
   value,
   unit,
   loading,
+  testId,
 }: {
   label: string;
   value: string | number;
   unit?: string;
   loading?: boolean;
+  testId: string;
 }) {
   if (loading) {
     return (
-      <Card className="animate-pulse">
+      <Card data-testid={testId} className="animate-pulse">
         <CardHeader className="pb-2">
           <div className="h-4 w-24 rounded bg-muted" />
         </CardHeader>
@@ -150,7 +152,7 @@ function StatCard({
   }
 
   return (
-    <Card>
+    <Card data-testid={testId}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {label}
@@ -242,6 +244,7 @@ export function StatisticsDashboard({
             {INTERVALS.map((opt) => (
               <button
                 key={opt.value}
+                data-testid={`interval-${opt.value}`}
                 onClick={() => setInterval(opt.value)}
                 className={cn(
                   "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
@@ -259,18 +262,21 @@ export function StatisticsDashboard({
         {/* Metric Cards */}
         <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
+            testId="stat-workload"
             label="Active Workload"
             value={data?.personalWorkload ?? 0}
             unit="tasks"
             loading={isLoading}
           />
           <StatCard
+            testId="stat-velocity"
             label="Velocity"
             value={data?.personalVelocity ?? 0}
             unit="completed"
             loading={isLoading}
           />
           <StatCard
+            testId="stat-cycle-time"
             label="Avg. Cycle Time"
             value={formatCycleTime(data?.personalCycleTime ?? null)}
             loading={isLoading}
@@ -278,7 +284,7 @@ export function StatisticsDashboard({
         </motion.div>
 
         {/* Chart */}
-        <motion.div variants={itemVariants} className="rounded-xl border border-border bg-card p-6">
+        <motion.div data-testid="velocity-chart" variants={itemVariants} className="rounded-xl border border-border bg-card p-6">
           <p className="text-sm font-medium text-card-foreground mb-4">
             Workspace Velocity
           </p>

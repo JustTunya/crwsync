@@ -127,6 +127,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
       role="presentation"
     >
       <div
+        data-testid="task-detail-modal"
         className={cn(
           "bg-base-100 rounded-xl p-6 shadow-xl border border-base-200 w-full mx-auto overflow-y-auto max-h-[90vh]",
           isMobile ? "max-w-full" : "max-w-3xl"
@@ -199,6 +200,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
                 {Object.values(TaskPriorityEnum).map((p) => (
                   <button
                     key={p}
+                    data-testid={`priority-${p.toLowerCase()}`}
                     onClick={() => dispatch({ priority: p })}
                     className={cn(
                       "px-2.5 py-1.5 text-xs rounded-md border transition-colors cursor-pointer capitalize",
@@ -227,6 +229,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
                 ) : (
                   <button
                     type="button"
+                    data-testid="add-deadline"
                     onClick={() => dispatch({ deadline: new Date() })}
                     className="text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
                   >
@@ -370,6 +373,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
             Cancel
           </button>
           <button
+            data-testid="task-save"
             onClick={handleSave}
             disabled={state.saving}
             className="px-3 py-1.5 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"

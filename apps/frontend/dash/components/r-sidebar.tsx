@@ -174,6 +174,7 @@ export function RSidebar() {
               setView={setView}
             />
             <div
+              data-testid="rsidebar-members-toggle"
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
@@ -288,6 +289,7 @@ function NotificationBellButton({ open, view, isMobile, toggleOpen, setView }: N
 
   return (
     <div
+      data-testid="rsidebar-notifications-toggle"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -363,7 +365,8 @@ export function SidebarMembers({ groups, statuses, isLoading, workspace, open, s
             );
           })}
 
-          <button 
+          <button
+            data-testid="invite-members"
             onClick={() => setOpen(true)}
             className="flex flex-row items-center gap-2 justify-center p-2 mt-auto bg-base-200 rounded-lg hover:bg-base-300/75 transition-colors cursor-pointer"
           >
