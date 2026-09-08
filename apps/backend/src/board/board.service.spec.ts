@@ -1,5 +1,9 @@
 import { BoardService } from "./board.service";
 import { NotFoundException } from "@nestjs/common";
+import { PrismaService } from "src/prisma/prisma.service";
+import { CacheService } from "src/redis";
+import { StatusGateway } from "src/status/status.gateway";
+import { UpdateBoardDto, CreateTaskDto, MoveTaskDto } from "src/board/dto/board.dto";
 
 function makeService() {
   const prisma = {
@@ -7,11 +11,20 @@ function makeService() {
     boardColumn: { findFirst: jest.fn(), findMany: jest.fn(), count: jest.fn() },
     task: { findFirst: jest.fn(), findMany: jest.fn(), update: jest.fn() },
     workspace: { update: jest.fn() },
-    $transaction: jest.fn((arg) => (Array.isArray(arg) ? Promise.all(arg) : arg({}))),
-  } as any;
-  const cache = { acquireLock: jest.fn().mockResolvedValue(true), releaseLock: jest.fn() } as any;
-  const statusGateway = { server: { to: jest.fn().mockReturnValue({ emit: jest.fn() }) } } as any;
-  return { service: new BoardService(prisma, cache, statusGateway), prisma };
+    $transaction: jest.fn((arg: unknown) =>
+      Array.isArray(arg) ? Promise.all(arg) : (arg as (tx: unknown) => unknown)({}),
+    ),
+  };
+  const cache = { acquireLock: jest.fn().mockResolvedValue(true), releaseLock: jest.fn() };
+  const statusGateway = { server: { to: jest.fn().mockReturnValue({ emit: jest.fn() }) } };
+  return {
+    service: new BoardService(
+      prisma as unknown as PrismaService,
+      cache as unknown as CacheService,
+      statusGateway as unknown as StatusGateway,
+    ),
+    prisma,
+  };
 }
 
 describe("BoardService cross-workspace scoping", () => {
@@ -37,9 +50,9 @@ describe("BoardService cross-workspace scoping", () => {
     const { service, prisma } = makeService();
     prisma.board.findFirst.mockResolvedValue(null);
 
-    await expect(service.updateBoard("ws-1", "board-from-ws-2", { name: "x" } as any)).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      service.updateBoard("ws-1", "board-from-ws-2", { name: "x" } as unknown as UpdateBoardDto),
+    ).rejects.toThrow(NotFoundException);
     expect(prisma.board.update).not.toHaveBeenCalled();
   });
 
@@ -48,7 +61,12 @@ describe("BoardService cross-workspace scoping", () => {
     prisma.boardColumn.findFirst.mockResolvedValue(null);
 
     await expect(
-      service.createTask("ws-1", "board-1", { column_id: "col-from-other-board", title: "t" } as any, "user-1"),
+      service.createTask(
+        "ws-1",
+        "board-1",
+        { column_id: "col-from-other-board", title: "t" } as unknown as CreateTaskDto,
+        "user-1",
+      ),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -58,7 +76,13 @@ describe("BoardService cross-workspace scoping", () => {
     prisma.boardColumn.findMany.mockResolvedValue([{ id: "col-1", type: "UPCOMING" }]);
 
     await expect(
-      service.moveTask("ws-1", "board-1", "task-1", { column_id: "col-from-other-board", position: 0 } as any, "user-1"),
+      service.moveTask(
+        "ws-1",
+        "board-1",
+        "task-1",
+        { column_id: "col-from-other-board", position: 0 } as unknown as MoveTaskDto,
+        "user-1",
+      ),
     ).rejects.toThrow(NotFoundException);
   });
 });
