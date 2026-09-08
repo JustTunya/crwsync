@@ -75,9 +75,9 @@ export class BoardService {
     return { success: true, data: boards };
   }
 
-  async getBoard(boardId: string) {
-    const board = await this.prisma.board.findUnique({
-      where: { id: boardId },
+  async getBoard(workspaceId: string, boardId: string) {
+    const board = await this.prisma.board.findFirst({
+      where: { id: boardId, workspace_id: workspaceId },
       include: {
         columns: {
           orderBy: { position: "asc" },
@@ -102,6 +102,12 @@ export class BoardService {
   }
 
   async updateBoard(workspaceId: string, boardId: string, dto: UpdateBoardDto) {
+    const existing = await this.prisma.board.findFirst({
+      where: { id: boardId, workspace_id: workspaceId },
+      select: { id: true },
+    });
+    if (!existing) throw new NotFoundException("Board not found");
+
     const board = await this.prisma.board.update({
       where: { id: boardId },
       data: dto,
@@ -122,6 +128,12 @@ export class BoardService {
   }
 
   async deleteBoard(workspaceId: string, boardId: string) {
+    const existing = await this.prisma.board.findFirst({
+      where: { id: boardId, workspace_id: workspaceId },
+      select: { id: true },
+    });
+    if (!existing) throw new NotFoundException("Board not found");
+
     await this.prisma.$transaction(async (tx) => {
       await tx.board.delete({ where: { id: boardId } });
       await tx.workspaceModule.deleteMany({
@@ -145,6 +157,12 @@ export class BoardService {
     boardId: string,
     dto: CreateColumnDto,
   ) {
+    const board = await this.prisma.board.findFirst({
+      where: { id: boardId, workspace_id: workspaceId },
+      select: { id: true },
+    });
+    if (!board) throw new NotFoundException("Board not found");
+
     const lastColumn = await this.prisma.boardColumn.findFirst({
       where: { board_id: boardId },
       orderBy: { position: "desc" },
@@ -176,6 +194,12 @@ export class BoardService {
     columnId: string,
     dto: UpdateColumnDto,
   ) {
+    const existing = await this.prisma.boardColumn.findFirst({
+      where: { id: columnId, board: { id: boardId, workspace_id: workspaceId } },
+      select: { id: true },
+    });
+    if (!existing) throw new NotFoundException("Column not found");
+
     const column = await this.prisma.boardColumn.update({
       where: { id: columnId },
       data: dto,
@@ -189,6 +213,12 @@ export class BoardService {
   }
 
   async deleteColumn(workspaceId: string, boardId: string, columnId: string) {
+    const existing = await this.prisma.boardColumn.findFirst({
+      where: { id: columnId, board: { id: boardId, workspace_id: workspaceId } },
+      select: { id: true },
+    });
+    if (!existing) throw new NotFoundException("Column not found");
+
     await this.prisma.boardColumn.delete({ where: { id: columnId } });
 
     this.statusGateway.server
@@ -203,6 +233,13 @@ export class BoardService {
     boardId: string,
     dto: ReorderColumnsDto,
   ) {
+    const count = await this.prisma.boardColumn.count({
+      where: { id: { in: dto.column_ids }, board: { id: boardId, workspace_id: workspaceId } },
+    });
+    if (count !== dto.column_ids.length) {
+      throw new NotFoundException("One or more columns not found on this board");
+    }
+
     await this.prisma.$transaction(
       dto.column_ids.map((id, index) =>
         this.prisma.boardColumn.update({
@@ -225,6 +262,14 @@ export class BoardService {
     dto: CreateTaskDto,
     userId: string,
   ) {
+    const targetColumn = await this.prisma.boardColumn.findFirst({
+      where: { id: dto.column_id, board: { id: boardId, workspace_id: workspaceId } },
+      select: { type: true },
+    });
+    if (!targetColumn) {
+      throw new NotFoundException("Column not found on this board");
+    }
+
     const lastTask = await this.prisma.task.findFirst({
       where: { column_id: dto.column_id },
       orderBy: { position: "desc" },
@@ -241,13 +286,8 @@ export class BoardService {
 
     const shortId = `${updatedWorkspace.workspaceKey}-${updatedWorkspace.taskSequenceCounter}`;
 
-    const targetColumn = await this.prisma.boardColumn.findUnique({
-      where: { id: dto.column_id },
-      select: { type: true },
-    });
-
-    const in_progress_at = targetColumn?.type === "ONGOING" ? new Date() : null;
-    const completed_at = targetColumn?.type === "COMPLETE" ? new Date() : null;
+    const in_progress_at = targetColumn.type === "ONGOING" ? new Date() : null;
+    const completed_at = targetColumn.type === "COMPLETE" ? new Date() : null;
 
     const task = await this.prisma.task.create({
       data: {
@@ -280,6 +320,12 @@ export class BoardService {
     taskId: string,
     dto: UpdateTaskDto,
   ) {
+    const existing = await this.prisma.task.findFirst({
+      where: { id: taskId, column: { board: { id: boardId, workspace_id: workspaceId } } },
+      select: { id: true },
+    });
+    if (!existing) throw new NotFoundException("Task not found");
+
     const data: Record<string, unknown> = {};
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.description !== undefined) data.description = dto.description;
@@ -315,8 +361,8 @@ export class BoardService {
     dto: MoveTaskDto,
     userId: string,
   ) {
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, column: { board: { id: boardId, workspace_id: workspaceId } } },
       select: { column_id: true, in_progress_at: true, completed_at: true },
     });
 
@@ -324,31 +370,31 @@ export class BoardService {
 
     const fromColumnId = task.column_id;
 
-    // Fetch column types to handle transitions
     const columns = await this.prisma.boardColumn.findMany({
-      where: { id: { in: [fromColumnId, dto.column_id] } },
+      where: { id: { in: [fromColumnId, dto.column_id] }, board_id: boardId },
       select: { id: true, type: true },
     });
 
-    const sourceColumn = columns.find((c) => c.id === fromColumnId);
     const targetColumn = columns.find((c) => c.id === dto.column_id);
+    if (!targetColumn) {
+      throw new NotFoundException("Target column not found on this board");
+    }
+    const sourceColumn = columns.find((c) => c.id === fromColumnId);
 
     let in_progress_at = task.in_progress_at;
     let completed_at = task.completed_at;
 
-    if (targetColumn) {
-      if (targetColumn.type === "ONGOING" && !in_progress_at) {
-        in_progress_at = new Date();
-      }
-      if (targetColumn.type === "COMPLETE") {
-        completed_at = new Date();
-      }
-      if (
-        sourceColumn?.type === "COMPLETE" &&
-        (targetColumn.type === "ONGOING" || targetColumn.type === "UPCOMING")
-      ) {
-        completed_at = null;
-      }
+    if (targetColumn.type === "ONGOING" && !in_progress_at) {
+      in_progress_at = new Date();
+    }
+    if (targetColumn.type === "COMPLETE") {
+      completed_at = new Date();
+    }
+    if (
+      sourceColumn?.type === "COMPLETE" &&
+      (targetColumn.type === "ONGOING" || targetColumn.type === "UPCOMING")
+    ) {
+      completed_at = null;
     }
 
     const tasksInTarget = await this.prisma.task.findMany({
