@@ -133,6 +133,8 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ (matrix.app == 'web' || matrix.app == 'dash') && secrets.NEXT_PUBLIC_API_URL || '' }}
             NEXT_PUBLIC_DASH_URL=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DASH_URL || '' }}
             NEXT_PUBLIC_WEB_URL=${{ matrix.app == 'dash' && secrets.NEXT_PUBLIC_WEB_URL || '' }}
+            NEXT_PUBLIC_DEMO_IDENTIFIER=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DEMO_IDENTIFIER || '' }}
+            NEXT_PUBLIC_DEMO_PASSWORD=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DEMO_PASSWORD || '' }}
           # Expose the database URL using build-time secure context isolation
           secrets: |
             ${{ matrix.app == 'backend' && format('DATABASE_URL={0}', secrets.DATABASE_URL) || '' }}

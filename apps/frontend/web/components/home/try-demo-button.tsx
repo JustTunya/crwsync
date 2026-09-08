@@ -29,7 +29,7 @@ export function TryDemoButton() {
       <button
         type="button"
         onClick={handleClick}
-        disabled={pending}
+        disabled={pending || !DEMO_IDENTIFIER || !DEMO_PASSWORD}
         aria-label="Sign in to a shared live demo account, not your own"
         className="group relative bg-primary p-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm text-primary-foreground font-semibold whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
