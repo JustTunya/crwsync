@@ -5,6 +5,7 @@ import { UserStatus, WorkspaceInvite } from "@prisma/client";
 import { Server, Socket } from "socket.io";
 import { parse } from "cookie";
 import { PrismaService } from "src/prisma/prisma.service";
+import { SessionService } from "src/session/session.service";
 import { createSocketCorsOrigin } from "src/common/utils/socket-cors.util";
 
 @WebSocketGateway({
@@ -21,20 +22,28 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly sessionService: SessionService,
   ) {}
 
   async handleConnection(client: Socket) {
     try {
       const token = this.extractToken(client);
-      
+
       if (!token) {
         client.disconnect();
         return;
       }
 
       const payload = this.jwtService.verify(token);
+      const session = await this.sessionService.findOne(payload.jti).catch(() => null);
+      if (!session || session.revoked_at || (session.expires_at && session.expires_at < new Date())) {
+        client.disconnect();
+        return;
+      }
+
       const userId = payload.sub;
       client.data.userId = userId;
+      client.data.sessionId = payload.jti;
 
       const userRoom = `user_${userId}`;
       await client.join(userRoom);
@@ -43,7 +52,14 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const count = sockets.length;
 
       if (count === 1) await this.broadcastUserStatus(userId, "ONLINE");
-      
+
+      client.data.revocationCheck = setInterval(async () => {
+        const current = await this.sessionService.findOne(payload.jti).catch(() => null);
+        if (!current || current.revoked_at) {
+          client.disconnect();
+        }
+      }, 60_000);
+
       this.logger.debug(`Client connected: ${client.id} (User: ${userId}, Count: ${count})`);
     } catch (error) {
       this.logger.error(`Error during client connection: ${error}`);
@@ -52,18 +68,20 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
+    clearInterval(client.data.revocationCheck);
+
     const userId = client.data.userId;
     if (!userId) return;
 
     const userRoom = `user_${userId}`;
-    
+
     const sockets = await this.server.in(userRoom).fetchSockets();
     const count = sockets.length;
 
     if (count === 0) {
       await this.broadcastUserStatus(userId, "OFFLINE");
     }
-    
+
     this.logger.debug(`Client disconnected: ${client.id} (User: ${userId}, Remaining: ${count})`);
   }
 
