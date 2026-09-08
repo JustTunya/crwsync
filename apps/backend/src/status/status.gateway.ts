@@ -67,8 +67,20 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage("sub_ws")
   async handleSubscribeWorkspace(client: Socket, workspaceId: string) {
+    const userId = client.data.userId;
+    if (!userId) return;
+
+    const member = await this.prisma.workspaceMember.findUnique({
+      where: { workspace_id_user_id: { workspace_id: workspaceId, user_id: userId } },
+    });
+
+    if (!member) {
+      client.emit("error", { message: "Not a workspace member" });
+      return;
+    }
+
     await client.join(`workspace_${workspaceId}`);
-    
+
     const members = await this.prisma.workspaceMember.findMany({
       where: { workspace_id: workspaceId },
       select: { user_id: true, user: { select: { status_preference: true } } },
