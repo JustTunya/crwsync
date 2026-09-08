@@ -454,40 +454,38 @@ export class BoardService {
     );
 
     if (chatModules.length === 0) {
-      return { 
-        success: true, 
+      return {
+        success: true,
         data: modules.map(({ pinned_by_users, ...m }) => ({
           ...m,
           isPinned: pinned_by_users.length > 0,
-        }))
+        })),
       };
     }
 
     const roomIds = chatModules.map((m) => m.reference_id);
 
-    const unreadCounts = await Promise.all(
-      roomIds.map(async (roomId) => {
-        const receipt = await this.prisma.chatReadReceipt.findFirst({
-          where: {
-            room_id: roomId,
-            user_id: userId,
-          },
-        });
+    const receipts = await this.prisma.chatReadReceipt.findMany({
+      where: { room_id: { in: roomIds }, user_id: userId },
+      select: { room_id: true, last_read_at: true },
+    });
 
+    const receiptMap = new Map(receipts.map((r) => [r.room_id, r.last_read_at]));
+
+    const unreadPerRoom = await Promise.all(
+      roomIds.map(async (roomId) => {
+        const lastReadAt = receiptMap.get(roomId);
         const count = await this.prisma.chatMessage.count({
           where: {
             room_id: roomId,
-            ...(receipt ? { created_at: { gt: receipt.last_read_at } } : {}),
+            ...(lastReadAt ? { created_at: { gt: lastReadAt } } : {}),
           },
         });
-
         return { room_id: roomId, count };
       }),
     );
 
-    const unreadMap = new Map(
-      unreadCounts.map((uc) => [uc.room_id, Number(uc.count)]),
-    );
+    const unreadMap = new Map(unreadPerRoom.map((uc) => [uc.room_id, uc.count]));
 
     const enrichedModules = modules.map(({ pinned_by_users, ...m }) => {
       const isPinned = pinned_by_users.length > 0;
