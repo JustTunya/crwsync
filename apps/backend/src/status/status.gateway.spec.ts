@@ -3,12 +3,19 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { JwtService } from "@nestjs/jwt";
 import { Socket } from "socket.io";
 
+import { SessionService } from "src/session/session.service";
+
 function makeGateway() {
   const prisma = {
     workspaceMember: { findUnique: jest.fn(), findMany: jest.fn() },
   };
-  const gateway = new StatusGateway({} as unknown as JwtService, prisma as unknown as PrismaService);
-  return { gateway, prisma };
+  const sessionService = { findOne: jest.fn() };
+  const gateway = new StatusGateway(
+    {} as unknown as JwtService,
+    prisma as unknown as PrismaService,
+    sessionService as unknown as SessionService,
+  );
+  return { gateway, prisma, sessionService };
 }
 
 describe("StatusGateway.handleSubscribeWorkspace", () => {
