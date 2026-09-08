@@ -31,7 +31,7 @@ Portfolio project.
 
 ## About
 
-CRWSync is a fictional crew-collaboration platform built as a complete,
+crwsync is a fictional crew-collaboration platform built as a complete,
 production-shaped application — not a static mockup. It demonstrates a real
 enterprise workflow with the rigor of a production system: a team signs in,
 organizes work into projects, moves tasks around a shared board, and watches
