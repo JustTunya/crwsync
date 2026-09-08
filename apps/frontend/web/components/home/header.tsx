@@ -141,6 +141,11 @@ export function NavMenu() {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "hidden lg:inline-flex")}>
+            <Link href="#about">About</Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "hidden lg:inline-flex")}>
             <Link href="#contact">Contact</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
@@ -161,6 +166,10 @@ const menuItems = [
   {
     href: "#architecture",
     title: "Architecture",
+  },
+  {
+    href: "#about",
+    title: "About",
   },
   {
     href: "#contact",

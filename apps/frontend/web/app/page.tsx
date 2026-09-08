@@ -4,6 +4,7 @@ import Hero from "@/components/home/hero";
 import ProofStrip from "@/components/home/proof-strip";
 import Features from "@/components/home/features";
 import Architecture from "@/components/home/architecture";
+import About from "@/components/home/about";
 import Contact from "@/components/home/contact";
 
 const Footer = dynamic(() => import("@/components/home/footer"), {
@@ -20,6 +21,7 @@ export default function Home() {
         <ProofStrip />
         <Features />
         <Architecture />
+        <About />
         <Contact />
       </main>
       <Footer />
