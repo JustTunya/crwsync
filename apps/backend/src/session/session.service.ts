@@ -118,16 +118,20 @@ export class SessionService {
     if (oldSession.expires_at && oldSession.expires_at < new Date()) {
       throw new BadRequestException("Old session has expired");
     }
-    if (oldSession.revoked_at) {
-      throw new BadRequestException("Old session has been revoked");
+
+    const claimed = await this.prisma.session.updateMany({
+      where: { id: oldSession.id, revoked_at: null },
+      data: { revoked_at: new Date() },
+    });
+    if (claimed.count === 0) {
+      throw new BadRequestException("Old session has already been rotated");
     }
+    await this.cache.del(CacheKeys.session(oldSession.id));
 
     const { session: newSession, token: refreshToken } = await this.create(
       { id: randomUUID(), user_id: dto.user_id, persistent: dto.persistent },
       req,
     );
-
-    await this.revoke(oldSession.id);
 
     return { session: newSession, refreshToken };
   }
