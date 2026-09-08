@@ -505,6 +505,12 @@ export class BoardService {
   }
 
   async togglePinModule(workspaceId: string, moduleId: string, userId: string, isPinned: boolean) {
+    const module_ = await this.prisma.workspaceModule.findFirst({
+      where: { id: moduleId, workspace_id: workspaceId },
+      select: { id: true },
+    });
+    if (!module_) throw new NotFoundException("Module not found");
+
     if (isPinned) {
       await this.prisma.userPinnedModule.upsert({
         where: {
@@ -527,11 +533,19 @@ export class BoardService {
         },
       });
     }
-    
+
     return { success: true };
   }
 
   async reorderModules(workspaceId: string, dto: ReorderModulesDto) {
+    const ids = dto.updates.map((u) => u.id);
+    const count = await this.prisma.workspaceModule.count({
+      where: { id: { in: ids }, workspace_id: workspaceId },
+    });
+    if (count !== ids.length) {
+      throw new NotFoundException("One or more modules not found in this workspace");
+    }
+
     await this.prisma.$transaction(
       dto.updates.map((update) =>
         this.prisma.workspaceModule.update({
@@ -556,6 +570,12 @@ export class BoardService {
     moduleId: string,
     dto: UpdateModuleDto,
   ) {
+    const existing = await this.prisma.workspaceModule.findFirst({
+      where: { id: moduleId, workspace_id: workspaceId },
+      select: { id: true },
+    });
+    if (!existing) throw new NotFoundException("Module not found");
+
     const wsModule = await this.prisma.workspaceModule.update({
       where: { id: moduleId },
       data: { name: dto.name },
@@ -566,8 +586,8 @@ export class BoardService {
         where: { id: wsModule.reference_id },
         data: { name: dto.name },
       });
-      
-       this.statusGateway.server
+
+      this.statusGateway.server
         .to(`workspace_${workspaceId}`)
         .emit("board:updated", { boardId: wsModule.reference_id, data: { name: dto.name } });
     }
@@ -628,14 +648,14 @@ export class BoardService {
   }
 
   async deleteModule(workspaceId: string, moduleId: string) {
-    const wsModule = await this.prisma.workspaceModule.findUnique({
-      where: { id: moduleId },
+    const wsModule = await this.prisma.workspaceModule.findFirst({
+      where: { id: moduleId, workspace_id: workspaceId },
     });
 
     if (!wsModule) throw new NotFoundException("Module not found");
 
     if (wsModule.type === ModuleTypeEnum.BOARD && wsModule.reference_id) {
-       await this.deleteBoard(workspaceId, wsModule.reference_id);
+      await this.deleteBoard(workspaceId, wsModule.reference_id);
     } else if (wsModule.type === ModuleTypeEnum.CHAT && wsModule.reference_id) {
       await this.prisma.$transaction(async (tx) => {
         await tx.chatMessage.deleteMany({ where: { room_id: wsModule.reference_id } });
@@ -647,11 +667,11 @@ export class BoardService {
         .to(`workspace_${workspaceId}`)
         .emit("module:deleted", { moduleId });
     } else {
-        await this.prisma.workspaceModule.delete({
-            where: { id: moduleId },
-        });
+      await this.prisma.workspaceModule.delete({
+        where: { id: moduleId },
+      });
 
-        this.statusGateway.server
+      this.statusGateway.server
         .to(`workspace_${workspaceId}`)
         .emit("module:deleted", { moduleId });
     }
@@ -697,6 +717,12 @@ export class BoardService {
     projectId: string,
     dto: { name?: string; position?: number },
   ) {
+    const existing = await this.prisma.workspaceProject.findFirst({
+      where: { id: projectId, workspace_id: workspaceId },
+      select: { id: true },
+    });
+    if (!existing) throw new NotFoundException("Project not found");
+
     const project = await this.prisma.workspaceProject.update({
       where: { id: projectId },
       data: dto,
@@ -710,14 +736,18 @@ export class BoardService {
   }
 
   async deleteProject(workspaceId: string, projectId: string) {
+    const existing = await this.prisma.workspaceProject.findFirst({
+      where: { id: projectId, workspace_id: workspaceId },
+      select: { id: true },
+    });
+    if (!existing) throw new NotFoundException("Project not found");
+
     const modulesInProject = await this.prisma.workspaceModule.findMany({
       where: { project_id: projectId },
       select: { id: true },
     });
 
-    for (const mod of modulesInProject) {
-      await this.deleteModule(workspaceId, mod.id);
-    }
+    await Promise.all(modulesInProject.map((mod) => this.deleteModule(workspaceId, mod.id)));
 
     await this.prisma.workspaceProject.delete({
       where: { id: projectId },

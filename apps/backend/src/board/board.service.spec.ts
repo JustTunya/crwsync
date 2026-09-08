@@ -86,3 +86,23 @@ describe("BoardService cross-workspace scoping", () => {
     ).rejects.toThrow(NotFoundException);
   });
 });
+
+describe("BoardService module/project workspace scoping", () => {
+  it("updateModule rejects a module from another workspace", async () => {
+    const { service, prisma } = makeService();
+    prisma.boardColumn.count = jest.fn();
+    (prisma as any).workspaceModule = { findFirst: jest.fn().mockResolvedValue(null), update: jest.fn() };
+
+    await expect(service.updateModule("ws-1", "module-from-ws-2", { name: "x" } as any)).rejects.toThrow(
+      NotFoundException,
+    );
+    expect((prisma as any).workspaceModule.update).not.toHaveBeenCalled();
+  });
+
+  it("deleteModule rejects a module from another workspace", async () => {
+    const { service, prisma } = makeService();
+    (prisma as any).workspaceModule = { findFirst: jest.fn().mockResolvedValue(null) };
+
+    await expect(service.deleteModule("ws-1", "module-from-ws-2")).rejects.toThrow(NotFoundException);
+  });
+});
