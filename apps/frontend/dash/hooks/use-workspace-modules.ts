@@ -37,8 +37,7 @@ export function useReorderModules(workspaceId: string) {
           data.updates.forEach((update) => {
             const mod = moduleMap.get(update.id);
             if (mod) {
-              mod.position = update.position;
-              mod.project_id = update.project_id;
+              moduleMap.set(update.id, { ...mod, position: update.position, project_id: update.project_id });
             }
           });
           const reordered = Array.from(moduleMap.values()).sort((a, b) => a.position - b.position);
