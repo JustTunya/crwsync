@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useRef, useState, useEffect, useId } from "react";
 import { HugeiconsIcon, IconSvgElement } from "@hugeicons/react";
 import { ComputerPhoneSyncIcon, Globe02Icon, DashboardSquare01Icon, ServerStack03Icon, DatabaseIcon, Layers01Icon, Rocket01Icon, FavouriteIcon, Notification01Icon } from "@hugeicons/core-free-icons";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 const clients = [
   { id: "browser", label: "Browser", desc: "crwsync.xyz", icon: ComputerPhoneSyncIcon },
@@ -159,29 +160,31 @@ function Card({
   fillIcon?: boolean;
   children?: React.ReactNode;
 }) {
+  const reducedMotion = usePrefersReducedMotion();
+
   return (
     <motion.div
       id={id}
-      initial={{ opacity: 0, y: 20 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: i * 0.15 }}
+      transition={{ duration: reducedMotion ? 0 : 0.5, delay: reducedMotion ? 0 : i * 0.15 }}
       className="flex flex-col items-center justify-center min-h-24 lg:min-h-26 h-full w-30 lg:w-36 p-2 text-center rounded-2xl shadow-xl border-[1.5px] border-foreground/10 bg-linear-to-br from-foreground/10 via-foreground/6 to-foreground/5 backdrop-blur-md"
     >
       <div className="p-2 mb-2 bg-foreground/10 text-foreground rounded-full">
         {typeof icon === "string" ? (
-          <div 
-            className="size-6 bg-current" 
-            style={{ 
-              WebkitMaskImage: `url(${icon})`, 
-              maskImage: `url(${icon})`, 
-              WebkitMaskSize: 'contain', 
+          <div
+            className="size-6 bg-current"
+            style={{
+              WebkitMaskImage: `url(${icon})`,
+              maskImage: `url(${icon})`,
+              WebkitMaskSize: 'contain',
               maskSize: 'contain',
               WebkitMaskRepeat: 'no-repeat',
               maskRepeat: 'no-repeat',
               WebkitMaskPosition: 'center',
               maskPosition: 'center'
-            }} 
+            }}
           />
         ) : (
           <HugeiconsIcon icon={icon} strokeWidth={1.5} fill={fillIcon ? "currentColor" : "none"} className="text-xs" />
@@ -231,6 +234,7 @@ function Connector({
   const [coords, setCoords] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const rawId = useId();
   const pathId = "path-" + rawId.replace(/:/g, "");
+  const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     let animationFrameId: number;
@@ -279,7 +283,7 @@ function Connector({
   const deltaX = Math.abs(x2 - x1);
   const deltaY = Math.abs(y2 - y1);
   const h = rightLoop ? deltaY * curve : deltaX * curve;
-  const data = rightLoop 
+  const data = rightLoop
     ? `M ${x1} ${y1} C ${x1 + h + offsetX} ${y1}, ${x2 + h + offsetX} ${y2}, ${x2} ${y2}`
     : `M ${x1} ${y1} C ${x1 + h - offsetX} ${y1}, ${x2 - h - offsetX} ${y2}, ${x2} ${y2}`;
   const dyValue = rightLoop ? 12 : -4;
@@ -295,7 +299,7 @@ function Connector({
   const beamDuration = 2;
   const initialDelay = (delayOrder || 0) * beamDuration;
   const repeatDelay = beamDuration;
-  
+
   return (
     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
       {label && <path id={pathId} d={textData} fill="none" stroke="none" />}
@@ -307,13 +311,13 @@ function Connector({
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeDasharray={dashed ? "5 5" : undefined}
-        initial={dashed ? { strokeDashoffset: 0 } : undefined}
-        animate={dashed ? { strokeDashoffset: -10 } : {}}
-        transition={dashed ? { repeat: Infinity, duration: 0.4, ease: "linear" } : {}}
+        initial={dashed && !reducedMotion ? { strokeDashoffset: 0 } : undefined}
+        animate={dashed && !reducedMotion ? { strokeDashoffset: -10 } : {}}
+        transition={dashed && !reducedMotion ? { repeat: Infinity, duration: 0.4, ease: "linear" } : {}}
       />
-      
+
       {/* Animated Light Beam for non-dashed lines */}
-      {!dashed && (
+      {!dashed && !reducedMotion && (
         <>
           {/* Faded edges tail */}
           <motion.path
@@ -343,8 +347,8 @@ function Connector({
       )}
 
       {label && (
-        <text 
-          className="text-[10px] font-medium fill-muted-foreground" 
+        <text
+          className="text-[10px] font-medium fill-muted-foreground"
           dy={finalDy}
         >
           <textPath href={`#${pathId}`} startOffset="50%" textAnchor="middle">
