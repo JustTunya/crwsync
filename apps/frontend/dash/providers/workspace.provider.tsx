@@ -7,6 +7,7 @@ import { Workspace, WorkspaceMember, CreateWorkspacePayload } from "@crwsync/typ
 import { useWorkspaces, useWorkspace as useWorkspaceQuery, useCreateWorkspace, workspaceKeys } from "@/hooks/use-workspaces";
 
 interface WorkspaceContextType {
+  activeId: string | undefined;
   activeWorkspace: Workspace | null;
   workspaces: WorkspaceMember[];
   loading: { list: boolean; active: boolean; mutation: boolean; };
@@ -69,6 +70,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       workspaces,
+      activeId,
       activeWorkspace,
       loading: {
         list: listLoading,
@@ -79,7 +81,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       switchWorkspace,
       refreshWorkspaces
     }),
-    [workspaces, activeWorkspace, listLoading, activeLoading, createMutation.isPending, createWorkspace, switchWorkspace, refreshWorkspaces]
+    [workspaces, activeId, activeWorkspace, listLoading, activeLoading, createMutation.isPending, createWorkspace, switchWorkspace, refreshWorkspaces]
   );
 
   return (
