@@ -153,12 +153,12 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   async scardMulti(keys: string[]): Promise<number[]> {
     try {
       if (keys.length === 0) return [];
-      
+
       const pipeline = this.redis.pipeline();
       keys.forEach((key) => pipeline.scard(key));
-      
+
       const results = await pipeline.exec();
-      
+
       if (!results) return keys.map(() => 0);
 
       return results.map(([error, result]) => {
@@ -172,6 +172,20 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       this.logger.warn(`Cache scardMulti error: ${error}`);
       return keys.map(() => 0);
     }
+  }
+
+  async acquireLock(key: string, ttlSeconds: number): Promise<boolean> {
+    try {
+      const result = await this.redis.set(key, "1", "EX", ttlSeconds, "NX");
+      return result === "OK";
+    } catch (error) {
+      this.logger.warn(`Cache acquireLock error for key ${key}: ${error}`);
+      return false;
+    }
+  }
+
+  async releaseLock(key: string): Promise<void> {
+    await this.del(key);
   }
 }
 

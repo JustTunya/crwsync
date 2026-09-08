@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
 import { ModuleTypeEnum } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
@@ -270,48 +270,58 @@ export class BoardService {
       throw new NotFoundException("Column not found on this board");
     }
 
-    const lastTask = await this.prisma.task.findFirst({
-      where: { column_id: dto.column_id },
-      orderBy: { position: "desc" },
-      select: { position: true },
-    });
+    const lockKey = `lock:column:${dto.column_id}:position`;
+    const acquired = await this.cache.acquireLock(lockKey, 5);
+    if (!acquired) {
+      throw new ConflictException("This column is busy, please try again");
+    }
 
-    const nextPosition = (lastTask?.position ?? 0) + POSITION_GAP;
+    try {
+      const lastTask = await this.prisma.task.findFirst({
+        where: { column_id: dto.column_id },
+        orderBy: { position: "desc" },
+        select: { position: true },
+      });
 
-    const updatedWorkspace = await this.prisma.workspace.update({
-      where: { id: workspaceId },
-      data: { taskSequenceCounter: { increment: 1 } },
-      select: { workspaceKey: true, taskSequenceCounter: true },
-    });
+      const nextPosition = (lastTask?.position ?? 0) + POSITION_GAP;
 
-    const shortId = `${updatedWorkspace.workspaceKey}-${updatedWorkspace.taskSequenceCounter}`;
+      const updatedWorkspace = await this.prisma.workspace.update({
+        where: { id: workspaceId },
+        data: { taskSequenceCounter: { increment: 1 } },
+        select: { workspaceKey: true, taskSequenceCounter: true },
+      });
 
-    const in_progress_at = targetColumn.type === "ONGOING" ? new Date() : null;
-    const completed_at = targetColumn.type === "COMPLETE" ? new Date() : null;
+      const shortId = `${updatedWorkspace.workspaceKey}-${updatedWorkspace.taskSequenceCounter}`;
 
-    const task = await this.prisma.task.create({
-      data: {
-        column_id: dto.column_id,
-        shortId,
-        title: dto.title,
-        description: dto.description,
-        priority: dto.priority,
-        labels: dto.labels ?? [],
-        tags: dto.tags ?? [],
-        assignee_id: dto.assignee_id,
-        due_date: dto.due_date ? new Date(dto.due_date) : undefined,
-        position: nextPosition,
-        in_progress_at,
-        completed_at,
-        created_by: userId,
-      },
-    });
+      const in_progress_at = targetColumn.type === "ONGOING" ? new Date() : null;
+      const completed_at = targetColumn.type === "COMPLETE" ? new Date() : null;
 
-    this.statusGateway.server
-      .to(`workspace_${workspaceId}`)
-      .emit("board:task:created", { boardId, task });
+      const task = await this.prisma.task.create({
+        data: {
+          column_id: dto.column_id,
+          shortId,
+          title: dto.title,
+          description: dto.description,
+          priority: dto.priority,
+          labels: dto.labels ?? [],
+          tags: dto.tags ?? [],
+          assignee_id: dto.assignee_id,
+          due_date: dto.due_date ? new Date(dto.due_date) : undefined,
+          position: nextPosition,
+          in_progress_at,
+          completed_at,
+          created_by: userId,
+        },
+      });
 
-    return { success: true, data: task };
+      this.statusGateway.server
+        .to(`workspace_${workspaceId}`)
+        .emit("board:task:created", { boardId, task });
+
+      return { success: true, data: task };
+    } finally {
+      await this.cache.releaseLock(lockKey);
+    }
   }
 
   async updateTask(
@@ -397,44 +407,54 @@ export class BoardService {
       completed_at = null;
     }
 
-    const tasksInTarget = await this.prisma.task.findMany({
-      where: { column_id: dto.column_id, is_deleted: false, is_archived: false },
-      orderBy: { position: "asc" },
-      select: { id: true },
-    });
+    const lockKey = `lock:column:${dto.column_id}:position`;
+    const acquired = await this.cache.acquireLock(lockKey, 5);
+    if (!acquired) {
+      throw new ConflictException("This column is busy, please try again");
+    }
 
-    const filtered = tasksInTarget.filter((t) => t.id !== taskId);
-    filtered.splice(dto.position, 0, { id: taskId });
-
-    await this.prisma.$transaction([
-      this.prisma.task.update({
-        where: { id: taskId },
-        data: {
-          column_id: dto.column_id,
-          in_progress_at,
-          completed_at,
-        },
-      }),
-      ...filtered.map((t, index) =>
-        this.prisma.task.update({
-          where: { id: t.id },
-          data: { position: (index + 1) * POSITION_GAP },
-        }),
-      ),
-    ]);
-
-    this.statusGateway.server
-      .to(`workspace_${workspaceId}`)
-      .emit("board:task:moved", {
-        boardId,
-        taskId,
-        fromColumnId,
-        toColumnId: dto.column_id,
-        position: dto.position,
-        userId,
+    try {
+      const tasksInTarget = await this.prisma.task.findMany({
+        where: { column_id: dto.column_id, is_deleted: false, is_archived: false },
+        orderBy: { position: "asc" },
+        select: { id: true },
       });
 
-    return { success: true };
+      const filtered = tasksInTarget.filter((t) => t.id !== taskId);
+      filtered.splice(dto.position, 0, { id: taskId });
+
+      await this.prisma.$transaction([
+        this.prisma.task.update({
+          where: { id: taskId },
+          data: {
+            column_id: dto.column_id,
+            in_progress_at,
+            completed_at,
+          },
+        }),
+        ...filtered.map((t, index) =>
+          this.prisma.task.update({
+            where: { id: t.id },
+            data: { position: (index + 1) * POSITION_GAP },
+          }),
+        ),
+      ]);
+
+      this.statusGateway.server
+        .to(`workspace_${workspaceId}`)
+        .emit("board:task:moved", {
+          boardId,
+          taskId,
+          fromColumnId,
+          toColumnId: dto.column_id,
+          position: dto.position,
+          userId,
+        });
+
+      return { success: true };
+    } finally {
+      await this.cache.releaseLock(lockKey);
+    }
   }
 
   async getWorkspaceModules(workspaceId: string, userId: string) {
