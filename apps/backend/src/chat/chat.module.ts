@@ -22,6 +22,10 @@ import { ChatProcessor } from "src/chat/chat.processor";
     }),
     BullModule.registerQueue({
       name: "chat_messages",
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: "exponential", delay: 1000 },
+      },
     }),
   ],
   controllers: [ChatController],
