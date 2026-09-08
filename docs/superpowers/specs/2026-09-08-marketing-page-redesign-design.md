@@ -90,7 +90,9 @@ Remove the commented-out dead block. Ship a slim, real version: GitHub, LinkedIn
 
 ## Demo CTA — implementation approach
 
-No new backend endpoint. The "Try Live Demo" button uses the same `useActionState(signin, initState)` pattern as `SigninForm`, dispatching a payload built from `DEMO_OWNER_*` env values exposed to the client build (needs a `NEXT_PUBLIC_`-prefixed pair, or a thin server action wrapper that reads the non-public env vars server-side and calls `signin` internally — server action wrapper is preferred so demo credentials never reach client JS). On success, redirect to `NEXT_PUBLIC_DASH_URL` exactly as the normal flow does.
+**Correction from initial draft:** `signin()` in `services/auth.service.tsx` is a plain client-side async function (called via `useActionState` from the `"use client"` `SigninForm`), not a Next.js Server Action — it calls the backend API directly from the browser via `axios` with `withCredentials: true`, matching every other public env var in this app (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_DASH_URL` in `apps/frontend/web/.env`). There is no server-side env boundary to hide behind here, and inventing one (a Next.js Route Handler proxying the signin call) would need to also forward the backend's `Set-Cookie` response correctly for the shared cookie domain — real added complexity for a credential that's meant to be public anyway (a "try the live demo" account, not a real user's secret).
+
+No new backend endpoint. The "Try Live Demo" button is a client component using the exact same `useActionState(signin, initState)` pattern as `SigninForm`, dispatching a fixed payload built from two new public env vars: `NEXT_PUBLIC_DEMO_IDENTIFIER` / `NEXT_PUBLIC_DEMO_PASSWORD` (set in deploy env from `DEMO_OWNER_USERNAME` / `DEMO_OWNER_PASSWORD` — never hardcoded in source, never committed). On success, redirect to `NEXT_PUBLIC_DASH_URL` exactly as the normal flow does.
 
 ## Video asset handling
 
