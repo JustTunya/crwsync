@@ -191,21 +191,34 @@ export class WorkspaceService {
   }
 
   async update(id: string, dto: UpdateWorkspaceDto) {
+    const existing = await this.prisma.workspace.findUnique({ where: { id }, select: { slug: true } });
     const result = await this.prisma.workspace.update({ where: { id }, data: dto });
+
     await this.cache.del(CacheKeys.workspace(id));
+    if (existing?.slug) {
+      await this.cache.del(CacheKeys.workspaceSlug(existing.slug));
+    }
+    if (dto.slug && dto.slug !== existing?.slug) {
+      await this.cache.del(CacheKeys.workspaceSlug(dto.slug));
+    }
+
     return result;
   }
 
   async remove(id: string) {
-    const members = await this.prisma.workspaceMember.findMany({
-      where: { workspace_id: id },
-      select: { user_id: true },
-    });
+    const [existing, members] = await Promise.all([
+      this.prisma.workspace.findUnique({ where: { id }, select: { slug: true } }),
+      this.prisma.workspaceMember.findMany({
+        where: { workspace_id: id },
+        select: { user_id: true },
+      }),
+    ]);
 
     const result = await this.prisma.workspace.delete({ where: { id } });
 
     const cacheKeys = [
       CacheKeys.workspace(id),
+      ...(existing?.slug ? [CacheKeys.workspaceSlug(existing.slug)] : []),
       ...members.flatMap((m) => [
         CacheKeys.workspaceMember(id, m.user_id),
         CacheKeys.userWorkspaces(m.user_id),
@@ -414,7 +427,7 @@ export class WorkspaceService {
       data: { role: newRole },
     });
 
-    await this.cache.del(CacheKeys.workspaceMember(workspaceId, memberId));
+    await this.invMembershipCaches(workspaceId, memberId);
 
     return result;
   }
@@ -447,8 +460,8 @@ export class WorkspaceService {
     });
 
     await Promise.all([
-      this.cache.del(CacheKeys.workspaceMember(workspaceId, currentOwnerId)),
-      this.cache.del(CacheKeys.workspaceMember(workspaceId, newOwnerId)),
+      this.invMembershipCaches(workspaceId, currentOwnerId),
+      this.invMembershipCaches(workspaceId, newOwnerId),
     ]);
   }
 
