@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import Header from "@/components/home/header";
 import Hero from "@/components/home/hero";
+import ProofStrip from "@/components/home/proof-strip";
 import Features from "@/components/home/features";
 import Architecture from "@/components/home/architecture";
 import Contact from "@/components/home/contact";
@@ -16,6 +17,7 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <Hero />
+        <ProofStrip />
         <Features />
         <Architecture />
         <Contact />
