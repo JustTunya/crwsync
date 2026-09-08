@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const cards = {
   chat: {
     name: "Real-Time Chat & Messaging",
-    description: "Team members can communicate instantly in dedicated chat rooms",
+    description: "Teammates communicate instantly in dedicated chat rooms, live over WebSockets.",
     icon: "/Paperplane.svg",
   },
   kanban: {
@@ -15,7 +15,7 @@ const cards = {
   },
   workspaces: {
     name: "Collaborative Workspaces",
-    description: "Users can manage projects and role-based access within isolated workspaces.",
+    description: "Manage projects and role-based access within isolated workspaces.",
     icon: "/Link.svg",
   },
   scheduling: {
@@ -25,7 +25,7 @@ const cards = {
   },
   notifications: {
     name: "Notifications",
-    description: "An integrated notification system keeps users updated on activities and mentions.",
+    description: "Keeps everyone updated on activity and mentions, in real time.",
     icon: "/Bell.svg",
   },
 };
