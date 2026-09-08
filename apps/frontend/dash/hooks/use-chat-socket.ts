@@ -18,7 +18,6 @@ const chatSocket: Socket = io(`${SOCKET_URL}/chat`, {
   withCredentials: true,
   transports: ["websocket"],
   autoConnect: false,
-  forceNew: true,
 });
 
 interface UseChatSocketOptions {
