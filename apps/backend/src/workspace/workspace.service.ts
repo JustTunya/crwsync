@@ -529,8 +529,8 @@ export class WorkspaceService {
   }
 
   async deleteTask(workspaceId: string, taskId: string) {
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, column: { board: { workspace_id: workspaceId } } },
       include: { column: { select: { board_id: true } } },
     });
     if (!task) throw new NotFoundException("Task not found");
@@ -548,8 +548,8 @@ export class WorkspaceService {
   }
 
   async archiveTask(workspaceId: string, taskId: string) {
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, column: { board: { workspace_id: workspaceId } } },
       include: { column: { select: { board_id: true, type: true } } },
     });
     if (!task) throw new NotFoundException("Task not found");
