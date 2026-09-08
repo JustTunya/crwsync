@@ -1,12 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ReorderModulesPayload, WorkspaceModule, Board } from "@crwsync/types";
 import * as boardService from "@/services/board.service";
-
-export const moduleKeys = {
-  all: ["modules"] as const,
-  list: (workspaceId: string) =>
-    [...moduleKeys.all, "list", workspaceId] as const,
-};
+import { boardKeys, moduleKeys } from "@/hooks/query-keys";
+export { moduleKeys } from "@/hooks/query-keys";
 
 export function useWorkspaceModules(workspaceId?: string) {
   return useQuery({
@@ -100,7 +96,7 @@ export function useUpdateModule(workspaceId: string) {
 
       if (referenceId && data.name) {
         queryClient.setQueryData(
-          ["boards", "detail", referenceId],
+          boardKeys.detail(referenceId),
           (old: { data: Board } | undefined) => {
             if (!old?.data) return old;
             return {
@@ -121,7 +117,7 @@ export function useUpdateModule(workspaceId: string) {
     onSettled: (_, __, ___, context) => {
       queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
       if (context?.referenceId) {
-        queryClient.invalidateQueries({ queryKey: ["boards", "detail", context.referenceId] });
+        queryClient.invalidateQueries({ queryKey: boardKeys.detail(context.referenceId) });
       }
     },
   });

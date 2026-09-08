@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { WorkspaceProject, CreateProjectPayload, UpdateProjectPayload } from "@crwsync/types";
 import { api } from "@/services/auth.service";
+import { moduleKeys } from "@/hooks/query-keys";
 
 export const projectKeys = {
   all: ["projects"] as const,
@@ -120,8 +121,7 @@ export function useDeleteProject(workspaceId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: projectKeys.list(workspaceId) });
-      // Modules might have been deleted, invalidate modules too
-      queryClient.invalidateQueries({ queryKey: ["modules", "list", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
     },
   });
 }

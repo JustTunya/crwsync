@@ -11,14 +11,8 @@ import {
   ReorderColumnsPayload,
 } from "@crwsync/types";
 import * as boardService from "@/services/board.service";
-import { moduleKeys } from "@/hooks/use-workspace-modules";
-
-export const boardKeys = {
-  all: ["boards"] as const,
-  list: (workspaceId: string) =>
-    [...boardKeys.all, "list", workspaceId] as const,
-  detail: (boardId: string) => [...boardKeys.all, "detail", boardId] as const,
-};
+import { boardKeys, moduleKeys } from "@/hooks/query-keys";
+export { boardKeys } from "@/hooks/query-keys";
 
 export function useBoards(workspaceId?: string) {
   return useQuery({
