@@ -22,7 +22,7 @@ Portfolio project.
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat&logo=redis&logoColor=white&labelColor=1A1816)](https://redis.io)
 [![Turborepo](https://img.shields.io/badge/Turborepo-Monorepo-EF4444?style=flat&logo=turborepo&logoColor=white&labelColor=1A1816)](https://turbo.build)
 [![pnpm](https://img.shields.io/badge/pnpm-10-F69220?style=flat&logo=pnpm&logoColor=white&labelColor=1A1816)](https://pnpm.io)
-[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-B93826?style=flat&labelColor=1A1816)](LICENSE)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-B93826?style=flat&labelColor=1A1816)](LICENSE)
 
 </div>
 
@@ -141,10 +141,9 @@ Create a `.env` in each of `apps/frontend/web`, `apps/frontend/dash`, and
 
 ## License
 
-**Proprietary and Confidential.**
+Licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE).
 
-This repository and its source code are provided strictly for viewing and
-portfolio evaluation purposes. All rights are reserved. No permission is
-granted to use, copy, modify, distribute, or deploy this software, in whole
-or in part, without explicit written permission from the author. See
-[LICENSE](LICENSE).
+The source is public so it can be read, studied, and used for personal or
+educational purposes. **Commercial use — including running this as, or as
+part of, an actual business — is not permitted without a separate license
+from the author.** Reach out if you'd like to discuss one.
