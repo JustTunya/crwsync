@@ -47,8 +47,8 @@ export default function Hero() {
           className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
         />
         <span className="absolute inset-0 flex items-center justify-center">
-          <span className="flex items-center justify-center size-16 bg-primary rounded-full shadow-lg shadow-black/20 group-hover:scale-105 transition-transform">
-            <svg viewBox="0 0 24 24" className="size-6 fill-primary-foreground translate-x-0.5">
+          <span className="flex items-center justify-center size-16 bg-background/15 dark:bg-linear-to-br from-foreground/20 via-foreground/12 to-foreground/10 border-[1.5px] border-foreground/20 backdrop-saturate-100 rounded-full shadow-lg shadow-black/20 group-hover:scale-105 transition-transform">
+            <svg viewBox="0 0 24 24" className="size-6 fill-foreground translate-x-0.5">
               <path d="M8 5v14l11-7z" />
             </svg>
           </span>
