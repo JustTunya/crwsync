@@ -31,6 +31,7 @@ export function useWorkspaceProjects(workspaceId?: string) {
     queryKey: projectKeys.list(workspaceId!),
     queryFn: () => projectService.getWorkspaceProjects(workspaceId!),
     enabled: !!workspaceId,
+    staleTime: 1000 * 60 * 5,
     select: (result) => result.data,
   });
 }

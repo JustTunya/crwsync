@@ -13,6 +13,7 @@ export function useWorkspaceModules(workspaceId?: string) {
     queryKey: moduleKeys.list(workspaceId!),
     queryFn: () => boardService.getWorkspaceModules(workspaceId!),
     enabled: !!workspaceId,
+    staleTime: 1000 * 60 * 5,
     select: (result) => result.data,
   });
 }
