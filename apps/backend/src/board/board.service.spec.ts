@@ -3,7 +3,7 @@ import { NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
-import { UpdateBoardDto, CreateTaskDto, MoveTaskDto } from "src/board/dto/board.dto";
+import { UpdateBoardDto, CreateTaskDto, MoveTaskDto, UpdateModuleDto } from "src/board/dto/board.dto";
 
 function makeService() {
   const prisma = {
@@ -90,23 +90,25 @@ describe("BoardService cross-workspace scoping", () => {
 describe("BoardService module/project workspace scoping", () => {
   it("updateModule rejects a module from another workspace", async () => {
     const { service, prisma } = makeService();
-    (prisma as any).workspaceModule = { findFirst: jest.fn().mockResolvedValue(null), update: jest.fn() };
+    const workspaceModule = { findFirst: jest.fn().mockResolvedValue(null), update: jest.fn() };
+    (prisma as unknown as { workspaceModule: typeof workspaceModule }).workspaceModule = workspaceModule;
 
-    await expect(service.updateModule("ws-1", "module-from-ws-2", { name: "x" } as any)).rejects.toThrow(
-      NotFoundException,
-    );
-    expect((prisma as any).workspaceModule.findFirst).toHaveBeenCalledWith(
+    await expect(
+      service.updateModule("ws-1", "module-from-ws-2", { name: "x" } as unknown as UpdateModuleDto),
+    ).rejects.toThrow(NotFoundException);
+    expect(workspaceModule.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "module-from-ws-2", workspace_id: "ws-1" } }),
     );
-    expect((prisma as any).workspaceModule.update).not.toHaveBeenCalled();
+    expect(workspaceModule.update).not.toHaveBeenCalled();
   });
 
   it("deleteModule rejects a module from another workspace", async () => {
     const { service, prisma } = makeService();
-    (prisma as any).workspaceModule = { findFirst: jest.fn().mockResolvedValue(null) };
+    const workspaceModule = { findFirst: jest.fn().mockResolvedValue(null) };
+    (prisma as unknown as { workspaceModule: typeof workspaceModule }).workspaceModule = workspaceModule;
 
     await expect(service.deleteModule("ws-1", "module-from-ws-2")).rejects.toThrow(NotFoundException);
-    expect((prisma as any).workspaceModule.findFirst).toHaveBeenCalledWith(
+    expect(workspaceModule.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "module-from-ws-2", workspace_id: "ws-1" } }),
     );
   });

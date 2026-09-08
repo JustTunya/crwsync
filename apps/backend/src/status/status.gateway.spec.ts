@@ -1,10 +1,13 @@
 import { StatusGateway } from "./status.gateway";
+import { PrismaService } from "src/prisma/prisma.service";
+import { JwtService } from "@nestjs/jwt";
+import { Socket } from "socket.io";
 
 function makeGateway() {
   const prisma = {
     workspaceMember: { findUnique: jest.fn(), findMany: jest.fn() },
-  } as any;
-  const gateway = new StatusGateway({} as any, prisma);
+  };
+  const gateway = new StatusGateway({} as unknown as JwtService, prisma as unknown as PrismaService);
   return { gateway, prisma };
 }
 
@@ -15,7 +18,7 @@ describe("StatusGateway.handleSubscribeWorkspace", () => {
 
     const join = jest.fn();
     const emit = jest.fn();
-    const client = { data: { userId: "user-1" }, join, emit } as any;
+    const client = { data: { userId: "user-1" }, join, emit } as unknown as Socket;
 
     await gateway.handleSubscribeWorkspace(client, "ws-not-a-member-of");
 
@@ -30,8 +33,8 @@ describe("StatusGateway.handleSubscribeWorkspace", () => {
 
     const join = jest.fn();
     const emit = jest.fn();
-    (gateway as any).server = { in: () => ({ fetchSockets: async () => [] }) };
-    const client = { data: { userId: "user-1" }, join, emit } as any;
+    (gateway as unknown as { server: unknown }).server = { in: () => ({ fetchSockets: async () => [] }) };
+    const client = { data: { userId: "user-1" }, join, emit } as unknown as Socket;
 
     await gateway.handleSubscribeWorkspace(client, "ws-1");
 
