@@ -173,6 +173,36 @@ export function useUpdateTask(workspaceId: string, boardId: string) {
       taskId: string;
       data: UpdateTaskPayload;
     }) => boardService.updateTask(workspaceId, boardId, taskId, data),
+    onMutate: async ({ taskId, data }) => {
+      await queryClient.cancelQueries({ queryKey: boardKeys.detail(boardId) });
+      const previous = queryClient.getQueryData(boardKeys.detail(boardId));
+
+      queryClient.setQueryData(
+        boardKeys.detail(boardId),
+        (old: { data: Board } | undefined) => {
+          if (!old?.data?.columns) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              columns: old.data.columns.map((col) => ({
+                ...col,
+                tasks: col.tasks
+                  ? col.tasks.map((t) => (t.id === taskId ? { ...t, ...data } : t))
+                  : [],
+              })),
+            },
+          };
+        },
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(boardKeys.detail(boardId), context.previous);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
     },
@@ -185,6 +215,34 @@ export function useDeleteTask(workspaceId: string, boardId: string) {
   return useMutation({
     mutationFn: (taskId: string) =>
       boardService.deleteTask(workspaceId, taskId),
+    onMutate: async (taskId) => {
+      await queryClient.cancelQueries({ queryKey: boardKeys.detail(boardId) });
+      const previous = queryClient.getQueryData(boardKeys.detail(boardId));
+
+      queryClient.setQueryData(
+        boardKeys.detail(boardId),
+        (old: { data: Board } | undefined) => {
+          if (!old?.data?.columns) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              columns: old.data.columns.map((col) => ({
+                ...col,
+                tasks: col.tasks ? col.tasks.filter((t) => t.id !== taskId) : [],
+              })),
+            },
+          };
+        },
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(boardKeys.detail(boardId), context.previous);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
     },
@@ -197,6 +255,36 @@ export function useArchiveTask(workspaceId: string, boardId: string) {
   return useMutation({
     mutationFn: (taskId: string) =>
       boardService.archiveTask(workspaceId, taskId),
+    onMutate: async (taskId) => {
+      await queryClient.cancelQueries({ queryKey: boardKeys.detail(boardId) });
+      const previous = queryClient.getQueryData(boardKeys.detail(boardId));
+
+      queryClient.setQueryData(
+        boardKeys.detail(boardId),
+        (old: { data: Board } | undefined) => {
+          if (!old?.data?.columns) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              columns: old.data.columns.map((col) => ({
+                ...col,
+                tasks: col.tasks
+                  ? col.tasks.map((t) => (t.id === taskId ? { ...t, is_archived: true } : t))
+                  : [],
+              })),
+            },
+          };
+        },
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(boardKeys.detail(boardId), context.previous);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
     },
