@@ -3,10 +3,12 @@ import { Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { UserStatus, WorkspaceInvite } from "@prisma/client";
 import { Server, Socket } from "socket.io";
+import { parse } from "cookie";
 import { PrismaService } from "src/prisma/prisma.service";
+import { createSocketCorsOrigin } from "src/common/utils/socket-cors.util";
 
 @WebSocketGateway({
-  cors: {origin: "*", methods: ["GET", "POST"], credentials: true},
+  cors: { origin: createSocketCorsOrigin(), methods: ["GET", "POST"], credentials: true },
   namespace: "status",
 })
 
@@ -107,12 +109,22 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.userId;
     if (!userId) return;
 
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { status_preference: status },
-    });
+    if (!Object.values(UserStatus).includes(status)) {
+      client.emit("error", { message: "Invalid status" });
+      return;
+    }
 
-    await this.broadcastUserStatus(userId, status);
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { status_preference: status },
+      });
+
+      await this.broadcastUserStatus(userId, status);
+    } catch (error) {
+      this.logger.error(`Update status error: ${error}`);
+      client.emit("error", { message: "Failed to update status" });
+    }
   }
 
   private extractToken(client: Socket): string | null {
@@ -122,17 +134,11 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (client.handshake.headers?.authorization) {
         return client.handshake.headers.authorization.replace("Bearer ", "");
     }
-    
+
     const cookieString = client.handshake.headers.cookie;
     if (!cookieString) return null;
 
-    const cookies = cookieString.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-
-    return cookies['crw-at'] || null;
+    return parse(cookieString)["crw-at"] || null;
   }
 
   private async broadcastUserStatus(userId: string, forceStatus?: string) {

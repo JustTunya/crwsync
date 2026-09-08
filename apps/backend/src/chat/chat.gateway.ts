@@ -11,15 +11,17 @@ import { randomUUID } from "crypto";
 import { Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Server, Socket } from "socket.io";
+import { parse } from "cookie";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ChatService } from "src/chat/chat.service";
 import { StatusGateway } from "src/status/status.gateway";
 import { SendMessageDto, EditMessageDto, DeleteMessageDto, MarkAsReadDto } from "src/chat/dto/chat.dto";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
+import { createSocketCorsOrigin } from "src/common/utils/socket-cors.util";
 
 @WebSocketGateway({
-  cors: { origin: "*", methods: ["GET", "POST"], credentials: true },
+  cors: { origin: createSocketCorsOrigin(), methods: ["GET", "POST"], credentials: true },
   namespace: "chat",
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -384,12 +386,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const cookieString = client.handshake.headers.cookie;
     if (!cookieString) return null;
 
-    const cookies = cookieString.split(";").reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split("=");
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-
-    return cookies["crw-at"] || null;
+    return parse(cookieString)["crw-at"] || null;
   }
 }
