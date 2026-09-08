@@ -46,13 +46,10 @@ export default function Contact() {
         </span>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-center gap-8 sm:gap-16 max-w-4xl w-full p-8 bg-linear-to-br from-foreground/10 via-foreground/6 to-foreground/5 border-[1.5px] border-foreground/10 backdrop-saturate-100 shadow-md shadow-black/5 rounded-xl">
-        <div className="flex flex-col gap-2 w-full sm:w-1/2">
-          <h1 className="text-3xl lg:text-4xl font-bold text-center sm:text-left">Get in touch with me</h1>
-          <p className="text-sm lg:text-base text-muted-foreground text-balance leading-tight max-w-xl text-center sm:text-left">I&apos;m always open to new opportunities and collaborations. Feel free to reach out if you have any questions or would like to discuss potential projects.</p>
-        </div>
+      <div className="flex flex-col gap-4 max-w-lg w-full p-8 bg-linear-to-br from-foreground/10 via-foreground/6 to-foreground/5 border-[1.5px] border-foreground/10 backdrop-saturate-100 shadow-md shadow-black/5 rounded-xl">
+        <h1 className="text-2xl lg:text-3xl font-bold text-center">Send a message</h1>
 
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <label htmlFor="name" className="text-xs sm:text-sm font-light tracking-tight">Full Name</label>
             <input type="text" id="name" name="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} className="px-3 py-1.5 text-sm bg-linear-to-br from-foreground/10 via-foreground/6 to-foreground/5 border-[1.5px] border-foreground/10 backdrop-saturate-100 shadow-md shadow-black/5 rounded-md" />
