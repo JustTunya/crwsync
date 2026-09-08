@@ -8,8 +8,9 @@
 
 ### Real-Time Collaborative Workspace Platform
 
-A full crew-sync workspace, built end to end — public portal, authenticated
-dashboard, and a real-time backend keeping tasks, files, and teams in sync.
+An enterprise-grade collaborative workspace, engineered end to end — public
+portal, authenticated dashboard, and a horizontally scalable real-time
+backend keeping tasks, files, and distributed teams in perfect sync.
 Portfolio project.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat&logo=nextdotjs&logoColor=white&labelColor=1A1816)](https://nextjs.org)
@@ -32,57 +33,68 @@ Portfolio project.
 
 CRWSync is a fictional crew-collaboration platform built as a complete,
 production-shaped application — not a static mockup. It demonstrates a real
-enterprise workflow: a team signs in, organizes work into projects, moves
-tasks around a shared board, and sees teammates' changes land instantly,
-while a decoupled backend enforces auth, queues background work, and fans
-out real-time state over WebSockets.
+enterprise workflow with the rigor of a production system: a team signs in,
+organizes work into projects, moves tasks around a shared board, and watches
+teammates' changes land instantly, while a decoupled backend enforces auth,
+queues background work, and fans out real-time state over WebSockets at
+scale.
 
-The system is split into three services — a public marketing portal, an
-authenticated dashboard, and a NestJS API — sharing one root domain via
-subdomains in production, and run together locally through a Turborepo
-pipeline.
+The architecture reflects deliberate separation of concerns rather than a
+single monolith: three independently deployable services — a public
+marketing portal, an authenticated dashboard, and a NestJS API — share one
+root domain via subdomains in production, isolating public traffic from
+authenticated workloads, and run together locally through a unified
+Turborepo pipeline.
 
 **This is a demo project.** No real customers, no production traffic. It
-exists to show a complete collaborative-workspace flow end to end: sign up →
-create a project → invite a crew → sync tasks and files in real time.
+exists to showcase a complete, enterprise-grade collaborative-workspace flow
+end to end: sign up → create a project → invite a crew → sync tasks and
+files in real time, with the same auth, queueing, and real-time
+infrastructure a production SaaS product would run.
 
 ## Features
 
 ### Public portal
 
-- **Marketing site** — the public-facing landing experience, deployed and
-  routed independently from the authenticated app so public traffic never
-  shares a runtime with logged-in workloads.
-- **Cross-subdomain auth handoff** — sign-in state carries from the portal
-  to the dashboard subdomain via shared, scoped HTTP-only cookies.
+- **Marketing site** — a dedicated public-facing landing experience,
+  deployed and routed independently from the authenticated app so public
+  traffic never competes with or shares a runtime with logged-in workloads.
+- **Cross-subdomain auth handoff** — sign-in state carries seamlessly from
+  the portal to the dashboard subdomain via shared, scoped HTTP-only
+  cookies, with zero friction for the end user.
 
 ### Dashboard (`dash.crwsync.xyz`)
 
-- **Real-time sync** — task, file, and workspace state pushed live over
-  Socket.IO, backed by a Redis adapter for horizontal WebSocket scaling
-  across instances.
-- **Modular workspaces** — projects, shared modules, and drag-and-drop
-  organization for moving work between them.
-- **Optimistic UI** — TanStack Query and Zustand keep interactions instant
+- **Real-time sync at scale** — task, file, and workspace state pushed live
+  over Socket.IO, backed by a Redis adapter so WebSocket delivery scales
+  horizontally across multiple instances rather than being pinned to one.
+- **Modular, reorganizable workspaces** — projects and shared modules with
+  fluid drag-and-drop organization, letting teams restructure work without
+  friction.
+- **Optimistic UI** — TanStack Query and Zustand make every interaction
+  feel instant, updating the interface ahead of the network round trip
   while writes settle against the API in the background.
-- **Design-system UI** — Tailwind CSS and Radix UI primitives for an
-  accessible, consistent interface.
+- **Design-system UI** — Tailwind CSS and Radix UI primitives deliver an
+  accessible, consistent, and polished interface throughout.
 
 ### Platform / infrastructure
 
-- **Backend API (`@crwsync/backend`)** — NestJS on Node, exposing REST
-  endpoints and a Socket.IO gateway behind one process.
-- **Resilient queues** — BullMQ handles distributed, asynchronous
-  background jobs (email delivery, session cleanup) without blocking
-  request paths.
-- **Session-based auth** — short-lived JWTs paired with HTTP-only, secure
-  cookies, bcrypt-hashed passwords, and a scheduled purge of expired
-  sessions.
+- **Backend API (`@crwsync/backend`)** — a strict, modular NestJS service
+  on Node, exposing REST endpoints and a Socket.IO gateway behind one
+  well-structured process.
+- **Resilient, distributed queues** — BullMQ handles asynchronous
+  background jobs (email delivery, session cleanup) reliably and without
+  ever blocking request paths.
+- **Defense-in-depth auth** — short-lived JWTs paired with HTTP-only,
+  secure cookies, bcrypt-hashed passwords, and a scheduled purge of expired
+  sessions, minimizing the attack surface for session hijacking.
 - **Postgres via Prisma** — schema and migrations own the actual business
-  logic, not the application layer.
-- **Docker-first ops** — a dev Compose stack for local Postgres/Redis, and
-  a production `stack.yml` for Docker Swarm with rolling updates and
-  per-service resource limits.
+  logic as a single source of truth, not scattered across the application
+  layer.
+- **Docker-first, production-ready ops** — a dev Compose stack for local
+  Postgres/Redis, and a hardened production `stack.yml` for Docker Swarm
+  with rolling updates and per-service resource limits built in from day
+  one.
 
 ## Stack
 
@@ -138,6 +150,8 @@ Create a `.env` in each of `apps/frontend/web`, `apps/frontend/dash`, and
 
 - No real customers or production workspaces — seed/demo data only.
 - Email delivery requires your own SMTP credentials; none are provisioned.
+- Every other layer — auth, queues, real-time sync, data integrity — runs
+  exactly as it would in production.
 
 ## License
 
