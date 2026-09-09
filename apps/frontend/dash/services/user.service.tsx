@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import { UserType, UserOperationState, WorkspaceInvite, UpdateUserProfilePayload, ChangePasswordPayload, ActiveSession } from "@crwsync/types";
+import { UserType, UserOperationState, WorkspaceInvite, UpdateUserProfilePayload, ChangePasswordPayload, ActiveSession, PresignedAvatarUpload } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
 export async function getUserById(userId: string): Promise<UserOperationState<UserType>> {
@@ -92,6 +92,19 @@ export async function revokeUserSession(userId: string, sessionId: string): Prom
     if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, message: resp?.message || "Failed to revoke session" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function presignUserAvatar(userId: string, contentType: string): Promise<UserOperationState<PresignedAvatarUpload>> {
+  try {
+    const response = await api.post(`/users/${userId}/avatar/presign`, { contentType });
+    return { success: true, data: response.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to get upload URL" };
     }
     return { success: false, message: "An unexpected error occurred" };
   }
