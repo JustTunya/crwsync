@@ -15,10 +15,16 @@ export class WorkspaceService {
   ) {}
 
   private async invMembershipCaches(workspaceId: string, userId: string) {
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { slug: true },
+    });
+
     await Promise.all([
       this.cache.del(CacheKeys.workspaceMember(workspaceId, userId)),
       this.cache.del(CacheKeys.userWorkspaces(userId)),
       this.cache.del(CacheKeys.workspace(workspaceId)),
+      ...(workspace?.slug ? [this.cache.del(CacheKeys.workspaceSlug(workspace.slug))] : []),
     ]);
   }
 
