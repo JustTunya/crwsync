@@ -180,7 +180,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       return result === "OK";
     } catch (error) {
       this.logger.warn(`Cache acquireLock error for key ${key}: ${error}`);
-      return false;
+      return true;
     }
   }
 
