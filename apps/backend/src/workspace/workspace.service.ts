@@ -5,6 +5,7 @@ import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto } from "src/wor
 import { CacheService, CacheKeys, CacheTTL } from "src/redis";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
+import { StorageService } from "src/storage/storage.service";
 
 @Injectable()
 export class WorkspaceService {
@@ -12,6 +13,7 @@ export class WorkspaceService {
     private prisma: PrismaService,
     private cache: CacheService,
     private statusGateway: StatusGateway,
+    private storageService: StorageService,
   ) {}
 
   private async invMembershipCaches(workspaceId: string, userId: string) {
@@ -197,8 +199,12 @@ export class WorkspaceService {
   }
 
   async update(id: string, dto: UpdateWorkspaceDto) {
+    if (dto.logo_key && !dto.logo_key.startsWith(`${id}_`)) {
+      throw new BadRequestException("Invalid logo key");
+    }
+
     const [existing, members] = await Promise.all([
-      this.prisma.workspace.findUnique({ where: { id }, select: { slug: true } }),
+      this.prisma.workspace.findUnique({ where: { id }, select: { slug: true, logo_key: true } }),
       this.prisma.workspaceMember.findMany({
         where: { workspace_id: id },
         select: { user_id: true },
@@ -211,6 +217,10 @@ export class WorkspaceService {
     }
 
     const result = await this.prisma.workspace.update({ where: { id }, data: dto });
+
+    if (dto.logo_key !== undefined && dto.logo_key !== existing?.logo_key && existing?.logo_key) {
+      await this.storageService.deleteObject(existing.logo_key);
+    }
 
     const cacheKeys = [
       CacheKeys.workspace(id),

@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import { CreateWorkspacePayload, InviteMemberPayload, UpdateWorkspacePayload, Workspace, WorkspaceMember, WorkspaceOperationState, WorkspacePendingInvite, WorkspaceRoleEnum } from "@crwsync/types";
+import { CreateWorkspacePayload, InviteMemberPayload, UpdateWorkspacePayload, Workspace, WorkspaceMember, WorkspaceOperationState, WorkspacePendingInvite, WorkspaceRoleEnum, PresignedAvatarUpload } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
 export async function getWorkspaceMembers(workspaceId: string): Promise<WorkspaceOperationState<(WorkspaceMember)[]>> {
@@ -179,6 +179,19 @@ export async function transferOwnership(workspaceId: string, newOwnerId: string)
     if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, message: resp?.message || "Failed to transfer ownership" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function presignWorkspaceLogo(workspaceId: string, contentType: string): Promise<WorkspaceOperationState<PresignedAvatarUpload>> {
+  try {
+    const response = await api.post(`/workspaces/${workspaceId}/logo/presign`, { contentType });
+    return { success: true, data: response.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to get upload URL" };
     }
     return { success: false, message: "An unexpected error occurred" };
   }

@@ -2,7 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { UpdateUserProfilePayload, ChangePasswordPayload } from "@crwsync/types";
-import { updateUserProfile, changePassword, getUserSessions, revokeUserSession } from "@/services/user.service";
+import { presignUserAvatar, updateUserProfile, changePassword, getUserSessions, revokeUserSession } from "@/services/user.service";
+import { uploadToPresignedPost } from "@/lib/upload-to-storage";
 import { sessionKeys } from "@/hooks/use-session";
 
 export const userKeys = {
@@ -17,6 +18,26 @@ export function useUpdateUserProfile() {
     mutationFn: async ({ userId, data }: { userId: string; data: UpdateUserProfilePayload }) => {
       const { success, data: result, message } = await updateUserProfile(userId, data);
       if (!success || !result) throw new Error(message);
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sessionKeys.user() });
+    },
+  });
+}
+
+export function useUploadUserAvatar() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, file }: { userId: string; file: File }) => {
+      const { success, data: presign, message } = await presignUserAvatar(userId, file.type);
+      if (!success || !presign) throw new Error(message);
+
+      await uploadToPresignedPost(presign, file);
+
+      const { success: updateSuccess, data: result, message: updateMessage } = await updateUserProfile(userId, { avatar_key: presign.key });
+      if (!updateSuccess || !result) throw new Error(updateMessage);
       return result;
     },
     onSuccess: () => {

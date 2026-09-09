@@ -4,6 +4,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { VerificationService } from "src/email-verification/email-verification.service";
 import { SessionService } from "src/session/session.service";
+import { StorageService } from "src/storage/storage.service";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
 
@@ -30,6 +31,9 @@ describe("UserService (Cluster 1 fixes)", () => {
   };
   let sessionService: {
     revokeAll: jest.Mock;
+  };
+  let storageService: {
+    deleteObject: jest.Mock;
   };
 
   beforeEach(() => {
@@ -59,11 +63,16 @@ describe("UserService (Cluster 1 fixes)", () => {
       revokeAll: jest.fn().mockResolvedValue(undefined),
     };
 
+    storageService = {
+      deleteObject: jest.fn().mockResolvedValue(undefined),
+    };
+
     userService = new UserService(
       prisma as unknown as PrismaService,
       cache as unknown as CacheService,
       verificationService as unknown as VerificationService,
       sessionService as unknown as SessionService,
+      storageService as unknown as StorageService,
     );
   });
 
@@ -90,6 +99,22 @@ describe("UserService (Cluster 1 fixes)", () => {
       expect(updateCall.data).not.toHaveProperty("password");
       expect(updateCall.data).not.toHaveProperty("password_hash");
       expect(updateCall.data.firstname).toBe("Updated");
+    });
+
+    it("rejects an avatar_key that doesn't belong to the calling user", async () => {
+      const mockUser = {
+        id: "user-1",
+        email: "test@example.com",
+        username: "testuser",
+      };
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+
+      const dto: UpdateUserDto = {
+        avatar_key: "user-2_some-uuid.png",
+      };
+
+      await expect(userService.update("user-1", dto)).rejects.toThrow(BadRequestException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
     });
   });
 

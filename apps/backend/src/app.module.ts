@@ -8,6 +8,7 @@ import { VerificationModule } from "src/email-verification/email-verification.mo
 import { PasswordResetModule } from "src/password-reset/password-reset.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { RedisModule } from "src/redis/redis.module";
+import { StorageModule } from "src/storage/storage.module";
 import { SessionModule } from "src/session/session.module";
 import { HealthModule } from "src/health/health.module";
 import { EmailModule } from "src/email/email.module";
@@ -47,6 +48,7 @@ import { ContactModule } from "src/contact/contact.module";
     HealthModule,
     PrismaModule,
     RedisModule,
+    StorageModule,
     UserModule,
     SessionModule,
     AuthModule,

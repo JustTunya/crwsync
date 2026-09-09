@@ -7,3 +7,4 @@ export * from "./session";
 export * from "./workspace";
 export * from "./board";
 export * from "./chat";
+export * from "./storage";
