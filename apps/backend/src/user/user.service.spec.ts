@@ -4,6 +4,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { VerificationService } from "src/email-verification/email-verification.service";
 import { SessionService } from "src/session/session.service";
+import { StorageService } from "src/storage/storage.service";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
 
@@ -30,6 +31,9 @@ describe("UserService (Cluster 1 fixes)", () => {
   };
   let sessionService: {
     revokeAll: jest.Mock;
+  };
+  let storageService: {
+    deleteObject: jest.Mock;
   };
 
   beforeEach(() => {
@@ -59,11 +63,16 @@ describe("UserService (Cluster 1 fixes)", () => {
       revokeAll: jest.fn().mockResolvedValue(undefined),
     };
 
+    storageService = {
+      deleteObject: jest.fn().mockResolvedValue(undefined),
+    };
+
     userService = new UserService(
       prisma as unknown as PrismaService,
       cache as unknown as CacheService,
       verificationService as unknown as VerificationService,
       sessionService as unknown as SessionService,
+      storageService as unknown as StorageService,
     );
   });
 
