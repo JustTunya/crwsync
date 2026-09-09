@@ -1,4 +1,5 @@
 import { BadRequestException } from "@nestjs/common";
+import { Request } from "express";
 import { AuthService } from "./auth.service";
 import { UserService } from "src/user/user.service";
 import { VerificationService } from "src/email-verification/email-verification.service";
@@ -48,7 +49,7 @@ describe("AuthService (Cluster 1 signin verification)", () => {
     } as unknown as UserPublic;
 
     await expect(
-      authService.signin(unverifiedUser, {} as any),
+      authService.signin(unverifiedUser, {} as unknown as Request),
     ).rejects.toThrow(BadRequestException);
 
     expect(userService.recordLogin).not.toHaveBeenCalled();
@@ -65,7 +66,7 @@ describe("AuthService (Cluster 1 signin verification)", () => {
       status_preference: "ONLINE",
     } as unknown as UserPublic;
 
-    const result = await authService.signin(verifiedUser, {} as any);
+    const result = await authService.signin(verifiedUser, {} as unknown as Request);
 
     expect(result.accessToken).toBe("access-token");
     expect(result.refreshToken).toBe("refresh-token");
