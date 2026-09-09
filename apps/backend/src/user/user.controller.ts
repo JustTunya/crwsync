@@ -1,16 +1,24 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, Patch, Delete, Query, ParseUUIDPipe, UseGuards } from "@nestjs/common";
-import { RoleEnum } from "@crwsync/types";
+import { Throttle } from "@nestjs/throttler";
+import { ActiveSession, RoleEnum } from "@crwsync/types";
 import { CreateUserDto } from "src/user/dto/create-user.dto";
 import { UpdateUserDto } from "src/user/dto/update-user.dto";
+import { ChangePasswordDto } from "src/user/dto/change-password.dto";
 import { UserService } from "src/user/user.service";
+import { SessionService } from "src/session/session.service";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { OwnershipGuard } from "src/common/guards/ownership.guard";
 import { Public } from "src/common/decorators/public.decorator";
+import { ActiveUserParam } from "src/common/decorators/active-user.decorator";
+import type { ActiveUser } from "src/common/types/active-user.type";
 import { UserPublic } from "src/prisma/selects";
 
 @Controller("users")
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly sessionService: SessionService,
+  ) {}
 
   @Roles(RoleEnum.ADMIN)
   @Post()
@@ -72,5 +80,44 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   findInvites(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string) {
     return this.userService.findInvites(userId);
+  }
+
+  @UseGuards(new OwnershipGuard("userId"))
+  @Throttle({ default: { ttl: 3600, limit: 5 } })
+  @Post(":userId/change-password")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async changePassword(
+    @Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string,
+    @Body() dto: ChangePasswordDto,
+    @ActiveUserParam() activeUser: ActiveUser,
+  ): Promise<void> {
+    await this.userService.changePassword(userId, dto, activeUser.sessionId);
+  }
+
+  @UseGuards(new OwnershipGuard("userId"))
+  @Get(":userId/sessions")
+  @HttpCode(HttpStatus.OK)
+  async findSessions(
+    @Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string,
+    @ActiveUserParam() activeUser: ActiveUser,
+  ): Promise<ActiveSession[]> {
+    const sessions = await this.sessionService.findAllByUser(userId);
+    return sessions.map((session) => ({
+      ...session,
+      expires_at: session.expires_at?.toISOString() ?? null,
+      created_at: session.created_at.toISOString(),
+      revoked_at: session.revoked_at?.toISOString() ?? null,
+      isCurrent: session.id === activeUser.sessionId,
+    }));
+  }
+
+  @UseGuards(new OwnershipGuard("userId"))
+  @Delete(":userId/sessions/:sessionId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async revokeSession(
+    @Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string,
+    @Param("sessionId", new ParseUUIDPipe({ version: "4" })) sessionId: string,
+  ): Promise<void> {
+    await this.sessionService.revokeOwned(userId, sessionId);
   }
 }

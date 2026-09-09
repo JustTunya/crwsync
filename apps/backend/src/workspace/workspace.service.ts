@@ -205,6 +205,11 @@ export class WorkspaceService {
       }),
     ]);
 
+    if (dto.slug && dto.slug !== existing?.slug) {
+      const slugTaken = await this.prisma.workspace.findUnique({ where: { slug: dto.slug } });
+      if (slugTaken) throw new BadRequestException("Workspace slug already taken");
+    }
+
     const result = await this.prisma.workspace.update({ where: { id }, data: dto });
 
     const cacheKeys = [

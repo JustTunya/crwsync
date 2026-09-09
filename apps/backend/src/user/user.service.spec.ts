@@ -3,7 +3,9 @@ import { UserService } from "./user.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { VerificationService } from "src/email-verification/email-verification.service";
+import { SessionService } from "src/session/session.service";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 
 describe("UserService (Cluster 1 fixes)", () => {
   let userService: UserService;
@@ -25,6 +27,9 @@ describe("UserService (Cluster 1 fixes)", () => {
   };
   let verificationService: {
     create: jest.Mock;
+  };
+  let sessionService: {
+    revokeAll: jest.Mock;
   };
 
   beforeEach(() => {
@@ -50,15 +55,20 @@ describe("UserService (Cluster 1 fixes)", () => {
       create: jest.fn().mockResolvedValue({}),
     };
 
+    sessionService = {
+      revokeAll: jest.fn().mockResolvedValue(undefined),
+    };
+
     userService = new UserService(
       prisma as unknown as PrismaService,
       cache as unknown as CacheService,
       verificationService as unknown as VerificationService,
+      sessionService as unknown as SessionService,
     );
   });
 
-  describe("update password handling", () => {
-    it("hashes password and does not pass 'password' key to prisma.update", async () => {
+  describe("update", () => {
+    it("does not accept a bare password field (UpdateUserDto has no password key)", async () => {
       const mockUser = {
         id: "user-1",
         email: "test@example.com",
@@ -68,7 +78,6 @@ describe("UserService (Cluster 1 fixes)", () => {
       prisma.user.update.mockResolvedValue({ ...mockUser, firstname: "Updated" });
 
       const dto: UpdateUserDto = {
-        password: "NewPassword123!",
         firstname: "Updated",
       };
 
@@ -79,10 +88,51 @@ describe("UserService (Cluster 1 fixes)", () => {
 
       expect(updateCall.where).toEqual({ id: "user-1" });
       expect(updateCall.data).not.toHaveProperty("password");
+      expect(updateCall.data).not.toHaveProperty("password_hash");
+      expect(updateCall.data.firstname).toBe("Updated");
+    });
+  });
+
+  describe("changePassword", () => {
+    it("rejects when currentPassword does not match the stored hash", async () => {
+      const { hash } = await import("bcrypt");
+      const mockUser = {
+        id: "user-1",
+        email: "test@example.com",
+        username: "testuser",
+        password_hash: await hash("CorrectPassword123!", 10),
+      };
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+
+      const dto: ChangePasswordDto = { currentPassword: "WrongPassword123!", newPassword: "NewPassword123!" };
+
+      await expect(userService.changePassword("user-1", dto, "session-1")).rejects.toThrow(BadRequestException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+      expect(sessionService.revokeAll).not.toHaveBeenCalled();
+    });
+
+    it("rehashes the password and revokes every other session on success", async () => {
+      const { hash } = await import("bcrypt");
+      const mockUser = {
+        id: "user-1",
+        email: "test@example.com",
+        username: "testuser",
+        password_hash: await hash("CorrectPassword123!", 10),
+      };
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+      prisma.user.update.mockResolvedValue({ ...mockUser });
+
+      const dto: ChangePasswordDto = { currentPassword: "CorrectPassword123!", newPassword: "NewPassword123!" };
+
+      await userService.changePassword("user-1", dto, "session-1");
+
+      const updateCall = prisma.user.update.mock.calls[0][0];
+      expect(updateCall.where).toEqual({ id: "user-1" });
       expect(updateCall.data).toHaveProperty("password_hash");
       expect(updateCall.data).toHaveProperty("last_password_change");
-      expect(typeof updateCall.data.password_hash).toBe("string");
-      expect(updateCall.data.firstname).toBe("Updated");
+      expect(updateCall.data.password_hash).not.toBe(mockUser.password_hash);
+
+      expect(sessionService.revokeAll).toHaveBeenCalledWith("user-1", "session-1");
     });
   });
 

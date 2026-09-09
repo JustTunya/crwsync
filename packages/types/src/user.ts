@@ -37,3 +37,14 @@ export interface UserOperationState<T = undefined> {
   errors?: Record<string, string[]>;
   data?: T;
 }
+
+export interface UpdateUserProfilePayload {
+  firstname?: string;
+  lastname?: string;
+  username?: string;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}

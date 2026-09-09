@@ -3,12 +3,13 @@
 import { createContext, useContext, useMemo, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Workspace, WorkspaceMember, CreateWorkspacePayload } from "@crwsync/types";
+import { Workspace, WorkspaceMember, WorkspaceRoleEnum, CreateWorkspacePayload } from "@crwsync/types";
 import { useWorkspaces, useWorkspace as useWorkspaceQuery, useCreateWorkspace, workspaceKeys } from "@/hooks/use-workspaces";
 
 interface WorkspaceContextType {
   activeId: string | undefined;
   activeWorkspace: Workspace | null;
+  currentRole: WorkspaceRoleEnum | null;
   workspaces: WorkspaceMember[];
   loading: { list: boolean; active: boolean; mutation: boolean; };
   createWorkspace: (data: CreateWorkspacePayload) => Promise<void>;
@@ -67,11 +68,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     await queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
   }, [queryClient]);
 
+  const currentRole = validMember?.role ?? null;
+
   const value = useMemo(
     () => ({
       workspaces,
       activeId,
       activeWorkspace,
+      currentRole,
       loading: {
         list: listLoading,
         active: activeLoading,
@@ -81,7 +85,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       switchWorkspace,
       refreshWorkspaces
     }),
-    [workspaces, activeId, activeWorkspace, listLoading, activeLoading, createMutation.isPending, createWorkspace, switchWorkspace, refreshWorkspaces]
+    [workspaces, activeId, activeWorkspace, currentRole, listLoading, activeLoading, createMutation.isPending, createWorkspace, switchWorkspace, refreshWorkspaces]
   );
 
   return (

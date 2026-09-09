@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, MoreHorizontalIcon, FileEmpty02Icon, Progress01Icon, CircleArrowReload01Icon, CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
-import type { Task, BoardColumn, ColumnType } from "@crwsync/types";
+import { WorkspaceRoleEnum, type Task, type BoardColumn, type ColumnType } from "@crwsync/types";
 import { useUpdateColumn, useDeleteColumn } from "@/hooks/use-boards";
+import { useWorkspace } from "@/providers/workspace.provider";
 import { cn } from "@/lib/utils";
 
 import { COLUMN_COLORS } from "../../lib/kanban.utils";
@@ -28,6 +29,8 @@ export interface KanbanColProps {
 export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, addingTask, taskTitle, setTaskTitle, onCreateTask, onCancelTask, onTaskClick }: KanbanColProps) {
   const updateColumn = useUpdateColumn(workspaceId, boardId);
   const deleteColumn = useDeleteColumn(workspaceId, boardId);
+  const { currentRole } = useWorkspace();
+  const canDelete = currentRole === WorkspaceRoleEnum.OWNER || currentRole === WorkspaceRoleEnum.ADMIN;
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(column.name);
@@ -220,12 +223,14 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                 >
                   Rename
                 </button>
-                <button
-                  onClick={handleDeleteColumn}
-                  className="w-full px-2 py-1 text-xs text-left text-error hover:bg-base-200 rounded-md transition-colors cursor-pointer"
-                >
-                  Delete
-                </button>
+                {canDelete && (
+                  <button
+                    onClick={handleDeleteColumn}
+                    className="w-full px-2 py-1 text-xs text-left text-error hover:bg-base-200 rounded-md transition-colors cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             )}
           </div>

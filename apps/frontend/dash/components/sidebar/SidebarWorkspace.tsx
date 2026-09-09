@@ -2,8 +2,10 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { AnimatePresence, m, Transition, LazyMotion, domAnimation } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowUp01Icon, ArrowDown01Icon, Tick02Icon, Add01Icon } from "@hugeicons/core-free-icons";
+import { ArrowUp01Icon, ArrowDown01Icon, Tick02Icon, Add01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
+import { useUser } from "@/providers/user.provider";
+import { useWorkspaceRole } from "@/hooks/use-workspaces";
 import { WorkspaceAvatar } from "@/components/workspace-avatar";
 import { useOutclick } from "@/hooks/use-outclick";
 import { cn } from "@/lib/utils";
@@ -13,6 +15,8 @@ const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 export function SidebarWorkspace({ extended }: { extended?: boolean }) {
   const { activeWorkspace, workspaces, switchWorkspace, loading } =
     useWorkspace();
+  const user = useUser();
+  const { isAdmin } = useWorkspaceRole(activeWorkspace?.id, user?.id);
 
   const [openWorkspaces, setOpenWorkspaces] = useState(false);
   const wsRef = useRef<HTMLDivElement>(null);
@@ -157,6 +161,22 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
               </div>
 
               <div className="h-px w-full bg-base-200 my-2" />
+
+              {activeWorkspace && isAdmin && (
+                <Link
+                  href={`/${activeWorkspace.slug}/settings`}
+                  onClick={() => setOpenWorkspaces(false)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-200 transition-colors text-left cursor-pointer group"
+                >
+                  <HugeiconsIcon
+                    icon={Settings02Icon}
+                    className="size-4 text-muted-foreground group-hover:text-foreground"
+                  />
+                  <p className="text-sm font-light text-muted-foreground group-hover:text-foreground">
+                    Workspace Settings
+                  </p>
+                </Link>
+              )}
 
               <Link
                 href="/create-workspace"
