@@ -3,8 +3,9 @@ import { useDroppable } from "@dnd-kit/core";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Folder02Icon, Settings02Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
-import { WorkspaceProject } from "@crwsync/types";
+import { WorkspaceProject, WorkspaceRoleEnum } from "@crwsync/types";
 import { useUpdateProject, useDeleteProject } from "@/hooks/use-workspace-projects";
+import { useWorkspace } from "@/providers/workspace.provider";
 
 interface SidebarProjectProps {
   project: WorkspaceProject;
@@ -51,6 +52,8 @@ export function SidebarProject({
 
   const updateProject = useUpdateProject(activeWorkspaceId);
   const deleteProject = useDeleteProject(activeWorkspaceId);
+  const { currentRole } = useWorkspace();
+  const canDelete = currentRole === WorkspaceRoleEnum.OWNER || currentRole === WorkspaceRoleEnum.ADMIN;
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { setNodeRef } = useDroppable({
@@ -198,12 +201,14 @@ export function SidebarProject({
             >
               Rename
             </button>
-            <button
-              onClick={handleDelete}
-              className="w-full px-2 py-1 text-xs text-left text-error hover:bg-base-200 rounded-md transition-colors cursor-pointer"
-            >
-              Delete
-            </button>
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                className="w-full px-2 py-1 text-xs text-left text-error hover:bg-base-200 rounded-md transition-colors cursor-pointer"
+              >
+                Delete
+              </button>
+            )}
           </div>
         )}
       </div>

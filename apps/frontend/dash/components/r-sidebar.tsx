@@ -434,8 +434,9 @@ export function SidebarProfile({ user, status, className }: SidebarProfileProps)
 
 function ContextMenu({ isOpen, onClose, position, user }: { isOpen: boolean; onClose: () => void; position: { x: number; y: number }; user: WorkspaceUser }) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const { activeWorkspace: workspace } = useWorkspace();
+  const { activeWorkspace: workspace, currentRole } = useWorkspace();
   const queryClient = useQueryClient();
+  const canKick = currentRole === WorkspaceRoleEnum.OWNER || currentRole === WorkspaceRoleEnum.ADMIN;
 
   const kickMutation = useMutation({
     mutationFn: () => kickWorkspaceMember(workspace!.id, user.id),
@@ -495,13 +496,15 @@ function ContextMenu({ isOpen, onClose, position, user }: { isOpen: boolean; onC
           <p className="text-foreground text-xs leading-tight whitespace-nowrap">Message {user.username}</p>
         </div>
 
-        <div 
-          className="flex flex-row items-center gap-2 w-full hover:bg-error/10 px-2 py-1 rounded-sm transition-colors cursor-pointer"
-          onClick={handleKickUser}
-        >
-          <HugeiconsIcon icon={Door01Icon} className="size-4 text-error" />
-          <p className="text-error text-xs leading-tight whitespace-nowrap">Kick {user.username}</p>
-        </div>
+        {canKick && (
+          <div
+            className="flex flex-row items-center gap-2 w-full hover:bg-error/10 px-2 py-1 rounded-sm transition-colors cursor-pointer"
+            onClick={handleKickUser}
+          >
+            <HugeiconsIcon icon={Door01Icon} className="size-4 text-error" />
+            <p className="text-error text-xs leading-tight whitespace-nowrap">Kick {user.username}</p>
+          </div>
+        )}
       </div>
     </div>
   );

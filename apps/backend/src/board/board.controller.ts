@@ -118,6 +118,8 @@ export class BoardController {
   }
 
   @Delete(":boardId/columns/:columnId")
+  @UseGuards(WorkspaceRolesGuard)
+  @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER, WorkspaceRoleEnum.ADMIN)
   deleteColumn(
     @Param("workspaceId", new ParseUUIDPipe({ version: "4" }))
     workspaceId: string,
@@ -267,6 +269,8 @@ export class ProjectController {
   }
 
   @Delete(":projectId")
+  @UseGuards(WorkspaceRolesGuard)
+  @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER, WorkspaceRoleEnum.ADMIN)
   remove(
     @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
     @Param("projectId", new ParseUUIDPipe({ version: "4" })) projectId: string,

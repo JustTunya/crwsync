@@ -5,7 +5,9 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
 import { Settings02Icon } from "@hugeicons/core-free-icons";
+import { WorkspaceRoleEnum } from "@crwsync/types";
 import { useUpdateModule, useDeleteModule, useTogglePinModule } from "@/hooks/use-workspace-modules";
+import { useWorkspace } from "@/providers/workspace.provider";
 import { Shortcut } from "@/components/ui/shortcut";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +31,8 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
   const updateModule = useUpdateModule(activeWorkspaceId);
   const deleteModule = useDeleteModule(activeWorkspaceId);
   const togglePinModule = useTogglePinModule(activeWorkspaceId);
+  const { currentRole } = useWorkspace();
+  const canManage = currentRole === WorkspaceRoleEnum.OWNER || currentRole === WorkspaceRoleEnum.ADMIN;
 
   const [showSettingsBtn, setShowSettingsBtn] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -210,18 +214,22 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
           >
             {isPinned ? "Unpin" : "Pin"}
           </button>
-          <button
-            onClick={handleRenameClick}
-            className="w-full px-2 py-1 text-xs text-left hover:bg-base-200 rounded-md transition-colors cursor-pointer"
-          >
-            Rename
-          </button>
-          <button
-            onClick={handleDelete}
-            className="w-full px-2 py-1 text-xs text-left text-error hover:bg-base-200 rounded-md transition-colors cursor-pointer"
-          >
-            Delete
-          </button>
+          {canManage && (
+            <button
+              onClick={handleRenameClick}
+              className="w-full px-2 py-1 text-xs text-left hover:bg-base-200 rounded-md transition-colors cursor-pointer"
+            >
+              Rename
+            </button>
+          )}
+          {canManage && (
+            <button
+              onClick={handleDelete}
+              className="w-full px-2 py-1 text-xs text-left text-error hover:bg-base-200 rounded-md transition-colors cursor-pointer"
+            >
+              Delete
+            </button>
+          )}
         </div>
       )}
     </Link>

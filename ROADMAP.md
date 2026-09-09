@@ -222,9 +222,9 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
   - Build workspace general settings: rename workspace, update slug.
   - Build member role administration: promote/demote members, transfer ownership.
   - Build Danger Zone: workspace deletion with validation input.
-- [ ] **Enforce UI Role-Gating**:
+- [x] **Enforce UI Role-Gating**:
   - Conditionally render administrative actions (delete column, delete project, kick member) based on current user's workspace role.
-- [ ] **Fix Root Page Redirection**:
+- [x] **Fix Root Page Redirection**:
   - Refactor `apps/frontend/dash/app/page.tsx` to handle routing via `router.replace()` inside `useEffect`.
 
 ---
