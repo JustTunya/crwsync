@@ -50,9 +50,9 @@ const BentoCard = ({
     </div>
     <div className="p-4">
       <div className="pointer-events-none z-10 flex transform-gpu flex-col gap-1">
-        <h3 className="text-xl font-semibold text-foreground">
+        <h2 className="text-xl font-semibold text-foreground">
           {name}
-        </h3>
+        </h2>
         <p className="max-w-lg text-muted-foreground line-clamp-2">{description}</p>
       </div>
     </div>

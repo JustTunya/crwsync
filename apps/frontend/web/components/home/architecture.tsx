@@ -39,7 +39,7 @@ export default function Architecture() {
       </div>
 
       <div className="flex flex-col items-center justify-center gap-2 w-full px-4">
-        <h1 className="text-4xl font-bold text-center">Runtime Architecture</h1>
+        <h2 className="text-4xl font-bold text-center">Runtime Architecture</h2>
         <p className="text-sm sm:text-base text-muted-foreground text-center text-balance leading-tight max-w-3xl">This diagram illustrates the flow of user requests and data between key system components during typical runtime scenarios for crwsync.</p>
       </div>
 
@@ -98,7 +98,7 @@ export default function Architecture() {
       </div>
 
       <div className="flex flex-col items-center justify-center gap-2 w-full px-4 mt-16">
-        <h1 className="text-4xl font-bold text-center">CI/CD Pipeline</h1>
+        <h2 className="text-4xl font-bold text-center">CI/CD Pipeline</h2>
         <p className="text-sm sm:text-base text-muted-foreground text-center text-balance leading-tight max-w-3xl">Automated testing and deployment pipeline of the project.</p>
       </div>
 

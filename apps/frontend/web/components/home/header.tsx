@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { m, Variants, LazyMotion, domAnimation, AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -87,23 +86,35 @@ export default function Header() {
             </Link>
             {isMobile && (
               open ? (
-                <HugeiconsIcon
-                  icon={Cancel01Icon}
-                  strokeWidth={2}
+                <button
+                  type="button"
+                  aria-label="Close menu"
                   onClick={() => {
                     setOpen(false);
                   }}
-                  className="size-5 ml-2 text-muted-foreground hover:text-foreground transition-colors"
-                />
+                  className="ml-2"
+                >
+                  <HugeiconsIcon
+                    icon={Cancel01Icon}
+                    strokeWidth={2}
+                    className="size-5 text-muted-foreground hover:text-foreground transition-colors"
+                  />
+                </button>
               ) : (
-                <HugeiconsIcon
-                  icon={Menu01Icon}
-                  strokeWidth={2}
+                <button
+                  type="button"
+                  aria-label="Open menu"
                   onClick={() => {
                     setOpen(true);
                   }}
-                  className="size-5 ml-2 text-muted-foreground hover:text-foreground transition-colors"
-                />
+                  className="ml-2"
+                >
+                  <HugeiconsIcon
+                    icon={Menu01Icon}
+                    strokeWidth={2}
+                    className="size-5 text-muted-foreground hover:text-foreground transition-colors"
+                  />
+                </button>
               )
             )}
           </div>
@@ -258,18 +269,13 @@ interface MobileItemProps {
 }
 
 function MobileItem({ index, href, title, onClick }: MobileItemProps) {
-  const router = useRouter();
-
   return (
-    <m.div variants={item} custom={index} className="last:mb-1 cursor-pointer" onClick={() => {
-      onClick();
-      router.push(href);
-    }}>
+    <m.a href={href} variants={item} custom={index} className="block last:mb-1 cursor-pointer" onClick={onClick}>
       <span className="text-base font-semibold text-foreground leading-tight">
         {title}
       </span>
 
       {index < MAX_INDEX && <div className="w-full h-px my-1 bg-foreground/15" />}
-    </m.div>
+    </m.a>
   );
 }
