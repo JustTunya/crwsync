@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, Patch, Delete, Query, ParseUUIDPipe, UseGuards } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
-import { ActiveSession, RoleEnum } from "@crwsync/types";
+import { ActiveSession, RoleEnum, PresignedAvatarUpload } from "@crwsync/types";
 import { CreateUserDto } from "src/user/dto/create-user.dto";
 import { UpdateUserDto } from "src/user/dto/update-user.dto";
 import { ChangePasswordDto } from "src/user/dto/change-password.dto";
@@ -12,12 +12,15 @@ import { Public } from "src/common/decorators/public.decorator";
 import { ActiveUserParam } from "src/common/decorators/active-user.decorator";
 import type { ActiveUser } from "src/common/types/active-user.type";
 import { UserPublic } from "src/prisma/selects";
+import { PresignAvatarDto } from "src/storage/dto/presign-avatar.dto";
+import { StorageService } from "src/storage/storage.service";
 
 @Controller("users")
 export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly sessionService: SessionService,
+    private readonly storageService: StorageService,
   ) {}
 
   @Roles(RoleEnum.ADMIN)
@@ -59,6 +62,17 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   findOne(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<UserPublic> {
     return this.userService.findOne(userId);
+  }
+
+  @UseGuards(new OwnershipGuard("userId"))
+  @Throttle({ default: { ttl: 3600, limit: 5 } })
+  @Post(":userId/avatar/presign")
+  @HttpCode(HttpStatus.OK)
+  presignAvatar(
+    @Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string,
+    @Body() dto: PresignAvatarDto,
+  ): Promise<PresignedAvatarUpload> {
+    return this.storageService.presignAvatarUpload(dto.contentType);
   }
 
   @UseGuards(new OwnershipGuard("userId"))

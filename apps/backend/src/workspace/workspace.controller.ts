@@ -10,6 +10,9 @@ import { IsMemberGuard } from "src/workspace/guards/ws-member.guard";
 import { WorkspaceService } from "src/workspace/workspace.service";
 import { ActiveUserParam } from "src/common/decorators/active-user.decorator";
 import type { ActiveUser } from "src/common/types/active-user.type";
+import { PresignAvatarDto } from "src/storage/dto/presign-avatar.dto";
+import { StorageService } from "src/storage/storage.service";
+import { PresignedAvatarUpload } from "@crwsync/types";
 
 interface WSRequest extends ExpressRequest {
   workspace: Workspace;
@@ -18,7 +21,10 @@ interface WSRequest extends ExpressRequest {
 
 @Controller("workspaces")
 export class WorkspaceController {
-  constructor(private readonly workspaceService: WorkspaceService) {}
+  constructor(
+    private readonly workspaceService: WorkspaceService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Post()
   @Throttle({ default: { ttl: 3600, limit: 5 } })
@@ -65,6 +71,17 @@ export class WorkspaceController {
     @Body() dto: UpdateWorkspaceDto
   ) {
     return this.workspaceService.update(workspaceId, dto);
+  }
+
+  @Post(":workspaceId/logo/presign")
+  @Throttle({ default: { ttl: 3600, limit: 5 } })
+  @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
+  @RequireWorkspaceRoles(WorkspaceRoleEnum.OWNER, WorkspaceRoleEnum.ADMIN)
+  presignLogo(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Body() dto: PresignAvatarDto,
+  ): Promise<PresignedAvatarUpload> {
+    return this.storageService.presignAvatarUpload(dto.contentType);
   }
 
   @Delete(":workspaceId")
