@@ -115,6 +115,10 @@ export class UserService {
 
     const { birthdate, email, username, firstname, lastname, avatar_key } = dto;
 
+    if (avatar_key && !avatar_key.startsWith(`${user.id}_`)) {
+      throw new BadRequestException("Invalid avatar key");
+    }
+
     const data: Prisma.UserUpdateInput = {};
 
     if (username !== undefined) data.username = username;

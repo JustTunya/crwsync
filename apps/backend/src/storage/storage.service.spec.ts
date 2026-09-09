@@ -29,13 +29,13 @@ describe("StorageService", () => {
   });
 
   it("rejects unsupported content types", async () => {
-    await expect(service.presignAvatarUpload("application/pdf")).rejects.toThrow("Unsupported image type");
+    await expect(service.presignAvatarUpload("application/pdf", "test-user-id")).rejects.toThrow("Unsupported image type");
   });
 
   it("returns a presigned POST with a UUID key ending in the correct extension", async () => {
-    const result = await service.presignAvatarUpload("image/png");
+    const result = await service.presignAvatarUpload("image/png", "test-user-id");
 
-    expect(result.key).toMatch(/^[0-9a-f-]{36}\.png$/);
+    expect(result.key).toMatch(/^test-user-id_[0-9a-f-]{36}\.png$/);
     expect(result.url).toContain("test-bucket");
     expect(result.fields["Content-Type"]).toBe("image/png");
 

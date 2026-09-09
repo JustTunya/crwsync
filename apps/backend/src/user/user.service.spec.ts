@@ -100,6 +100,22 @@ describe("UserService (Cluster 1 fixes)", () => {
       expect(updateCall.data).not.toHaveProperty("password_hash");
       expect(updateCall.data.firstname).toBe("Updated");
     });
+
+    it("rejects an avatar_key that doesn't belong to the calling user", async () => {
+      const mockUser = {
+        id: "user-1",
+        email: "test@example.com",
+        username: "testuser",
+      };
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+
+      const dto: UpdateUserDto = {
+        avatar_key: "user-2_some-uuid.png",
+      };
+
+      await expect(userService.update("user-1", dto)).rejects.toThrow(BadRequestException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
   });
 
   describe("changePassword", () => {

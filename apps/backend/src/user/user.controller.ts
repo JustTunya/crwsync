@@ -72,7 +72,7 @@ export class UserController {
     @Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string,
     @Body() dto: PresignAvatarDto,
   ): Promise<PresignedAvatarUpload> {
-    return this.storageService.presignAvatarUpload(dto.contentType);
+    return this.storageService.presignAvatarUpload(dto.contentType, userId);
   }
 
   @UseGuards(new OwnershipGuard("userId"))

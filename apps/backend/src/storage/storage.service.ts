@@ -15,6 +15,7 @@ import { PresignedAvatarUpload } from "@crwsync/types";
 const AVATAR_PREFIX = "avatars/";
 const MAX_AVATAR_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
 const PRESIGN_EXPIRY_SECONDS = 300; // 5 minutes
+const PRESIGN_GET_EXPIRY_SECONDS = 3600; // 1 hour
 
 const AVATAR_MIME_EXTENSIONS: Record<string, string> = {
   "image/png": "png",
@@ -55,11 +56,11 @@ export class StorageService implements OnModuleInit {
     }
   }
 
-  async presignAvatarUpload(contentType: string): Promise<PresignedAvatarUpload> {
+  async presignAvatarUpload(contentType: string, ownerId: string): Promise<PresignedAvatarUpload> {
     const ext = AVATAR_MIME_EXTENSIONS[contentType];
     if (!ext) throw new BadRequestException("Unsupported image type");
 
-    const key = `${randomUUID()}.${ext}`;
+    const key = `${ownerId}_${randomUUID()}.${ext}`;
 
     const { url, fields } = await createPresignedPost(this.client, {
       Bucket: this.bucket,
@@ -77,7 +78,7 @@ export class StorageService implements OnModuleInit {
 
   async presignGet(key: string): Promise<string> {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: `${AVATAR_PREFIX}${key}` });
-    return getSignedUrl(this.client, command, { expiresIn: PRESIGN_EXPIRY_SECONDS });
+    return getSignedUrl(this.client, command, { expiresIn: PRESIGN_GET_EXPIRY_SECONDS });
   }
 
   async deleteObject(key: string): Promise<void> {

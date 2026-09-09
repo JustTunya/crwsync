@@ -199,6 +199,10 @@ export class WorkspaceService {
   }
 
   async update(id: string, dto: UpdateWorkspaceDto) {
+    if (dto.logo_key && !dto.logo_key.startsWith(`${id}_`)) {
+      throw new BadRequestException("Invalid logo key");
+    }
+
     const [existing, members] = await Promise.all([
       this.prisma.workspace.findUnique({ where: { id }, select: { slug: true, logo_key: true } }),
       this.prisma.workspaceMember.findMany({

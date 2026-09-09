@@ -81,7 +81,7 @@ export class WorkspaceController {
     @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
     @Body() dto: PresignAvatarDto,
   ): Promise<PresignedAvatarUpload> {
-    return this.storageService.presignAvatarUpload(dto.contentType);
+    return this.storageService.presignAvatarUpload(dto.contentType, workspaceId);
   }
 
   @Delete(":workspaceId")
