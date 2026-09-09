@@ -69,9 +69,10 @@ export class BoardController {
 
   @Get(":boardId")
   findOne(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
     @Param("boardId", new ParseUUIDPipe({ version: "4" })) boardId: string,
   ) {
-    return this.boardService.getBoard(boardId);
+    return this.boardService.getBoard(workspaceId, boardId);
   }
 
   @Patch(":boardId")

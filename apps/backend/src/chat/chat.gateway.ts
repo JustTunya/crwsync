@@ -11,15 +11,19 @@ import { randomUUID } from "crypto";
 import { Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Server, Socket } from "socket.io";
+import { parse } from "cookie";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ChatService } from "src/chat/chat.service";
 import { StatusGateway } from "src/status/status.gateway";
+import { SessionService } from "src/session/session.service";
+import { CacheService } from "src/redis";
 import { SendMessageDto, EditMessageDto, DeleteMessageDto, MarkAsReadDto } from "src/chat/dto/chat.dto";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
+import { createSocketCorsOrigin } from "src/common/utils/socket-cors.util";
 
 @WebSocketGateway({
-  cors: { origin: "*", methods: ["GET", "POST"], credentials: true },
+  cors: { origin: createSocketCorsOrigin(), methods: ["GET", "POST"], credentials: true },
   namespace: "chat",
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -28,11 +32,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly logger = new Logger(ChatGateway.name);
 
+  private readonly revocationChecks = new Map<string, NodeJS.Timeout>();
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly chatService: ChatService,
     private readonly statusGateway: StatusGateway,
+    private readonly sessionService: SessionService,
+    private readonly cache: CacheService,
     @InjectQueue("chat_messages") private readonly messageQueue: Queue,
   ) {}
 
@@ -46,13 +54,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       const payload = this.jwtService.verify(token);
+      const session = await this.sessionService.findOne(payload.jti).catch(() => null);
+      if (!session || session.revoked_at || (session.expires_at && session.expires_at < new Date())) {
+        client.disconnect();
+        return;
+      }
+
       client.data.userId = payload.sub;
+      client.data.sessionId = payload.jti;
 
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
         select: { id: true, firstname: true, lastname: true, avatar_key: true },
       });
       client.data.user = user;
+
+      this.revocationChecks.set(
+        client.id,
+        setInterval(async () => {
+          const current = await this.sessionService.findOne(payload.jti).catch(() => null);
+          if (!current || current.revoked_at) {
+            client.disconnect();
+          }
+        }, 60_000),
+      );
 
       this.logger.debug(`Chat client connected: ${client.id} (User: ${payload.sub})`);
     } catch (error) {
@@ -62,6 +87,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
+    const interval = this.revocationChecks.get(client.id);
+    if (interval) {
+      clearInterval(interval);
+      this.revocationChecks.delete(client.id);
+    }
     this.logger.debug(`Chat client disconnected: ${client.id}`);
   }
 
@@ -124,6 +154,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     if (!userId || !roomId || !workspaceId) {
       client.emit("error", { message: "Not in a room" });
+      return;
+    }
+
+    const rateLimitKey = `ratelimit:send_message:${userId}`;
+    const withinLimit = await this.cache.acquireLock(rateLimitKey, 1);
+    if (!withinLimit) {
+      client.emit("error", { message: "You're sending messages too fast" });
       return;
     }
 
@@ -384,12 +421,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const cookieString = client.handshake.headers.cookie;
     if (!cookieString) return null;
 
-    const cookies = cookieString.split(";").reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split("=");
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-
-    return cookies["crw-at"] || null;
+    return parse(cookieString)["crw-at"] || null;
   }
 }
