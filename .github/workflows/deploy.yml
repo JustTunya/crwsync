@@ -168,6 +168,11 @@ jobs:
       ACCESS_COOKIE_DOMAIN: ${{ secrets.ACCESS_COOKIE_DOMAIN }}
       REFRESH_COOKIE_DOMAIN: ${{ secrets.REFRESH_COOKIE_DOMAIN }}
       CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+      STORAGE_ENDPOINT: ${{ secrets.STORAGE_ENDPOINT }}
+      STORAGE_BUCKET: ${{ secrets.STORAGE_BUCKET }}
+      STORAGE_ACCESS_KEY: ${{ secrets.STORAGE_ACCESS_KEY }}
+      STORAGE_SECRET_KEY: ${{ secrets.STORAGE_SECRET_KEY }}
+      STORAGE_REGION: ${{ secrets.STORAGE_REGION }}
     steps:
       - uses: actions/checkout@v4
         with:
