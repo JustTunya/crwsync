@@ -10,7 +10,7 @@ export default function About() {
       </div>
 
       <div className="flex flex-col items-center gap-4 max-w-2xl w-full p-8 bg-linear-to-br from-foreground/10 via-foreground/6 to-foreground/5 border-[1.5px] border-foreground/10 backdrop-saturate-100 shadow-md shadow-black/5 rounded-xl text-center">
-        <h1 className="text-3xl lg:text-4xl font-bold">Tunya Lénárd-Sándor</h1>
+        <h2 className="text-3xl lg:text-4xl font-bold">Tunya Lénárd-Sándor</h2>
         <p className="text-sm text-muted-foreground tracking-wide">
           Engineered crwsync end to end — public portal, authenticated dashboard, and a horizontally scalable real-time backend — solo.
         </p>

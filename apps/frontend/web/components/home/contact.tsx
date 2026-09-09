@@ -47,7 +47,7 @@ export default function Contact() {
       </div>
 
       <div className="flex flex-col gap-4 max-w-lg w-full p-8 bg-linear-to-br from-foreground/10 via-foreground/6 to-foreground/5 border-[1.5px] border-foreground/10 backdrop-saturate-100 shadow-md shadow-black/5 rounded-xl">
-        <h1 className="text-2xl lg:text-3xl font-bold text-center">Send a message</h1>
+        <h2 className="text-2xl lg:text-3xl font-bold text-center">Send a message</h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">

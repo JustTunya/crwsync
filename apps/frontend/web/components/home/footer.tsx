@@ -13,8 +13,8 @@ export default function Footer() {
       </div>
 
       <div className="flex items-center justify-center gap-4">
-        <Link href="https://github.com/justtunya/crwsync">
-          <div 
+        <Link href="https://github.com/justtunya/crwsync" aria-label="GitHub">
+          <div
             className="size-6 bg-current" 
             style={{ 
               WebkitMaskImage: "url(/github.svg)", 
@@ -29,8 +29,8 @@ export default function Footer() {
           />
         </Link>
 
-        <Link href="https://www.linkedin.com/in/lenard-tunya/">
-          <div 
+        <Link href="https://www.linkedin.com/in/lenard-tunya/" aria-label="LinkedIn">
+          <div
             className="size-8 bg-current" 
             style={{ 
               WebkitMaskImage: "url(/linkedin.svg)", 
