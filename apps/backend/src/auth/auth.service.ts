@@ -54,9 +54,7 @@ export class AuthService {
   }
 
   async signin(user: UserPublic, req: Request, rememberMe?: boolean): Promise<JwtResponse> {
-    const verification = await this.verificationService.findByEmail(user.email);
-
-    if (verification && verification.status !== "verified") {
+    if (!user.email_verified_at) {
       throw new BadRequestException(`Email ${user.email} is not verified`);
     }
 
@@ -68,10 +66,11 @@ export class AuthService {
       req,
     );
 
-    await this.userService.update(user.id, { last_login: new Date().toISOString() });
+    await this.userService.recordLogin(user.id);
 
     return { accessToken, refreshToken };
   }
+
 
   async signout(req: Request, res: Response): Promise<void> {
     const accessToken = req.cookies["crw-at"];
@@ -97,7 +96,7 @@ export class AuthService {
         httpOnly: true,
         secure: isProduction,
         sameSite: "lax",
-        path: "/auth",
+        path: "/",
         domain: refreshCookieDomain,
       });
     }

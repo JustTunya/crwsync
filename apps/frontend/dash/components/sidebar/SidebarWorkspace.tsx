@@ -28,9 +28,10 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
     setOpenWorkspaces(false);
   };
 
-  if (loading.list && !activeWorkspace) {
+  if ((loading.list || loading.active) && !activeWorkspace) {
     return <div className="h-10 w-full bg-base-200 rounded-lg animate-pulse" />;
   }
+
 
   return (
     <div

@@ -7,10 +7,11 @@ import { ChatRoom } from "@/components/chat/ChatRoom";
 
 export default function ChatPage() {
   const { roomId } = useParams<{ roomId: string }>();
-  const { activeWorkspace } = useWorkspace();
+  const { activeId } = useWorkspace();
   const user = useUser();
 
-  const workspaceId = activeWorkspace?.id || "";
+  const workspaceId = activeId || "";
+
   const currentUserId = user?.id || "";
 
   if (!workspaceId || !currentUserId || !roomId) {

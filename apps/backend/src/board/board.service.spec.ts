@@ -1,9 +1,9 @@
 import { BoardService } from "./board.service";
-import { NotFoundException } from "@nestjs/common";
+import { NotFoundException, ForbiddenException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
-import { UpdateBoardDto, CreateTaskDto, MoveTaskDto, UpdateModuleDto } from "src/board/dto/board.dto";
+import { UpdateBoardDto, CreateTaskDto, MoveTaskDto, UpdateModuleDto, ReorderModulesDto } from "src/board/dto/board.dto";
 
 function makeService() {
   const prisma = {
@@ -11,10 +11,13 @@ function makeService() {
     boardColumn: { findFirst: jest.fn(), findMany: jest.fn(), count: jest.fn() },
     task: { findFirst: jest.fn(), findMany: jest.fn(), update: jest.fn() },
     workspace: { update: jest.fn() },
+    workspaceModule: { count: jest.fn(), update: jest.fn(), findFirst: jest.fn(), delete: jest.fn() },
+    workspaceProject: { findMany: jest.fn() },
     $transaction: jest.fn((arg: unknown) =>
       Array.isArray(arg) ? Promise.all(arg) : (arg as (tx: unknown) => unknown)({}),
     ),
   };
+
   const cache = { acquireLock: jest.fn().mockResolvedValue(true), releaseLock: jest.fn() };
   const statusGateway = { server: { to: jest.fn().mockReturnValue({ emit: jest.fn() }) } };
   return {
@@ -112,4 +115,33 @@ describe("BoardService module/project workspace scoping", () => {
       expect.objectContaining({ where: { id: "module-from-ws-2", workspace_id: "ws-1" } }),
     );
   });
+
+  it("reorderModules rejects updates when project_id belongs to another workspace", async () => {
+    const { service, prisma } = makeService();
+    prisma.workspaceModule.count.mockResolvedValue(1); // module exists in workspace
+    prisma.workspaceProject.findMany.mockResolvedValue([]); // project NOT in this workspace
+
+    const dto: ReorderModulesDto = {
+      updates: [{ id: "mod-1", position: 1, project_id: "project-from-other-ws" }],
+    };
+
+    await expect(service.reorderModules("ws-1", dto)).rejects.toThrow(ForbiddenException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(prisma.workspaceModule.update).not.toHaveBeenCalled();
+  });
+
+  it("reorderModules succeeds when project_id belongs to the workspace", async () => {
+    const { service, prisma } = makeService();
+    prisma.workspaceModule.count.mockResolvedValue(1);
+    prisma.workspaceProject.findMany.mockResolvedValue([{ id: "project-1" }]);
+
+    const dto: ReorderModulesDto = {
+      updates: [{ id: "mod-1", position: 1, project_id: "project-1" }],
+    };
+
+    const result = await service.reorderModules("ws-1", dto);
+    expect(result).toEqual({ success: true });
+    expect(prisma.$transaction).toHaveBeenCalled();
+  });
 });
+

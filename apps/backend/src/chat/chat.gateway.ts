@@ -262,6 +262,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           }
         } catch (err) {
           this.logger.error(`Secondary messaging logic error: ${err}`);
+          this.server.to(`chat_${roomId}`).emit("message_failed", {
+            roomId,
+            preGeneratedId: messageId,
+          });
         }
       })();
     } catch (error) {

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from "@nestjs/common";
 import { ModuleTypeEnum } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
@@ -564,6 +564,24 @@ export class BoardService {
       throw new NotFoundException("One or more modules not found in this workspace");
     }
 
+    const projectIds = Array.from(
+      new Set(
+        dto.updates
+          .map((u) => u.project_id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
+
+    if (projectIds.length > 0) {
+      const validProjects = await this.prisma.workspaceProject.findMany({
+        where: { id: { in: projectIds }, workspace_id: workspaceId },
+        select: { id: true },
+      });
+      if (validProjects.length !== projectIds.length) {
+        throw new ForbiddenException("One or more projects do not belong to this workspace");
+      }
+    }
+
     await this.prisma.$transaction(
       dto.updates.map((update) =>
         this.prisma.workspaceModule.update({
@@ -575,6 +593,7 @@ export class BoardService {
         }),
       ),
     );
+
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)

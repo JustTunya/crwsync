@@ -41,8 +41,12 @@ export function useCreateProject(workspaceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateProjectPayload) => projectService.createProject(workspaceId, data),
+    mutationFn: (data: CreateProjectPayload) => {
+      if (!workspaceId) throw new Error("Workspace ID is required");
+      return projectService.createProject(workspaceId, data);
+    },
     onSuccess: (res) => {
+      if (!workspaceId) return;
       queryClient.setQueryData(
         projectKeys.list(workspaceId),
         (old: { data: WorkspaceProject[] } | undefined) => {
@@ -53,6 +57,7 @@ export function useCreateProject(workspaceId: string) {
       );
     },
     onSettled: () => {
+      if (!workspaceId) return;
       queryClient.invalidateQueries({ queryKey: projectKeys.list(workspaceId) });
     },
   });
@@ -62,9 +67,12 @@ export function useUpdateProject(workspaceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ projectId, data }: { projectId: string; data: UpdateProjectPayload }) =>
-      projectService.updateProject(workspaceId, projectId, data),
+    mutationFn: ({ projectId, data }: { projectId: string; data: UpdateProjectPayload }) => {
+      if (!workspaceId) throw new Error("Workspace ID is required");
+      return projectService.updateProject(workspaceId, projectId, data);
+    },
     onMutate: async ({ projectId, data }) => {
+      if (!workspaceId) return;
       await queryClient.cancelQueries({ queryKey: projectKeys.list(workspaceId) });
       const previous = queryClient.getQueryData(projectKeys.list(workspaceId));
 
@@ -82,11 +90,12 @@ export function useUpdateProject(workspaceId: string) {
       return { previous };
     },
     onError: (_, __, context) => {
-      if (context?.previous) {
+      if (context?.previous && workspaceId) {
         queryClient.setQueryData(projectKeys.list(workspaceId), context.previous);
       }
     },
     onSettled: () => {
+      if (!workspaceId) return;
       queryClient.invalidateQueries({ queryKey: projectKeys.list(workspaceId) });
     },
   });
@@ -96,8 +105,12 @@ export function useDeleteProject(workspaceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (projectId: string) => projectService.deleteProject(workspaceId, projectId),
+    mutationFn: (projectId: string) => {
+      if (!workspaceId) throw new Error("Workspace ID is required");
+      return projectService.deleteProject(workspaceId, projectId);
+    },
     onMutate: async (projectId) => {
+      if (!workspaceId) return;
       await queryClient.cancelQueries({ queryKey: projectKeys.list(workspaceId) });
       const previous = queryClient.getQueryData(projectKeys.list(workspaceId));
 
@@ -115,13 +128,15 @@ export function useDeleteProject(workspaceId: string) {
       return { previous };
     },
     onError: (_, __, context) => {
-      if (context?.previous) {
+      if (context?.previous && workspaceId) {
         queryClient.setQueryData(projectKeys.list(workspaceId), context.previous);
       }
     },
     onSettled: () => {
+      if (!workspaceId) return;
       queryClient.invalidateQueries({ queryKey: projectKeys.list(workspaceId) });
       queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
     },
   });
 }
+

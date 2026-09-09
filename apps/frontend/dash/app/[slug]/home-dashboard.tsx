@@ -116,10 +116,11 @@ function StatCard({
 
 export function HomeDashboard({ slug }: { slug: string }) {
   const user = useUser();
-  const { activeId, activeWorkspace } = useWorkspace();
+  const { activeId } = useWorkspace();
   const { data: modules, isLoading: isModulesLoading } = useWorkspaceModules(activeId);
-  const togglePinModule = useTogglePinModule(activeWorkspace?.id || "");
+  const togglePinModule = useTogglePinModule(activeId || "");
   const { data: stats, isLoading: isStatsLoading } = useStatistics(activeId, "2w");
+
 
   const pinnedModules = modules?.filter(m => m.isPinned) || [];
 
@@ -197,11 +198,14 @@ export function HomeDashboard({ slug }: { slug: string }) {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                          if (!activeId) return;
                           togglePinModule.mutate({ moduleId: mod.id, isPinned: false });
                         }}
-                        className="opacity-0 group-hover:opacity-100 flex items-center justify-center size-8 rounded-md hover:bg-base-300 text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                        disabled={!activeId}
+                        className="opacity-0 group-hover:opacity-100 flex items-center justify-center size-8 rounded-md hover:bg-base-300 text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:pointer-events-none"
                         title="Unpin module"
                       >
+
                         <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
                       </button>
                     </GlassBox>

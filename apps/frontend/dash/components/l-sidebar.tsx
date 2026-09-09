@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { m, AnimatePresence, Transition, LazyMotion, domAnimation } from "framer-motion";
 import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -53,15 +53,17 @@ export function LSidebar() {
   const { socket } = useSocket();
   const queryClient = useQueryClient();
 
-  const slug = activeWorkspace?.slug || "";
+  const params = useParams();
+  const slug = (params?.slug as string) || activeWorkspace?.slug || "";
   const [addModuleOpen, setAddModuleOpen] = useState(false);
   const [addModuleProjectId, setAddModuleProjectId] = useState<string | undefined>();
   const { data: wsModules } = useWorkspaceModules(activeWorkspaceId);
   const { data: projects } = useWorkspaceProjects(activeWorkspaceId);
-  const createProject = useCreateProject(activeWorkspace?.id || "");
-  const reorderModules = useReorderModules(activeWorkspace?.id || "");
+  const createProject = useCreateProject(activeWorkspaceId || "");
+  const reorderModules = useReorderModules(activeWorkspaceId || "");
 
-  useWorkspaceSocket(activeWorkspace?.id);
+  useWorkspaceSocket(activeWorkspaceId);
+
 
 
   const [prevWsModules, setPrevWsModules] = useState(wsModules);
@@ -93,12 +95,12 @@ export function LSidebar() {
   };
 
   useEffect(() => {
-    if (!socket || !activeWorkspace?.id) return;
+    if (!socket || !activeWorkspaceId) return;
 
     const handleUnreadIncrement = ({ roomId, senderId }: { roomId: string; senderId: string }) => {
       if (senderId === user?.id) return;
       queryClient.setQueryData(
-        moduleKeys.list(activeWorkspace.id),
+        moduleKeys.list(activeWorkspaceId),
         (old: { data: WorkspaceModule[] } | undefined) => {
           if (!old?.data) return old;
           return {
@@ -122,10 +124,10 @@ export function LSidebar() {
     return () => {
       socket.off("chat:unread_increment", handleUnreadIncrement);
     };
-  }, [socket, activeWorkspace?.id, queryClient, user?.id, pathname, slug]);
+  }, [socket, activeWorkspaceId, queryClient, user?.id, pathname, slug]);
 
   useEffect(() => {
-    if (!activeWorkspace?.id || !localModules) return;
+    if (!activeWorkspaceId || !localModules) return;
 
     const currentModule = localModules.find(
       (m) => m.type === "CHAT" && getModuleHref(slug, m) === pathname,
@@ -133,7 +135,7 @@ export function LSidebar() {
 
     if (currentModule && currentModule.unreadCount && currentModule.unreadCount > 0) {
       queryClient.setQueryData(
-        moduleKeys.list(activeWorkspace.id),
+        moduleKeys.list(activeWorkspaceId),
         (old: { data: WorkspaceModule[] } | undefined) => {
           if (!old?.data) return old;
           return {
@@ -143,14 +145,15 @@ export function LSidebar() {
         },
       );
     }
-  }, [pathname, localModules, activeWorkspace?.id, queryClient, slug]);
+  }, [pathname, localModules, activeWorkspaceId, queryClient, slug]);
 
   const { activeId, sensors, handleDragStart, handleDragOver, handleDragEnd } = useModuleDnd(
     localModules,
     setLocalModules,
-    activeWorkspace?.id,
+    activeWorkspaceId,
     reorderModules
   );
+
 
   const modules = getModules(slug);
 
@@ -322,7 +325,7 @@ export function LSidebar() {
                           <SidebarModule
                             key={mod.id}
                             id={mod.id}
-                            activeWorkspaceId={activeWorkspace!.id}
+                            activeWorkspaceId={activeWorkspaceId || ""}
                             icon={getModuleIcon(mod.type)}
                             name={mod.name}
                             href={getModuleHref(slug, mod)}
@@ -359,8 +362,8 @@ export function LSidebar() {
                     <SidebarProject 
                       key={project.id} 
                       project={project} 
-                      activeWorkspaceId={activeWorkspace!.id}
-                      extended={open}
+                      activeWorkspaceId={activeWorkspaceId || ""}
+                      extended={open} 
                       isActiveContext={isActiveContext}
                       isNewlyCreated={editingProjectId === project.id}
                       onEditComplete={() => {
@@ -380,7 +383,7 @@ export function LSidebar() {
                             <SidebarModule
                               key={mod.id}
                               id={mod.id}
-                              activeWorkspaceId={activeWorkspace!.id}
+                              activeWorkspaceId={activeWorkspaceId || ""}
                               icon={getModuleIcon(mod.type)}
                               name={mod.name}
                               href={getModuleHref(slug, mod)}
@@ -407,7 +410,7 @@ export function LSidebar() {
                     return (
                       <SidebarModule
                         id={mod.id}
-                        activeWorkspaceId={activeWorkspace!.id}
+                        activeWorkspaceId={activeWorkspaceId || ""}
                         icon={getModuleIcon(mod.type)}
                         name={mod.name}
                         href={getModuleHref(slug, mod)}
@@ -422,6 +425,7 @@ export function LSidebar() {
                 </DragOverlay>,
                 document.body
               )}
+
             </DndContext>
           </div>
 
@@ -506,7 +510,7 @@ export function LSidebar() {
               <div key={mod.id} onClick={() => setSearchModalOpen(false)}>
                 <SidebarModule
                   id={mod.id}
-                  activeWorkspaceId={activeWorkspace?.id || ""}
+                  activeWorkspaceId={activeWorkspaceId || ""}
                   icon={getModuleIcon(mod.type)}
                   name={mod.name}
                   href={getModuleHref(slug, mod)}

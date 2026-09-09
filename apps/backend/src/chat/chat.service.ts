@@ -9,6 +9,7 @@ import {
   DeleteMessageDto,
 } from "src/chat/dto/chat.dto";
 import ogs from "open-graph-scraper";
+import { assertPublicUrl } from "src/common/security/assert-public-url";
 
 const POSITION_GAP = 1000;
 
@@ -159,52 +160,64 @@ export class ChatService {
     dto: SendMessageDto,
     messageId?: string,
   ) {
-    const message = await this.prisma.chatMessage.create({
-      data: {
-        ...(messageId ? { id: messageId } : {}),
-        workspace_id: workspaceId,
-        room_id: roomId,
-        sender_id: senderId,
-        content: dto.content,
-        reply_to_id: dto.reply_to_id,
-        is_everyone_mention: dto.isEveryoneMention || false,
-        ...(dto.mentionedUserIds?.length
-          ? {
-              mentions: {
-                connect: dto.mentionedUserIds.map((id) => ({ id })),
-              },
-            }
-          : {}),
-      },
-      include: {
-        sender: { select: SENDER_SELECT },
-        mentions: { select: SENDER_SELECT },
-        reply_to: {
-          select: {
-            id: true,
-            content: true,
-            is_deleted: true,
-            sender: { select: { firstname: true, lastname: true } },
-          },
-        },
-        reactions: {
-          include: {
-            user: { select: SENDER_SELECT },
-          },
-        },
-        read_receipts: {
-          include: {
-            user: { select: SENDER_SELECT },
-          },
+    const createData = {
+      ...(messageId ? { id: messageId } : {}),
+      workspace_id: workspaceId,
+      room_id: roomId,
+      sender_id: senderId,
+      content: dto.content,
+      reply_to_id: dto.reply_to_id,
+      is_everyone_mention: dto.isEveryoneMention || false,
+      ...(dto.mentionedUserIds?.length
+        ? {
+            mentions: {
+              connect: dto.mentionedUserIds.map((id) => ({ id })),
+            },
+          }
+        : {}),
+    };
+
+    const include = {
+      sender: { select: SENDER_SELECT },
+      mentions: { select: SENDER_SELECT },
+      reply_to: {
+        select: {
+          id: true,
+          content: true,
+          is_deleted: true,
+          sender: { select: { firstname: true, lastname: true } },
         },
       },
-    });
+      reactions: {
+        include: {
+          user: { select: SENDER_SELECT },
+        },
+      },
+      read_receipts: {
+        include: {
+          user: { select: SENDER_SELECT },
+        },
+      },
+    };
+
+    const message = messageId
+      ? await this.prisma.chatMessage.upsert({
+          where: { id: messageId },
+          create: createData,
+          update: {},
+          include,
+        })
+      : await this.prisma.chatMessage.create({
+          data: createData,
+          include,
+        });
 
     const receipt = await this.markAsRead(workspaceId, roomId, senderId, message.id);
     message.read_receipts = [receipt];
 
     return message;
   }
+
 
   async editMessage(
     workspaceId: string,
@@ -374,6 +387,7 @@ export class ChatService {
 
   async getLinkPreview(url: string) {
     try {
+      await assertPublicUrl(url);
       const options = { url, timeout: 5000 };
       const { result } = await ogs(options);
 

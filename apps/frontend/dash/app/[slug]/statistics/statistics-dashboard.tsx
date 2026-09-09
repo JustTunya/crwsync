@@ -187,10 +187,10 @@ export function StatisticsDashboard({
 
   const interval = searchParams.get("interval") ?? initialInterval ?? DEFAULT_INTERVAL;
 
-  const { activeWorkspace } = useWorkspace();
-  const workspaceId = activeWorkspace?.id;
+  const { activeId: workspaceId } = useWorkspace();
 
   const { data, isLoading } = useStatistics(workspaceId, interval);
+
 
   /* Sync interval to URL */
   const setInterval = useCallback(
