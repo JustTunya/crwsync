@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "record": "node --env-file=../../.env.demo scripts/record.ts"
+    "record": "node --env-file=../../.env.demo scripts/record.ts",
+    "screenshot": "node --env-file=../../.env.demo scripts/screenshot.ts"
   },
   "devDependencies": {
     "playwright": "^1.62.1"
