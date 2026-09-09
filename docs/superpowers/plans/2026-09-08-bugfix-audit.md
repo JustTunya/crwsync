@@ -1063,17 +1063,10 @@ async getWorkspaceModules(workspaceId: string, userId: string) {
 
   const roomIds = chatModules.map((m) => m.reference_id);
 
-  const [receipts, unreadCounts] = await Promise.all([
-    this.prisma.chatReadReceipt.findMany({
-      where: { room_id: { in: roomIds }, user_id: userId },
-      select: { room_id: true, last_read_at: true },
-    }),
-    this.prisma.chatMessage.groupBy({
-      by: ["room_id"],
-      where: { room_id: { in: roomIds } },
-      _count: { _all: true },
-    }),
-  ]);
+  const receipts = await this.prisma.chatReadReceipt.findMany({
+    where: { room_id: { in: roomIds }, user_id: userId },
+    select: { room_id: true, last_read_at: true },
+  });
 
   const receiptMap = new Map(receipts.map((r) => [r.room_id, r.last_read_at]));
 

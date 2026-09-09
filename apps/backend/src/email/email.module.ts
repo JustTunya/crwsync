@@ -13,6 +13,10 @@ import { EmailProcessor } from "src/email/email.processor";
     }),
     BullModule.registerQueue({
       name: "email",
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: "exponential", delay: 1000 },
+      },
     }),
   ],
   controllers: [EmailController],
