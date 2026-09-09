@@ -1,4 +1,5 @@
 import { ChatService } from "./chat.service";
+import { SendMessageDto } from "src/chat/dto/chat.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
 import ogs from "open-graph-scraper";
@@ -78,7 +79,7 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
         "ws-1",
         "room-1",
         "user-1",
-        { content: "Hello world" } as any,
+        { content: "Hello world" } as unknown as SendMessageDto,
         "msg-1",
       );
 
@@ -101,7 +102,7 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
         "ws-1",
         "room-1",
         "user-1",
-        { content: "Hello world" } as any,
+        { content: "Hello world" } as unknown as SendMessageDto,
       );
 
       expect(prisma.chatMessage.create).toHaveBeenCalledWith(
