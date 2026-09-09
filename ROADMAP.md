@@ -218,7 +218,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 - [x] **Build Account Settings (`/settings`)**:
   - Implement user profile edit form (first name, last name, username).
   - Implement security tab: password update and session management table with "Revoke Session" actions.
-- [ ] **Build Workspace Settings (`/[slug]/settings`)**:
+- [x] **Build Workspace Settings (`/[slug]/settings`)**:
   - Build workspace general settings: rename workspace, update slug.
   - Build member role administration: promote/demote members, transfer ownership.
   - Build Danger Zone: workspace deletion with validation input.

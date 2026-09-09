@@ -46,6 +46,7 @@ export interface CreateWorkspacePayload {
 
 export interface UpdateWorkspacePayload {
   name?: string;
+  slug?: string;
   logo_key?: string;
 }
 

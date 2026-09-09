@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import { CreateWorkspacePayload, InviteMemberPayload, UpdateWorkspacePayload, Workspace, WorkspaceMember, WorkspaceOperationState, WorkspacePendingInvite } from "@crwsync/types";
+import { CreateWorkspacePayload, InviteMemberPayload, UpdateWorkspacePayload, Workspace, WorkspaceMember, WorkspaceOperationState, WorkspacePendingInvite, WorkspaceRoleEnum } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
 export async function getWorkspaceMembers(workspaceId: string): Promise<WorkspaceOperationState<(WorkspaceMember)[]>> {
@@ -153,6 +153,32 @@ export async function kickWorkspaceMember(workspaceId: string, memberId: string)
     if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, message: resp?.message || "Failed to kick member" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function updateMemberRole(workspaceId: string, memberId: string, role: WorkspaceRoleEnum): Promise<WorkspaceOperationState> {
+  try {
+    await api.patch(`/workspaces/${workspaceId}/members/${memberId}/role`, { role });
+    return { success: true, message: "Member role updated successfully" };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to update member role" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function transferOwnership(workspaceId: string, newOwnerId: string): Promise<WorkspaceOperationState> {
+  try {
+    await api.post(`/workspaces/${workspaceId}/transfer-ownership`, { newOwnerId });
+    return { success: true, message: "Ownership transferred successfully" };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to transfer ownership" };
     }
     return { success: false, message: "An unexpected error occurred" };
   }
