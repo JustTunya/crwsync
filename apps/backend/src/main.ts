@@ -19,7 +19,7 @@ async function bootstrap() {
   
   app.enableShutdownHooks(["SIGINT", "SIGTERM"]);
 
-  app.use(helmet());
+  app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
   app.use(compression());
   app.use(json({ limit : "10mb" }));
   app.use(urlencoded({ extended: true, limit: "10mb" }));
