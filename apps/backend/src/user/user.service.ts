@@ -1,12 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import { hash } from "bcrypt";
+import { compare, hash } from "bcrypt";
 import { CreateUserDto } from "src/user/dto/create-user.dto";
 import { UpdateUserDto } from "src/user/dto/update-user.dto";
+import { ChangePasswordDto } from "src/user/dto/change-password.dto";
 import { CacheService, CacheKeys, CacheTTL } from "src/redis";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UserAuth, userAuthSelect, UserPublic, userPublicSelect } from "src/prisma/selects";
 import { VerificationService } from "src/email-verification/email-verification.service";
+import { SessionService } from "src/session/session.service";
 
 @Injectable()
 export class UserService {
@@ -14,6 +16,7 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
     private readonly verificationService: VerificationService,
+    private readonly sessionService: SessionService,
   ) {}
 
 
@@ -108,7 +111,7 @@ export class UserService {
   async update(id: string, dto: UpdateUserDto): Promise<UserPublic> {
     const user = await this.findOne(id);
 
-    const { password, birthdate, email, username, firstname, lastname, avatar_key } = dto;
+    const { birthdate, email, username, firstname, lastname, avatar_key } = dto;
 
     const data: Prisma.UserUpdateInput = {};
 
@@ -117,11 +120,6 @@ export class UserService {
     if (lastname !== undefined) data.lastname = lastname;
     if (avatar_key !== undefined) data.avatar_key = avatar_key;
     if (birthdate !== undefined) data.birthdate = new Date(`${birthdate}T00:00:00.000Z`);
-
-    if (password) {
-      data.password_hash = await hash(password, 10);
-      data.last_password_change = new Date();
-    }
 
     let emailChanged = false;
     if (email !== undefined && email !== user.email) {
@@ -164,6 +162,33 @@ export class UserService {
     return updated;
   }
 
+  async changePassword(id: string, dto: ChangePasswordDto, currentSessionId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id }, select: userAuthSelect });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const valid = await compare(dto.currentPassword, user.password_hash);
+    if (!valid) {
+      throw new BadRequestException("Current password is incorrect");
+    }
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        password_hash: await hash(dto.newPassword, 10),
+        last_password_change: new Date(),
+      },
+    });
+
+    await Promise.all([
+      this.cache.del(CacheKeys.user(id)),
+      this.cache.del(CacheKeys.userByIdentifier(user.email)),
+      this.cache.del(CacheKeys.userByIdentifier(user.username)),
+    ]);
+
+    await this.sessionService.revokeAll(id, currentSessionId);
+  }
 
   async findInvites(userId: string) {
     return this.prisma.workspaceInvite.findMany({

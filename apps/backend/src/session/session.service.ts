@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, UnauthorizedException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { Request } from "express";
 import { randomBytes, createHash, randomUUID } from "crypto";
 import { CreateSessionDto } from "src/session/dto/create-session.dto";
@@ -48,6 +49,14 @@ export class SessionService {
 
   findAll(): Promise<SessionPublic[]> {
     return this.prisma.session.findMany({ select: sessionPublicSelect });
+  }
+
+  findAllByUser(userId: string): Promise<SessionPublic[]> {
+    return this.prisma.session.findMany({
+      where: { user_id: userId, revoked_at: null },
+      select: sessionPublicSelect,
+      orderBy: { created_at: "desc" },
+    });
   }
 
   async findOne(id: string): Promise<SessionPublic> {
@@ -141,16 +150,24 @@ export class SessionService {
     await this.cache.del(CacheKeys.session(id));
   }
 
-  async revokeAll(userId: string): Promise<void> {
-    const sessions = await this.prisma.session.findMany({
-      where: { user_id: userId, revoked_at: null },
-      select: { id: true },
-    });
+  async revokeOwned(userId: string, sessionId: string): Promise<void> {
+    const session = await this.prisma.session.findUnique({ where: { id: sessionId }, select: { user_id: true } });
+    if (!session || session.user_id !== userId) {
+      throw new NotFoundException("Session not found");
+    }
+    await this.revoke(sessionId);
+  }
 
-    await this.prisma.session.updateMany({
-      where: { user_id: userId, revoked_at: null },
-      data: { revoked_at: new Date() },
-    });
+  async revokeAll(userId: string, excludeSessionId?: string): Promise<void> {
+    const where: Prisma.SessionWhereInput = {
+      user_id: userId,
+      revoked_at: null,
+      ...(excludeSessionId ? { id: { not: excludeSessionId } } : {}),
+    };
+
+    const sessions = await this.prisma.session.findMany({ where, select: { id: true } });
+
+    await this.prisma.session.updateMany({ where, data: { revoked_at: new Date() } });
 
     const cacheKeys = sessions.map((s) => CacheKeys.session(s.id));
     if (cacheKeys.length > 0) {
