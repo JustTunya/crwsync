@@ -57,3 +57,5 @@ banchmark.js
 
 # == Graphify ===
 graphify-out/
+# === Worktrees ===
+.worktrees/
