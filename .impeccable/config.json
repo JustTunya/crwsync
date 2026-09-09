@@ -2,25 +2,6 @@
   "detector": {
     "ignoreRules": [],
     "ignoreFiles": [],
-    "ignoreValues": [
-      {
-        "rule": "border-accent-on-rounded",
-        "value": "*",
-        "files": [
-          "apps/frontend/dash/app/page.tsx"
-        ],
-        "createdAt": "2026-09-09T15:33:09.636Z",
-        "reason": "spinner idiom (animate-spin rounded-full border-b-2), not a card accent border; pre-existing code"
-      },
-      {
-        "rule": "side-tab",
-        "value": "*",
-        "files": [
-          "apps/frontend/dash/components/sidebar/SidebarProject.tsx"
-        ],
-        "createdAt": "2026-09-09T15:33:17.596Z",
-        "reason": "neutral tree-indent guide line (border-base-200) for nested project children, not a colored accent border; pre-existing code"
-      }
-    ]
+    "ignoreValues": []
   }
 }

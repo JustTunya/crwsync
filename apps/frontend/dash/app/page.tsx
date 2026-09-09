@@ -27,7 +27,7 @@ export default function RootPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 }

@@ -216,7 +216,7 @@ export function SidebarProject({
       {!collapsed && (
         <div className={cn(
           "flex flex-col mt-1",
-          extended ? "ml-3 pl-2 border-l-2 border-base-200" : "items-center gap-1 w-full bg-base-200/50 rounded-xl py-2 my-1"
+          extended ? "ml-3 pl-2 border-l border-base-200" : "items-center gap-1 w-full bg-base-200/50 rounded-xl py-2 my-1"
         )}>
           {children}
         </div>
