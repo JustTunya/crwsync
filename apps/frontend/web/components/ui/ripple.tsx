@@ -1,6 +1,9 @@
+"use client"
+
 import React, { type ComponentPropsWithoutRef, type CSSProperties } from "react"
 
 import { cn } from "@/lib/utils"
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 
 interface RippleProps extends ComponentPropsWithoutRef<"div"> {
   mainCircleSize?: number
@@ -11,10 +14,12 @@ interface RippleProps extends ComponentPropsWithoutRef<"div"> {
 export const Ripple = React.memo(function Ripple({
   mainCircleSize = 210,
   mainCircleOpacity = 0.48,
-  numCircles = 16,
+  numCircles = 8,
   className,
   ...props
 }: RippleProps) {
+  const reducedMotion = usePrefersReducedMotion()
+
   return (
     <div
       className={cn(
@@ -32,7 +37,10 @@ export const Ripple = React.memo(function Ripple({
         return (
           <div
             key={i}
-            className={`animate-ripple bg-foreground/15 absolute rounded-full border shadow-xl`}
+            className={cn(
+              "bg-foreground/15 absolute rounded-full border will-change-transform",
+              !reducedMotion && "animate-ripple"
+            )}
             style={
               {
                 "--i": i,

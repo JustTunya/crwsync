@@ -21,7 +21,11 @@ export class PrismaService
       throw new Error("The connection string is missing.");
     }
 
-    const adapter = new PrismaPg({ connectionString });
+    const url = new URL(connectionString);
+    const max = Number(url.searchParams.get("connection_limit")) || 10;
+    const connectionTimeoutMillis = (Number(url.searchParams.get("pool_timeout")) || 10) * 1000;
+
+    const adapter = new PrismaPg({ connectionString, max, connectionTimeoutMillis });
 
     super({
       adapter,

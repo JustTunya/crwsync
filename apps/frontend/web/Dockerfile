@@ -28,9 +28,13 @@ COPY tsconfig.base.json tsconfig.base.json
 
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_DASH_URL
+ARG NEXT_PUBLIC_DEMO_IDENTIFIER
+ARG NEXT_PUBLIC_DEMO_PASSWORD
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_DASH_URL=${NEXT_PUBLIC_DASH_URL}
+ENV NEXT_PUBLIC_DEMO_IDENTIFIER=${NEXT_PUBLIC_DEMO_IDENTIFIER}
+ENV NEXT_PUBLIC_DEMO_PASSWORD=${NEXT_PUBLIC_DEMO_PASSWORD}
 
 RUN --mount=type=cache,id=turbo,target=/app/node_modules/.cache/turbo \
     --mount=type=cache,id=next-web,target=/app/apps/frontend/web/.next/cache \
