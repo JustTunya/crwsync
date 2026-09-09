@@ -4,7 +4,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { SessionUserType } from "@crwsync/types";
 import { useUser } from "@/providers/user.provider";
-import { useUpdateUserProfile } from "@/hooks/use-user";
+import { UserAvatar } from "@/components/user-avatar";
+import { AvatarUpload } from "@/components/settings/avatar-upload";
+import { useUpdateUserProfile, useUploadUserAvatar } from "@/hooks/use-user";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -19,6 +21,7 @@ export function ProfileForm() {
 
 function ProfileFormFields({ user }: { user: SessionUserType }) {
   const { mutateAsync, isPending, error } = useUpdateUserProfile();
+  const { mutateAsync: uploadAvatar, isPending: isUploadingAvatar, error: avatarError } = useUploadUserAvatar();
 
   const [firstname, setFirstname] = useState(user.firstname);
   const [lastname, setLastname] = useState(user.lastname);
@@ -48,6 +51,13 @@ function ProfileFormFields({ user }: { user: SessionUserType }) {
           </CardHeader>
 
           <CardContent className="space-y-4 mt-4">
+            <AvatarUpload
+              preview={<UserAvatar user={user} size={16} />}
+              isUploading={isUploadingAvatar}
+              error={avatarError?.message}
+              onSelect={(file) => uploadAvatar({ userId: user.id, file })}
+            />
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstname">First name</Label>

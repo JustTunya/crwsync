@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Workspace } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
-import { useUpdateWorkspace } from "@/hooks/use-workspaces";
+import { WorkspaceAvatar } from "@/components/workspace-avatar";
+import { AvatarUpload } from "@/components/settings/avatar-upload";
+import { useUpdateWorkspace, useUploadWorkspaceLogo } from "@/hooks/use-workspaces";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -25,6 +27,7 @@ export function WorkspaceGeneralForm() {
 function WorkspaceGeneralFormFields({ workspace }: { workspace: Workspace }) {
   const router = useRouter();
   const { mutateAsync, isPending, error } = useUpdateWorkspace();
+  const { mutateAsync: uploadLogo, isPending: isUploadingLogo, error: logoError } = useUploadWorkspaceLogo();
 
   const [name, setName] = useState(workspace.name);
   const [slug, setSlug] = useState(workspace.slug);
@@ -54,6 +57,13 @@ function WorkspaceGeneralFormFields({ workspace }: { workspace: Workspace }) {
           </CardHeader>
 
           <CardContent className="space-y-4 mt-4">
+            <AvatarUpload
+              preview={<WorkspaceAvatar avatar_key={workspace.logo_key ?? undefined} name={workspace.name} className="size-16 rounded-lg" />}
+              isUploading={isUploadingLogo}
+              error={logoError?.message}
+              onSelect={(file) => uploadLogo({ workspaceId: workspace.id, file })}
+            />
+
             <div className="space-y-2">
               <Label htmlFor="ws-name">Workspace name</Label>
               <Input id="ws-name" value={name} onChange={(e) => setName(e.target.value)} required />
