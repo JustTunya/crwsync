@@ -204,9 +204,6 @@ export class WorkspaceService {
     if (existing?.slug) {
       await this.cache.del(CacheKeys.workspaceSlug(existing.slug));
     }
-    if (dto.slug && dto.slug !== existing?.slug) {
-      await this.cache.del(CacheKeys.workspaceSlug(dto.slug));
-    }
 
     return result;
   }

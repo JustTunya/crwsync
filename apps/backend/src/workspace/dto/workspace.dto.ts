@@ -18,10 +18,6 @@ export class UpdateWorkspaceDto {
 
   @IsString()
   @IsOptional()
-  slug?: string;
-
-  @IsString()
-  @IsOptional()
   logo_key?: string;
 }
 
