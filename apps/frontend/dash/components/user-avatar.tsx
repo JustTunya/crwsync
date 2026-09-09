@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
@@ -36,14 +35,13 @@ export function UserAvatar({ size = 7, user, status, variant = "default", classN
     const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL}/avatars/${user.avatar_key}`;
 
     return (
-      <Image
+      <img
         src={avatarUrl}
         alt={`${user.firstname} ${user.lastname} avatar`}
         title={`${user.firstname} ${user.lastname}`}
         className={cn("rounded-full object-cover", className)}
-        width={pixels}
-        height={pixels}
-        priority
+        style={{ width: pixels, height: pixels }}
+        loading="eager"
         onError={() => setImageFailed(true)}
       />
     );
