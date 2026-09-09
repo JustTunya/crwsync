@@ -13,7 +13,9 @@ import {
   getWorkspaceMembers,
   updateMemberRole,
   transferOwnership,
+  presignWorkspaceLogo,
 } from "@/services/workspace.service";
+import { uploadToPresignedPost } from "@/lib/upload-to-storage";
 
 export const workspaceKeys = {
   all: ["workspaces"] as const,
@@ -84,6 +86,27 @@ export function useUpdateWorkspace() {
     mutationFn: async ({ id, data }: { id: string; data: UpdateWorkspacePayload }) => {
       const { success, data: result, message } = await updateWorkspace(id, data);
       if (!success || !result) throw new Error(message);
+      return result;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.list() });
+    },
+  });
+}
+
+export function useUploadWorkspaceLogo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ workspaceId, file }: { workspaceId: string; file: File }) => {
+      const { success, data: presign, message } = await presignWorkspaceLogo(workspaceId, file.type);
+      if (!success || !presign) throw new Error(message);
+
+      await uploadToPresignedPost(presign, file);
+
+      const { success: updateSuccess, data: result, message: updateMessage } = await updateWorkspace(workspaceId, { logo_key: presign.key });
+      if (!updateSuccess || !result) throw new Error(updateMessage);
       return result;
     },
     onSuccess: (data) => {

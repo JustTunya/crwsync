@@ -19,7 +19,7 @@ async function bootstrap() {
   
   app.enableShutdownHooks(["SIGINT", "SIGTERM"]);
 
-  app.use(helmet());
+  app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
   app.use(compression());
   app.use(json({ limit : "10mb" }));
   app.use(urlencoded({ extended: true, limit: "10mb" }));
@@ -40,6 +40,14 @@ async function bootstrap() {
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   });
+
+  const requiredStorageVars = ["STORAGE_ENDPOINT", "STORAGE_BUCKET", "STORAGE_ACCESS_KEY", "STORAGE_SECRET_KEY", "STORAGE_REGION"];
+  for (const key of requiredStorageVars) {
+    if (!config.get<string>(key)) {
+      logger.error(`${key} must be set`);
+      process.exit(1);
+    }
+  }
 
   const cookieSecret = config.get<string>("COOKIE_SECRET");
   app.use(cookieParser(cookieSecret));

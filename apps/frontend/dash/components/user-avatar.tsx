@@ -1,4 +1,6 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
@@ -27,18 +29,20 @@ export function UserAvatar({ size = 7, user, status, variant = "default", classN
     "busy": "bg-error",
   };
 
-  if (user && user.avatar_key) {
-    const avatarUrl = `/api/avatars/${user.avatar_key}`;
+  const [imageFailed, setImageFailed] = useState(false);
+
+  if (user && user.avatar_key && !imageFailed) {
+    const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL}/avatars/${user.avatar_key}`;
 
     return (
-      <Image
+      <img
         src={avatarUrl}
         alt={`${user.firstname} ${user.lastname} avatar`}
         title={`${user.firstname} ${user.lastname}`}
         className={cn("rounded-full object-cover", className)}
-        width={pixels}
-        height={pixels}
-        priority
+        style={{ width: pixels, height: pixels }}
+        loading="eager"
+        onError={() => setImageFailed(true)}
       />
     );
   } else {

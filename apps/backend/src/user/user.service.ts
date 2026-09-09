@@ -9,6 +9,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { UserAuth, userAuthSelect, UserPublic, userPublicSelect } from "src/prisma/selects";
 import { VerificationService } from "src/email-verification/email-verification.service";
 import { SessionService } from "src/session/session.service";
+import { StorageService } from "src/storage/storage.service";
 
 @Injectable()
 export class UserService {
@@ -17,6 +18,7 @@ export class UserService {
     private readonly cache: CacheService,
     private readonly verificationService: VerificationService,
     private readonly sessionService: SessionService,
+    private readonly storageService: StorageService,
   ) {}
 
 
@@ -113,6 +115,10 @@ export class UserService {
 
     const { birthdate, email, username, firstname, lastname, avatar_key } = dto;
 
+    if (avatar_key && !avatar_key.startsWith(`${user.id}_`)) {
+      throw new BadRequestException("Invalid avatar key");
+    }
+
     const data: Prisma.UserUpdateInput = {};
 
     if (username !== undefined) data.username = username;
@@ -140,6 +146,10 @@ export class UserService {
       data,
       select: userPublicSelect,
     });
+
+    if (avatar_key !== undefined && avatar_key !== user.avatar_key && user.avatar_key) {
+      await this.storageService.deleteObject(user.avatar_key);
+    }
 
     if (emailChanged && email) {
       await this.prisma.emailVerification.deleteMany({

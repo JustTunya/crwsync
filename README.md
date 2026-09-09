@@ -140,6 +140,7 @@ Create a `.env` in each of `apps/frontend/web`, `apps/frontend/dash`, and
 | `JWT_ACCESS_TOKEN_SECRET`, `JWT_REFRESH_TOKEN_SECRET`, `COOKIE_SECRET` | any string — sign local sessions and cookies |
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS` | an SMTP provider (e.g. Zoho Mail), for transactional email |
 | `CORS_ORIGIN`, `APP_URL`, `ACCESS_COOKIE_DOMAIN`, `REFRESH_COOKIE_DOMAIN` | `localhost` for local dev |
+| `STORAGE_ENDPOINT`, `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_REGION` | `docker-compose.dev.yml` MinIO credentials locally; an S3-compatible bucket (e.g. Cloudflare R2) in production |
 
 ## Layout of the codebase
 

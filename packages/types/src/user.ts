@@ -42,6 +42,7 @@ export interface UpdateUserProfilePayload {
   firstname?: string;
   lastname?: string;
   username?: string;
+  avatar_key?: string;
 }
 
 export interface ChangePasswordPayload {
