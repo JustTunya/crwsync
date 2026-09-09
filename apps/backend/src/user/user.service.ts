@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { hash } from "bcrypt";
 import { CreateUserDto } from "src/user/dto/create-user.dto";
@@ -6,13 +6,16 @@ import { UpdateUserDto } from "src/user/dto/update-user.dto";
 import { CacheService, CacheKeys, CacheTTL } from "src/redis";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UserAuth, userAuthSelect, UserPublic, userPublicSelect } from "src/prisma/selects";
+import { VerificationService } from "src/email-verification/email-verification.service";
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
+    private readonly verificationService: VerificationService,
   ) {}
+
 
   async create(dto: CreateUserDto): Promise<UserPublic> {
     const data = {
@@ -94,13 +97,44 @@ export class UserService {
     return { available: !exists };
   }
 
+  async recordLogin(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { last_login: new Date() },
+    });
+    await this.cache.del(CacheKeys.user(userId));
+  }
+
   async update(id: string, dto: UpdateUserDto): Promise<UserPublic> {
     const user = await this.findOne(id);
 
-    const data: Prisma.UserUpdateInput = { ...dto };
+    const { password, birthdate, email, username, firstname, lastname, avatar_key } = dto;
 
-    if (dto.password) {
-      data.password_hash = await hash(dto.password, 10);
+    const data: Prisma.UserUpdateInput = {};
+
+    if (username !== undefined) data.username = username;
+    if (firstname !== undefined) data.firstname = firstname;
+    if (lastname !== undefined) data.lastname = lastname;
+    if (avatar_key !== undefined) data.avatar_key = avatar_key;
+    if (birthdate !== undefined) data.birthdate = new Date(`${birthdate}T00:00:00.000Z`);
+
+    if (password) {
+      data.password_hash = await hash(password, 10);
+      data.last_password_change = new Date();
+    }
+
+    let emailChanged = false;
+    if (email !== undefined && email !== user.email) {
+      const existing = await this.prisma.user.findFirst({
+        where: { email, NOT: { id: user.id } },
+        select: { id: true },
+      });
+      if (existing) {
+        throw new BadRequestException(`Email ${email} is already in use`);
+      }
+      data.email = email;
+      data.email_verified_at = null;
+      emailChanged = true;
     }
 
     const updated = await this.prisma.user.update({
@@ -109,14 +143,27 @@ export class UserService {
       select: userPublicSelect,
     });
 
+    if (emailChanged && email) {
+      await this.prisma.emailVerification.deleteMany({
+        where: { user_id: user.id },
+      });
+      await this.verificationService.create({
+        user_id: user.id,
+        email,
+      });
+    }
+
     await Promise.all([
       this.cache.del(CacheKeys.user(id)),
       this.cache.del(CacheKeys.userByIdentifier(user.email)),
       this.cache.del(CacheKeys.userByIdentifier(user.username)),
+      ...(email && email !== user.email ? [this.cache.del(CacheKeys.userByIdentifier(email))] : []),
+      ...(username && username !== user.username ? [this.cache.del(CacheKeys.userByIdentifier(username))] : []),
     ]);
 
     return updated;
   }
+
 
   async findInvites(userId: string) {
     return this.prisma.workspaceInvite.findMany({

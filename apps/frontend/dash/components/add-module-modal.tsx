@@ -45,9 +45,9 @@ export function AddModuleModal({
   onClose: () => void;
   projectId?: string;
 }) {
-  const { activeWorkspace } = useWorkspace();
-  const createBoard = useCreateBoard(activeWorkspace?.id || "");
-  const createChatRoom = useCreateChatRoom(activeWorkspace?.id || "");
+  const { activeId } = useWorkspace();
+  const createBoard = useCreateBoard(activeId || "");
+  const createChatRoom = useCreateChatRoom(activeId || "");
 
   const [step, setStep] = useState<"select" | "configure">("select");
   const [selectedType, setSelectedType] = useState<ModuleType | null>(null);

@@ -28,7 +28,7 @@ export function setAuthCookies(
     httpOnly: true,
     secure: isProduction,
     sameSite: "lax",
-    path: "/auth",
+    path: "/",
     maxAge: refreshMaxAge,
     domain: refreshCookieDomain,
   });

@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, UsePipes, ValidationPipe, Patch, Delete, Query, ParseUUIDPipe, UseGuards} from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, Patch, Delete, Query, ParseUUIDPipe, UseGuards } from "@nestjs/common";
 import { RoleEnum } from "@crwsync/types";
 import { CreateUserDto } from "src/user/dto/create-user.dto";
 import { UpdateUserDto } from "src/user/dto/update-user.dto";
@@ -9,7 +9,6 @@ import { Public } from "src/common/decorators/public.decorator";
 import { UserPublic } from "src/prisma/selects";
 
 @Controller("users")
-@UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

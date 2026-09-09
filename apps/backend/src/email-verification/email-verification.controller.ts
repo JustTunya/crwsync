@@ -55,8 +55,9 @@ export class VerificationController {
     try {
       if (email) {
         const v = await this.verificationService.findByEmail(email);
-        return [v];
+        return v ? [v] : [];
       }
+
       if (token) {
         const v = await this.verificationService.findByToken(token);
         return [v];

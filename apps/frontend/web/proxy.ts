@@ -7,7 +7,9 @@ export function proxy(req: NextRequest) {
 
   if (hasSession) {
     if (!DASH_URL) return NextResponse.next();
-    return NextResponse.redirect(DASH_URL);
+    const res = NextResponse.redirect(DASH_URL);
+    res.cookies.set("crw-rt", "", { path: "/auth", maxAge: 0 });
+    return res;
   }
 
   return NextResponse.next();

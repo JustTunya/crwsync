@@ -18,9 +18,12 @@ export function useReorderModules(workspaceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ReorderModulesPayload) =>
-      boardService.reorderModules(workspaceId, data),
+    mutationFn: (data: ReorderModulesPayload) => {
+      if (!workspaceId) throw new Error("Workspace ID is required");
+      return boardService.reorderModules(workspaceId, data);
+    },
     onMutate: async (data) => {
+      if (!workspaceId) return;
       await queryClient.cancelQueries({
         queryKey: moduleKeys.list(workspaceId),
       });
@@ -45,7 +48,7 @@ export function useReorderModules(workspaceId: string) {
       return { previous };
     },
     onError: (_, __, context) => {
-      if (context?.previous) {
+      if (context?.previous && workspaceId) {
         queryClient.setQueryData(
           moduleKeys.list(workspaceId),
           context.previous,
@@ -65,8 +68,12 @@ export function useUpdateModule(workspaceId: string) {
     }: {
       moduleId: string;
       data: Partial<WorkspaceModule>;
-    }) => boardService.updateModule(workspaceId, moduleId, data),
+    }) => {
+      if (!workspaceId) throw new Error("Workspace ID is required");
+      return boardService.updateModule(workspaceId, moduleId, data);
+    },
     onMutate: async ({ moduleId, data }) => {
+      if (!workspaceId) return;
       await queryClient.cancelQueries({
         queryKey: moduleKeys.list(workspaceId),
       });
@@ -110,11 +117,12 @@ export function useUpdateModule(workspaceId: string) {
       return { previous, referenceId };
     },
     onError: (_, __, context) => {
-      if (context?.previous) {
+      if (context?.previous && workspaceId) {
         queryClient.setQueryData(moduleKeys.list(workspaceId), context.previous);
       }
     },
     onSettled: (_, __, ___, context) => {
+      if (!workspaceId) return;
       queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
       if (context?.referenceId) {
         queryClient.invalidateQueries({ queryKey: boardKeys.detail(context.referenceId) });
@@ -127,9 +135,12 @@ export function useDeleteModule(workspaceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (moduleId: string) =>
-      boardService.deleteModule(workspaceId, moduleId),
+    mutationFn: (moduleId: string) => {
+      if (!workspaceId) throw new Error("Workspace ID is required");
+      return boardService.deleteModule(workspaceId, moduleId);
+    },
     onMutate: async (moduleId) => {
+      if (!workspaceId) return;
       await queryClient.cancelQueries({
         queryKey: moduleKeys.list(workspaceId),
       });
@@ -149,11 +160,12 @@ export function useDeleteModule(workspaceId: string) {
       return { previous };
     },
     onError: (_, __, context) => {
-      if (context?.previous) {
+      if (context?.previous && workspaceId) {
         queryClient.setQueryData(moduleKeys.list(workspaceId), context.previous);
       }
     },
     onSettled: () => {
+      if (!workspaceId) return;
       queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
     },
   });
@@ -163,9 +175,12 @@ export function useTogglePinModule(workspaceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ moduleId, isPinned }: { moduleId: string; isPinned: boolean }) =>
-      boardService.togglePinModule(workspaceId, moduleId, isPinned),
+    mutationFn: ({ moduleId, isPinned }: { moduleId: string; isPinned: boolean }) => {
+      if (!workspaceId) throw new Error("Workspace ID is required");
+      return boardService.togglePinModule(workspaceId, moduleId, isPinned);
+    },
     onMutate: async ({ moduleId, isPinned }) => {
+      if (!workspaceId) return;
       await queryClient.cancelQueries({
         queryKey: moduleKeys.list(workspaceId),
       });
@@ -187,12 +202,14 @@ export function useTogglePinModule(workspaceId: string) {
       return { previous };
     },
     onError: (_, __, context) => {
-      if (context?.previous) {
+      if (context?.previous && workspaceId) {
         queryClient.setQueryData(moduleKeys.list(workspaceId), context.previous);
       }
     },
     onSettled: () => {
+      if (!workspaceId) return;
       queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
     },
   });
 }
+

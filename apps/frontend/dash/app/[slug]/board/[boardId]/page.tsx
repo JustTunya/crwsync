@@ -67,8 +67,9 @@ function boardReducer(state: BoardPageState, action: BoardPageAction): BoardPage
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
 
-  const { activeWorkspace } = useWorkspace();
-  const workspaceId = activeWorkspace?.id || "";
+  const { activeId } = useWorkspace();
+  const workspaceId = activeId || "";
+
 
   useBoardSocket(workspaceId, boardId);
 

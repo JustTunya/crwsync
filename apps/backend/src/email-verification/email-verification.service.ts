@@ -6,6 +6,7 @@ import { VerificationPublic, verificationPublicSelect } from "src/prisma/selects
 import { CreateVerificationDto } from "src/email-verification/dto/create-email-verification.dto";
 import { UpdateVerificationDto } from "src/email-verification/dto/update-email-verification.dto";
 import { PrismaService } from "src/prisma/prisma.service";
+import { CacheService, CacheKeys } from "src/redis";
 
 import { Queue } from "bullmq";
 import { InjectQueue } from "@nestjs/bullmq";
@@ -15,6 +16,7 @@ export class VerificationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly cache: CacheService,
     @InjectQueue("email") private readonly emailQueue: Queue,
   ) {}
 
@@ -79,16 +81,14 @@ export class VerificationService {
     return verification;
   }
 
-  async findByEmail(email: string): Promise<VerificationPublic> {
+  async findByEmail(email: string): Promise<VerificationPublic | null> {
     const verification = await this.prisma.emailVerification.findUnique({
       where: { email },
       select: verificationPublicSelect,
     });
-    if (!verification) {
-      throw new NotFoundException("Verification not found");
-    }
     return verification;
   }
+
 
   async findByToken(token: string): Promise<VerificationPublic> {
     const hashedToken = createHash("sha256").update(token).digest("hex");
@@ -165,6 +165,8 @@ export class VerificationService {
         data: { status: MailVerificationStatus.VERIFIED, verified_at: new Date() },
       }),
     ]);
+
+    await this.cache.del(CacheKeys.user(verification.user_id));
 
     return { success: true, message: "Email verified successfully" };
   }
