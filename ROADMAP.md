@@ -213,7 +213,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 
 - [x] **Fix Provider Hierarchy**:
   - Remove redundant `<WorkspaceProvider>` from `apps/frontend/dash/app/[slug]/layout.tsx`.
-- [ ] **Consolidate Domain Enums**:
+- [x] **Consolidate Domain Enums**:
   - Remove local `WorkspaceRoleEnum` definitions in `r-sidebar.tsx` and `inv-modal.tsx`; import directly from `@crwsync/types`.
 - [ ] **Build Account Settings (`/settings`)**:
   - Implement user profile edit form (first name, last name, username).

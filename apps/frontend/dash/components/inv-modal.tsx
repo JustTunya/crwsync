@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, UserAdd01Icon, UserTime01Icon } from "@hugeicons/core-free-icons";
-import { InviteMemberPayload, UserType, WorkspacePendingInvite } from "@crwsync/types";
+import { InviteMemberPayload, UserType, WorkspacePendingInvite, WorkspaceRoleEnum } from "@crwsync/types";
 import { Input } from "@/components/ui/input";
 import { SidebarProfile } from "@/components/r-sidebar";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -19,14 +19,6 @@ interface InviteMemberModalProps {
   }
   isOpen: boolean;
   onClose: () => void;
-}
-
-//! TODO: Use enum from packages/types
-export enum WorkspaceRoleEnum {
-  OWNER = "OWNER",
-  ADMIN = "ADMIN",
-  MEMBER = "MEMBER",
-  GUEST = "GUEST",
 }
 
 export default function InviteMemberModal({ workspace, isOpen, onClose }: InviteMemberModalProps) {
