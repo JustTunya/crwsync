@@ -97,7 +97,7 @@ export class AuthService {
         httpOnly: true,
         secure: isProduction,
         sameSite: "lax",
-        path: "/",
+        path: "/auth",
         domain: refreshCookieDomain,
       });
     }

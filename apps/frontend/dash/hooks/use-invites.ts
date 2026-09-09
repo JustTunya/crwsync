@@ -5,13 +5,18 @@ import { useSocket } from "@/providers/socket.provider";
 import { useUser } from "@/providers/user.provider";
 import { getInvites } from "@/services/user.service";
 
+export const inviteKeys = {
+  all: ["invites"] as const,
+  list: (userId: string) => [...inviteKeys.all, userId] as const,
+};
+
 export function useInvites() {
   const user = useUser();
   const queryClient = useQueryClient();
   const { socket } = useSocket();
 
   const { data: invites = [], isLoading } = useQuery({
-    queryKey: ["invites", user?.id],
+    queryKey: inviteKeys.list(user?.id ?? ""),
     queryFn: async () => {
       if (!user?.id) return [];
       const { success, data } = await getInvites(user.id);
@@ -24,15 +29,15 @@ export function useInvites() {
     if (!socket || !user) return;
 
     const handleInviteReceived = (newInvite: WorkspaceInvite) => {
-      queryClient.setQueryData(["invites", user.id], (old: WorkspaceInvite[] = []) => {
+      queryClient.setQueryData(inviteKeys.list(user.id), (old: WorkspaceInvite[] = []) => {
         if (old.find((i) => i.id === newInvite.id)) return old;
         return [newInvite, ...old];
       });
     };
 
     const handleInviteHandled = ({ inviteId, status }: { inviteId: string; status: string }) => {
-      queryClient.setQueryData(["invites", user.id], (old: WorkspaceInvite[] = []) => {
-        return old.map((invite) => 
+      queryClient.setQueryData(inviteKeys.list(user.id), (old: WorkspaceInvite[] = []) => {
+        return old.map((invite) =>
           invite.id === inviteId ? { ...invite, status } : invite
         );
       });

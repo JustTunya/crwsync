@@ -116,10 +116,10 @@ function StatCard({
 
 export function HomeDashboard({ slug }: { slug: string }) {
   const user = useUser();
-  const { activeWorkspace } = useWorkspace();
-  const { data: modules, isLoading: isModulesLoading } = useWorkspaceModules(activeWorkspace?.id);
+  const { activeId, activeWorkspace } = useWorkspace();
+  const { data: modules, isLoading: isModulesLoading } = useWorkspaceModules(activeId);
   const togglePinModule = useTogglePinModule(activeWorkspace?.id || "");
-  const { data: stats, isLoading: isStatsLoading } = useStatistics(activeWorkspace?.id, "2w");
+  const { data: stats, isLoading: isStatsLoading } = useStatistics(activeId, "2w");
 
   const pinnedModules = modules?.filter(m => m.isPinned) || [];
 

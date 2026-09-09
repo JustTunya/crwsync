@@ -3,10 +3,13 @@ import { Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { UserStatus, WorkspaceInvite } from "@prisma/client";
 import { Server, Socket } from "socket.io";
+import { parse } from "cookie";
 import { PrismaService } from "src/prisma/prisma.service";
+import { SessionService } from "src/session/session.service";
+import { createSocketCorsOrigin } from "src/common/utils/socket-cors.util";
 
 @WebSocketGateway({
-  cors: {origin: "*", methods: ["GET", "POST"], credentials: true},
+  cors: { origin: createSocketCorsOrigin(), methods: ["GET", "POST"], credentials: true },
   namespace: "status",
 })
 
@@ -16,23 +19,33 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly logger = new Logger(StatusGateway.name);
 
+  private readonly revocationChecks = new Map<string, NodeJS.Timeout>();
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly sessionService: SessionService,
   ) {}
 
   async handleConnection(client: Socket) {
     try {
       const token = this.extractToken(client);
-      
+
       if (!token) {
         client.disconnect();
         return;
       }
 
       const payload = this.jwtService.verify(token);
+      const session = await this.sessionService.findOne(payload.jti).catch(() => null);
+      if (!session || session.revoked_at || (session.expires_at && session.expires_at < new Date())) {
+        client.disconnect();
+        return;
+      }
+
       const userId = payload.sub;
       client.data.userId = userId;
+      client.data.sessionId = payload.jti;
 
       const userRoom = `user_${userId}`;
       await client.join(userRoom);
@@ -41,7 +54,17 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const count = sockets.length;
 
       if (count === 1) await this.broadcastUserStatus(userId, "ONLINE");
-      
+
+      this.revocationChecks.set(
+        client.id,
+        setInterval(async () => {
+          const current = await this.sessionService.findOne(payload.jti).catch(() => null);
+          if (!current || current.revoked_at) {
+            client.disconnect();
+          }
+        }, 60_000),
+      );
+
       this.logger.debug(`Client connected: ${client.id} (User: ${userId}, Count: ${count})`);
     } catch (error) {
       this.logger.error(`Error during client connection: ${error}`);
@@ -50,25 +73,43 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
+    const interval = this.revocationChecks.get(client.id);
+    if (interval) {
+      clearInterval(interval);
+      this.revocationChecks.delete(client.id);
+    }
+
     const userId = client.data.userId;
     if (!userId) return;
 
     const userRoom = `user_${userId}`;
-    
+
     const sockets = await this.server.in(userRoom).fetchSockets();
     const count = sockets.length;
 
     if (count === 0) {
       await this.broadcastUserStatus(userId, "OFFLINE");
     }
-    
+
     this.logger.debug(`Client disconnected: ${client.id} (User: ${userId}, Remaining: ${count})`);
   }
 
   @SubscribeMessage("sub_ws")
   async handleSubscribeWorkspace(client: Socket, workspaceId: string) {
+    const userId = client.data.userId;
+    if (!userId) return;
+
+    const member = await this.prisma.workspaceMember.findUnique({
+      where: { workspace_id_user_id: { workspace_id: workspaceId, user_id: userId } },
+    });
+
+    if (!member) {
+      client.emit("error", { message: "Not a workspace member" });
+      return;
+    }
+
     await client.join(`workspace_${workspaceId}`);
-    
+
     const members = await this.prisma.workspaceMember.findMany({
       where: { workspace_id: workspaceId },
       select: { user_id: true, user: { select: { status_preference: true } } },
@@ -95,12 +136,22 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.userId;
     if (!userId) return;
 
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { status_preference: status },
-    });
+    if (!Object.values(UserStatus).includes(status)) {
+      client.emit("error", { message: "Invalid status" });
+      return;
+    }
 
-    await this.broadcastUserStatus(userId, status);
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { status_preference: status },
+      });
+
+      await this.broadcastUserStatus(userId, status);
+    } catch (error) {
+      this.logger.error(`Update status error: ${error}`);
+      client.emit("error", { message: "Failed to update status" });
+    }
   }
 
   private extractToken(client: Socket): string | null {
@@ -110,17 +161,11 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (client.handshake.headers?.authorization) {
         return client.handshake.headers.authorization.replace("Bearer ", "");
     }
-    
+
     const cookieString = client.handshake.headers.cookie;
     if (!cookieString) return null;
 
-    const cookies = cookieString.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-
-    return cookies['crw-at'] || null;
+    return parse(cookieString)["crw-at"] || null;
   }
 
   private async broadcastUserStatus(userId: string, forceStatus?: string) {

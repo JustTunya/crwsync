@@ -45,7 +45,7 @@ export function LSidebar() {
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  const { activeWorkspace } = useWorkspace();
+  const { activeId: activeWorkspaceId, activeWorkspace } = useWorkspace();
   const { open, toggleOpen, setOpen } = useLSidebar();
 
   const { status, handleStatusChange } = useUserStatus();
@@ -56,8 +56,8 @@ export function LSidebar() {
   const slug = activeWorkspace?.slug || "";
   const [addModuleOpen, setAddModuleOpen] = useState(false);
   const [addModuleProjectId, setAddModuleProjectId] = useState<string | undefined>();
-  const { data: wsModules } = useWorkspaceModules(activeWorkspace?.id);
-  const { data: projects } = useWorkspaceProjects(activeWorkspace?.id);
+  const { data: wsModules } = useWorkspaceModules(activeWorkspaceId);
+  const { data: projects } = useWorkspaceProjects(activeWorkspaceId);
   const createProject = useCreateProject(activeWorkspace?.id || "");
   const reorderModules = useReorderModules(activeWorkspace?.id || "");
 

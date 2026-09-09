@@ -14,6 +14,6 @@ export function useStatistics(workspaceId?: string, interval: string = "1m") {
     queryKey: statisticsKeys.detail(workspaceId || "unknown", interval),
     queryFn: () => getWorkspaceStatistics(workspaceId!, interval),
     enabled: !!workspaceId,
-    staleTime: 0,
+    staleTime: 1000 * 60 * 5,
   });
 }
