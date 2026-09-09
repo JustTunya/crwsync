@@ -32,6 +32,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly logger = new Logger(ChatGateway.name);
 
+  private readonly revocationChecks = new Map<string, NodeJS.Timeout>();
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
@@ -67,12 +69,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       client.data.user = user;
 
-      client.data.revocationCheck = setInterval(async () => {
-        const current = await this.sessionService.findOne(payload.jti).catch(() => null);
-        if (!current || current.revoked_at) {
-          client.disconnect();
-        }
-      }, 60_000);
+      this.revocationChecks.set(
+        client.id,
+        setInterval(async () => {
+          const current = await this.sessionService.findOne(payload.jti).catch(() => null);
+          if (!current || current.revoked_at) {
+            client.disconnect();
+          }
+        }, 60_000),
+      );
 
       this.logger.debug(`Chat client connected: ${client.id} (User: ${payload.sub})`);
     } catch (error) {
@@ -82,7 +87,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
-    clearInterval(client.data.revocationCheck);
+    const interval = this.revocationChecks.get(client.id);
+    if (interval) {
+      clearInterval(interval);
+      this.revocationChecks.delete(client.id);
+    }
     this.logger.debug(`Chat client disconnected: ${client.id}`);
   }
 

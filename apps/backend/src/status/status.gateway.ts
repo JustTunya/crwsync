@@ -19,6 +19,8 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly logger = new Logger(StatusGateway.name);
 
+  private readonly revocationChecks = new Map<string, NodeJS.Timeout>();
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
@@ -53,12 +55,15 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       if (count === 1) await this.broadcastUserStatus(userId, "ONLINE");
 
-      client.data.revocationCheck = setInterval(async () => {
-        const current = await this.sessionService.findOne(payload.jti).catch(() => null);
-        if (!current || current.revoked_at) {
-          client.disconnect();
-        }
-      }, 60_000);
+      this.revocationChecks.set(
+        client.id,
+        setInterval(async () => {
+          const current = await this.sessionService.findOne(payload.jti).catch(() => null);
+          if (!current || current.revoked_at) {
+            client.disconnect();
+          }
+        }, 60_000),
+      );
 
       this.logger.debug(`Client connected: ${client.id} (User: ${userId}, Count: ${count})`);
     } catch (error) {
@@ -68,7 +73,11 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
-    clearInterval(client.data.revocationCheck);
+    const interval = this.revocationChecks.get(client.id);
+    if (interval) {
+      clearInterval(interval);
+      this.revocationChecks.delete(client.id);
+    }
 
     const userId = client.data.userId;
     if (!userId) return;

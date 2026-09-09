@@ -8,14 +8,16 @@ import { SessionService } from "src/session/session.service";
 function makeGateway() {
   const prisma = {
     workspaceMember: { findUnique: jest.fn(), findMany: jest.fn() },
+    user: { findUnique: jest.fn().mockResolvedValue(null) },
   };
+  const jwtService = { verify: jest.fn() };
   const sessionService = { findOne: jest.fn() };
   const gateway = new StatusGateway(
-    {} as unknown as JwtService,
+    jwtService as unknown as JwtService,
     prisma as unknown as PrismaService,
     sessionService as unknown as SessionService,
   );
-  return { gateway, prisma, sessionService };
+  return { gateway, prisma, jwtService, sessionService };
 }
 
 describe("StatusGateway.handleSubscribeWorkspace", () => {
@@ -46,5 +48,29 @@ describe("StatusGateway.handleSubscribeWorkspace", () => {
     await gateway.handleSubscribeWorkspace(client, "ws-1");
 
     expect(join).toHaveBeenCalledWith("workspace_ws-1");
+  });
+});
+
+describe("StatusGateway.handleConnection", () => {
+  it("keeps the revocation interval out of client.data so the Redis adapter can serialize it", async () => {
+    const { gateway, jwtService, sessionService } = makeGateway();
+    jwtService.verify.mockReturnValue({ sub: "user-1", jti: "session-1" });
+    sessionService.findOne.mockResolvedValue({ revoked_at: null, expires_at: null });
+    (gateway as unknown as { server: unknown }).server = { in: () => ({ fetchSockets: async () => [] }) };
+
+    const client = {
+      id: "socket-1",
+      data: {} as Record<string, unknown>,
+      handshake: { auth: { token: "token" }, headers: {} },
+      join: jest.fn(),
+      disconnect: jest.fn(),
+    } as unknown as Socket;
+
+    await gateway.handleConnection(client);
+
+    expect(client.data.revocationCheck).toBeUndefined();
+    expect(() => JSON.stringify(client.data)).not.toThrow();
+
+    await gateway.handleDisconnect(client);
   });
 });
