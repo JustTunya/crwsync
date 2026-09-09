@@ -17,7 +17,7 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 const chatSocket: Socket = io(`${SOCKET_URL}/chat`, {
   withCredentials: true,
   transports: ["websocket"],
-  autoConnect: false,
+  autoConnect: true,
 });
 
 interface UseChatSocketOptions {
