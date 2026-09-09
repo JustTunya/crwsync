@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
@@ -27,8 +30,10 @@ export function UserAvatar({ size = 7, user, status, variant = "default", classN
     "busy": "bg-error",
   };
 
-  if (user && user.avatar_key) {
-    const avatarUrl = `/api/avatars/${user.avatar_key}`;
+  const [imageFailed, setImageFailed] = useState(false);
+
+  if (user && user.avatar_key && !imageFailed) {
+    const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL}/avatars/${user.avatar_key}`;
 
     return (
       <Image
@@ -39,6 +44,7 @@ export function UserAvatar({ size = 7, user, status, variant = "default", classN
         width={pixels}
         height={pixels}
         priority
+        onError={() => setImageFailed(true)}
       />
     );
   } else {
