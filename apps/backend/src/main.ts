@@ -41,6 +41,14 @@ async function bootstrap() {
     credentials: true,
   });
 
+  const requiredStorageVars = ["STORAGE_ENDPOINT", "STORAGE_BUCKET", "STORAGE_ACCESS_KEY", "STORAGE_SECRET_KEY", "STORAGE_REGION"];
+  for (const key of requiredStorageVars) {
+    if (!config.get<string>(key)) {
+      logger.error(`${key} must be set`);
+      process.exit(1);
+    }
+  }
+
   const cookieSecret = config.get<string>("COOKIE_SECRET");
   app.use(cookieParser(cookieSecret));
 
