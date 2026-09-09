@@ -1,5 +1,8 @@
 import { ConfigService } from "@nestjs/config";
+import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { StorageService } from "./storage.service";
+
+jest.mock("@aws-sdk/s3-presigned-post");
 
 describe("StorageService", () => {
   let service: StorageService;
@@ -17,6 +20,11 @@ describe("StorageService", () => {
   } as unknown as ConfigService;
 
   beforeEach(() => {
+    jest.clearAllMocks();
+    (createPresignedPost as jest.Mock).mockResolvedValue({
+      url: "http://test-bucket:9000/test-bucket",
+      fields: { "Content-Type": "image/png" },
+    });
     service = new StorageService(config);
   });
 
@@ -30,6 +38,16 @@ describe("StorageService", () => {
     expect(result.key).toMatch(/^[0-9a-f-]{36}\.png$/);
     expect(result.url).toContain("test-bucket");
     expect(result.fields["Content-Type"]).toBe("image/png");
+
+    expect(createPresignedPost).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        Conditions: expect.arrayContaining([
+          ["content-length-range", 0, 5242880],
+          { "Content-Type": "image/png" },
+        ]),
+      }),
+    );
   });
 
   it("returns a presigned GET url containing the key", async () => {
