@@ -197,13 +197,25 @@ export class WorkspaceService {
   }
 
   async update(id: string, dto: UpdateWorkspaceDto) {
-    const existing = await this.prisma.workspace.findUnique({ where: { id }, select: { slug: true } });
+    const [existing, members] = await Promise.all([
+      this.prisma.workspace.findUnique({ where: { id }, select: { slug: true } }),
+      this.prisma.workspaceMember.findMany({
+        where: { workspace_id: id },
+        select: { user_id: true },
+      }),
+    ]);
+
     const result = await this.prisma.workspace.update({ where: { id }, data: dto });
 
-    await this.cache.del(CacheKeys.workspace(id));
-    if (existing?.slug) {
-      await this.cache.del(CacheKeys.workspaceSlug(existing.slug));
-    }
+    const cacheKeys = [
+      CacheKeys.workspace(id),
+      ...(existing?.slug ? [CacheKeys.workspaceSlug(existing.slug)] : []),
+      ...members.flatMap((m) => [
+        CacheKeys.workspaceMember(id, m.user_id),
+        CacheKeys.userWorkspaces(m.user_id),
+      ]),
+    ];
+    await this.cache.del(cacheKeys);
 
     return result;
   }
