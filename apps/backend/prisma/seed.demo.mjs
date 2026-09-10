@@ -23,7 +23,12 @@ const NOW = Date.now();
 
 /* ── env ────────────────────────────────────────────────────────────────── */
 
+// Set to seed a non-local database (e.g. production, from CI) with credentials
+// supplied via process.env instead of the gitignored local .env.demo file.
+const REMOTE = process.env.SEED_ALLOW_REMOTE === "1";
+
 function parseEnvFile(path) {
+  if (!existsSync(path)) return {};
   const out = {};
   for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/i);
@@ -35,7 +40,7 @@ function parseEnvFile(path) {
 const backendEnv = parseEnvFile(resolve(REPO_ROOT, "apps/backend/.env"));
 
 const demoEnvPath = resolve(REPO_ROOT, ".env.demo");
-if (!existsSync(demoEnvPath)) {
+if (!existsSync(demoEnvPath) && !REMOTE) {
   console.error(
     `\n  Missing ${demoEnvPath}\n\n` +
       `  Copy the template and fill in credentials:\n` +
@@ -47,9 +52,9 @@ if (!existsSync(demoEnvPath)) {
 const demoEnv = parseEnvFile(demoEnvPath);
 
 function need(key) {
-  const v = demoEnv[key];
+  const v = demoEnv[key] ?? process.env[key];
   if (!v) {
-    console.error(`\n  .env.demo is missing ${key}\n`);
+    console.error(`\n  Missing ${key} (checked .env.demo and process.env)\n`);
     process.exit(1);
   }
   return v;
@@ -77,16 +82,16 @@ function assertLocalDatabase(url) {
     process.exit(1);
   }
 
-  if (!LOCAL_HOSTS.has(host)) {
+  if (!LOCAL_HOSTS.has(host) && !REMOTE) {
     console.error(
       `\n  Refusing to seed: DATABASE_URL points at "${host}", not a local host.\n` +
-        `  This script only ever runs against a local demo database.\n`,
+        `  Set SEED_ALLOW_REMOTE=1 to seed a remote database deliberately.\n`,
     );
     process.exit(1);
   }
 
-  if (process.env.NODE_ENV === "production") {
-    console.error("\n  Refusing to seed: NODE_ENV=production.\n");
+  if (process.env.NODE_ENV === "production" && !REMOTE) {
+    console.error("\n  Refusing to seed: NODE_ENV=production. Set SEED_ALLOW_REMOTE=1 to override.\n");
     process.exit(1);
   }
 
@@ -507,14 +512,14 @@ async function seed() {
 /* ── cache invalidation ─────────────────────────────────────────────────── */
 
 async function clearCache({ workspace, owner, member, invitee }) {
-  const host = backendEnv.REDIS_HOST ?? "localhost";
-  const port = Number(backendEnv.REDIS_PORT ?? 6379);
-  const prefix = backendEnv.REDIS_KEY_PREFIX ?? "";
+  const host = backendEnv.REDIS_HOST ?? process.env.REDIS_HOST ?? "localhost";
+  const port = Number(backendEnv.REDIS_PORT ?? process.env.REDIS_PORT ?? 6379);
+  const prefix = backendEnv.REDIS_KEY_PREFIX ?? process.env.REDIS_KEY_PREFIX ?? "";
 
   const redis = new Redis({
     host,
     port,
-    password: backendEnv.REDIS_PASS || undefined,
+    password: backendEnv.REDIS_PASS || process.env.REDIS_PASS || undefined,
     lazyConnect: true,
     retryStrategy: () => null,
     maxRetriesPerRequest: 1,
