@@ -17,6 +17,10 @@ import {
   CreateTaskAttachmentPayload,
   PresignedAvatarUpload,
   BoardOperationState,
+  TaskComment,
+  CreateTaskCommentPayload,
+  UpdateTaskCommentPayload,
+  TaskCommentPage,
 } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
@@ -341,6 +345,73 @@ export async function deleteTaskAttachment(
         success: false,
         message: error.response?.data?.message || "Failed to delete attachment",
       };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function getTaskComments(
+  workspaceId: string,
+  taskId: string,
+  cursor?: string,
+): Promise<BoardOperationState<TaskCommentPage>> {
+  try {
+    const response = await api.get(`/workspaces/${workspaceId}/tasks/${taskId}/comments`, {
+      params: cursor ? { cursor } : undefined,
+    });
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return { success: false, message: error.response?.data?.message || "Failed to fetch comments" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function createTaskComment(
+  workspaceId: string,
+  taskId: string,
+  data: CreateTaskCommentPayload,
+): Promise<BoardOperationState<TaskComment>> {
+  try {
+    const response = await api.post(`/workspaces/${workspaceId}/tasks/${taskId}/comments`, data);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return { success: false, message: error.response?.data?.message || "Failed to post comment" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function updateTaskComment(
+  workspaceId: string,
+  taskId: string,
+  commentId: string,
+  data: UpdateTaskCommentPayload,
+): Promise<BoardOperationState<TaskComment>> {
+  try {
+    const response = await api.patch(`/workspaces/${workspaceId}/tasks/${taskId}/comments/${commentId}`, data);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return { success: false, message: error.response?.data?.message || "Failed to update comment" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function deleteTaskComment(
+  workspaceId: string,
+  taskId: string,
+  commentId: string,
+): Promise<BoardOperationState> {
+  try {
+    await api.delete(`/workspaces/${workspaceId}/tasks/${taskId}/comments/${commentId}`);
+    return { success: true };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return { success: false, message: error.response?.data?.message || "Failed to delete comment" };
     }
     return { success: false, message: "An unexpected error occurred" };
   }

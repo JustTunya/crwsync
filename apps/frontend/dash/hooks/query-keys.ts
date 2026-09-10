@@ -10,3 +10,8 @@ export const moduleKeys = {
   list: (workspaceId: string) =>
     [...moduleKeys.all, "list", workspaceId] as const,
 };
+
+export const commentKeys = {
+  all: ["taskComments"] as const,
+  list: (taskId: string) => [...commentKeys.all, "list", taskId] as const,
+};

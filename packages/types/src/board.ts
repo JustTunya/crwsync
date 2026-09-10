@@ -57,6 +57,7 @@ export interface Task {
   created_at: string;
   updated_at: string;
   attachments?: TaskAttachment[];
+  _count?: { comments: number };
 }
 
 export interface TaskAttachment {
@@ -75,6 +76,50 @@ export interface CreateTaskAttachmentPayload {
   file_name: string;
   file_size: number;
   mime_type: string;
+}
+
+export interface TaskCommentAuthor {
+  id: string;
+  firstname: string;
+  lastname: string;
+  avatar_key: string | null;
+}
+
+export interface TaskComment {
+  id: string;
+  task_id: string;
+  author_id: string;
+  content: string;
+  is_edited: boolean;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+  author?: TaskCommentAuthor;
+  mentions?: TaskCommentAuthor[];
+}
+
+export interface CreateTaskCommentPayload {
+  content: string;
+  mentionedUserIds?: string[];
+}
+
+export interface UpdateTaskCommentPayload {
+  content: string;
+}
+
+export interface TaskCommentPage {
+  comments: TaskComment[];
+  next_cursor: string | null;
+  has_more: boolean;
+}
+
+export interface TaskCommentMentionNotification {
+  notificationId: string;
+  comment: TaskComment;
+  task: { id: string; shortId: string; title: string };
+  board: { id: string; name: string };
+  workspace: { slug: string; name: string };
+  receivedAt: string;
 }
 
 export interface WorkspaceProject {

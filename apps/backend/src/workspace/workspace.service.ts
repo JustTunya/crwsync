@@ -1,12 +1,15 @@
-import { Injectable, BadRequestException, NotFoundException } from "@nestjs/common";
+import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { WorkspaceRoleEnum } from "@prisma/client";
 import { WorkspaceInviteStatusEnum, PresignedAvatarUpload } from "@crwsync/types";
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto } from "src/workspace/dto/workspace.dto";
 import { CreateTaskAttachmentDto } from "src/workspace/dto/task-attachment.dto";
+import { CreateTaskCommentDto, UpdateTaskCommentDto } from "src/workspace/dto/task-comment.dto";
 import { CacheService, CacheKeys, CacheTTL } from "src/redis";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
 import { StorageService } from "src/storage/storage.service";
+
+const COMMENT_AUTHOR_SELECT = { id: true, firstname: true, lastname: true, avatar_key: true };
 
 @Injectable()
 export class WorkspaceService {
@@ -719,6 +722,174 @@ export class WorkspaceService {
         taskId,
         attachmentId,
       });
+
+    return { success: true };
+  }
+
+  async createTaskComment(
+    workspaceId: string,
+    taskId: string,
+    authorId: string,
+    dto: CreateTaskCommentDto,
+  ) {
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, column: { board: { workspace_id: workspaceId } } },
+      include: {
+        column: {
+          select: {
+            board_id: true,
+            board: { select: { name: true, workspace: { select: { slug: true, name: true } } } },
+          },
+        },
+      },
+    });
+    if (!task) throw new NotFoundException("Task not found");
+
+    const validMentionIds = dto.mentionedUserIds?.length
+      ? (
+          await this.prisma.workspaceMember.findMany({
+            where: { workspace_id: workspaceId, user_id: { in: dto.mentionedUserIds } },
+            select: { user_id: true },
+          })
+        ).map((m) => m.user_id)
+      : [];
+
+    const comment = await this.prisma.taskComment.create({
+      data: {
+        task_id: taskId,
+        author_id: authorId,
+        content: dto.content,
+        ...(validMentionIds.length ? { mentions: { connect: validMentionIds.map((id) => ({ id })) } } : {}),
+      },
+      include: {
+        author: { select: COMMENT_AUTHOR_SELECT },
+        mentions: { select: COMMENT_AUTHOR_SELECT },
+      },
+    });
+
+    const commentCount = await this.prisma.taskComment.count({
+      where: { task_id: taskId, is_deleted: false },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("task:comment:created", {
+        boardId: task.column.board_id,
+        taskId,
+        comment,
+        commentCount,
+      });
+
+    if (validMentionIds.length) {
+      const mentionPayload = {
+        comment,
+        task: { id: task.id, shortId: task.shortId, title: task.title },
+        board: { id: task.column.board_id, name: task.column.board.name },
+        workspace: { slug: task.column.board.workspace.slug, name: task.column.board.workspace.name },
+      };
+      for (const mentionedId of validMentionIds) {
+        if (mentionedId !== authorId) {
+          this.statusGateway.server
+            .to(`user_${mentionedId}`)
+            .emit("task_comment_mention_notification", mentionPayload);
+        }
+      }
+    }
+
+    return { success: true, data: comment };
+  }
+
+  async listTaskComments(
+    workspaceId: string,
+    taskId: string,
+    cursor?: string,
+    limit: number = 50,
+  ) {
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, column: { board: { workspace_id: workspaceId } } },
+      select: { id: true },
+    });
+    if (!task) throw new NotFoundException("Task not found");
+
+    const take = Math.min(Number(limit) || 50, 100);
+
+    const comments = await this.prisma.taskComment.findMany({
+      where: {
+        task_id: taskId,
+        ...(cursor ? { created_at: { lt: new Date(cursor) } } : {}),
+      },
+      orderBy: { created_at: "desc" },
+      take: take + 1,
+      include: {
+        author: { select: COMMENT_AUTHOR_SELECT },
+        mentions: { select: COMMENT_AUTHOR_SELECT },
+      },
+    });
+
+    const hasMore = comments.length > take;
+    if (hasMore) comments.pop();
+    const ordered = comments.reverse();
+
+    return {
+      success: true,
+      data: {
+        comments: ordered,
+        next_cursor: hasMore && ordered.length > 0 ? ordered[0].created_at.toISOString() : null,
+        has_more: hasMore,
+      },
+    };
+  }
+
+  async updateTaskComment(
+    workspaceId: string,
+    taskId: string,
+    commentId: string,
+    authorId: string,
+    dto: UpdateTaskCommentDto,
+  ) {
+    const comment = await this.prisma.taskComment.findFirst({
+      where: { id: commentId, task_id: taskId, task: { column: { board: { workspace_id: workspaceId } } } },
+      include: { task: { include: { column: { select: { board_id: true } } } } },
+    });
+    if (!comment) throw new NotFoundException("Comment not found");
+    if (comment.author_id !== authorId) throw new ForbiddenException("Not authorized to edit this comment");
+
+    const updated = await this.prisma.taskComment.update({
+      where: { id: commentId },
+      data: { content: dto.content, is_edited: true },
+      include: {
+        author: { select: COMMENT_AUTHOR_SELECT },
+        mentions: { select: COMMENT_AUTHOR_SELECT },
+      },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("task:comment:updated", { boardId: comment.task.column.board_id, taskId, comment: updated });
+
+    return { success: true, data: updated };
+  }
+
+  async deleteTaskComment(workspaceId: string, taskId: string, commentId: string, authorId: string) {
+    const comment = await this.prisma.taskComment.findFirst({
+      where: { id: commentId, task_id: taskId, task: { column: { board: { workspace_id: workspaceId } } } },
+      include: { task: { include: { column: { select: { board_id: true } } } } },
+    });
+    if (!comment) throw new NotFoundException("Comment not found");
+    if (comment.author_id !== authorId) throw new ForbiddenException("Not authorized to delete this comment");
+
+    await this.prisma.taskComment.update({
+      where: { id: commentId },
+      data: { is_deleted: true, content: "This comment was deleted." },
+    });
+
+    const commentCount = await this.prisma.taskComment.count({
+      where: { task_id: taskId, is_deleted: false },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("task:comment:deleted", { boardId: comment.task.column.board_id, taskId, commentId, commentCount });
 
     return { success: true };
   }
