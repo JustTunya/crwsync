@@ -235,7 +235,8 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 - [ ] **Backend Storage Service**:
   - Implement S3/MinIO service in `apps/backend` for presigned upload URLs and file retrieval.
   - Implement `/api/avatars/:key` and `/api/files/:key` streaming endpoints.
-- [ ] **User & Workspace Avatar Upload**:
+  - `/api/avatars/:key` is live; `/api/files/:key` still pending (blocked on Task Attachments / Files module below).
+- [x] **User & Workspace Avatar Upload**:
   - Add image upload components to User Settings and Workspace Settings.
 - [ ] **Task Attachments**:
   - Add `TaskAttachment` model in Prisma schema.

@@ -22,6 +22,7 @@ export function useUpdateUserProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sessionKeys.user() });
+      queryClient.invalidateQueries({ queryKey: ["ws-members"] });
     },
   });
 }
@@ -42,6 +43,7 @@ export function useUploadUserAvatar() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sessionKeys.user() });
+      queryClient.invalidateQueries({ queryKey: ["ws-members"] });
     },
   });
 }

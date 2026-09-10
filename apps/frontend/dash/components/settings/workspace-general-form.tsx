@@ -59,6 +59,7 @@ function WorkspaceGeneralFormFields({ workspace }: { workspace: Workspace }) {
           <CardContent className="space-y-4 mt-4">
             <AvatarUpload
               preview={<WorkspaceAvatar avatar_key={workspace.logo_key ?? undefined} name={workspace.name} className="size-16 rounded-lg" />}
+              previewClassName="size-16 rounded-lg object-cover"
               isUploading={isUploadingLogo}
               error={logoError?.message}
               onSelect={(file) => uploadLogo({ workspaceId: workspace.id, file })}
