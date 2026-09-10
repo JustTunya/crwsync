@@ -5,6 +5,7 @@ import { UpdateUserProfilePayload, ChangePasswordPayload } from "@crwsync/types"
 import { presignUserAvatar, updateUserProfile, changePassword, getUserSessions, revokeUserSession } from "@/services/user.service";
 import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
 import { sessionKeys } from "@/hooks/use-session";
+import { commentKeys } from "@/hooks/query-keys";
 
 export const userKeys = {
   all: ["users"] as const,
@@ -23,6 +24,7 @@ export function useUpdateUserProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sessionKeys.user() });
       queryClient.invalidateQueries({ queryKey: ["ws-members"] });
+      queryClient.invalidateQueries({ queryKey: commentKeys.all });
     },
   });
 }
@@ -44,6 +46,7 @@ export function useUploadUserAvatar() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sessionKeys.user() });
       queryClient.invalidateQueries({ queryKey: ["ws-members"] });
+      queryClient.invalidateQueries({ queryKey: commentKeys.all });
     },
   });
 }

@@ -88,9 +88,9 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
       ref={setNodeRef}
       data-testid="kanban-column"
       data-column-name={column.name}
-      className="flex flex-col gap-3 w-xs p-3 bg-base-100 rounded-xl shrink-0"
+      className="flex flex-col gap-3 w-xs h-full p-3 bg-base-100 rounded-xl shrink-0"
     >
-      <div className="flex flex-row items-center justify-between p-1 rounded-lg">
+      <div className="flex flex-row items-center justify-between p-1 rounded-lg shrink-0">
         <div className="flex items-center gap-2">
           {column.color && (
             <div
@@ -239,7 +239,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
 
       {column.tasks && column.tasks.length > 0 ? (
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-col gap-2 flex-1 min-h-10">
+          <div className="flex flex-col gap-2 flex-1 min-h-10 overflow-y-auto">
             {column.tasks?.map((task) => (
               <KanbanTask
                 key={task.id}

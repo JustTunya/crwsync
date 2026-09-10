@@ -204,37 +204,36 @@ export function TaskComments({ task, workspaceId, boardId }: TaskCommentsProps) 
                   )}
                 >
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-sm font-medium text-foreground truncate">
-                      {comment.author ? `${comment.author.firstname} ${comment.author.lastname}` : "Unknown"}
-                    </span>
-
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="text-[10px] text-muted-foreground">
+                    <div className="flex items-baseline gap-1.5 min-w-0">
+                      <span className="text-sm font-medium text-foreground truncate">
+                        {comment.author ? `${comment.author.firstname} ${comment.author.lastname}` : "Unknown"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">
                         {format(new Date(comment.created_at), "MMM d, h:mm a")}
                         {comment.is_edited && !comment.is_deleted ? " (edited)" : ""}
                       </span>
-
-                      {isAuthor && !comment.is_deleted && !isEditing && (
-                        <div className="flex items-center gap-0.5 ml-0.5 opacity-0 group-hover/comment:opacity-100 focus-within:opacity-100 transition-opacity">
-                          <button
-                            type="button"
-                            title="Edit comment"
-                            onClick={() => startEdit(comment)}
-                            className="size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-base-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors cursor-pointer"
-                          >
-                            <HugeiconsIcon icon={Edit02Icon} strokeWidth={2} className="size-3" />
-                          </button>
-                          <button
-                            type="button"
-                            title="Delete comment"
-                            onClick={() => deleteComment.mutate(comment.id)}
-                            className="size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-error hover:bg-error/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/50 transition-colors cursor-pointer"
-                          >
-                            <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-3" />
-                          </button>
-                        </div>
-                      )}
                     </div>
+
+                    {isAuthor && !comment.is_deleted && !isEditing && (
+                      <div className="flex items-center gap-0.5 shrink-0 opacity-0 pointer-coarse:opacity-100 group-hover/comment:opacity-100 focus-within:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          title="Edit comment"
+                          onClick={() => startEdit(comment)}
+                          className="size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-base-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors cursor-pointer"
+                        >
+                          <HugeiconsIcon icon={Edit02Icon} strokeWidth={2} className="size-3" />
+                        </button>
+                        <button
+                          type="button"
+                          title="Delete comment"
+                          onClick={() => deleteComment.mutate(comment.id)}
+                          className="size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-error hover:bg-error/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/50 transition-colors cursor-pointer"
+                        >
+                          <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {isEditing ? (

@@ -179,8 +179,8 @@ export default function BoardPage() {
   ];
 
   return (
-    <div className="size-full flex flex-col">
-      <div className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200">
+    <div className="size-full flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200 shrink-0">
         <div className="w-0 flex-1">
           <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{board.name}</h1>
         </div>
@@ -202,7 +202,7 @@ export default function BoardPage() {
         )}
       </div>
 
-      <div className="flex-1 overflow-x-auto p-6">
+      <div className="flex-1 min-h-0 overflow-x-auto p-6">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
