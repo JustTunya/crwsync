@@ -86,6 +86,8 @@ model User {
   tasks_assigned      Task[]              @relation("TaskAssignee")
   tasks_created       Task[]              @relation("TaskCreator")
   task_attachments    TaskAttachment[]
+  task_comments       TaskComment[]       @relation("TaskCommentAuthor")
+  mentioned_in_comments TaskComment[]     @relation("TaskCommentMentions")
   chat_attachments    ChatAttachment[]
   chat_messages       ChatMessage[]
   mentioned_in        ChatMessage[]       @relation("MessageMentions")
@@ -260,6 +262,7 @@ model Task {
   assignee    User?            @relation("TaskAssignee", fields: [assignee_id], references: [id], onDelete: SetNull)
   creator     User             @relation("TaskCreator", fields: [created_by], references: [id], onDelete: Cascade)
   attachments TaskAttachment[]
+  comments    TaskComment[]
 
   @@index([column_id], map: "idx_task_column_id")
   @@index([assignee_id], map: "idx_task_assignee_id")
@@ -281,6 +284,24 @@ model TaskAttachment {
 
   @@index([task_id], map: "idx_task_attachment_task_id")
   @@map("task_attachments")
+}
+
+model TaskComment {
+  id         String   @id @default(uuid()) @db.Uuid
+  task_id    String   @db.Uuid
+  author_id  String   @db.Uuid
+  content    String   @db.Text
+  is_edited  Boolean  @default(false)
+  is_deleted Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  task     Task   @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  author   User   @relation("TaskCommentAuthor", fields: [author_id], references: [id], onDelete: Cascade)
+  mentions User[] @relation("TaskCommentMentions")
+
+  @@index([task_id, created_at], map: "idx_task_comment_task_id_created")
+  @@map("task_comments")
 }
 
 model WorkspaceModule {
