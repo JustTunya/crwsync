@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 import { TaskPriorityEnum } from "../../lib/kanban.utils";
 import { RichTextEditor } from "./RichTextEditor";
+import { TaskAttachments } from "./TaskAttachments";
 
 export interface TaskDetailModalProps {
   task: Task;
@@ -49,6 +50,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
 
   const currentColumn = board?.columns?.find((c) => c.id === task.column_id);
   const isCompleteColumn = currentColumn?.type === "COMPLETE";
+  const liveTask = currentColumn?.tasks?.find((t) => t.id === task.id) ?? task;
 
   const assigneeRef = useRef<HTMLDivElement>(null);
 
@@ -364,6 +366,8 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
             </div>
           </div>
         </div>
+
+        <TaskAttachments task={liveTask} workspaceId={workspaceId} boardId={boardId} />
 
         <div className="flex justify-end gap-2 pt-5 mt-5 border-t border-base-200">
           <button

@@ -88,6 +88,9 @@ export class BoardService {
                 is_archived: false,
               },
               orderBy: { position: "asc" },
+              include: {
+                attachments: { orderBy: { created_at: "asc" } },
+              },
             },
           },
         },

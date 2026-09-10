@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Board, BoardColumn, Task } from "@crwsync/types";
+import type { Board, BoardColumn, Task, TaskAttachment } from "@crwsync/types";
 import { useSocket } from "@/providers/socket.provider";
 import { useUser } from "@/providers/user.provider";
 import { boardKeys } from "@/hooks/use-boards";
@@ -60,6 +60,18 @@ interface BoardUpdatedPayload {
 
 interface BoardDeletedPayload {
   boardId: string;
+}
+
+interface TaskAttachmentAddedPayload {
+  boardId: string;
+  taskId: string;
+  attachment: TaskAttachment;
+}
+
+interface TaskAttachmentRemovedPayload {
+  boardId: string;
+  taskId: string;
+  attachmentId: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -266,6 +278,49 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
       queryClient.invalidateQueries({ queryKey: boardKeys.list(workspaceId) });
     };
 
+    // ----- task:attachment:added ------------------------------------------
+    const onTaskAttachmentAdded = ({ boardId: bId, taskId, attachment }: TaskAttachmentAddedPayload) => {
+      if (bId !== boardId) return;
+
+      queryClient.setQueryData<BoardCache>(
+        boardKeys.detail(boardId),
+        (old) =>
+          patchBoardCache(old, (board) => ({
+            ...board,
+            columns: (board.columns ?? []).map((col) => ({
+              ...col,
+              tasks: (col.tasks ?? []).map((t) => {
+                if (t.id !== taskId) return t;
+                const alreadyExists = (t.attachments ?? []).some((a) => a.id === attachment.id);
+                if (alreadyExists) return t;
+                return { ...t, attachments: [...(t.attachments ?? []), attachment] };
+              }),
+            })),
+          })),
+      );
+    };
+
+    // ----- task:attachment:removed ----------------------------------------
+    const onTaskAttachmentRemoved = ({ boardId: bId, taskId, attachmentId }: TaskAttachmentRemovedPayload) => {
+      if (bId !== boardId) return;
+
+      queryClient.setQueryData<BoardCache>(
+        boardKeys.detail(boardId),
+        (old) =>
+          patchBoardCache(old, (board) => ({
+            ...board,
+            columns: (board.columns ?? []).map((col) => ({
+              ...col,
+              tasks: (col.tasks ?? []).map((t) =>
+                t.id === taskId
+                  ? { ...t, attachments: (t.attachments ?? []).filter((a) => a.id !== attachmentId) }
+                  : t,
+              ),
+            })),
+          })),
+      );
+    };
+
     // ----- reconnect: recover missed events -----------------------------
     const onReconnect = () => {
       queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
@@ -281,6 +336,8 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
     socket.on("board:columns:reordered", onColumnsReordered);
     socket.on("board:updated", onBoardUpdated);
     socket.on("board:deleted", onBoardDeleted);
+    socket.on("task:attachment:added", onTaskAttachmentAdded);
+    socket.on("task:attachment:removed", onTaskAttachmentRemoved);
     socket.io.on("reconnect", onReconnect);
 
     return () => {
@@ -293,6 +350,8 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
       socket.off("board:columns:reordered", onColumnsReordered);
       socket.off("board:updated", onBoardUpdated);
       socket.off("board:deleted", onBoardDeleted);
+      socket.off("task:attachment:added", onTaskAttachmentAdded);
+      socket.off("task:attachment:removed", onTaskAttachmentRemoved);
       socket.io.off("reconnect", onReconnect);
     };
   }, [socket, boardId, workspaceId, queryClient, user?.id]);

@@ -3,6 +3,7 @@ import {
   Board,
   BoardColumn,
   Task,
+  TaskAttachment,
   WorkspaceModule,
   CreateBoardPayload,
   UpdateBoardPayload,
@@ -13,6 +14,8 @@ import {
   MoveTaskPayload,
   ReorderColumnsPayload,
   ReorderModulesPayload,
+  CreateTaskAttachmentPayload,
+  PresignedAvatarUpload,
   BoardOperationState,
 } from "@crwsync/types";
 import { api } from "@/services/auth.service";
@@ -276,6 +279,67 @@ export async function moveTask(
       return {
         success: false,
         message: error.response?.data?.message || "Failed to move task",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function presignTaskAttachment(
+  workspaceId: string,
+  taskId: string,
+  contentType: string,
+  fileName: string,
+): Promise<BoardOperationState<PresignedAvatarUpload>> {
+  try {
+    const response = await api.post(
+      `/workspaces/${workspaceId}/tasks/${taskId}/attachments/presign`,
+      { contentType, fileName },
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to prepare upload",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function createTaskAttachment(
+  workspaceId: string,
+  taskId: string,
+  data: CreateTaskAttachmentPayload,
+): Promise<BoardOperationState<TaskAttachment>> {
+  try {
+    const response = await api.post(`/workspaces/${workspaceId}/tasks/${taskId}/attachments`, data);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to save attachment",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function deleteTaskAttachment(
+  workspaceId: string,
+  taskId: string,
+  attachmentId: string,
+): Promise<BoardOperationState> {
+  try {
+    await api.delete(`/workspaces/${workspaceId}/tasks/${taskId}/attachments/${attachmentId}`);
+    return { success: true };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to delete attachment",
       };
     }
     return { success: false, message: "An unexpected error occurred" };

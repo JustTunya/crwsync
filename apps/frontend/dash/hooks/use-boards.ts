@@ -11,6 +11,7 @@ import {
   ReorderColumnsPayload,
 } from "@crwsync/types";
 import * as boardService from "@/services/board.service";
+import { uploadToPresignedPost } from "@/lib/upload-to-storage";
 import { boardKeys, moduleKeys } from "@/hooks/query-keys";
 export { boardKeys } from "@/hooks/query-keys";
 
@@ -325,6 +326,102 @@ export function useMoveTask(workspaceId: string, boardId: string) {
           }
 
           return { ...old, data: { ...old.data, columns } };
+        },
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(boardKeys.detail(boardId), context.previous);
+      }
+    },
+  });
+}
+
+export function useUploadTaskAttachment(workspaceId: string, boardId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ taskId, file }: { taskId: string; file: File }) => {
+      const { success, data: presign, message } = await boardService.presignTaskAttachment(
+        workspaceId,
+        taskId,
+        file.type || "application/octet-stream",
+        file.name,
+      );
+      if (!success || !presign) throw new Error(message);
+
+      await uploadToPresignedPost(presign, file);
+
+      const { success: createSuccess, data: attachment, message: createMessage } =
+        await boardService.createTaskAttachment(workspaceId, taskId, {
+          key: presign.key,
+          file_name: file.name,
+          file_size: file.size,
+          mime_type: file.type || "application/octet-stream",
+        });
+      if (!createSuccess || !attachment) throw new Error(createMessage);
+
+      return { taskId, attachment };
+    },
+    onSuccess: ({ taskId, attachment }) => {
+      queryClient.setQueryData(
+        boardKeys.detail(boardId),
+        (old: { data: Board } | undefined) => {
+          if (!old?.data?.columns) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              columns: old.data.columns.map((col) => ({
+                ...col,
+                tasks: col.tasks
+                  ? col.tasks.map((t) =>
+                      t.id === taskId
+                        ? { ...t, attachments: [...(t.attachments ?? []), attachment] }
+                        : t,
+                    )
+                  : [],
+              })),
+            },
+          };
+        },
+      );
+    },
+  });
+}
+
+export function useDeleteTaskAttachment(workspaceId: string, boardId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ taskId, attachmentId }: { taskId: string; attachmentId: string }) =>
+      boardService.deleteTaskAttachment(workspaceId, taskId, attachmentId),
+    onMutate: async ({ taskId, attachmentId }) => {
+      await queryClient.cancelQueries({ queryKey: boardKeys.detail(boardId) });
+      const previous = queryClient.getQueryData(boardKeys.detail(boardId));
+
+      queryClient.setQueryData(
+        boardKeys.detail(boardId),
+        (old: { data: Board } | undefined) => {
+          if (!old?.data?.columns) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              columns: old.data.columns.map((col) => ({
+                ...col,
+                tasks: col.tasks
+                  ? col.tasks.map((t) =>
+                      t.id === taskId
+                        ? { ...t, attachments: (t.attachments ?? []).filter((a) => a.id !== attachmentId) }
+                        : t,
+                    )
+                  : [],
+              })),
+            },
+          };
         },
       );
 
