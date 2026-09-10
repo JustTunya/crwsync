@@ -2,11 +2,12 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Board, BoardColumn, Task, TaskAttachment } from "@crwsync/types";
+import type { Board, BoardColumn, Task, TaskAttachment, TaskComment, TaskCommentPage } from "@crwsync/types";
 import { useSocket } from "@/providers/socket.provider";
 import { useUser } from "@/providers/user.provider";
 import { boardKeys } from "@/hooks/use-boards";
 import { moduleKeys } from "@/hooks/use-workspace-modules";
+import { commentKeys } from "@/hooks/query-keys";
 
 // ---------------------------------------------------------------------------
 // Types for incoming socket payloads
@@ -72,6 +73,26 @@ interface TaskAttachmentRemovedPayload {
   boardId: string;
   taskId: string;
   attachmentId: string;
+}
+
+interface TaskCommentCreatedPayload {
+  boardId: string;
+  taskId: string;
+  comment: TaskComment;
+  commentCount: number;
+}
+
+interface TaskCommentUpdatedPayload {
+  boardId: string;
+  taskId: string;
+  comment: TaskComment;
+}
+
+interface TaskCommentDeletedPayload {
+  boardId: string;
+  taskId: string;
+  commentId: string;
+  commentCount: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -321,6 +342,85 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
       );
     };
 
+    // ----- task:comment:created -------------------------------------------
+    const onTaskCommentCreated = ({ boardId: bId, taskId, comment, commentCount }: TaskCommentCreatedPayload) => {
+      if (bId !== boardId) return;
+
+      queryClient.setQueryData<BoardCache>(
+        boardKeys.detail(boardId),
+        (old) =>
+          patchBoardCache(old, (board) => ({
+            ...board,
+            columns: (board.columns ?? []).map((col) => ({
+              ...col,
+              tasks: (col.tasks ?? []).map((t) =>
+                t.id === taskId ? { ...t, _count: { comments: commentCount } } : t,
+              ),
+            })),
+          })),
+      );
+
+      queryClient.setQueryData(
+        commentKeys.list(taskId),
+        (old: { data: TaskCommentPage } | undefined) => {
+          if (!old?.data) return old;
+          if (old.data.comments.some((c) => c.id === comment.id)) return old;
+          return { ...old, data: { ...old.data, comments: [...old.data.comments, comment] } };
+        },
+      );
+    };
+
+    // ----- task:comment:updated -------------------------------------------
+    const onTaskCommentUpdated = ({ boardId: bId, taskId, comment }: TaskCommentUpdatedPayload) => {
+      if (bId !== boardId) return;
+
+      queryClient.setQueryData(
+        commentKeys.list(taskId),
+        (old: { data: TaskCommentPage } | undefined) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: { ...old.data, comments: old.data.comments.map((c) => (c.id === comment.id ? comment : c)) },
+          };
+        },
+      );
+    };
+
+    // ----- task:comment:deleted -------------------------------------------
+    const onTaskCommentDeleted = ({ boardId: bId, taskId, commentId, commentCount }: TaskCommentDeletedPayload) => {
+      if (bId !== boardId) return;
+
+      queryClient.setQueryData<BoardCache>(
+        boardKeys.detail(boardId),
+        (old) =>
+          patchBoardCache(old, (board) => ({
+            ...board,
+            columns: (board.columns ?? []).map((col) => ({
+              ...col,
+              tasks: (col.tasks ?? []).map((t) =>
+                t.id === taskId ? { ...t, _count: { comments: commentCount } } : t,
+              ),
+            })),
+          })),
+      );
+
+      queryClient.setQueryData(
+        commentKeys.list(taskId),
+        (old: { data: TaskCommentPage } | undefined) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              comments: old.data.comments.map((c) =>
+                c.id === commentId ? { ...c, is_deleted: true, content: "This comment was deleted." } : c,
+              ),
+            },
+          };
+        },
+      );
+    };
+
     // ----- reconnect: recover missed events -----------------------------
     const onReconnect = () => {
       queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
@@ -338,6 +438,9 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
     socket.on("board:deleted", onBoardDeleted);
     socket.on("task:attachment:added", onTaskAttachmentAdded);
     socket.on("task:attachment:removed", onTaskAttachmentRemoved);
+    socket.on("task:comment:created", onTaskCommentCreated);
+    socket.on("task:comment:updated", onTaskCommentUpdated);
+    socket.on("task:comment:deleted", onTaskCommentDeleted);
     socket.io.on("reconnect", onReconnect);
 
     return () => {
@@ -352,6 +455,9 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
       socket.off("board:deleted", onBoardDeleted);
       socket.off("task:attachment:added", onTaskAttachmentAdded);
       socket.off("task:attachment:removed", onTaskAttachmentRemoved);
+      socket.off("task:comment:created", onTaskCommentCreated);
+      socket.off("task:comment:updated", onTaskCommentUpdated);
+      socket.off("task:comment:deleted", onTaskCommentDeleted);
       socket.io.off("reconnect", onReconnect);
     };
   }, [socket, boardId, workspaceId, queryClient, user?.id]);
