@@ -162,7 +162,7 @@ export default function BoardPage() {
       taskId: activeId,
       data: { column_id: targetColumnId, position: getTargetIndex() },
     });
-  }, [board?.columns, findColumnByTaskId, moveTask]);
+  }, [board, findColumnByTaskId, moveTask]);
 
   const allSortableIds = useMemo(
     () => [
