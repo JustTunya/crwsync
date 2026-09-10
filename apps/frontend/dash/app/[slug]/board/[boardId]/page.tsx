@@ -1,17 +1,24 @@
 "use client";
 
-import { useReducer, useCallback } from "react";
+import { useReducer, useCallback, useMemo, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { SortableContext } from "@dnd-kit/sortable";
 import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent } from "@dnd-kit/core";
 import type { Task, BoardColumn } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
-import { KanbanCol, KanbanTaskOverlay, TaskDetailModal } from "@/components/kanban";
+import { KanbanCol } from "@/components/kanban/KanbanCol";
+import { KanbanTaskOverlay } from "@/components/kanban/KanbanTask";
 import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/use-boards";
 import { useBoardSocket } from "@/hooks/use-board-socket";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@/hooks/use-media-query";
+
+const TaskDetailModal = dynamic(
+  () => import("@/components/kanban/TaskDetailModal").then((mod) => mod.TaskDetailModal),
+  { ssr: false }
+);
 
 interface BoardPageState {
   addingTaskFor: string | null;
@@ -70,7 +77,6 @@ export default function BoardPage() {
   const { activeId } = useWorkspace();
   const workspaceId = activeId || "";
 
-
   useBoardSocket(workspaceId, boardId);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -83,24 +89,30 @@ export default function BoardPage() {
   const [state, dispatch] = useReducer(boardReducer, initialState);
   const { addingTaskFor, editingTask, activeTask, addingColumn, columnName, taskTitle } = state;
 
+  useEffect(() => {
+    if (board?.name) {
+      document.title = `${board.name} | crwsync`;
+    }
+  }, [board?.name]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
-  const handleCreateColumn = async () => {
+  const handleCreateColumn = useCallback(async () => {
     if (!columnName.trim()) return;
     await createColumn.mutateAsync({ name: columnName.trim() });
     dispatch({ type: "RESET_COLUMN_INPUT" });
-  };
+  }, [columnName, createColumn]);
 
-  const handleCreateTask = async (columnId: string) => {
+  const handleCreateTask = useCallback(async (columnId: string) => {
     if (!taskTitle.trim()) return;
     await createTask.mutateAsync({
       title: taskTitle.trim(),
       column_id: columnId,
     });
     dispatch({ type: "RESET_TASK_INPUT" });
-  };
+  }, [taskTitle, createTask]);
 
   const findColumnByTaskId = useCallback(
     (taskId: string): BoardColumn | undefined => {
@@ -111,13 +123,13 @@ export default function BoardPage() {
     [board],
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
     const task = active.data.current?.task as Task | undefined;
     if (task) dispatch({ type: "SET_ACTIVE_TASK", payload: task });
-  };
+  }, []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     dispatch({ type: "SET_ACTIVE_TASK", payload: null });
 
@@ -129,7 +141,7 @@ export default function BoardPage() {
     const sourceColumn = findColumnByTaskId(activeId);
     if (!sourceColumn) return;
 
-    const isColumnDrop = overId.startsWith("column-"); // Eather column or another task
+    const isColumnDrop = overId.startsWith("column-"); // Either column or another task
     const targetColumnId = isColumnDrop
       ? overId.replace("column-", "")
       : findColumnByTaskId(overId)?.id;
@@ -150,12 +162,30 @@ export default function BoardPage() {
       taskId: activeId,
       data: { column_id: targetColumnId, position: getTargetIndex() },
     });
-  };
+  }, [board?.columns, findColumnByTaskId, moveTask]);
+
+  const allSortableIds = useMemo(
+    () => [
+      ...(board?.columns?.flatMap((col) => [
+        `column-${col.id}`,
+        ...(col.tasks?.map((t) => t.id) || []),
+      ]) || []),
+    ],
+    [board?.columns],
+  );
 
   if (isLoading || !workspaceId) {
     return (
-      <div className="size-full flex items-center justify-center">
-        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="size-full flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200 shrink-0">
+          <div className="w-0 flex-1">
+            <div className="h-5 w-40 bg-base-200 rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center" role="status" aria-label="Loading board">
+          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="sr-only">Loading board...</span>
+        </div>
       </div>
     );
   }
@@ -171,13 +201,6 @@ export default function BoardPage() {
     );
   }
 
-  const allSortableIds = [
-    ...(board.columns?.flatMap((col) => [
-      `column-${col.id}`,
-      ...(col.tasks?.map((t) => t.id) || []),
-    ]) || []),
-  ];
-
   return (
     <div className="size-full flex flex-col overflow-hidden">
       <div className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200 shrink-0">
@@ -186,6 +209,8 @@ export default function BoardPage() {
         </div>
         {isMobile ? (
           <button
+            type="button"
+            aria-label="Add column"
             onClick={() => dispatch({ type: "SET_ADDING_COLUMN", payload: true })}
             className="flex items-center gap-1 bg-foreground text-background p-1.5 rounded-full text-sm font-semibold cursor-pointer"
           >
@@ -193,6 +218,8 @@ export default function BoardPage() {
           </button>
         ) : (
           <button
+            type="button"
+            aria-label="Add column"
             onClick={() => dispatch({ type: "SET_ADDING_COLUMN", payload: true })}
             className="flex items-center gap-1 bg-foreground text-background px-2 py-1 rounded-md text-sm font-semibold cursor-pointer"
           >
@@ -243,6 +270,7 @@ export default function BoardPage() {
                       if (input && addingColumn) input.focus();
                     }}
                     type="text"
+                    aria-label="Column name"
                     value={columnName}
                     onChange={(e) => dispatch({ type: "SET_COLUMN_NAME", payload: e.target.value })}
                     onKeyDown={(e) => {
@@ -269,7 +297,6 @@ export default function BoardPage() {
           </DragOverlay>
         </DndContext>
       </div>
-
 
       {editingTask && (
         <TaskDetailModal

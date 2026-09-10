@@ -44,7 +44,7 @@ export function UserAvatar({ size = 7, user, status, variant = "default", classN
           width={pixels}
           height={pixels}
           className="rounded-full object-cover size-full"
-          loading="eager"
+          loading="lazy"
           onError={() => setImageFailed(true)}
         />
         {status && <div className={cn("absolute -bottom-px -right-px size-2 rounded-full outline-2 outline-base-200", STATUS_INDICATOR[status])} />}

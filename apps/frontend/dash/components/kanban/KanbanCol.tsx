@@ -101,6 +101,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
           {editing ? (
             <input
               type="text"
+              aria-label="Rename column"
               ref={(input) => {
                 if (input && editing) input.focus();
               }}
@@ -159,6 +160,8 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                     {COLUMN_COLORS.map((color) => (
                       <button
                         key={color}
+                        type="button"
+                        aria-label={`Set column color to ${color}`}
                         onClick={() => handleColorChange(`var(--label-${color})`)}
                         style={{ backgroundColor: `var(--label-${color})` }}
                         className={cn(
@@ -168,6 +171,8 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                       />
                     ))}
                     <button
+                      type="button"
+                      aria-label="Clear column color"
                       onClick={() => handleColorChange("")}
                       className={cn(
                         "flex items-center justify-center size-5 mx-auto rounded-full border border-base-300 hover:scale-110 transition-transform cursor-pointer",
@@ -193,6 +198,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                     ] as const).map((t) => (
                       <button
                         key={t.value}
+                        type="button"
                         onClick={() => handleTypeChange(t.value)}
                         className={cn(
                           "w-full px-1.5 py-1 text-left text-xs font-semibold rounded-md transition-all cursor-pointer",
@@ -214,6 +220,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                 <div className="w-full h-px bg-base-200 rounded-full my-0.5" />
 
                 <button
+                  type="button"
                   onClick={() => {
                     setShowMenu(false);
                     setEditName(column.name);
@@ -225,6 +232,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                 </button>
                 {canDelete && (
                   <button
+                    type="button"
                     onClick={handleDeleteColumn}
                     className="w-full px-2 py-1 text-xs text-left text-error hover:bg-base-200 rounded-md transition-colors cursor-pointer"
                   >
@@ -255,6 +263,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                     if (input && addingTask) input.focus();
                   }}
                   type="text"
+                  aria-label="Task title"
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
                   onKeyDown={(e) => {
@@ -280,6 +289,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
                   if (input && addingTask) input.focus();
                 }}
                 type="text"
+                aria-label="Task title"
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
                 onKeyDown={(e) => {

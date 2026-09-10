@@ -11,30 +11,13 @@ import { TextBoldIcon, TextItalicIcon, TextUnderlineIcon, LeftToRightListNumberI
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export function ReadOnlyDescription({ content }: { content: string }) {
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({ heading: false, codeBlock: false, blockquote: false, horizontalRule: false }),
-      Underline,
-      Link.configure({ openOnClick: true }),
-    ],
-    content,
-    editable: false,
-    editorProps: {
-      attributes: {
-        class: "text-xs text-muted-foreground leading-tight line-clamp-2 [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5",
-      },
-    },
-  });
-
-  useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
-    }
-  }, [content, editor]);
-
-  if (!editor) return null;
-  return <EditorContent editor={editor} />;
+  if (!content) return null;
+  return (
+    <div
+      className="text-xs text-muted-foreground leading-tight line-clamp-2 [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5"
+      dangerouslySetInnerHTML={{ __html: content }}
+    />
+  );
 }
 
 export interface RichTextEditorProps {
