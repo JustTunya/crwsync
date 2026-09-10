@@ -16,7 +16,7 @@ import InviteMemberModal from "@/components/inv-modal";
 import { useInvites } from "@/hooks/use-invites";
 import { useMentions } from "@/hooks/use-mentions";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { InviteNotification, MentionNotificationCard } from "@/components/notifications";
+import { InviteNotification, MentionNotificationCard, TaskCommentMentionCard } from "@/components/notifications";
 import { useUser } from "@/providers/user.provider";
 
 import { cn } from "@/lib/utils";
@@ -224,9 +224,9 @@ export function RSidebar() {
 
 export function SidebarNotifications() {
   const { invites, isLoading } = useInvites();
-  const { mentions, dismissMention } = useMentions();
+  const { mentions, dismissMention, taskCommentMentions, dismissTaskCommentMention } = useMentions();
 
-  const isEmpty = invites.length === 0 && mentions.length === 0;
+  const isEmpty = invites.length === 0 && mentions.length === 0 && taskCommentMentions.length === 0;
 
   if (isLoading) {
     return (
@@ -255,6 +255,13 @@ export function SidebarNotifications() {
           onDismiss={dismissMention}
         />
       ))}
+      {taskCommentMentions.map((notification) => (
+        <TaskCommentMentionCard
+          key={notification.notificationId}
+          notification={notification}
+          onDismiss={dismissTaskCommentMention}
+        />
+      ))}
       {invites.map((invite) => (
         <InviteNotification key={invite.id} invite={invite} />
       ))}
@@ -274,10 +281,10 @@ interface NotificationBellButtonProps {
 
 function NotificationBellButton({ open, view, isMobile, toggleOpen, setView }: NotificationBellButtonProps) {
   const { invites } = useInvites();
-  const { mentions } = useMentions();
+  const { mentions, taskCommentMentions } = useMentions();
 
   const pendingInvites = invites.filter((i) => i.status === "pending").length;
-  const totalBadge = pendingInvites + mentions.length;
+  const totalBadge = pendingInvites + mentions.length + taskCommentMentions.length;
 
   return (
     <div
