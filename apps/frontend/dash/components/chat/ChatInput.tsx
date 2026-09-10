@@ -17,6 +17,7 @@ import {
 import type { WorkspaceMember, CreateChatAttachmentPayload } from "@crwsync/types";
 import { useWorkspaceMembers } from "@/hooks/use-workspaces";
 import { useChatStore } from "@/hooks/use-chat-store";
+import { useMentionAutocomplete } from "@/hooks/use-mention-autocomplete";
 import { UserAvatar } from "@/components/user-avatar";
 import EmojiPicker from "@/components/chat/EmojiPicker";
 import { cn } from "@/lib/utils";
@@ -147,27 +148,20 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
   }, [emojiPickerOpen]);
 
   const { data: members } = useWorkspaceMembers(workspaceId);
+  const { activeMentions, filterMembers, detectAtTrigger, expandMentions, extractMentionedUserIds } =
+    useMentionAutocomplete(members);
 
-  const activeMentions = useMemo(() => {
-    const list: { display: string; replaceWith: string }[] = [];
-    list.push({ display: "@everyone", replaceWith: "@everyone" });
-    if (members) {
-      members.forEach((m) => {
-        if (m.user) {
-          list.push({
-            display: `@${m.user.firstname} ${m.user.lastname}`,
-            replaceWith: `@[${m.user.firstname} ${m.user.lastname}](user:${m.user.id})`,
-          });
-        }
-      });
-    }
-    return list.sort((a, b) => b.display.length - a.display.length);
-  }, [members]);
+  // renderColoredText highlights @everyone too, but the shared hook's activeMentions
+  // (reused for submit-time expansion) intentionally excludes it — see Step 4.
+  const renderMentions = useMemo(
+    () => [...activeMentions, { display: "@everyone", replaceWith: "@everyone" }],
+    [activeMentions],
+  );
 
   const renderColoredText = (text: string) => {
-    if (!activeMentions.length) return <span className="text-foreground">{text}</span>;
-    
-    const escaped = activeMentions.map(m => m.display.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    if (!renderMentions.length) return <span className="text-foreground">{text}</span>;
+
+    const escaped = renderMentions.map(m => m.display.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     const userMentionPattern = escaped.join("|");
     // 1. Highlight existing full task tokens: #[shortId: Title](task:boardId:taskId)
     const taskTokenPattern = /#\[.*?\]\(task:[a-zA-Z0-9-]+:[a-zA-Z0-9-]+\)/;
@@ -234,22 +228,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
     if (!mentionState.active) return [];
     
     const search = mentionState.text.toLowerCase();
-    const opts: MentionOption[] = (members || [])
-      .filter((m) => m.user)
-      .filter((m) => {
-        const u = m.user!;
-        const f = u.firstname?.toLowerCase() || "";
-        const l = u.lastname?.toLowerCase() || "";
-        const un = u.username?.toLowerCase() || "";
-        const fullName = `${f} ${l}`;
-        return (
-          f.includes(search) ||
-          l.includes(search) ||
-          un.includes(search) ||
-          fullName.includes(search)
-        );
-      })
-      .map((m) => ({ type: "user", user: m.user! }));
+    const opts: MentionOption[] = filterMembers(mentionState.text).map((user) => ({ type: "user", user }));
 
     if ("everyone".includes(search.trim())) {
       opts.push({ type: "everyone" });
@@ -265,7 +244,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
     }
 
     return opts;
-  }, [mentionState.active, mentionState.text, members]);
+  }, [mentionState.active, mentionState.text, filterMembers]);
 
   const clampedSelectedIndex = Math.max(0, Math.min(selectedIndex, filteredOptions.length - 1));
   const clampedTaskSelectedIndex = Math.max(0, Math.min(taskSelectedIndex, taskResults.length - 1));
@@ -364,17 +343,11 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
       return match;
     });
 
-    // 2. Process user mentions
-    if (activeMentions.length > 0) {
-      const escaped = activeMentions.map(m => m.display.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-      const regex = new RegExp(`(^|\\n|\\s)(${escaped.join("|")})(?=$|\\s|\\n|[.,!?;:])`, "g");
-      processedContent = processedContent.replace(regex, (match, p1, p2) => {
-        const mention = activeMentions.find(m => m.display === p2);
-        return p1 + (mention ? mention.replaceWith : p2);
-      });
-    }
-
-    const mentionedUserIds = [...processedContent.matchAll(/@\[.*?\]\(user:([a-zA-Z0-9-]+)\)/g)].map(m => m[1]);
+    // 2. Process user mentions (the shared hook does not handle @everyone, so
+    // that token is left as literal text here — isEveryoneMention below still
+    // detects it via a plain substring check, unchanged from before).
+    processedContent = expandMentions(processedContent);
+    const mentionedUserIds = extractMentionedUserIds(processedContent);
     const isEveryoneMention = processedContent.includes("@everyone");
     const attachmentPayloads: CreateChatAttachmentPayload[] = readyAttachments.map((a) => ({
       key: a.key,
@@ -496,26 +469,16 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
     }
 
     // ── User mention detection (@) ────────────────────────────────────
-    if (!members) {
-      setMentionState({ active: false, text: "", startIndex: -1 });
-      setTaskMentionState({ active: false, text: "", startIndex: -1 });
-      setTaskResults([]);
-      return;
-    }
-
-    const lastAtSymbolIndex = textBeforeCursor.lastIndexOf("@");
-    if (lastAtSymbolIndex !== -1) {
-      if (lastAtSymbolIndex === 0 || /[\s\n]/.test(textBeforeCursor[lastAtSymbolIndex - 1])) {
-        const textAfterAt = textBeforeCursor.slice(lastAtSymbolIndex + 1);
-        if (!textAfterAt.startsWith(" ") && !/\n/.test(textAfterAt) && textAfterAt.length < 50) {
-          setMentionState({ active: true, text: textAfterAt, startIndex: lastAtSymbolIndex });
-          setTaskMentionState({ active: false, text: "", startIndex: -1 });
-          setTaskResults([]);
-          return;
-        }
+    if (members) {
+      const atTrigger = detectAtTrigger(textBeforeCursor);
+      if (atTrigger) {
+        setMentionState({ active: true, text: atTrigger.text, startIndex: atTrigger.startIndex });
+        setTaskMentionState({ active: false, text: "", startIndex: -1 });
+        setTaskResults([]);
+        return;
       }
     }
-    
+
     setMentionState({ active: false, text: "", startIndex: -1 });
     setTaskMentionState({ active: false, text: "", startIndex: -1 });
     setTaskResults([]);
