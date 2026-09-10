@@ -110,13 +110,15 @@ itself.
 
 ## Components
 
-**Backend**
+### Backend
+
 - `dto/task-comment.dto.ts`: `CreateTaskCommentDto` (`content` — `@IsString @MaxLength(4000)`, `mentionedUserIds?: string[]` — `@IsOptional @IsArray @IsUUID("4", {each:true})`), `UpdateTaskCommentDto` (`content` only).
 - `workspace.service.ts`: `createTaskComment`, `updateTaskComment`, `deleteTaskComment`, `listTaskComments(taskId, cursor?, limit?)`.
 - `workspace.controller.ts`: `POST/GET /workspaces/:id/tasks/:taskId/comments`, `PATCH/DELETE /workspaces/:id/tasks/:taskId/comments/:commentId`.
 - Per-route throttling: comment creation gets a sane per-user limit (mirrors the granularity already used for invites/workspace creation), reads stay `@SkipThrottle()`.
 
-**Frontend**
+### Frontend
+
 - Extract `useMentionAutocomplete` out of `ChatInput.tsx`'s inline `@`-detection/dropdown/token-insertion logic (currently duplicated-in-place, ~100 lines) into a shared hook. `ChatInput.tsx` is refactored to consume it; `TaskComments.tsx` consumes the same hook — avoids a second copy of the same regex/dropdown logic.
 - `commentKeys` query-key factory (`all/list(taskId)/...`), following the existing `xKeys` shape used by `boardKeys`/`moduleKeys`.
 - `use-task-comments.ts`: `useTaskComments(taskId)` (paginated), `useCreateTaskComment`, `useEditTaskComment`, `useDeleteTaskComment`.
