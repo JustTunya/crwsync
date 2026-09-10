@@ -118,6 +118,14 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
       href={href}
       onMouseEnter={() => handleMouseEvent(true)}
       onMouseLeave={() => handleMouseEvent(false)}
+      onDoubleClick={(e) => {
+        if (!canManage) return;
+        e.preventDefault();
+        e.stopPropagation();
+        setShowSettings(false);
+        setModuleName(name);
+        setRename(true);
+      }}
       style={style}
       className={cn(
         "relative flex flex-row items-center justify-between gap-2 p-2 mx-0.5 rounded-lg cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-base-200",

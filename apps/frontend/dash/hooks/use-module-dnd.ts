@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSensor, useSensors, PointerSensor, KeyboardSensor, DragStartEvent, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
+import { useSensor, useSensors, MouseSensor, TouchSensor, KeyboardSensor, DragStartEvent, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates, arrayMove } from "@dnd-kit/sortable";
 import { WorkspaceModule } from "@crwsync/types";
 import { useReorderModules } from "@/hooks/use-workspace-modules";
@@ -13,7 +13,8 @@ export function useModuleDnd(
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
