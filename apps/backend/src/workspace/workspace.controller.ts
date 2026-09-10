@@ -5,6 +5,7 @@ import { WorkspaceRoleEnum, Workspace, WorkspaceMember } from "@prisma/client";
 import type { Response } from "express";
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto, UpdateMemberRoleDto } from "src/workspace/dto/workspace.dto";
 import { CreateTaskAttachmentDto } from "src/workspace/dto/task-attachment.dto";
+import { CreateTaskCommentDto, UpdateTaskCommentDto } from "src/workspace/dto/task-comment.dto";
 import { PresignFileDto } from "src/storage/dto/presign-file.dto";
 import { RequireWorkspaceRoles } from "src/workspace/decorators/ws-roles.decorator";
 import { HasPendingInviteGuard } from "src/workspace/guards/ws-invite.guard";
@@ -253,6 +254,53 @@ export class WorkspaceController {
     @Param("attachmentId", new ParseUUIDPipe({ version: "4" })) attachmentId: string,
   ) {
     return this.workspaceService.deleteTaskAttachment(workspaceId, taskId, attachmentId);
+  }
+
+  @Post(":workspaceId/tasks/:taskId/comments")
+  @Throttle({ default: { ttl: 3600, limit: 120 } })
+  @UseGuards(IsMemberGuard)
+  createTaskComment(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @ActiveUserParam() user: ActiveUser,
+    @Body() dto: CreateTaskCommentDto,
+  ) {
+    return this.workspaceService.createTaskComment(workspaceId, taskId, user.userId, dto);
+  }
+
+  @Get(":workspaceId/tasks/:taskId/comments")
+  @SkipThrottle()
+  @UseGuards(IsMemberGuard)
+  listTaskComments(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @Query("cursor") cursor?: string,
+    @Query("limit") limit?: number,
+  ) {
+    return this.workspaceService.listTaskComments(workspaceId, taskId, cursor, limit);
+  }
+
+  @Patch(":workspaceId/tasks/:taskId/comments/:commentId")
+  @UseGuards(IsMemberGuard)
+  updateTaskComment(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @Param("commentId", new ParseUUIDPipe({ version: "4" })) commentId: string,
+    @ActiveUserParam() user: ActiveUser,
+    @Body() dto: UpdateTaskCommentDto,
+  ) {
+    return this.workspaceService.updateTaskComment(workspaceId, taskId, commentId, user.userId, dto);
+  }
+
+  @Delete(":workspaceId/tasks/:taskId/comments/:commentId")
+  @UseGuards(IsMemberGuard)
+  deleteTaskComment(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @Param("commentId", new ParseUUIDPipe({ version: "4" })) commentId: string,
+    @ActiveUserParam() user: ActiveUser,
+  ) {
+    return this.workspaceService.deleteTaskComment(workspaceId, taskId, commentId, user.userId);
   }
 
   @Get(":workspaceId/files/:key")
