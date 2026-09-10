@@ -90,7 +90,7 @@ export class BoardService {
               orderBy: { position: "asc" },
               include: {
                 attachments: { orderBy: { created_at: "asc" } },
-                _count: { select: { comments: true } },
+                _count: { select: { comments: { where: { is_deleted: false } } } },
               },
             },
           },

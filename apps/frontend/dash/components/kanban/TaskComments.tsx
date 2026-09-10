@@ -125,7 +125,7 @@ export function TaskComments({ task, workspaceId, boardId }: TaskCommentsProps) 
       closeMentions();
       return;
     }
-    if (e.key === "Enter" && !e.shiftKey && !mentionState.active) {
+    if (e.key === "Enter" && !e.shiftKey && !(mentionState.active && filteredMembers.length > 0)) {
       e.preventDefault();
       handleSubmit();
     }
