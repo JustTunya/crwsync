@@ -64,9 +64,10 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
         readReceipts={readReceipts}
       />
 
-      <ChatInput 
-        workspaceId={workspaceId} 
-        onSend={sendMessage} 
+      <ChatInput
+        workspaceId={workspaceId}
+        roomId={roomId}
+        onSend={sendMessage}
         disabled={!isConnected} 
         onTypingStart={sendTypingStart}
         onTypingStop={sendTypingStop}

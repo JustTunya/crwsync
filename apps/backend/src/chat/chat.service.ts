@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { ModuleTypeEnum } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
+import { StorageService } from "src/storage/storage.service";
 import {
   CreateChatRoomDto,
   SendMessageDto,
@@ -10,6 +11,7 @@ import {
 } from "src/chat/dto/chat.dto";
 import ogs from "open-graph-scraper";
 import { assertPublicUrl } from "src/common/security/assert-public-url";
+import { PresignedAvatarUpload } from "@crwsync/types";
 
 const POSITION_GAP = 1000;
 
@@ -25,6 +27,7 @@ export class ChatService {
   constructor(
     private prisma: PrismaService,
     private statusGateway: StatusGateway,
+    private storageService: StorageService,
   ) {}
 
   async createRoom(
@@ -81,6 +84,21 @@ export class ChatService {
     return { success: true, data: room };
   }
 
+  async presignAttachment(
+    workspaceId: string,
+    roomId: string,
+    contentType: string,
+    fileName: string,
+  ): Promise<PresignedAvatarUpload> {
+    const room = await this.prisma.chatRoom.findFirst({
+      where: { id: roomId, workspace_id: workspaceId },
+      select: { id: true },
+    });
+    if (!room) throw new NotFoundException("Chat room not found");
+
+    return this.storageService.presignFileUpload(contentType, fileName, roomId);
+  }
+
   async getMessages(
     roomId: string,
     cursor?: string,
@@ -126,6 +144,7 @@ export class ChatService {
             user: { select: SENDER_SELECT },
           },
         },
+        attachments: { orderBy: { created_at: "asc" } },
       },
     });
 
@@ -175,6 +194,21 @@ export class ChatService {
             },
           }
         : {}),
+      ...(dto.attachments?.length
+        ? {
+            attachments: {
+              createMany: {
+                data: dto.attachments.map((a) => ({
+                  key: a.key,
+                  file_name: a.file_name,
+                  file_size: a.file_size,
+                  mime_type: a.mime_type,
+                  uploaded_by: senderId,
+                })),
+              },
+            },
+          }
+        : {}),
     };
 
     const include = {
@@ -198,6 +232,7 @@ export class ChatService {
           user: { select: SENDER_SELECT },
         },
       },
+      attachments: { orderBy: { created_at: "asc" as const } },
     };
 
     const message = messageId
@@ -379,6 +414,7 @@ export class ChatService {
             user: { select: SENDER_SELECT },
           },
         },
+        attachments: { orderBy: { created_at: "asc" } },
       },
     });
 

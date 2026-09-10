@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import type { ChatMessage, ChatReadReceipt } from "@crwsync/types";
+import type { ChatMessage, ChatReadReceipt, CreateChatAttachmentPayload } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { getChatMessages } from "@/services/chat.service";
 import { useSession } from "@/hooks/use-session";
@@ -170,8 +170,13 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
   }, [workspaceId, roomId, currentUserId, appendMessage, appendMissedMessages, updateMessage, confirmOptimistic, rejectOptimistic, setConnected, addTypingUser, removeTypingUser, updateReadReceipt]);
 
   const sendMessage = useCallback(
-    (content: string, mentionedUserIds: string[] = [], isEveryoneMention: boolean = false) => {
-      if (!socketRef.current || !content.trim()) return;
+    (
+      content: string,
+      mentionedUserIds: string[] = [],
+      isEveryoneMention: boolean = false,
+      attachments: CreateChatAttachmentPayload[] = [],
+    ) => {
+      if (!socketRef.current || (!content.trim() && attachments.length === 0)) return;
 
       const clientId = crypto.randomUUID();
       const now = new Date().toISOString();
@@ -197,6 +202,16 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
           avatar_key: user.avatar_key ?? null,
         } : undefined,
         reactions: [],
+        attachments: attachments.map((a, i) => ({
+          id: `pending_${clientId}_${i}`,
+          message_id: `pending_${clientId}`,
+          key: a.key,
+          file_name: a.file_name,
+          file_size: a.file_size,
+          mime_type: a.mime_type,
+          uploaded_by: currentUserId,
+          created_at: now,
+        })),
       };
 
       const store = useChatStore.getState();
@@ -220,6 +235,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
         reply_to_id: store.replyingToMessage?.id || undefined,
         mentionedUserIds,
         isEveryoneMention,
+        attachments,
       });
 
       store.setReplyingTo(null);

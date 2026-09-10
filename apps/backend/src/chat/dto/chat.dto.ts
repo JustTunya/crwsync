@@ -6,7 +6,12 @@ import {
   IsOptional,
   IsArray,
   IsBoolean,
+  IsInt,
+  Min,
+  ValidateNested,
+  ArrayMaxSize,
 } from "class-validator";
+import { Type } from "class-transformer";
 
 export class CreateChatRoomDto {
   @IsString()
@@ -18,9 +23,26 @@ export class CreateChatRoomDto {
   project_id?: string;
 }
 
-export class SendMessageDto {
+export class ChatMessageAttachmentDto {
   @IsString()
   @IsNotEmpty()
+  key!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  file_name!: string;
+
+  @IsInt()
+  @Min(1)
+  file_size!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  mime_type!: string;
+}
+
+export class SendMessageDto {
+  @IsString()
   @MaxLength(4000)
   content!: string;
 
@@ -40,6 +62,13 @@ export class SendMessageDto {
   @IsOptional()
   @IsBoolean()
   isEveryoneMention?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => ChatMessageAttachmentDto)
+  attachments?: ChatMessageAttachmentDto[];
 }
 
 export class EditMessageDto {

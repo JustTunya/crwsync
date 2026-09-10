@@ -1,16 +1,118 @@
 import { useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Edit03Icon, Delete02Icon, UnavailableIcon, ArrowTurnBackwardIcon, HappyIcon } from "@hugeicons/core-free-icons";
-import type { ChatMessage } from "@crwsync/types";
+import {
+  Edit03Icon,
+  Delete02Icon,
+  UnavailableIcon,
+  ArrowTurnBackwardIcon,
+  HappyIcon,
+  Download01Icon,
+  Pdf01Icon,
+  FileZipIcon,
+  Video01Icon,
+  File01Icon,
+} from "@hugeicons/core-free-icons";
+import type { ChatMessage, ChatAttachment } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { useSession } from "@/hooks/use-session";
 import { UserAvatar } from "@/components/user-avatar";
 import EmojiPicker from "@/components/chat/EmojiPicker";
 import { LinkPreview } from "@/components/chat/LinkPreview";
 import { ReactionIndicator } from "@/components/chat/ReactionIndicator";
+import { ChatLightbox } from "@/components/chat/ChatLightbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+
+function attachmentUrl(workspaceId: string, key: string): string {
+  return `${process.env.NEXT_PUBLIC_API_URL}/workspaces/${workspaceId}/files/${key}`;
+}
+
+function iconForMimeType(mimeType: string) {
+  if (mimeType.startsWith("video/")) return Video01Icon;
+  if (mimeType === "application/pdf") return Pdf01Icon;
+  if (mimeType.includes("zip") || mimeType.includes("compressed")) return FileZipIcon;
+  return File01Icon;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function AttachmentGallery({ attachments, workspaceId }: { attachments: ChatAttachment[]; workspaceId: string }) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const images = attachments.filter((a) => a.mime_type.startsWith("image/"));
+  const files = attachments.filter((a) => !a.mime_type.startsWith("image/"));
+
+  const lightboxImages = images.map((img) => ({ url: attachmentUrl(workspaceId, img.key), fileName: img.file_name }));
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      {images.length > 0 && (
+        <div
+          className={cn(
+            "grid gap-1 overflow-hidden rounded-xl w-64",
+            images.length === 1 ? "grid-cols-1" : "grid-cols-2",
+          )}
+        >
+          {images.map((img, i) => (
+            <button
+              key={img.id}
+              type="button"
+              onClick={() => setLightboxIndex(i)}
+              className={cn(
+                "group/img relative overflow-hidden bg-base-200 cursor-zoom-in",
+                images.length === 1 ? "w-64 h-64 max-w-full" : "aspect-square",
+              )}
+            >
+              <img
+                src={attachmentUrl(workspaceId, img.key)}
+                alt={img.file_name}
+                className="size-full object-cover transition-transform duration-300 group-hover/img:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {files.map((file) => (
+        <a
+          key={file.id}
+          href={attachmentUrl(workspaceId, file.key)}
+          target="_blank"
+          rel="noreferrer"
+          className="group/file flex items-center gap-2.5 px-3 py-2 bg-base-100 hover:bg-base-200/70 rounded-xl border-[1.5px] border-base-300 transition-colors max-w-64"
+        >
+          <div className="flex items-center justify-center size-8 rounded-md bg-base-200 shrink-0">
+            <HugeiconsIcon icon={iconForMimeType(file.mime_type)} strokeWidth={2} className="size-4 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate leading-tight">{file.file_name}</p>
+            <p className="text-xs text-muted-foreground leading-tight">{formatFileSize(file.file_size)}</p>
+          </div>
+          <HugeiconsIcon
+            icon={Download01Icon}
+            strokeWidth={2}
+            className="size-4 text-muted-foreground shrink-0 opacity-0 group-hover/file:opacity-100 transition-opacity"
+          />
+        </a>
+      ))}
+
+      {lightboxIndex !== null && (
+        <ChatLightbox
+          images={lightboxImages}
+          index={lightboxIndex}
+          onIndexChange={setLightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
+    </div>
+  );
+}
 
 const COMBINED_REGEX = /(@\[.*?\]\(user:[a-zA-Z0-9-]+\)|#\[.*?\]\(task:[a-zA-Z0-9-]+:[a-zA-Z0-9-]+\)|https?:\/\/[^\s]+|@everyone)/g;
 const URL_REGEX_EXACT = /^(https?:\/\/[^\s]+)$/;
@@ -212,6 +314,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
 
         <div className={cn("relative z-10 group/bubble flex flex-col gap-1", isSelf ? "items-end" : "items-start")}>
           <div className={cn("flex items-center gap-2", isSelf ? "flex-row-reverse" : "flex-row")}>
+            {(message.content || message.is_deleted || isEditing) && (
             <div
               className={cn(
                 "message-highlight-target px-2.5 py-1.5 text-sm leading-relaxed whitespace-pre-wrap transition-colors duration-500",
@@ -268,6 +371,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                 </>
               )}
             </div>
+            )}
 
           {!message.is_deleted && !isPending && !isEditing && (
             <div className={cn(
@@ -342,7 +446,11 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
               <LinkPreview workspaceId={message.workspace_id} url={firstUrl} />
             </div>
           )}
-          
+
+          {!message.is_deleted && !isEditing && message.attachments && message.attachments.length > 0 && (
+            <AttachmentGallery attachments={message.attachments} workspaceId={message.workspace_id} />
+          )}
+
           {!message.is_deleted && message.reactions && message.reactions.length > 0 && (
             <div className="flex">
               <ReactionIndicator 

@@ -243,7 +243,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
   - Add drag-and-drop file upload zone in `TaskDetailModal.tsx`.
   - Display attachment previews, download links, and file size badges.
   - Real-time sync via `task:attachment:added`/`task:attachment:removed` socket events.
-- [ ] **Chat Media & File Attachments**:
+- [x] **Chat Media & File Attachments**:
   - Add attachment trigger to `ChatInput.tsx`.
   - Render image previews with lightbox modal and downloadable file cards in `MessageBubble.tsx`.
 - [ ] **Workspace "Files" Module**:

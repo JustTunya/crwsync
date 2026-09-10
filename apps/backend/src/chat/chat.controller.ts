@@ -9,12 +9,14 @@ import {
   ParseUUIDPipe,
   BadRequestException,
 } from "@nestjs/common";
-import { SkipThrottle } from "@nestjs/throttler";
+import { SkipThrottle, Throttle } from "@nestjs/throttler";
 import { IsMemberGuard } from "src/workspace/guards/ws-member.guard";
 import { ActiveUserParam } from "src/common/decorators/active-user.decorator";
 import type { ActiveUser } from "src/common/types/active-user.type";
 import { ChatService } from "src/chat/chat.service";
 import { CreateChatRoomDto } from "src/chat/dto/chat.dto";
+import { PresignFileDto } from "src/storage/dto/presign-file.dto";
+import { PresignedAvatarUpload } from "@crwsync/types";
 
 @Controller("workspaces/:workspaceId/chat")
 @UseGuards(IsMemberGuard)
@@ -55,5 +57,15 @@ export class ChatController {
     @Query("direction") direction?: "before" | "after",
   ) {
     return this.chatService.getMessages(roomId, cursor, limit, direction);
+  }
+
+  @Post(":roomId/attachments/presign")
+  @Throttle({ default: { ttl: 3600, limit: 60 } })
+  presignAttachment(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("roomId", new ParseUUIDPipe({ version: "4" })) roomId: string,
+    @Body() dto: PresignFileDto,
+  ): Promise<PresignedAvatarUpload> {
+    return this.chatService.presignAttachment(workspaceId, roomId, dto.contentType, dto.fileName);
   }
 }
