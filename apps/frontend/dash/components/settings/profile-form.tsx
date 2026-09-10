@@ -53,6 +53,7 @@ function ProfileFormFields({ user }: { user: SessionUserType }) {
           <CardContent className="space-y-4 mt-4">
             <AvatarUpload
               preview={<UserAvatar user={user} size={16} />}
+              previewClassName="size-16 rounded-full object-cover"
               isUploading={isUploadingAvatar}
               error={avatarError?.message}
               onSelect={(file) => uploadAvatar({ userId: user.id, file })}

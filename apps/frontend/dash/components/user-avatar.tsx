@@ -35,15 +35,17 @@ export function UserAvatar({ size = 7, user, status, variant = "default", classN
     const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL}/avatars/${user.avatar_key}`;
 
     return (
-      <img
-        src={avatarUrl}
-        alt={`${user.firstname} ${user.lastname} avatar`}
-        title={`${user.firstname} ${user.lastname}`}
-        className={cn("rounded-full object-cover", className)}
-        style={{ width: pixels, height: pixels }}
-        loading="eager"
-        onError={() => setImageFailed(true)}
-      />
+      <div className={cn(status && ["ring-1", STATUS_RING[status]], "relative shrink-0 ring-offset-2 ring-offset-base-200 rounded-full", className)} style={{ width: pixels, height: pixels }}>
+        <img
+          src={avatarUrl}
+          alt={`${user.firstname} ${user.lastname} avatar`}
+          title={`${user.firstname} ${user.lastname}`}
+          className="rounded-full object-cover size-full"
+          loading="eager"
+          onError={() => setImageFailed(true)}
+        />
+        {status && <div className={cn("absolute -bottom-px -right-px size-2 rounded-full outline-2 outline-base-200", STATUS_INDICATOR[status])} />}
+      </div>
     );
   } else {
     return (
