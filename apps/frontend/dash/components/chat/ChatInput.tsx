@@ -151,8 +151,6 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
   const { activeMentions, filterMembers, detectAtTrigger, expandMentions, extractMentionedUserIds } =
     useMentionAutocomplete(members);
 
-  // renderColoredText highlights @everyone too, but the shared hook's activeMentions
-  // (reused for submit-time expansion) intentionally excludes it — see Step 4.
   const renderMentions = useMemo(
     () => [...activeMentions, { display: "@everyone", replaceWith: "@everyone" }],
     [activeMentions],
@@ -343,9 +341,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
       return match;
     });
 
-    // 2. Process user mentions (the shared hook does not handle @everyone, so
-    // that token is left as literal text here — isEveryoneMention below still
-    // detects it via a plain substring check, unchanged from before).
+    // 2. Process user mentions
     processedContent = expandMentions(processedContent);
     const mentionedUserIds = extractMentionedUserIds(processedContent);
     const isEveryoneMention = processedContent.includes("@everyone");
