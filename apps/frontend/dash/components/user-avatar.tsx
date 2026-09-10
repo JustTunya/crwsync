@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
@@ -36,10 +37,12 @@ export function UserAvatar({ size = 7, user, status, variant = "default", classN
 
     return (
       <div className={cn(status && ["ring-1", STATUS_RING[status]], "relative shrink-0 ring-offset-2 ring-offset-base-200 rounded-full", className)} style={{ width: pixels, height: pixels }}>
-        <img
+        <Image
           src={avatarUrl}
           alt={`${user.firstname} ${user.lastname} avatar`}
           title={`${user.firstname} ${user.lastname}`}
+          width={pixels}
+          height={pixels}
           className="rounded-full object-cover size-full"
           loading="eager"
           onError={() => setImageFailed(true)}

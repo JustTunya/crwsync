@@ -152,7 +152,7 @@ export default function BoardPage() {
     });
   };
 
-  if (isLoading) {
+  if (isLoading || !workspaceId) {
     return (
       <div className="size-full flex items-center justify-center">
         <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />

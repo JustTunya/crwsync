@@ -117,7 +117,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
               className="text-sm font-medium bg-transparent outline-none w-full"
             />
           ) : (
-            <h3
+            <h2
               className="text-sm font-medium truncate cursor-pointer"
               onDoubleClick={() => {
                 setEditName(column.name);
@@ -125,7 +125,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
               }}
             >
               {column.name}
-            </h3>
+            </h2>
           )}
           {!editing && (
             <span className="text-xs text-muted-foreground shrink-0">
@@ -136,16 +136,16 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
         <div className="flex items-center gap-1 shrink-0">
           <div className="relative" ref={menuRef}>
             <div className="flex items-center gap-1">
-              <button type="button" title="Add task" onClick={onAddTask}>
+              <button type="button" title="Add task" aria-label="Add task" onClick={onAddTask} className="p-1.5 rounded-md hover:bg-base-200 transition-colors cursor-pointer">
                 <HugeiconsIcon
                   icon={Add01Icon}
-                  className="size-4.5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                  className="size-4.5 text-muted-foreground hover:text-foreground transition-colors"
                 />
               </button>
-              <button type="button" title="More" data-testid="column-menu" onClick={() => setShowMenu(!showMenu)}>
+              <button type="button" title="More" aria-label="Column options" data-testid="column-menu" onClick={() => setShowMenu(!showMenu)} className="p-1.5 rounded-md hover:bg-base-200 transition-colors cursor-pointer">
                 <HugeiconsIcon
                   icon={MoreHorizontalIcon}
-                  className="size-4.5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                  className="size-4.5 text-muted-foreground hover:text-foreground transition-colors"
                 />
               </button>
             </div>
