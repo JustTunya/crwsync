@@ -257,7 +257,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 
 - [x] **Task Comments & Discussion**:
   - Add `TaskComment` model in Prisma schema with foreign keys to `Task` and `User`.
-  - Build comment feed inside `TaskDetailModal.tsx` with TipTap editor, `@mentions`, and timestamps.
+  - Build comment feed inside `TaskDetailModal.tsx` with `@mentions` and timestamps.
   - Broadcast `task:comment:created` and `task:comment:deleted` events via `StatusGateway`.
 - [ ] **Task Subtasks / Checklists**:
   - Add `TaskChecklistItem` model in Prisma.
