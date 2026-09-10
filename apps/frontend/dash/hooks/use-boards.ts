@@ -11,7 +11,7 @@ import {
   ReorderColumnsPayload,
 } from "@crwsync/types";
 import * as boardService from "@/services/board.service";
-import { uploadToPresignedPost } from "@/lib/upload-to-storage";
+import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
 import { boardKeys, moduleKeys } from "@/hooks/query-keys";
 export { boardKeys } from "@/hooks/query-keys";
 
@@ -352,7 +352,7 @@ export function useUploadTaskAttachment(workspaceId: string, boardId: string) {
       );
       if (!success || !presign) throw new Error(message);
 
-      await uploadToPresignedPost(presign, file);
+      await uploadToPresignedUrl(presign, file);
 
       const { success: createSuccess, data: attachment, message: createMessage } =
         await boardService.createTaskAttachment(workspaceId, taskId, {

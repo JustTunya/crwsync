@@ -1,8 +1,8 @@
 import { ConfigService } from "@nestjs/config";
-import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { StorageService } from "./storage.service";
 
-jest.mock("@aws-sdk/s3-presigned-post");
+jest.mock("@aws-sdk/s3-request-presigner");
 
 describe("StorageService", () => {
   let service: StorageService;
@@ -21,10 +21,10 @@ describe("StorageService", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (createPresignedPost as jest.Mock).mockResolvedValue({
-      url: "http://test-bucket:9000/test-bucket",
-      fields: { "Content-Type": "image/png" },
-    });
+    (getSignedUrl as jest.Mock).mockImplementation(
+      async (_client: unknown, command: { input: { Key: string } }) =>
+        `http://test-bucket:9000/test-bucket/${command.input.Key}`,
+    );
     service = new StorageService(config);
   });
 
@@ -32,21 +32,16 @@ describe("StorageService", () => {
     await expect(service.presignAvatarUpload("application/pdf", "test-user-id")).rejects.toThrow("Unsupported image type");
   });
 
-  it("returns a presigned POST with a UUID key ending in the correct extension", async () => {
+  it("returns a presigned PUT url with a UUID key ending in the correct extension", async () => {
     const result = await service.presignAvatarUpload("image/png", "test-user-id");
 
     expect(result.key).toMatch(/^test-user-id_[0-9a-f-]{36}\.png$/);
     expect(result.url).toContain("test-bucket");
-    expect(result.fields["Content-Type"]).toBe("image/png");
 
-    expect(createPresignedPost).toHaveBeenCalledWith(
+    expect(getSignedUrl).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({
-        Conditions: expect.arrayContaining([
-          ["content-length-range", 0, 5242880],
-          { "Content-Type": "image/png" },
-        ]),
-      }),
+      expect.objectContaining({ input: expect.objectContaining({ ContentType: "image/png" }) }),
+      expect.objectContaining({ expiresIn: 300 }),
     );
   });
 

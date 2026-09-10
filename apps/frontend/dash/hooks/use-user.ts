@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { UpdateUserProfilePayload, ChangePasswordPayload } from "@crwsync/types";
 import { presignUserAvatar, updateUserProfile, changePassword, getUserSessions, revokeUserSession } from "@/services/user.service";
-import { uploadToPresignedPost } from "@/lib/upload-to-storage";
+import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
 import { sessionKeys } from "@/hooks/use-session";
 
 export const userKeys = {
@@ -35,7 +35,7 @@ export function useUploadUserAvatar() {
       const { success, data: presign, message } = await presignUserAvatar(userId, file.type);
       if (!success || !presign) throw new Error(message);
 
-      await uploadToPresignedPost(presign, file);
+      await uploadToPresignedUrl(presign, file);
 
       const { success: updateSuccess, data: result, message: updateMessage } = await updateUserProfile(userId, { avatar_key: presign.key });
       if (!updateSuccess || !result) throw new Error(updateMessage);

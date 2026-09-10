@@ -22,7 +22,7 @@ import EmojiPicker from "@/components/chat/EmojiPicker";
 import { cn } from "@/lib/utils";
 import { searchWorkspaceTasks, type TaskSearchResult } from "@/services/board.service";
 import { presignChatAttachment } from "@/services/chat.service";
-import { uploadToPresignedPost } from "@/lib/upload-to-storage";
+import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
 
 type MentionOption =
   | { type: "user"; user: NonNullable<WorkspaceMember["user"]> }
@@ -321,7 +321,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
           }
 
           try {
-            await uploadToPresignedPost(presign, file);
+            await uploadToPresignedUrl(presign, file);
             setAttachments((prev) => prev.map((a) => (a.id === id ? { ...a, status: "done", key: presign.key } : a)));
           } catch {
             setAttachments((prev) =>

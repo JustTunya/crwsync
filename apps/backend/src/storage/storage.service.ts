@@ -4,19 +4,20 @@ import { ConfigService } from "@nestjs/config";
 import {
   S3Client,
   GetObjectCommand,
+  PutObjectCommand,
   DeleteObjectCommand,
   HeadBucketCommand,
   CreateBucketCommand,
 } from "@aws-sdk/client-s3";
-import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { extname } from "path";
 import { PresignedAvatarUpload } from "@crwsync/types";
 
 const AVATAR_PREFIX = "avatars/";
 const ATTACHMENT_PREFIX = "attachments/";
-const MAX_AVATAR_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
-const MAX_ATTACHMENT_UPLOAD_BYTES = 25 * 1024 * 1024; // 25MB
+// ponytail: presigned PUT (R2 has no S3 POST-policy support) can't enforce a
+// content-length-range at sign time; add a HeadObject size check + delete on
+// violation if abuse becomes a problem.
 const PRESIGN_EXPIRY_SECONDS = 300; // 5 minutes
 const PRESIGN_GET_EXPIRY_SECONDS = 3600; // 1 hour
 
@@ -65,18 +66,14 @@ export class StorageService implements OnModuleInit {
 
     const key = `${ownerId}_${randomUUID()}.${ext}`;
 
-    const { url, fields } = await createPresignedPost(this.client, {
+    const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: `${AVATAR_PREFIX}${key}`,
-      Conditions: [
-        ["content-length-range", 0, MAX_AVATAR_UPLOAD_BYTES],
-        { "Content-Type": contentType },
-      ],
-      Fields: { "Content-Type": contentType },
-      Expires: PRESIGN_EXPIRY_SECONDS,
+      ContentType: contentType,
     });
+    const url = await getSignedUrl(this.client, command, { expiresIn: PRESIGN_EXPIRY_SECONDS });
 
-    return { url, fields, key };
+    return { url, key };
   }
 
   async presignGet(key: string): Promise<string> {
@@ -100,18 +97,14 @@ export class StorageService implements OnModuleInit {
     const ext = extname(fileName).slice(1).replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "bin";
     const key = `${ownerId}_${randomUUID()}.${ext}`;
 
-    const { url, fields } = await createPresignedPost(this.client, {
+    const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: `${ATTACHMENT_PREFIX}${key}`,
-      Conditions: [
-        ["content-length-range", 0, MAX_ATTACHMENT_UPLOAD_BYTES],
-        { "Content-Type": contentType },
-      ],
-      Fields: { "Content-Type": contentType },
-      Expires: PRESIGN_EXPIRY_SECONDS,
+      ContentType: contentType,
     });
+    const url = await getSignedUrl(this.client, command, { expiresIn: PRESIGN_EXPIRY_SECONDS });
 
-    return { url, fields, key };
+    return { url, key };
   }
 
   async presignFileGet(key: string): Promise<string> {

@@ -16,18 +16,10 @@ export function AvatarUpload({ preview, isUploading, error, onSelect, previewCla
   const [localPreview, setLocalPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isUploading && localPreview) {
-      URL.revokeObjectURL(localPreview);
-      setLocalPreview(null);
-    }
-  }, [isUploading, localPreview]);
-
-  useEffect(() => {
     return () => {
       if (localPreview) URL.revokeObjectURL(localPreview);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [localPreview]);
 
   return (
     <div className="flex items-center gap-4">
