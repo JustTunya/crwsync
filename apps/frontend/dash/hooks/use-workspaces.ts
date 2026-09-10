@@ -15,7 +15,7 @@ import {
   transferOwnership,
   presignWorkspaceLogo,
 } from "@/services/workspace.service";
-import { uploadToPresignedPost } from "@/lib/upload-to-storage";
+import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
 
 export const workspaceKeys = {
   all: ["workspaces"] as const,
@@ -103,7 +103,7 @@ export function useUploadWorkspaceLogo() {
       const { success, data: presign, message } = await presignWorkspaceLogo(workspaceId, file.type);
       if (!success || !presign) throw new Error(message);
 
-      await uploadToPresignedPost(presign, file);
+      await uploadToPresignedUrl(presign, file);
 
       const { success: updateSuccess, data: result, message: updateMessage } = await updateWorkspace(workspaceId, { logo_key: presign.key });
       if (!updateSuccess || !result) throw new Error(updateMessage);

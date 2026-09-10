@@ -22,7 +22,7 @@ import { useFileRoom, useFiles, useDeleteFile, fileKeys } from "@/hooks/use-file
 import { useFilesSocket } from "@/hooks/use-files-socket";
 import { useTimeAgo } from "@/hooks/use-time-ago";
 import { presignFileUpload, createWorkspaceFile } from "@/services/files.service";
-import { uploadToPresignedPost } from "@/lib/upload-to-storage";
+import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
 import { UserAvatar } from "@/components/user-avatar";
 import { Input } from "@/components/ui/input";
 import { ChatLightbox } from "@/components/chat/ChatLightbox";
@@ -112,7 +112,7 @@ export function FilesRoom({ workspaceId, roomId }: FilesRoomProps) {
           }
 
           try {
-            await uploadToPresignedPost(presign, file);
+            await uploadToPresignedUrl(presign, file);
             const created = await createWorkspaceFile(workspaceId, roomId, {
               key: presign.key,
               file_name: file.name,
