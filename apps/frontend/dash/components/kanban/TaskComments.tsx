@@ -12,6 +12,7 @@ import {
   useCreateTaskComment,
   useEditTaskComment,
   useDeleteTaskComment,
+  useLoadOlderComments,
 } from "@/hooks/use-task-comments";
 import { useUser } from "@/providers/user.provider";
 import { UserAvatar } from "@/components/user-avatar";
@@ -49,12 +50,15 @@ export function TaskComments({ task, workspaceId, boardId }: TaskCommentsProps) 
   const createComment = useCreateTaskComment(workspaceId, boardId, task.id);
   const editComment = useEditTaskComment(workspaceId, task.id);
   const deleteComment = useDeleteTaskComment(workspaceId, boardId, task.id);
+  const loadOlder = useLoadOlderComments(workspaceId, task.id);
 
   const [content, setContent] = useState("");
   const [mentionState, setMentionState] = useState({ active: false, text: "", startIndex: -1 });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const filteredMembers = mentionState.active ? filterMembers(mentionState.text) : [];
@@ -87,6 +91,7 @@ export function TaskComments({ task, workspaceId, boardId }: TaskCommentsProps) 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setContent(value);
+    setSubmitError(null);
     const atTrigger = members ? detectAtTrigger(value.slice(0, e.target.selectionStart)) : null;
     setSelectedIndex(0);
     setMentionState(atTrigger ? { active: true, ...atTrigger } : { active: false, text: "", startIndex: -1 });
@@ -97,9 +102,15 @@ export function TaskComments({ task, workspaceId, boardId }: TaskCommentsProps) 
     const expanded = expandMentions(content);
     createComment.mutate(
       { content: expanded, mentionedUserIds: extractMentionedUserIds(expanded) },
-      { onSuccess: () => setContent("") },
+      {
+        onSuccess: () => {
+          setContent("");
+          setSubmitError(null);
+          closeMentions();
+        },
+        onError: (error) => setSubmitError(error instanceof Error ? error.message : "Failed to post comment"),
+      },
     );
-    closeMentions();
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -134,6 +145,7 @@ export function TaskComments({ task, workspaceId, boardId }: TaskCommentsProps) 
   const startEdit = (comment: TaskComment) => {
     setEditingId(comment.id);
     setEditContent(comment.content);
+    setEditError(null);
   };
 
   const saveEdit = (comment: TaskComment) => {
@@ -144,18 +156,36 @@ export function TaskComments({ task, workspaceId, boardId }: TaskCommentsProps) 
     }
     editComment.mutate(
       { commentId: comment.id, data: { content: editContent } },
-      { onSuccess: () => setEditingId(null) },
+      {
+        onSuccess: () => {
+          setEditingId(null);
+          setEditError(null);
+        },
+        onError: (error) => setEditError(error instanceof Error ? error.message : "Failed to save comment"),
+      },
     );
   };
 
   const comments = page?.comments ?? [];
+  const activeCommentCount = comments.filter((c) => !c.is_deleted).length;
   const canSend = !!content.trim() && !createComment.isPending;
 
   return (
     <div className="pt-4 mt-4 border-t border-base-200">
       <label className="text-xs text-muted-foreground mb-2 block">
-        Comments{comments.length > 0 ? ` (${comments.length})` : ""}
+        Comments{activeCommentCount > 0 ? ` (${activeCommentCount})` : ""}
       </label>
+
+      {page?.has_more && (
+        <button
+          type="button"
+          onClick={() => page.next_cursor && loadOlder.mutate(page.next_cursor)}
+          disabled={loadOlder.isPending}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer mb-2 disabled:opacity-50"
+        >
+          {loadOlder.isPending ? "Loading..." : "Load older comments"}
+        </button>
+      )}
 
       {comments.length > 0 && (
         <div className="flex flex-col gap-2 mb-3">
@@ -212,7 +242,10 @@ export function TaskComments({ task, workspaceId, boardId }: TaskCommentsProps) 
                       <textarea
                         autoFocus
                         value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
+                        onChange={(e) => {
+                          setEditContent(e.target.value);
+                          setEditError(null);
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === "Escape") {
                             e.preventDefault();
@@ -225,6 +258,7 @@ export function TaskComments({ task, workspaceId, boardId }: TaskCommentsProps) 
                         rows={2}
                         className="w-full text-sm leading-snug text-foreground bg-base-100 rounded-md border-[1.5px] border-base-300 px-2.5 py-1.5 resize-none outline-none focus:border-primary/50 transition-colors"
                       />
+                      {editError && <p className="text-xs text-error leading-tight">{editError}</p>}
                       <div className="flex items-center justify-end gap-1">
                         <button
                           type="button"
@@ -321,6 +355,8 @@ export function TaskComments({ task, workspaceId, boardId }: TaskCommentsProps) 
             </button>
           </div>
         </div>
+
+        {submitError && <p className="text-xs text-error mt-1">{submitError}</p>}
       </div>
     </div>
   );

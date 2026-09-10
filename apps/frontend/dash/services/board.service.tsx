@@ -353,9 +353,12 @@ export async function deleteTaskAttachment(
 export async function getTaskComments(
   workspaceId: string,
   taskId: string,
+  cursor?: string,
 ): Promise<BoardOperationState<TaskCommentPage>> {
   try {
-    const response = await api.get(`/workspaces/${workspaceId}/tasks/${taskId}/comments`);
+    const response = await api.get(`/workspaces/${workspaceId}/tasks/${taskId}/comments`, {
+      params: cursor ? { cursor } : undefined,
+    });
     return { success: true, data: response.data.data };
   } catch (error) {
     if (isAxiosError(error)) {

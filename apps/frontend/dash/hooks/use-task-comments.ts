@@ -12,15 +12,42 @@ export function useTaskComments(workspaceId?: string, taskId?: string) {
   });
 }
 
+export function useLoadOlderComments(workspaceId: string, taskId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (cursor: string) => {
+      const { success, data, message } = await boardService.getTaskComments(workspaceId, taskId, cursor);
+      if (!success || !data) throw new Error(message);
+      return data;
+    },
+    onSuccess: (olderPage) => {
+      queryClient.setQueryData(
+        commentKeys.list(taskId),
+        (old: { data: TaskCommentPage } | undefined) => {
+          if (!old?.data) return old;
+          const existingIds = new Set(old.data.comments.map((c) => c.id));
+          const merged = [...olderPage.comments.filter((c) => !existingIds.has(c.id)), ...old.data.comments];
+          return {
+            ...old,
+            data: { comments: merged, next_cursor: olderPage.next_cursor, has_more: olderPage.has_more },
+          };
+        },
+      );
+    },
+  });
+}
+
 export function useCreateTaskComment(workspaceId: string, boardId: string, taskId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateTaskCommentPayload) =>
-      boardService.createTaskComment(workspaceId, taskId, data),
-    onSuccess: ({ success, data: comment }) => {
-      if (!success || !comment) return;
-
+    mutationFn: async (data: CreateTaskCommentPayload) => {
+      const { success, data: comment, message } = await boardService.createTaskComment(workspaceId, taskId, data);
+      if (!success || !comment) throw new Error(message);
+      return comment;
+    },
+    onSuccess: (comment) => {
       queryClient.setQueryData(
         commentKeys.list(taskId),
         (old: { data: TaskCommentPage } | undefined) => {
@@ -58,10 +85,17 @@ export function useEditTaskComment(workspaceId: string, taskId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ commentId, data }: { commentId: string; data: UpdateTaskCommentPayload }) =>
-      boardService.updateTaskComment(workspaceId, taskId, commentId, data),
-    onSuccess: ({ success, data: comment }) => {
-      if (!success || !comment) return;
+    mutationFn: async ({ commentId, data }: { commentId: string; data: UpdateTaskCommentPayload }) => {
+      const { success, data: comment, message } = await boardService.updateTaskComment(
+        workspaceId,
+        taskId,
+        commentId,
+        data,
+      );
+      if (!success || !comment) throw new Error(message);
+      return comment;
+    },
+    onSuccess: (comment) => {
       queryClient.setQueryData(
         commentKeys.list(taskId),
         (old: { data: TaskCommentPage } | undefined) => {
@@ -80,7 +114,10 @@ export function useDeleteTaskComment(workspaceId: string, boardId: string, taskI
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (commentId: string) => boardService.deleteTaskComment(workspaceId, taskId, commentId),
+    mutationFn: async (commentId: string) => {
+      const { success, message } = await boardService.deleteTaskComment(workspaceId, taskId, commentId);
+      if (!success) throw new Error(message);
+    },
     onMutate: async (commentId: string) => {
       await queryClient.cancelQueries({ queryKey: commentKeys.list(taskId) });
       const previousComments = queryClient.getQueryData(commentKeys.list(taskId));
