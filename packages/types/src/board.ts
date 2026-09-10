@@ -9,6 +9,7 @@ export enum TaskPriorityEnum {
 export enum ModuleTypeEnum {
   BOARD = "BOARD",
   CHAT = "CHAT",
+  FILES = "FILES",
 }
 
 export type ColumnType = "UPCOMING" | "ONGOING" | "COMPLETE";

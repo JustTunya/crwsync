@@ -626,7 +626,7 @@ export class WorkspaceService {
     const keyPrefix = key.split("_")[0];
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(keyPrefix);
 
-    const [taskAttachment, chatRoom] = await Promise.all([
+    const [taskAttachment, chatRoom, fileRoom] = await Promise.all([
       this.prisma.taskAttachment.findFirst({
         where: { key, task: { column: { board: { workspace_id: workspaceId } } } },
         select: { id: true },
@@ -637,8 +637,14 @@ export class WorkspaceService {
             select: { id: true },
           })
         : null,
+      isUuid
+        ? this.prisma.fileRoom.findFirst({
+            where: { id: keyPrefix, workspace_id: workspaceId },
+            select: { id: true },
+          })
+        : null,
     ]);
-    if (!taskAttachment && !chatRoom) throw new NotFoundException("File not found");
+    if (!taskAttachment && !chatRoom && !fileRoom) throw new NotFoundException("File not found");
 
     return this.storageService.presignFileGet(key);
   }

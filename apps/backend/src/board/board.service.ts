@@ -639,6 +639,13 @@ export class BoardService {
       });
     }
 
+    if (wsModule.type === ModuleTypeEnum.FILES && wsModule.reference_id) {
+      await this.prisma.fileRoom.update({
+        where: { id: wsModule.reference_id },
+        data: { name: dto.name },
+      });
+    }
+
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("module:updated", { moduleId, data: dto });
@@ -700,6 +707,16 @@ export class BoardService {
       await this.prisma.$transaction(async (tx) => {
         await tx.chatMessage.deleteMany({ where: { room_id: wsModule.reference_id } });
         await tx.chatRoom.delete({ where: { id: wsModule.reference_id } });
+        await tx.workspaceModule.delete({ where: { id: moduleId } });
+      });
+
+      this.statusGateway.server
+        .to(`workspace_${workspaceId}`)
+        .emit("module:deleted", { moduleId });
+    } else if (wsModule.type === ModuleTypeEnum.FILES && wsModule.reference_id) {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.workspaceFile.deleteMany({ where: { file_room_id: wsModule.reference_id } });
+        await tx.fileRoom.delete({ where: { id: wsModule.reference_id } });
         await tx.workspaceModule.delete({ where: { id: moduleId } });
       });
 

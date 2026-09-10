@@ -46,6 +46,7 @@ enum TaskPriorityEnum {
 enum ModuleTypeEnum {
   BOARD @map("board")
   CHAT  @map("chat")
+  FILES @map("files")
 
   @@map("module_type_enum")
 }
@@ -91,6 +92,7 @@ model User {
   message_reactions   MessageReaction[]
   chat_read_receipts  ChatReadReceipt[]
   pinned_modules      UserPinnedModule[]
+  workspace_files     WorkspaceFile[]
 
   @@map("users")
 }
@@ -158,6 +160,7 @@ model Workspace {
   modules       WorkspaceModule[]
   chat_rooms    ChatRoom[]
   chat_messages ChatMessage[]
+  file_rooms    FileRoom[]
 
   @@unique([slug], map: "idx_workspace_slug_unique")
   @@index([slug], map: "idx_workspace_slug_index")
@@ -234,17 +237,17 @@ model BoardColumn {
 }
 
 model Task {
-  id          String           @id @default(uuid()) @db.Uuid
-  column_id   String           @db.Uuid
-  shortId     String           @unique(map: "idx_task_short_id") @map("short_id") @db.Text
-  title       String           @db.Text
-  description String?          @db.Text
-  priority    TaskPriorityEnum @default(NONE)
-  labels      String[]         @default([])
-  tags        String[]         @default([])
-  assignee_id String?          @db.Uuid
-  due_date    DateTime?        @db.Timestamptz
-  position    Int              @default(0)
+  id             String           @id @default(uuid()) @db.Uuid
+  column_id      String           @db.Uuid
+  shortId        String           @unique(map: "idx_task_short_id") @map("short_id") @db.Text
+  title          String           @db.Text
+  description    String?          @db.Text
+  priority       TaskPriorityEnum @default(NONE)
+  labels         String[]         @default([])
+  tags           String[]         @default([])
+  assignee_id    String?          @db.Uuid
+  due_date       DateTime?        @db.Timestamptz
+  position       Int              @default(0)
   is_deleted     Boolean          @default(false)
   is_archived    Boolean          @default(false)
   in_progress_at DateTime?        @db.Timestamptz
@@ -291,8 +294,8 @@ model WorkspaceModule {
 
   workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
 
-  project_id   String?        @db.Uuid
-  project      WorkspaceProject? @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  project_id String?           @db.Uuid
+  project    WorkspaceProject? @relation(fields: [project_id], references: [id], onDelete: Cascade)
 
   pinned_by_users UserPinnedModule[]
 
@@ -377,6 +380,37 @@ model ChatAttachment {
   @@map("chat_attachments")
 }
 
+model FileRoom {
+  id           String   @id @default(uuid()) @db.Uuid
+  workspace_id String   @db.Uuid
+  name         String?  @db.Text
+  created_at   DateTime @default(now()) @db.Timestamptz
+  updated_at   DateTime @updatedAt @db.Timestamptz
+
+  workspace Workspace       @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  files     WorkspaceFile[]
+
+  @@index([workspace_id], map: "idx_file_room_workspace_id")
+  @@map("file_rooms")
+}
+
+model WorkspaceFile {
+  id           String   @id @default(uuid()) @db.Uuid
+  file_room_id String   @db.Uuid
+  key          String   @db.Text
+  file_name    String   @db.Text
+  file_size    Int
+  mime_type    String   @db.Text
+  uploaded_by  String   @db.Uuid
+  created_at   DateTime @default(now()) @db.Timestamptz
+
+  room     FileRoom @relation(fields: [file_room_id], references: [id], onDelete: Cascade)
+  uploader User     @relation(fields: [uploaded_by], references: [id], onDelete: Cascade)
+
+  @@index([file_room_id], map: "idx_workspace_file_room_id")
+  @@map("workspace_files")
+}
+
 model MessageReaction {
   id         String   @id @default(uuid()) @db.Uuid
   message_id String   @db.Uuid
@@ -411,13 +445,13 @@ model ChatReadReceipt {
 }
 
 model UserPinnedModule {
-  id           String   @id @default(uuid()) @db.Uuid
-  user_id      String   @db.Uuid
-  module_id    String   @db.Uuid
-  created_at   DateTime @default(now()) @db.Timestamptz
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  module_id  String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
 
-  user         User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  module       WorkspaceModule @relation(fields: [module_id], references: [id], onDelete: Cascade)
+  user   User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  module WorkspaceModule @relation(fields: [module_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, module_id], map: "idx_user_pinned_module_unique")
   @@index([user_id], map: "idx_user_pinned_module_user_id")

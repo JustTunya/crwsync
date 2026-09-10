@@ -2,16 +2,18 @@
 
 import { useState, useMemo } from "react";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
-import { Cancel01Icon, Chat01Icon, DashboardSquare01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Chat01Icon, DashboardSquare01Icon, Folder01Icon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useCreateBoard } from "@/hooks/use-boards";
 import { useCreateChatRoom } from "@/hooks/use-chat";
+import { useCreateFileRoom } from "@/hooks/use-files";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 enum ModuleType {
   BOARD = "BOARD",
   CHAT = "CHAT",
+  FILES = "FILES",
 }
 
 interface ModuleOption {
@@ -34,6 +36,12 @@ const MODULE_OPTIONS: ModuleOption[] = [
     description: "Communicate with your crew",
     icon: Chat01Icon,
   },
+  {
+    type: ModuleType.FILES,
+    label: "Team Drive",
+    description: "Store and share files",
+    icon: Folder01Icon,
+  },
 ];
 
 export function AddModuleModal({ 
@@ -48,6 +56,7 @@ export function AddModuleModal({
   const { activeId } = useWorkspace();
   const createBoard = useCreateBoard(activeId || "");
   const createChatRoom = useCreateChatRoom(activeId || "");
+  const createFileRoom = useCreateFileRoom(activeId || "");
 
   const [step, setStep] = useState<"select" | "configure">("select");
   const [selectedType, setSelectedType] = useState<ModuleType | null>(null);
@@ -73,6 +82,8 @@ export function AddModuleModal({
         await createBoard.mutateAsync({ name: name.trim(), project_id: projectId });
       } else if (selectedType === ModuleType.CHAT) {
         await createChatRoom.mutateAsync({ name: name.trim(), project_id: projectId });
+      } else if (selectedType === ModuleType.FILES) {
+        await createFileRoom.mutateAsync({ name: name.trim(), project_id: projectId });
       }
       handleClose();
     } catch (error) {
@@ -150,9 +161,9 @@ export function AddModuleModal({
                 <Button 
                   className="w-auto flex-1"
                   onClick={handleCreate} 
-                  disabled={!name.trim() || createBoard.isPending || createChatRoom.isPending}
+                  disabled={!name.trim() || createBoard.isPending || createChatRoom.isPending || createFileRoom.isPending}
                 >
-                  {(createBoard.isPending || createChatRoom.isPending) ? "Creating..." : "Create Module"}
+                  {(createBoard.isPending || createChatRoom.isPending || createFileRoom.isPending) ? "Creating..." : "Create Module"}
                 </Button>
               </div>
             </div>

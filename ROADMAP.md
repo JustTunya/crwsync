@@ -246,7 +246,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 - [x] **Chat Media & File Attachments**:
   - Add attachment trigger to `ChatInput.tsx`.
   - Render image previews with lightbox modal and downloadable file cards in `MessageBubble.tsx`.
-- [ ] **Workspace "Files" Module**:
+- [x] **Workspace "Files" Module**:
   - Add `FILES` to `ModuleTypeEnum` in `schema.prisma`.
   - Build team file drive page (`/[slug]/files/[fileRoomId]`) with grid/list views, file uploads, and deletion.
 
