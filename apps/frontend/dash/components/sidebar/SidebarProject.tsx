@@ -137,6 +137,12 @@ export function SidebarProject({
           setShowSettings(false);
         }}
         onClick={() => !isEditing && setCollapsed(!collapsed)}
+        onDoubleClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowSettings(false);
+          setIsEditing(true);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !isEditing) {
             e.preventDefault();

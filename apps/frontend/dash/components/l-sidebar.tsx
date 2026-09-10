@@ -16,7 +16,7 @@ import { SidebarProfile } from "@/components/sidebar/SidebarProfile";
 import { SidebarProject } from "@/components/sidebar/SidebarProject";
 import { SectionHeader } from "@/components/sidebar/SectionHeader";
 import { AddModuleModal } from "@/components/add-module-modal";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Shortcut } from "@/components/ui/shortcut";
 import { Input } from "@/components/ui/input";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
@@ -474,6 +474,8 @@ export function LSidebar() {
         </m.div>
       <Dialog open={searchModalOpen} onOpenChange={setSearchModalOpen}>
         <DialogContent className="max-w-md gap-0 p-0 overflow-hidden bg-base-100" showCloseButton={false}>
+          <DialogTitle className="sr-only">Search modules</DialogTitle>
+          <DialogDescription className="sr-only">Search across workspace modules</DialogDescription>
           <div className="flex items-center px-4 border-b border-base-200">
             <HugeiconsIcon icon={Search01Icon} className="mr-2 size-4 text-muted-foreground shrink-0" />
             <Input

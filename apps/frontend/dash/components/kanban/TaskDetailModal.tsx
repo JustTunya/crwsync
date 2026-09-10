@@ -252,10 +252,19 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
                 Assignee
               </label>
               <div className="relative" ref={assigneeRef}>
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-haspopup="listbox"
+                  aria-expanded={state.showAssigneeDropdown}
                   onClick={() => dispatch({ showAssigneeDropdown: !state.showAssigneeDropdown })}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-base-200 rounded-lg border-[1.5px] border-base-300 shadow-md/5 transition-all text-left cursor-pointer"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      dispatch({ showAssigneeDropdown: !state.showAssigneeDropdown });
+                    }
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-base-200 rounded-lg border-[1.5px] border-base-300 shadow-md/5 transition-all text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                 >
                   <HugeiconsIcon icon={UserIcon} className="size-4 text-muted-foreground shrink-0" />
                   <span className={selectedMember?.user ? "text-foreground" : "text-muted-foreground"}>
@@ -272,7 +281,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
                       <HugeiconsIcon icon={Cancel01Icon} size={14} strokeWidth={2} />
                     </button>
                   )}
-                </button>
+                </div>
 
                 {state.showAssigneeDropdown && (
                   <div className="absolute left-0 top-full mt-1 z-50 bg-base-100 border border-base-200 rounded-lg shadow-lg w-full max-h-48 overflow-y-auto">

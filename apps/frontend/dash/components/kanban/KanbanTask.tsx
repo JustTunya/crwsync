@@ -35,6 +35,7 @@ export function KanbanTask({ task, onClick, workspaceId }: { task: Task; onClick
       style={style}
       role="button"
       tabIndex={0}
+      aria-label={`${task.title}, task ${task.shortId}`}
       className="bg-background dark:bg-base-200 rounded-lg p-3 border-[1.5px] border-base-200 dark:border-base-300 hover:border-base-300 transition-colors cursor-grab active:cursor-grabbing"
     >
       <p className="text-[10px] text-muted-foreground font-medium mb-1 tracking-wider uppercase">{task.shortId}</p>

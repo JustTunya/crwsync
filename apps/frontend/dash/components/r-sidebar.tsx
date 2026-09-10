@@ -168,6 +168,7 @@ export function RSidebar() {
             <div
               data-testid="rsidebar-members-toggle"
               role="button"
+              aria-label="Toggle workspace members"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -290,6 +291,7 @@ function NotificationBellButton({ open, view, isMobile, toggleOpen, setView }: N
     <div
       data-testid="rsidebar-notifications-toggle"
       role="button"
+      aria-label="Toggle notifications"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
@@ -353,11 +355,12 @@ export function SidebarMembers({ groups, statuses, isLoading, workspace, open, s
                 </p>
                 <ul>
                   {group.members.map((member) => (
-                    <SidebarProfile 
-                      key={member.id} 
-                      user={member.user}
-                      status={statuses[member.user_id] || "OFFLINE"} 
-                    />
+                    <li key={member.id}>
+                      <SidebarProfile
+                        user={member.user}
+                        status={statuses[member.user_id] || "OFFLINE"}
+                      />
+                    </li>
                   ))}
                 </ul>
               </div>
