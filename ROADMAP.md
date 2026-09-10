@@ -255,7 +255,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 ### Milestone 3: Deep Collaboration & Task Enhancements
 **Goal**: Upgrade task tracking and communication from basic cards into an enterprise-grade collaboration engine.
 
-- [ ] **Task Comments & Discussion**:
+- [x] **Task Comments & Discussion**:
   - Add `TaskComment` model in Prisma schema with foreign keys to `Task` and `User`.
   - Build comment feed inside `TaskDetailModal.tsx` with TipTap editor, `@mentions`, and timestamps.
   - Broadcast `task:comment:created` and `task:comment:deleted` events via `StatusGateway`.
