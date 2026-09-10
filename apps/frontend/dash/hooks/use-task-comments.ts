@@ -83,7 +83,8 @@ export function useDeleteTaskComment(workspaceId: string, boardId: string, taskI
     mutationFn: (commentId: string) => boardService.deleteTaskComment(workspaceId, taskId, commentId),
     onMutate: async (commentId: string) => {
       await queryClient.cancelQueries({ queryKey: commentKeys.list(taskId) });
-      const previous = queryClient.getQueryData(commentKeys.list(taskId));
+      const previousComments = queryClient.getQueryData(commentKeys.list(taskId));
+      const previousBoard = queryClient.getQueryData(boardKeys.detail(boardId));
 
       queryClient.setQueryData(
         commentKeys.list(taskId),
@@ -122,11 +123,14 @@ export function useDeleteTaskComment(workspaceId: string, boardId: string, taskI
         },
       );
 
-      return { previous };
+      return { previousComments, previousBoard };
     },
     onError: (_err, _commentId, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(commentKeys.list(taskId), context.previous);
+      if (context?.previousComments) {
+        queryClient.setQueryData(commentKeys.list(taskId), context.previousComments);
+      }
+      if (context?.previousBoard) {
+        queryClient.setQueryData(boardKeys.detail(boardId), context.previousBoard);
       }
     },
   });
