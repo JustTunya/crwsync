@@ -232,20 +232,21 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 ### Milestone 2: Files & Media Storage Engine
 **Goal**: Deliver the missing file storage pillar and fulfill the platform's core promise of syncing tasks and files.
 
-- [ ] **Backend Storage Service**:
+- [x] **Backend Storage Service**:
   - Implement S3/MinIO service in `apps/backend` for presigned upload URLs and file retrieval.
-  - Implement `/api/avatars/:key` and `/api/files/:key` streaming endpoints.
-  - `/api/avatars/:key` is live; `/api/files/:key` still pending (blocked on Task Attachments / Files module below).
+  - Implement `/avatars/:key` and `/workspaces/:workspaceId/files/:key` streaming endpoints.
+  - Both are live; the files endpoint is workspace-scoped and auth-gated (unlike the public avatar route) since attachments are private to a workspace.
 - [x] **User & Workspace Avatar Upload**:
   - Add image upload components to User Settings and Workspace Settings.
-- [ ] **Task Attachments**:
+- [x] **Task Attachments**:
   - Add `TaskAttachment` model in Prisma schema.
   - Add drag-and-drop file upload zone in `TaskDetailModal.tsx`.
   - Display attachment previews, download links, and file size badges.
-- [ ] **Chat Media & File Attachments**:
+  - Real-time sync via `task:attachment:added`/`task:attachment:removed` socket events.
+- [x] **Chat Media & File Attachments**:
   - Add attachment trigger to `ChatInput.tsx`.
   - Render image previews with lightbox modal and downloadable file cards in `MessageBubble.tsx`.
-- [ ] **Workspace "Files" Module**:
+- [x] **Workspace "Files" Module**:
   - Add `FILES` to `ModuleTypeEnum` in `schema.prisma`.
   - Build team file drive page (`/[slug]/files/[fileRoomId]`) with grid/list views, file uploads, and deletion.
 

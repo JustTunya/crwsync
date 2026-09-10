@@ -31,6 +31,17 @@ export interface ChatReadReceipt {
   user?: ChatMessageSender;
 }
 
+export interface ChatAttachment {
+  id: string;
+  message_id: string;
+  key: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
+  uploaded_by: string;
+  created_at: string;
+}
+
 export interface ChatMessage {
   id: string;
   workspace_id: string;
@@ -53,11 +64,19 @@ export interface ChatMessage {
   sender?: ChatMessageSender;
   reactions?: MessageReaction[];
   read_receipts?: ChatReadReceipt[];
+  attachments?: ChatAttachment[];
 }
 
 export interface CreateChatRoomPayload {
   name: string;
   project_id?: string;
+}
+
+export interface CreateChatAttachmentPayload {
+  key: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
 }
 
 export interface SendMessagePayload {
@@ -66,6 +85,7 @@ export interface SendMessagePayload {
   reply_to_id?: string;
   isEveryoneMention?: boolean;
   mentionedUserIds?: string[];
+  attachments?: CreateChatAttachmentPayload[];
 }
 
 export interface ToggleReactionPayload {

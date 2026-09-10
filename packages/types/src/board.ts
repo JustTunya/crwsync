@@ -9,6 +9,7 @@ export enum TaskPriorityEnum {
 export enum ModuleTypeEnum {
   BOARD = "BOARD",
   CHAT = "CHAT",
+  FILES = "FILES",
 }
 
 export type ColumnType = "UPCOMING" | "ONGOING" | "COMPLETE";
@@ -55,6 +56,25 @@ export interface Task {
   created_by: string;
   created_at: string;
   updated_at: string;
+  attachments?: TaskAttachment[];
+}
+
+export interface TaskAttachment {
+  id: string;
+  task_id: string;
+  key: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
+  uploaded_by: string;
+  created_at: string;
+}
+
+export interface CreateTaskAttachmentPayload {
+  key: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
 }
 
 export interface WorkspaceProject {

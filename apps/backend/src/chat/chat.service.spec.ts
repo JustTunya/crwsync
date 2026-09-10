@@ -2,6 +2,7 @@ import { ChatService } from "./chat.service";
 import { SendMessageDto } from "src/chat/dto/chat.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
+import { StorageService } from "src/storage/storage.service";
 import ogs from "open-graph-scraper";
 
 jest.mock("open-graph-scraper", () => jest.fn());
@@ -43,6 +44,7 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
     chatService = new ChatService(
       prisma as unknown as PrismaService,
       statusGateway as unknown as StatusGateway,
+      {} as unknown as StorageService,
     );
     jest.clearAllMocks();
   });
@@ -112,6 +114,43 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
       );
       expect(prisma.chatMessage.upsert).not.toHaveBeenCalled();
       expect(result.id).toBe("msg-generated");
+    });
+
+    it("nested-creates attachments when the dto carries them", async () => {
+      const mockMessage = { id: "msg-generated", read_receipts: [] };
+      prisma.chatMessage.create.mockResolvedValue(mockMessage);
+
+      await chatService.createMessage(
+        "ws-1",
+        "room-1",
+        "user-1",
+        {
+          content: "",
+          attachments: [
+            { key: "room-1_abc.png", file_name: "a.png", file_size: 100, mime_type: "image/png" },
+          ],
+        } as unknown as SendMessageDto,
+      );
+
+      expect(prisma.chatMessage.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            attachments: {
+              createMany: {
+                data: [
+                  {
+                    key: "room-1_abc.png",
+                    file_name: "a.png",
+                    file_size: 100,
+                    mime_type: "image/png",
+                    uploaded_by: "user-1",
+                  },
+                ],
+              },
+            },
+          }),
+        }),
+      );
     });
   });
 });

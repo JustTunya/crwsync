@@ -1,8 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseUUIDPipe, Req, Query } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseUUIDPipe, Req, Query, Res, HttpStatus, BadRequestException } from "@nestjs/common";
 import { Request as ExpressRequest } from "express";
 import { Throttle, SkipThrottle } from "@nestjs/throttler";
 import { WorkspaceRoleEnum, Workspace, WorkspaceMember } from "@prisma/client";
+import type { Response } from "express";
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto, UpdateMemberRoleDto } from "src/workspace/dto/workspace.dto";
+import { CreateTaskAttachmentDto } from "src/workspace/dto/task-attachment.dto";
+import { PresignFileDto } from "src/storage/dto/presign-file.dto";
 import { RequireWorkspaceRoles } from "src/workspace/decorators/ws-roles.decorator";
 import { HasPendingInviteGuard } from "src/workspace/guards/ws-invite.guard";
 import { WorkspaceRolesGuard } from "src/workspace/guards/ws-roles.guard";
@@ -217,5 +220,52 @@ export class WorkspaceController {
     @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
   ) {
     return this.workspaceService.archiveTask(workspaceId, taskId);
+  }
+
+  @Post(":workspaceId/tasks/:taskId/attachments/presign")
+  @Throttle({ default: { ttl: 3600, limit: 60 } })
+  @UseGuards(IsMemberGuard)
+  presignTaskAttachment(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @Body() dto: PresignFileDto,
+  ): Promise<PresignedAvatarUpload> {
+    return this.workspaceService.presignTaskAttachment(workspaceId, taskId, dto.contentType, dto.fileName);
+  }
+
+  @Post(":workspaceId/tasks/:taskId/attachments")
+  @Throttle({ default: { ttl: 3600, limit: 60 } })
+  @UseGuards(IsMemberGuard)
+  createTaskAttachment(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @ActiveUserParam() user: ActiveUser,
+    @Body() dto: CreateTaskAttachmentDto,
+  ) {
+    return this.workspaceService.createTaskAttachment(workspaceId, taskId, user.userId, dto);
+  }
+
+  @Delete(":workspaceId/tasks/:taskId/attachments/:attachmentId")
+  @UseGuards(IsMemberGuard)
+  deleteTaskAttachment(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @Param("attachmentId", new ParseUUIDPipe({ version: "4" })) attachmentId: string,
+  ) {
+    return this.workspaceService.deleteTaskAttachment(workspaceId, taskId, attachmentId);
+  }
+
+  @Get(":workspaceId/files/:key")
+  @SkipThrottle()
+  @UseGuards(IsMemberGuard)
+  async getFile(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("key") key: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    if (!/^[A-Za-z0-9_-]+\.[a-z0-9]{1,10}$/.test(key)) throw new BadRequestException("Invalid file key");
+
+    const url = await this.workspaceService.getTaskAttachmentDownloadUrl(workspaceId, key);
+    res.redirect(HttpStatus.FOUND, url);
   }
 }

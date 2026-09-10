@@ -1,19 +1,60 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, DragEvent } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon, Cancel01Icon, Happy01Icon, Task01Icon } from "@hugeicons/core-free-icons";
-import type { WorkspaceMember } from "@crwsync/types";
+import {
+  SentIcon,
+  Cancel01Icon,
+  Happy01Icon,
+  Task01Icon,
+  Attachment01Icon,
+  Image01Icon,
+  Pdf01Icon,
+  FileZipIcon,
+  Video01Icon,
+  File01Icon,
+} from "@hugeicons/core-free-icons";
+import type { WorkspaceMember, CreateChatAttachmentPayload } from "@crwsync/types";
 import { useWorkspaceMembers } from "@/hooks/use-workspaces";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { UserAvatar } from "@/components/user-avatar";
 import EmojiPicker from "@/components/chat/EmojiPicker";
 import { cn } from "@/lib/utils";
 import { searchWorkspaceTasks, type TaskSearchResult } from "@/services/board.service";
+import { presignChatAttachment } from "@/services/chat.service";
+import { uploadToPresignedPost } from "@/lib/upload-to-storage";
 
-type MentionOption = 
+type MentionOption =
   | { type: "user"; user: NonNullable<WorkspaceMember["user"]> }
   | { type: "everyone" };
+
+type PendingAttachment = {
+  id: string;
+  file: File;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  previewUrl?: string;
+  status: "uploading" | "done" | "error";
+  key?: string;
+  error?: string;
+};
+
+const MAX_ATTACHMENTS_PER_MESSAGE = 10;
+
+function iconForMimeType(mimeType: string) {
+  if (mimeType.startsWith("image/")) return Image01Icon;
+  if (mimeType.startsWith("video/")) return Video01Icon;
+  if (mimeType === "application/pdf") return Pdf01Icon;
+  if (mimeType.includes("zip") || mimeType.includes("compressed")) return FileZipIcon;
+  return File01Icon;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 const PRIORITY_COLORS: Record<string, string> = {
   URGENT: "text-red-500",
@@ -33,20 +74,29 @@ const PRIORITY_DOT: Record<string, string> = {
 
 interface ChatInputProps {
   workspaceId: string;
-  onSend: (content: string, mentionedUserIds: string[], isEveryoneMention: boolean) => void;
+  roomId: string;
+  onSend: (
+    content: string,
+    mentionedUserIds: string[],
+    isEveryoneMention: boolean,
+    attachments: CreateChatAttachmentPayload[],
+  ) => void;
   disabled?: boolean;
   onTypingStart?: () => void;
   onTypingStop?: () => void;
 }
 
-export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypingStop }: ChatInputProps) {
+export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart, onTypingStop }: ChatInputProps) {
   const { replyingToMessage, setReplyingTo } = useChatStore();
   const [content, setContent] = useState("");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);
 
@@ -245,8 +295,62 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [content]);
 
+  const uploadFiles = useCallback((files: FileList | File[]) => {
+    Array.from(files)
+      .slice(0, MAX_ATTACHMENTS_PER_MESSAGE)
+      .forEach((file) => {
+        const id = `${file.name}-${file.size}-${Date.now()}-${Math.random()}`;
+        const mimeType = file.type || "application/octet-stream";
+        const previewUrl = mimeType.startsWith("image/") ? URL.createObjectURL(file) : undefined;
+
+        setAttachments((prev) => [
+          ...prev,
+          { id, file, fileName: file.name, fileSize: file.size, mimeType, previewUrl, status: "uploading" },
+        ]);
+
+        (async () => {
+          const { success, data: presign, message } = await presignChatAttachment(
+            workspaceId,
+            roomId,
+            mimeType,
+            file.name,
+          );
+          if (!success || !presign) {
+            setAttachments((prev) => prev.map((a) => (a.id === id ? { ...a, status: "error", error: message } : a)));
+            return;
+          }
+
+          try {
+            await uploadToPresignedPost(presign, file);
+            setAttachments((prev) => prev.map((a) => (a.id === id ? { ...a, status: "done", key: presign.key } : a)));
+          } catch {
+            setAttachments((prev) =>
+              prev.map((a) => (a.id === id ? { ...a, status: "error", error: "Upload failed" } : a)),
+            );
+          }
+        })();
+      });
+  }, [workspaceId, roomId]);
+
+  const removeAttachment = (id: string) => {
+    setAttachments((prev) => {
+      const target = prev.find((a) => a.id === id);
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((a) => a.id !== id);
+    });
+  };
+
+  const handleComposerDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
+  };
+
+  const readyAttachments = attachments.filter((a): a is PendingAttachment & { status: "done"; key: string } => a.status === "done");
+  const isUploadingAttachment = attachments.some((a) => a.status === "uploading");
+
   const handleSubmit = () => {
-    if (!content.trim() || disabled) return;
+    if ((!content.trim() && readyAttachments.length === 0) || isUploadingAttachment || disabled) return;
 
     let processedContent = content;
 
@@ -272,8 +376,16 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
 
     const mentionedUserIds = [...processedContent.matchAll(/@\[.*?\]\(user:([a-zA-Z0-9-]+)\)/g)].map(m => m[1]);
     const isEveryoneMention = processedContent.includes("@everyone");
-    onSend(processedContent, mentionedUserIds, isEveryoneMention);
+    const attachmentPayloads: CreateChatAttachmentPayload[] = readyAttachments.map((a) => ({
+      key: a.key,
+      file_name: a.fileName,
+      file_size: a.fileSize,
+      mime_type: a.mimeType,
+    }));
+    onSend(processedContent, mentionedUserIds, isEveryoneMention, attachmentPayloads);
     setContent("");
+    attachments.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl));
+    setAttachments([]);
     setMentionState({ active: false, text: "", startIndex: -1 });
     setTaskMentionState({ active: false, text: "", startIndex: -1 });
     setTaskResults([]);
@@ -565,9 +677,69 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
           </div>
         )}
 
-        <div className="flex flex-col w-full max-w-2xl bg-muted border-[1.5px] border-base-300 rounded-2xl focus-within:border-primary/50 transition-colors">
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragOver(true);
+          }}
+          onDragLeave={() => setIsDragOver(false)}
+          onDrop={handleComposerDrop}
+          className={cn(
+            "relative flex flex-col w-full max-w-2xl bg-muted border-[1.5px] border-base-300 rounded-2xl overflow-hidden focus-within:border-primary/50 transition-colors",
+            isDragOver && "border-primary/60 bg-primary/5",
+          )}
+        >
+          {isDragOver && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center gap-2 rounded-2xl bg-base-100/90 backdrop-blur-sm border-[1.5px] border-dashed border-primary/60 text-sm font-medium text-primary pointer-events-none">
+              <HugeiconsIcon icon={Attachment01Icon} strokeWidth={2} className="size-4" />
+              Drop to attach
+            </div>
+          )}
+
+          {attachments.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-3 pt-3 pb-1 border-b-[1.5px] border-b-base-300">
+              {attachments.map((a) => (
+                <div
+                  key={a.id}
+                  className={cn(
+                    "group/attachment relative flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-xl bg-base-100 border-[1.5px] transition-colors",
+                    a.status === "error" ? "border-error/40" : "border-base-300",
+                  )}
+                >
+                  {a.previewUrl ? (
+                    <img src={a.previewUrl} alt={a.fileName} className="size-8 rounded-lg object-cover shrink-0" />
+                  ) : (
+                    <div className="flex items-center justify-center size-8 rounded-lg bg-base-200 shrink-0">
+                      <HugeiconsIcon icon={iconForMimeType(a.mimeType)} strokeWidth={2} className="size-4 text-muted-foreground" />
+                    </div>
+                  )}
+
+                  <div className="flex flex-col min-w-0 max-w-32">
+                    <span className="text-xs font-medium text-foreground truncate leading-tight">{a.fileName}</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">
+                      {a.status === "uploading" ? "Uploading..." : a.status === "error" ? (a.error || "Failed") : formatFileSize(a.fileSize)}
+                    </span>
+                  </div>
+
+                  {a.status === "uploading" && (
+                    <div className="size-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin shrink-0" />
+                  )}
+
+                  <button
+                    type="button"
+                    aria-label={`Remove ${a.fileName}`}
+                    onClick={() => removeAttachment(a.id)}
+                    className="shrink-0 size-4 flex items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover/attachment:opacity-100 hover:text-foreground hover:bg-base-200 transition-opacity cursor-pointer"
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2.5} className="size-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {replyingToMessage && (
-            <div className="flex items-center justify-between px-3 py-2 bg-base-100/50 border-b-[1.5px] border-b-base-300 rounded-t-[calc(1rem-1.5px)]">
+            <div className="flex items-center justify-between px-3 py-2 bg-base-100/50 border-b-[1.5px] border-b-base-300">
               <div className="flex flex-col gap-0.5 overflow-hidden">
                 <span className="text-xs text-primary font-medium tracking-wide">
                   Replying to {replyingToMessage.sender?.firstname || "Unknown User"} {replyingToMessage.sender?.lastname ? ` ${replyingToMessage.sender.lastname.charAt(0)}.` : ""}
@@ -622,6 +794,25 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
               />
             </div>
             <div className="flex items-center gap-2 relative">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.length) uploadFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                title="Attach files"
+                disabled={disabled}
+                onClick={() => fileInputRef.current?.click()}
+                className="p-1.75 text-muted-foreground hover:text-foreground hover:bg-base-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <HugeiconsIcon icon={Attachment01Icon} strokeWidth={2} className="size-4.5" />
+              </button>
               <button
                 ref={emojiButtonRef}
                 type="button"
@@ -648,10 +839,10 @@ export function ChatInput({ workspaceId, onSend, disabled, onTypingStart, onTypi
                 type="button"
                 data-testid="chat-send"
                 onClick={handleSubmit}
-                disabled={!content.trim() || disabled}
+                disabled={(!content.trim() && readyAttachments.length === 0) || isUploadingAttachment || disabled}
                 className={cn(
                   "shrink-0 p-1.75 rounded-lg flex items-center justify-center transition-all",
-                  content.trim() && !disabled
+                  (content.trim() || readyAttachments.length > 0) && !isUploadingAttachment && !disabled
                     ? "bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                     : "text-muted-foreground cursor-not-allowed",
                 )}

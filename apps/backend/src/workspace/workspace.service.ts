@@ -1,7 +1,8 @@
 import { Injectable, BadRequestException, NotFoundException } from "@nestjs/common";
 import { WorkspaceRoleEnum } from "@prisma/client";
-import { WorkspaceInviteStatusEnum } from "@crwsync/types";
+import { WorkspaceInviteStatusEnum, PresignedAvatarUpload } from "@crwsync/types";
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto } from "src/workspace/dto/workspace.dto";
+import { CreateTaskAttachmentDto } from "src/workspace/dto/task-attachment.dto";
 import { CacheService, CacheKeys, CacheTTL } from "src/redis";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
@@ -615,5 +616,110 @@ export class WorkspaceService {
       });
 
     return { success: true, data: updatedTask };
+  }
+
+  async getTaskAttachmentDownloadUrl(workspaceId: string, key: string): Promise<string> {
+    // Chat attachments are authorized by room-membership via the key's room-id prefix
+    // (the same check presignAttachment applies), not by the ChatAttachment row —
+    // that row is written asynchronously by the chat persist queue, so a freshly-sent
+    // message's attachment can be fetched before the row exists.
+    const keyPrefix = key.split("_")[0];
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(keyPrefix);
+
+    const [taskAttachment, chatRoom, fileRoom] = await Promise.all([
+      this.prisma.taskAttachment.findFirst({
+        where: { key, task: { column: { board: { workspace_id: workspaceId } } } },
+        select: { id: true },
+      }),
+      isUuid
+        ? this.prisma.chatRoom.findFirst({
+            where: { id: keyPrefix, workspace_id: workspaceId },
+            select: { id: true },
+          })
+        : null,
+      isUuid
+        ? this.prisma.fileRoom.findFirst({
+            where: { id: keyPrefix, workspace_id: workspaceId },
+            select: { id: true },
+          })
+        : null,
+    ]);
+    if (!taskAttachment && !chatRoom && !fileRoom) throw new NotFoundException("File not found");
+
+    return this.storageService.presignFileGet(key);
+  }
+
+  async presignTaskAttachment(
+    workspaceId: string,
+    taskId: string,
+    contentType: string,
+    fileName: string,
+  ): Promise<PresignedAvatarUpload> {
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, column: { board: { workspace_id: workspaceId } } },
+      select: { id: true },
+    });
+    if (!task) throw new NotFoundException("Task not found");
+
+    return this.storageService.presignFileUpload(contentType, fileName, taskId);
+  }
+
+  async createTaskAttachment(
+    workspaceId: string,
+    taskId: string,
+    userId: string,
+    dto: CreateTaskAttachmentDto,
+  ) {
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, column: { board: { workspace_id: workspaceId } } },
+      include: { column: { select: { board_id: true } } },
+    });
+    if (!task) throw new NotFoundException("Task not found");
+
+    if (!dto.key.startsWith(`${taskId}_`)) {
+      throw new BadRequestException("Invalid attachment key");
+    }
+
+    const attachment = await this.prisma.taskAttachment.create({
+      data: {
+        task_id: taskId,
+        key: dto.key,
+        file_name: dto.file_name,
+        file_size: dto.file_size,
+        mime_type: dto.mime_type,
+        uploaded_by: userId,
+      },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("task:attachment:added", {
+        boardId: task.column.board_id,
+        taskId,
+        attachment,
+      });
+
+    return { success: true, data: attachment };
+  }
+
+  async deleteTaskAttachment(workspaceId: string, taskId: string, attachmentId: string) {
+    const attachment = await this.prisma.taskAttachment.findFirst({
+      where: { id: attachmentId, task: { id: taskId, column: { board: { workspace_id: workspaceId } } } },
+      include: { task: { include: { column: { select: { board_id: true } } } } },
+    });
+    if (!attachment) throw new NotFoundException("Attachment not found");
+
+    await this.prisma.taskAttachment.delete({ where: { id: attachmentId } });
+    await this.storageService.deleteFileObject(attachment.key);
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("task:attachment:removed", {
+        boardId: attachment.task.column.board_id,
+        taskId,
+        attachmentId,
+      });
+
+    return { success: true };
   }
 }

@@ -1,5 +1,5 @@
 import { HugeiconsIconProps } from "@hugeicons/react";
-import { Home03Icon, Analytics01Icon, DashboardSquare01Icon, Chat01Icon } from "@hugeicons/core-free-icons";
+import { Home03Icon, Analytics01Icon, DashboardSquare01Icon, Chat01Icon, Folder01Icon } from "@hugeicons/core-free-icons";
 import { WorkspaceModule } from "@crwsync/types";
 
 export type UserStatus = "online" | "offline" | "busy" | "away";
@@ -7,6 +7,7 @@ export type UserStatus = "online" | "offline" | "busy" | "away";
 export enum ModuleTypeEnum {
   BOARD = "BOARD",
   CHAT = "CHAT",
+  FILES = "FILES",
 }
 
 export const STATUS_META: Record<UserStatus, { label: string; color: string }> = {
@@ -39,6 +40,8 @@ export function getModuleIcon(type: ModuleTypeEnum | string): HugeiconsIconProps
       return DashboardSquare01Icon;
     case ModuleTypeEnum.CHAT:
       return Chat01Icon;
+    case ModuleTypeEnum.FILES:
+      return Folder01Icon;
     default:
       return DashboardSquare01Icon;
   }
@@ -50,6 +53,8 @@ export function getModuleHref(slug: string, mod: WorkspaceModule): string {
       return `/${slug}/board/${mod.reference_id}`;
     case ModuleTypeEnum.CHAT:
       return `/${slug}/chat/${mod.reference_id}`;
+    case ModuleTypeEnum.FILES:
+      return `/${slug}/files/${mod.reference_id}`;
     default:
       return `/${slug}`;
   }
@@ -65,6 +70,8 @@ export function isModuleActive(
       return pathname === `/${slug}/board/${mod.reference_id}`;
     case ModuleTypeEnum.CHAT:
       return pathname === `/${slug}/chat/${mod.reference_id}`;
+    case ModuleTypeEnum.FILES:
+      return pathname === `/${slug}/files/${mod.reference_id}`;
     default:
       return false;
   }

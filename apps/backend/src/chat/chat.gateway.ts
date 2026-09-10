@@ -157,6 +157,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
+    if (!dto.content?.trim() && !dto.attachments?.length) {
+      client.emit("message_error", { client_id: dto.client_id, error: "Message cannot be empty" });
+      return;
+    }
+
+    if (dto.attachments?.some((a) => !a.key.startsWith(`${roomId}_`))) {
+      client.emit("message_error", { client_id: dto.client_id, error: "Invalid attachment" });
+      return;
+    }
+
     const rateLimitKey = `ratelimit:send_message:${userId}`;
     const withinLimit = await this.cache.acquireLock(rateLimitKey, 1);
     if (!withinLimit) {
@@ -185,6 +195,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         mentions: dto.mentionedUserIds?.map(id => ({ id, firstname: "", lastname: "", avatar_key: null })) || [],
         reply_to: dto.reply_to_id ? { id: dto.reply_to_id, content: "", is_deleted: false, sender: { firstname: "", lastname: "" } } : null,
         reactions: [],
+        attachments: (dto.attachments || []).map((a) => ({
+          id: randomUUID(),
+          message_id: messageId,
+          key: a.key,
+          file_name: a.file_name,
+          file_size: a.file_size,
+          mime_type: a.mime_type,
+          uploaded_by: userId,
+          created_at: now,
+        })),
         read_receipts: [{
           id: randomUUID(),
           room_id: roomId,

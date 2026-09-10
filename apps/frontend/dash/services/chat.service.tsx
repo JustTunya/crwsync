@@ -4,6 +4,7 @@ import {
   ChatMessagePage,
   CreateChatRoomPayload,
   BoardOperationState,
+  PresignedAvatarUpload,
 } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
@@ -68,6 +69,29 @@ export async function getChatMessages(
       return {
         success: false,
         message: error.response?.data?.message || "Failed to fetch messages",
+      };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function presignChatAttachment(
+  workspaceId: string,
+  roomId: string,
+  contentType: string,
+  fileName: string,
+): Promise<BoardOperationState<PresignedAvatarUpload>> {
+  try {
+    const response = await api.post(
+      `${CHAT_BASE(workspaceId)}/${roomId}/attachments/presign`,
+      { contentType, fileName },
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to presign attachment",
       };
     }
     return { success: false, message: "An unexpected error occurred" };
