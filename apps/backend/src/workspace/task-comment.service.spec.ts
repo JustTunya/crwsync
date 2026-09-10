@@ -17,6 +17,7 @@ describe("WorkspaceService task comments", () => {
       count: jest.Mock;
       findMany: jest.Mock;
     };
+    workspaceMember: { findMany: jest.Mock };
   };
   let statusGateway: { server: { to: jest.Mock } };
   let emit: jest.Mock;
@@ -33,6 +34,7 @@ describe("WorkspaceService task comments", () => {
         count: jest.fn(),
         findMany: jest.fn(),
       },
+      workspaceMember: { findMany: jest.fn() },
     };
 
     service = new WorkspaceService(
@@ -67,6 +69,7 @@ describe("WorkspaceService task comments", () => {
       const comment = { id: "comment-1", task_id: "task-1", author_id: "user-1", content: dto.content };
       prisma.taskComment.create.mockResolvedValue(comment);
       prisma.taskComment.count.mockResolvedValue(1);
+      prisma.workspaceMember.findMany.mockResolvedValue([{ user_id: "user-2" }]);
 
       const result = await service.createTaskComment("ws-1", "task-1", "user-1", dto);
 
@@ -89,10 +92,66 @@ describe("WorkspaceService task comments", () => {
       });
       prisma.taskComment.create.mockResolvedValue({ id: "comment-1" });
       prisma.taskComment.count.mockResolvedValue(1);
+      prisma.workspaceMember.findMany.mockResolvedValue([{ user_id: "user-1" }]);
 
       await service.createTaskComment("ws-1", "task-1", "user-1", { content: "note to self", mentionedUserIds: ["user-1"] });
 
       expect(statusGateway.server.to).not.toHaveBeenCalledWith("user_user-1");
+    });
+
+    it("does not notify or connect a mentioned user who is not a workspace member", async () => {
+      prisma.task.findFirst.mockResolvedValue({
+        id: "task-1",
+        shortId: "CRW-1",
+        title: "Ship it",
+        column: { board_id: "board-1", board: { name: "Main board", workspace: { slug: "acme", name: "Acme" } } },
+      });
+      prisma.taskComment.create.mockResolvedValue({ id: "comment-1" });
+      prisma.taskComment.count.mockResolvedValue(1);
+      prisma.workspaceMember.findMany.mockResolvedValue([]);
+
+      await service.createTaskComment("ws-1", "task-1", "user-1", { content: "hi @outsider", mentionedUserIds: ["user-99"] });
+
+      expect(prisma.taskComment.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.not.objectContaining({ mentions: expect.anything() }) }),
+      );
+      expect(statusGateway.server.to).not.toHaveBeenCalledWith("user_user-99");
+    });
+  });
+
+  describe("listTaskComments", () => {
+    it("throws NotFoundException when the task does not resolve in this workspace", async () => {
+      prisma.task.findFirst.mockResolvedValue(null);
+
+      await expect(service.listTaskComments("ws-1", "task-1")).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it("returns comments in chronological order with has_more false when under the page size", async () => {
+      prisma.task.findFirst.mockResolvedValue({ id: "task-1" });
+      const newest = { id: "c2", created_at: new Date("2026-01-02") };
+      const oldest = { id: "c1", created_at: new Date("2026-01-01") };
+      prisma.taskComment.findMany.mockResolvedValue([newest, oldest]);
+
+      const result = await service.listTaskComments("ws-1", "task-1");
+
+      expect(result).toEqual({
+        success: true,
+        data: { comments: [oldest, newest], next_cursor: null, has_more: false },
+      });
+    });
+
+    it("sets has_more and next_cursor when there are more comments than the page size", async () => {
+      prisma.task.findFirst.mockResolvedValue({ id: "task-1" });
+      const c3 = { id: "c3", created_at: new Date("2026-01-03") };
+      const c2 = { id: "c2", created_at: new Date("2026-01-02") };
+      const extra = { id: "c1", created_at: new Date("2026-01-01") };
+      prisma.taskComment.findMany.mockResolvedValue([c3, c2, extra]);
+
+      const result = await service.listTaskComments("ws-1", "task-1", undefined, 2);
+
+      expect(result.data.has_more).toBe(true);
+      expect(result.data.comments).toEqual([c2, c3]);
+      expect(result.data.next_cursor).toBe(c2.created_at.toISOString());
     });
   });
 
@@ -139,6 +198,14 @@ describe("WorkspaceService task comments", () => {
   });
 
   describe("deleteTaskComment", () => {
+    it("throws NotFoundException when the comment does not resolve", async () => {
+      prisma.taskComment.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.deleteTaskComment("ws-1", "task-1", "comment-1", "user-1"),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
     it("throws ForbiddenException when the requester is not the author", async () => {
       prisma.taskComment.findFirst.mockResolvedValue({
         id: "comment-1",

@@ -745,14 +745,21 @@ export class WorkspaceService {
     });
     if (!task) throw new NotFoundException("Task not found");
 
+    const validMentionIds = dto.mentionedUserIds?.length
+      ? (
+          await this.prisma.workspaceMember.findMany({
+            where: { workspace_id: workspaceId, user_id: { in: dto.mentionedUserIds } },
+            select: { user_id: true },
+          })
+        ).map((m) => m.user_id)
+      : [];
+
     const comment = await this.prisma.taskComment.create({
       data: {
         task_id: taskId,
         author_id: authorId,
         content: dto.content,
-        ...(dto.mentionedUserIds?.length
-          ? { mentions: { connect: dto.mentionedUserIds.map((id) => ({ id })) } }
-          : {}),
+        ...(validMentionIds.length ? { mentions: { connect: validMentionIds.map((id) => ({ id })) } } : {}),
       },
       include: {
         author: { select: COMMENT_AUTHOR_SELECT },
@@ -773,14 +780,14 @@ export class WorkspaceService {
         commentCount,
       });
 
-    if (dto.mentionedUserIds?.length) {
+    if (validMentionIds.length) {
       const mentionPayload = {
         comment,
         task: { id: task.id, shortId: task.shortId, title: task.title },
         board: { id: task.column.board_id, name: task.column.board.name },
         workspace: { slug: task.column.board.workspace.slug, name: task.column.board.workspace.name },
       };
-      for (const mentionedId of dto.mentionedUserIds) {
+      for (const mentionedId of validMentionIds) {
         if (mentionedId !== authorId) {
           this.statusGateway.server
             .to(`user_${mentionedId}`)

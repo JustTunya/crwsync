@@ -257,7 +257,7 @@ export class WorkspaceController {
   }
 
   @Post(":workspaceId/tasks/:taskId/comments")
-  @Throttle({ default: { ttl: 3600, limit: 120 } })
+  @Throttle({ default: { ttl: 3_600_000, limit: 120 } })
   @UseGuards(IsMemberGuard)
   createTaskComment(
     @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
