@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { m, Transition, LazyMotion, domAnimation } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon, Door01Icon, Message01Icon } from "@hugeicons/core-free-icons";
@@ -28,6 +29,8 @@ const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 export function RSidebar() {
   const { activeWorkspace: workspace } = useWorkspace();
   const { socket, isConnected } = useSocket();
+  const pathname = usePathname();
+  const self = useUser();
 
   const { open, toggleOpen, view, setView, setOpen } = useRSidebar();
   const { open: lOpen, setOpen: setLOpen } = useLSidebar();
@@ -81,8 +84,8 @@ export function RSidebar() {
       }
     };
 
-    const handleUnreadIncrement = ({ senderId, isDirect }: { senderId: string; isDirect?: boolean }) => {
-      if (!isDirect || !workspace?.id) return;
+    const handleUnreadIncrement = ({ roomId, senderId, isDirect }: { roomId: string; senderId: string; isDirect?: boolean }) => {
+      if (!isDirect || !workspace?.id || senderId === self?.id) return;
       queryClient.setQueryData<BoardOperationState<DmRoomSummary[]>>(
         dmKeys.list(workspace.id),
         (old) => {
@@ -90,7 +93,9 @@ export function RSidebar() {
           return {
             ...old,
             data: old.data.map((dm) =>
-              dm.otherParticipant.id === senderId ? { ...dm, unread: true } : dm,
+              dm.room.id === roomId && pathname !== `/${workspace.slug}/chat/${dm.room.id}`
+                ? { ...dm, unread: true }
+                : dm,
             ),
           };
         },
@@ -110,7 +115,7 @@ export function RSidebar() {
       socket.off("dm:room_created", handleDmRoomCreated);
       socket.off("chat:unread_increment", handleUnreadIncrement);
     };
-  }, [socket, workspace?.id, isConnected, queryClient]);
+  }, [socket, workspace?.id, workspace?.slug, isConnected, queryClient, pathname, self?.id]);
 
   const groupedMembers = useMemo(() => {
     if (!data?.data) return [];
