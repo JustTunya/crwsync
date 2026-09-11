@@ -2,6 +2,9 @@ export interface ChatRoom {
   id: string;
   workspace_id: string;
   name: string | null;
+  is_direct: boolean;
+  dm_user_a_id: string | null;
+  dm_user_b_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -110,4 +113,14 @@ export interface MentionNotification {
   workspace: { slug: string; name: string };
   /** When the notification was received on the client */
   receivedAt: string;
+}
+
+export interface DmRoomSummary {
+  room: ChatRoom;
+  otherParticipant: ChatMessageSender;
+  unread: boolean;
+}
+
+export interface CreateDmPayload {
+  otherUserId: string;
 }
