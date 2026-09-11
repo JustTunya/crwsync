@@ -83,11 +83,12 @@ interface ChatInputProps {
     attachments: CreateChatAttachmentPayload[],
   ) => void;
   disabled?: boolean;
+  isDirect?: boolean;
   onTypingStart?: () => void;
   onTypingStop?: () => void;
 }
 
-export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart, onTypingStop }: ChatInputProps) {
+export function ChatInput({ workspaceId, roomId, onSend, disabled, isDirect, onTypingStart, onTypingStop }: ChatInputProps) {
   const { replyingToMessage, setReplyingTo } = useChatStore();
   const [content, setContent] = useState("");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
@@ -152,8 +153,8 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
     useMentionAutocomplete(members);
 
   const renderMentions = useMemo(
-    () => [...activeMentions, { display: "@everyone", replaceWith: "@everyone" }],
-    [activeMentions],
+    () => (isDirect ? activeMentions : [...activeMentions, { display: "@everyone", replaceWith: "@everyone" }]),
+    [activeMentions, isDirect],
   );
 
   const renderColoredText = (text: string) => {
@@ -228,7 +229,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
     const search = mentionState.text.toLowerCase();
     const opts: MentionOption[] = filterMembers(mentionState.text).map((user) => ({ type: "user", user }));
 
-    if ("everyone".includes(search.trim())) {
+    if (!isDirect && "everyone".includes(search.trim())) {
       opts.push({ type: "everyone" });
     }
 
@@ -242,7 +243,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, onTypingStart
     }
 
     return opts;
-  }, [mentionState.active, mentionState.text, filterMembers]);
+  }, [mentionState.active, mentionState.text, filterMembers, isDirect]);
 
   const clampedSelectedIndex = Math.max(0, Math.min(selectedIndex, filteredOptions.length - 1));
   const clampedTaskSelectedIndex = Math.max(0, Math.min(taskSelectedIndex, taskResults.length - 1));

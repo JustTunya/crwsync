@@ -83,7 +83,8 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
         workspaceId={workspaceId}
         roomId={roomId}
         onSend={sendMessage}
-        disabled={!isConnected} 
+        disabled={!isConnected}
+        isDirect={room?.is_direct}
         onTypingStart={sendTypingStart}
         onTypingStop={sendTypingStop}
       />
