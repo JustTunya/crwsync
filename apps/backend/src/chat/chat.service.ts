@@ -427,27 +427,31 @@ export class ChatService {
     });
     const otherUsersById = new Map(otherUsers.map((user) => [user.id, user]));
 
-    const data = rooms.map((room) => {
-      const otherUserId = room.dm_user_a_id === userId ? room.dm_user_b_id! : room.dm_user_a_id!;
-      const lastMessageAt = room.messages[0]?.created_at ?? null;
-      const lastReadAt = room.read_receipts[0]?.last_read_at ?? null;
-      const unread = !!lastMessageAt && (!lastReadAt || lastReadAt < lastMessageAt);
+    const data = rooms
+      .map((room) => {
+        const otherUserId = room.dm_user_a_id === userId ? room.dm_user_b_id! : room.dm_user_a_id!;
+        const lastMessageAt = room.messages[0]?.created_at ?? null;
+        const lastReadAt = room.read_receipts[0]?.last_read_at ?? null;
+        const unread = !!lastMessageAt && (!lastReadAt || lastReadAt < lastMessageAt);
 
-      return {
-        room: {
-          id: room.id,
-          workspace_id: room.workspace_id,
-          name: room.name,
-          is_direct: room.is_direct,
-          dm_user_a_id: room.dm_user_a_id,
-          dm_user_b_id: room.dm_user_b_id,
-          created_at: room.created_at,
-          updated_at: room.updated_at,
-        },
-        otherParticipant: otherUsersById.get(otherUserId)!,
-        unread,
-      };
-    });
+        return {
+          room: {
+            id: room.id,
+            workspace_id: room.workspace_id,
+            name: room.name,
+            is_direct: room.is_direct,
+            dm_user_a_id: room.dm_user_a_id,
+            dm_user_b_id: room.dm_user_b_id,
+            created_at: room.created_at,
+            updated_at: room.updated_at,
+          },
+          otherParticipant: otherUsersById.get(otherUserId),
+          unread,
+        };
+      })
+      .filter((dm): dm is typeof dm & { otherParticipant: NonNullable<typeof dm.otherParticipant> } =>
+        dm.otherParticipant !== undefined,
+      );
 
     return { success: true, data };
   }
