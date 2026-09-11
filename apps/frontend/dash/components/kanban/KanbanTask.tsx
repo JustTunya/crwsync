@@ -95,7 +95,7 @@ export function KanbanTaskOverlay({ task }: { task: Task }) {
 
 export function Chip({ icon, label, className }: { icon: HugeiconsIconProps["icon"], label: string, className: string }) {
   return (
-    <span className={cn("flex items-center gap-0.5 text-xs font-medium capitalize border-[1.25px] px-1.5 py-0.5 rounded-full", className)}>
+    <span className={cn("flex items-center gap-0.5 text-xs font-medium capitalize border-[1.25px] px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0", className)}>
       <HugeiconsIcon icon={icon} strokeWidth={2} className="size-3" />
       {label.toLowerCase()}
     </span>
