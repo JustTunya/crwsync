@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, ForbiddenException } from "@nestjs/common";
-import { ModuleTypeEnum } from "@prisma/client";
+import { ModuleTypeEnum, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
@@ -17,6 +17,7 @@ import {
 } from "src/board/dto/board.dto";
 
 const POSITION_GAP = 1000;
+const ACTIVITY_ACTOR_SELECT = { id: true, firstname: true, lastname: true, avatar_key: true };
 
 @Injectable()
 export class BoardService {
@@ -90,6 +91,7 @@ export class BoardService {
               orderBy: { position: "asc" },
               include: {
                 attachments: { orderBy: { created_at: "asc" } },
+                checklistItems: { orderBy: { position: "asc" } },
                 _count: { select: { comments: { where: { is_deleted: false } } } },
               },
             },
@@ -333,10 +335,11 @@ export class BoardService {
     boardId: string,
     taskId: string,
     dto: UpdateTaskDto,
+    userId: string,
   ) {
     const existing = await this.prisma.task.findFirst({
       where: { id: taskId, column: { board: { id: boardId, workspace_id: workspaceId } } },
-      select: { id: true },
+      select: { priority: true, assignee_id: true, due_date: true },
     });
     if (!existing) throw new NotFoundException("Task not found");
 
@@ -356,16 +359,71 @@ export class BoardService {
     if (dto.completed_at !== undefined)
       data.completed_at = dto.completed_at ? new Date(dto.completed_at) : null;
 
-    const task = await this.prisma.task.update({
-      where: { id: taskId },
-      data,
-    });
+    const activityInputs = await this.buildUpdateActivities(existing, dto);
+
+    const [task, ...createdActivities] = await this.prisma.$transaction([
+      this.prisma.task.update({ where: { id: taskId }, data }),
+      ...activityInputs.map((activity) =>
+        this.prisma.taskActivity.create({
+          data: { task_id: taskId, actor_id: userId, type: activity.type, metadata: activity.metadata as Prisma.InputJsonValue },
+          include: { actor: { select: ACTIVITY_ACTOR_SELECT } },
+        }),
+      ),
+    ]);
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("board:task:updated", { boardId, taskId, data: dto });
 
+    if (createdActivities.length) {
+      this.statusGateway.server
+        .to(`workspace_${workspaceId}`)
+        .emit("task:activity:created", { boardId, taskId, activities: createdActivities });
+    }
+
     return { success: true, data: task };
+  }
+
+  private async buildUpdateActivities(
+    existing: { priority: string; assignee_id: string | null; due_date: Date | null },
+    dto: UpdateTaskDto,
+  ): Promise<{ type: "PRIORITY_CHANGED" | "ASSIGNEE_CHANGED" | "DUE_DATE_CHANGED"; metadata: Record<string, unknown> }[]> {
+    const activities: { type: "PRIORITY_CHANGED" | "ASSIGNEE_CHANGED" | "DUE_DATE_CHANGED"; metadata: Record<string, unknown> }[] = [];
+
+    if (dto.priority !== undefined && dto.priority !== existing.priority) {
+      activities.push({ type: "PRIORITY_CHANGED", metadata: { from: existing.priority, to: dto.priority } });
+    }
+
+    if (dto.assignee_id !== undefined && dto.assignee_id !== existing.assignee_id) {
+      const userIds = [existing.assignee_id, dto.assignee_id].filter((id): id is string => !!id);
+      const users = userIds.length
+        ? await this.prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, firstname: true, lastname: true } })
+        : [];
+      const nameOf = (id: string | null) => {
+        if (!id) return null;
+        const u = users.find((u) => u.id === id);
+        return u ? `${u.firstname} ${u.lastname}` : null;
+      };
+      activities.push({
+        type: "ASSIGNEE_CHANGED",
+        metadata: {
+          fromUserId: existing.assignee_id,
+          fromUserName: nameOf(existing.assignee_id),
+          toUserId: dto.assignee_id,
+          toUserName: nameOf(dto.assignee_id),
+        },
+      });
+    }
+
+    const newDueDate = dto.due_date !== undefined ? (dto.due_date ? new Date(dto.due_date) : null) : undefined;
+    if (newDueDate !== undefined && newDueDate?.getTime() !== existing.due_date?.getTime()) {
+      activities.push({
+        type: "DUE_DATE_CHANGED",
+        metadata: { from: existing.due_date?.toISOString() ?? null, to: newDueDate?.toISOString() ?? null },
+      });
+    }
+
+    return activities;
   }
 
   async moveTask(
@@ -386,7 +444,7 @@ export class BoardService {
 
     const columns = await this.prisma.boardColumn.findMany({
       where: { id: { in: [fromColumnId, dto.column_id] }, board_id: boardId },
-      select: { id: true, type: true },
+      select: { id: true, name: true, type: true },
     });
 
     const targetColumn = columns.find((c) => c.id === dto.column_id);
@@ -427,7 +485,9 @@ export class BoardService {
       const filtered = tasksInTarget.filter((t) => t.id !== taskId);
       filtered.splice(dto.position, 0, { id: taskId });
 
-      await this.prisma.$transaction([
+      const columnChanged = fromColumnId !== dto.column_id;
+
+      const [, activity] = await this.prisma.$transaction([
         this.prisma.task.update({
           where: { id: taskId },
           data: {
@@ -436,6 +496,24 @@ export class BoardService {
             completed_at,
           },
         }),
+        ...(columnChanged
+          ? [
+              this.prisma.taskActivity.create({
+                data: {
+                  task_id: taskId,
+                  actor_id: userId,
+                  type: "COLUMN_MOVED",
+                  metadata: {
+                    fromColumnId,
+                    fromColumnName: sourceColumn?.name ?? null,
+                    toColumnId: dto.column_id,
+                    toColumnName: targetColumn.name,
+                  },
+                },
+                include: { actor: { select: ACTIVITY_ACTOR_SELECT } },
+              }),
+            ]
+          : []),
         ...filtered.map((t, index) =>
           this.prisma.task.update({
             where: { id: t.id },
@@ -454,6 +532,12 @@ export class BoardService {
           position: dto.position,
           userId,
         });
+
+      if (columnChanged && activity) {
+        this.statusGateway.server
+          .to(`workspace_${workspaceId}`)
+          .emit("task:activity:created", { boardId, taskId, activities: [activity] });
+      }
 
       return { success: true };
     } finally {

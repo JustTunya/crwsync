@@ -156,9 +156,10 @@ export class BoardController {
     workspaceId: string,
     @Param("boardId", new ParseUUIDPipe({ version: "4" })) boardId: string,
     @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @ActiveUserParam() user: ActiveUser,
     @Body() dto: UpdateTaskDto,
   ) {
-    return this.boardService.updateTask(workspaceId, boardId, taskId, dto);
+    return this.boardService.updateTask(workspaceId, boardId, taskId, dto, user.userId);
   }
 
   @Put(":boardId/tasks/:taskId/move")

@@ -57,6 +57,7 @@ export interface Task {
   created_at: string;
   updated_at: string;
   attachments?: TaskAttachment[];
+  checklistItems?: TaskChecklistItem[];
   _count?: { comments: number };
 }
 
@@ -76,6 +77,26 @@ export interface CreateTaskAttachmentPayload {
   file_name: string;
   file_size: number;
   mime_type: string;
+}
+
+export interface TaskChecklistItem {
+  id: string;
+  task_id: string;
+  content: string;
+  is_completed: boolean;
+  position: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTaskChecklistItemPayload {
+  content: string;
+}
+
+export interface UpdateTaskChecklistItemPayload {
+  content?: string;
+  is_completed?: boolean;
 }
 
 export interface TaskCommentAuthor {
@@ -109,6 +130,29 @@ export interface UpdateTaskCommentPayload {
 
 export interface TaskCommentPage {
   comments: TaskComment[];
+  next_cursor: string | null;
+  has_more: boolean;
+}
+
+export enum TaskActivityTypeEnum {
+  COLUMN_MOVED = "COLUMN_MOVED",
+  PRIORITY_CHANGED = "PRIORITY_CHANGED",
+  ASSIGNEE_CHANGED = "ASSIGNEE_CHANGED",
+  DUE_DATE_CHANGED = "DUE_DATE_CHANGED",
+}
+
+export interface TaskActivity {
+  id: string;
+  task_id: string;
+  actor_id: string;
+  type: TaskActivityTypeEnum;
+  metadata: Record<string, string | null>;
+  created_at: string;
+  actor?: TaskCommentAuthor;
+}
+
+export interface TaskActivityPage {
+  activities: TaskActivity[];
   next_cursor: string | null;
   has_more: boolean;
 }

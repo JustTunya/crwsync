@@ -14,8 +14,10 @@ import { cn } from "@/lib/utils";
 
 import { TaskPriorityEnum } from "../../lib/kanban.utils";
 import { RichTextEditor } from "./RichTextEditor";
+import { TaskChecklist } from "./TaskChecklist";
 import { TaskAttachments } from "./TaskAttachments";
 import { TaskComments } from "./TaskComments";
+import { TaskActivity } from "./TaskActivity";
 
 export interface TaskDetailModalProps {
   task: Task;
@@ -377,9 +379,13 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
           </div>
         </div>
 
+        <TaskChecklist task={liveTask} workspaceId={workspaceId} boardId={boardId} />
+
         <TaskAttachments task={liveTask} workspaceId={workspaceId} boardId={boardId} />
 
         <TaskComments task={liveTask} workspaceId={workspaceId} boardId={boardId} />
+
+        <TaskActivity task={liveTask} workspaceId={workspaceId} />
 
         <div className="flex justify-end gap-2 pt-5 mt-5 border-t border-base-200">
           <button

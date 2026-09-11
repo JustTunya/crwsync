@@ -259,13 +259,13 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
   - Add `TaskComment` model in Prisma schema with foreign keys to `Task` and `User`.
   - Build comment feed inside `TaskDetailModal.tsx` with `@mentions` and timestamps.
   - Broadcast `task:comment:created` and `task:comment:deleted` events via `StatusGateway`.
-- [ ] **Task Subtasks / Checklists**:
+- [x] **Task Subtasks / Checklists**:
   - Add `TaskChecklistItem` model in Prisma.
   - Implement interactive checklists in `TaskDetailModal.tsx` and progress indicators on Kanban cards.
-- [ ] **Task Activity Audit Trail**:
+- [x] **Task Activity Audit Trail**:
   - Track column moves, priority changes, assignee updates, and deadline edits in a `TaskActivity` table.
   - Display chronological activity tab in `TaskDetailModal.tsx`.
-- [ ] **Board Filters & View Modes**:
+- [x] **Board Filters & View Modes**:
   - Implement filter bar in `BoardPage` (Assignee, Priority, Label).
   - Add toggle between Kanban board view and List/Table view.
 - [ ] **Direct Messaging (DMs)**:

@@ -9,6 +9,8 @@ import {
   UpdateTaskPayload,
   MoveTaskPayload,
   ReorderColumnsPayload,
+  CreateTaskChecklistItemPayload,
+  UpdateTaskChecklistItemPayload,
 } from "@crwsync/types";
 import * as boardService from "@/services/board.service";
 import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
@@ -416,6 +418,133 @@ export function useDeleteTaskAttachment(workspaceId: string, boardId: string) {
                   ? col.tasks.map((t) =>
                       t.id === taskId
                         ? { ...t, attachments: (t.attachments ?? []).filter((a) => a.id !== attachmentId) }
+                        : t,
+                    )
+                  : [],
+              })),
+            },
+          };
+        },
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(boardKeys.detail(boardId), context.previous);
+      }
+    },
+  });
+}
+
+export function useCreateChecklistItem(workspaceId: string, boardId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ taskId, data }: { taskId: string; data: CreateTaskChecklistItemPayload }) => {
+      const { success, data: item, message } = await boardService.createChecklistItem(workspaceId, taskId, data);
+      if (!success || !item) throw new Error(message);
+      return { taskId, item };
+    },
+    onSuccess: ({ taskId, item }) => {
+      queryClient.setQueryData(
+        boardKeys.detail(boardId),
+        (old: { data: Board } | undefined) => {
+          if (!old?.data?.columns) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              columns: old.data.columns.map((col) => ({
+                ...col,
+                tasks: col.tasks
+                  ? col.tasks.map((t) => {
+                      if (t.id !== taskId) return t;
+                      if ((t.checklistItems ?? []).some((i) => i.id === item.id)) return t;
+                      return { ...t, checklistItems: [...(t.checklistItems ?? []), item] };
+                    })
+                  : [],
+              })),
+            },
+          };
+        },
+      );
+    },
+  });
+}
+
+export function useUpdateChecklistItem(workspaceId: string, boardId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ taskId, itemId, data }: { taskId: string; itemId: string; data: UpdateTaskChecklistItemPayload }) =>
+      boardService.updateChecklistItem(workspaceId, taskId, itemId, data),
+    onMutate: async ({ taskId, itemId, data }) => {
+      await queryClient.cancelQueries({ queryKey: boardKeys.detail(boardId) });
+      const previous = queryClient.getQueryData(boardKeys.detail(boardId));
+
+      queryClient.setQueryData(
+        boardKeys.detail(boardId),
+        (old: { data: Board } | undefined) => {
+          if (!old?.data?.columns) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              columns: old.data.columns.map((col) => ({
+                ...col,
+                tasks: col.tasks
+                  ? col.tasks.map((t) =>
+                      t.id === taskId
+                        ? {
+                            ...t,
+                            checklistItems: (t.checklistItems ?? []).map((i) =>
+                              i.id === itemId ? { ...i, ...data } : i,
+                            ),
+                          }
+                        : t,
+                    )
+                  : [],
+              })),
+            },
+          };
+        },
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(boardKeys.detail(boardId), context.previous);
+      }
+    },
+  });
+}
+
+export function useDeleteChecklistItem(workspaceId: string, boardId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ taskId, itemId }: { taskId: string; itemId: string }) =>
+      boardService.deleteChecklistItem(workspaceId, taskId, itemId),
+    onMutate: async ({ taskId, itemId }) => {
+      await queryClient.cancelQueries({ queryKey: boardKeys.detail(boardId) });
+      const previous = queryClient.getQueryData(boardKeys.detail(boardId));
+
+      queryClient.setQueryData(
+        boardKeys.detail(boardId),
+        (old: { data: Board } | undefined) => {
+          if (!old?.data?.columns) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              columns: old.data.columns.map((col) => ({
+                ...col,
+                tasks: col.tasks
+                  ? col.tasks.map((t) =>
+                      t.id === taskId
+                        ? { ...t, checklistItems: (t.checklistItems ?? []).filter((i) => i.id !== itemId) }
                         : t,
                     )
                   : [],
