@@ -284,7 +284,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 * [x] **Board Filters & View Modes**:
   * Implement filter bar in `BoardPage` (Assignee, Priority, Label).
   * Add toggle between Kanban board view and List/Table view.
-* [ ] **Direct Messaging (DMs)**:
+* [x] **Direct Messaging (DMs)**:
   * Add support for 1-on-1 private rooms between workspace members.
 * [ ] **Persistent Notifications**:
   * Add `Notification` model to Prisma schema.
