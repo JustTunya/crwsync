@@ -243,7 +243,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
           this.statusGateway.server
             .to(`workspace_${workspaceId}`)
-            .emit("chat:unread_increment", { roomId, senderId: userId });
+            .emit("chat:unread_increment", { roomId, senderId: userId, isDirect: !!client.data.currentRoomIsDirect });
 
           if (dto.isEveryoneMention || dto.mentionedUserIds?.length) {
             // Fetch room name + workspace slug once for the notification payload

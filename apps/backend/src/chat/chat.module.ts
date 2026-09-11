@@ -7,6 +7,7 @@ import { SessionModule } from "src/session/session.module";
 import { ChatService } from "src/chat/chat.service";
 import { ChatGateway } from "src/chat/chat.gateway";
 import { ChatController } from "src/chat/chat.controller";
+import { DmController } from "src/chat/dm.controller";
 import { BullModule } from "@nestjs/bullmq";
 import { ChatProcessor } from "src/chat/chat.processor";
 
@@ -30,7 +31,7 @@ import { ChatProcessor } from "src/chat/chat.processor";
       },
     }),
   ],
-  controllers: [ChatController],
+  controllers: [ChatController, DmController],
   providers: [ChatService, ChatGateway, ChatProcessor, Logger],
   exports: [ChatService, BullModule],
 })

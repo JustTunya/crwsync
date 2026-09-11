@@ -20,6 +20,14 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
     chatRoom: {
       findUnique: jest.Mock;
       findFirst: jest.Mock;
+      create: jest.Mock;
+      findMany: jest.Mock;
+    };
+    workspaceMember: {
+      findUnique: jest.Mock;
+    };
+    user: {
+      findMany: jest.Mock;
     };
   };
   let statusGateway: {
@@ -40,6 +48,14 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
       chatRoom: {
         findUnique: jest.fn(),
         findFirst: jest.fn(),
+        create: jest.fn(),
+        findMany: jest.fn(),
+      },
+      workspaceMember: {
+        findUnique: jest.fn(),
+      },
+      user: {
+        findMany: jest.fn(),
       },
     };
 
@@ -208,6 +224,57 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
       await expect(
         chatService.presignAttachment("ws-1", "room-dm", "user-c", "image/png", "a.png"),
       ).rejects.toThrow("Chat room not found");
+    });
+  });
+
+  describe("getOrCreateDm", () => {
+    it("returns the existing room if one already exists for the sorted pair", async () => {
+      prisma.workspaceMember.findUnique
+        .mockResolvedValueOnce({ id: "mem-1" })
+        .mockResolvedValueOnce({ id: "mem-2" });
+      const existingRoom = { id: "room-existing", is_direct: true };
+      prisma.chatRoom.findFirst.mockResolvedValue(existingRoom);
+
+      const result = await chatService.getOrCreateDm("ws-1", "user-b", "user-a");
+
+      expect(prisma.chatRoom.findFirst).toHaveBeenCalledWith({
+        where: { workspace_id: "ws-1", is_direct: true, dm_user_a_id: "user-a", dm_user_b_id: "user-b" },
+      });
+      expect(prisma.chatRoom.create).not.toHaveBeenCalled();
+      expect(result).toEqual({ success: true, data: existingRoom });
+    });
+
+    it("creates a new room and emits dm:room_created when none exists", async () => {
+      prisma.workspaceMember.findUnique
+        .mockResolvedValueOnce({ id: "mem-1" })
+        .mockResolvedValueOnce({ id: "mem-2" });
+      prisma.chatRoom.findFirst.mockResolvedValue(null);
+      const newRoom = { id: "room-new", is_direct: true, dm_user_a_id: "user-a", dm_user_b_id: "user-b" };
+      prisma.chatRoom.create.mockResolvedValue(newRoom);
+
+      const result = await chatService.getOrCreateDm("ws-1", "user-a", "user-b");
+
+      expect(prisma.chatRoom.create).toHaveBeenCalledWith({
+        data: { workspace_id: "ws-1", is_direct: true, dm_user_a_id: "user-a", dm_user_b_id: "user-b" },
+      });
+      expect(statusGateway.server.to).toHaveBeenCalledWith("user_user-b");
+      expect(result).toEqual({ success: true, data: newRoom });
+    });
+
+    it("throws NotFoundException if the other user is not a workspace member", async () => {
+      prisma.workspaceMember.findUnique
+        .mockResolvedValueOnce({ id: "mem-1" })
+        .mockResolvedValueOnce(null);
+
+      await expect(chatService.getOrCreateDm("ws-1", "user-a", "user-b")).rejects.toThrow(
+        "User is not a member of this workspace",
+      );
+    });
+
+    it("throws BadRequestException when starting a DM with yourself", async () => {
+      await expect(chatService.getOrCreateDm("ws-1", "user-a", "user-a")).rejects.toThrow(
+        "Cannot start a DM with yourself",
+      );
     });
   });
 });

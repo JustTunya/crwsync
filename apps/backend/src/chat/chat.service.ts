@@ -366,6 +366,91 @@ export class ChatService {
     return { success: true };
   }
 
+  async getOrCreateDm(workspaceId: string, userId: string, otherUserId: string) {
+    if (userId === otherUserId) {
+      throw new BadRequestException("Cannot start a DM with yourself");
+    }
+
+    const [member, otherMember] = await Promise.all([
+      this.prisma.workspaceMember.findUnique({
+        where: { workspace_id_user_id: { workspace_id: workspaceId, user_id: userId } },
+      }),
+      this.prisma.workspaceMember.findUnique({
+        where: { workspace_id_user_id: { workspace_id: workspaceId, user_id: otherUserId } },
+      }),
+    ]);
+
+    if (!member || !otherMember) {
+      throw new NotFoundException("User is not a member of this workspace");
+    }
+
+    const [dmUserAId, dmUserBId] = [userId, otherUserId].sort();
+
+    const existing = await this.prisma.chatRoom.findFirst({
+      where: { workspace_id: workspaceId, is_direct: true, dm_user_a_id: dmUserAId, dm_user_b_id: dmUserBId },
+    });
+
+    if (existing) {
+      return { success: true, data: existing };
+    }
+
+    const room = await this.prisma.chatRoom.create({
+      data: { workspace_id: workspaceId, is_direct: true, dm_user_a_id: dmUserAId, dm_user_b_id: dmUserBId },
+    });
+
+    this.statusGateway.server.to(`user_${otherUserId}`).emit("dm:room_created", room);
+
+    return { success: true, data: room };
+  }
+
+  async listDms(workspaceId: string, userId: string) {
+    const rooms = await this.prisma.chatRoom.findMany({
+      where: {
+        workspace_id: workspaceId,
+        is_direct: true,
+        OR: [{ dm_user_a_id: userId }, { dm_user_b_id: userId }],
+      },
+      include: {
+        messages: { orderBy: { created_at: "desc" }, take: 1, select: { created_at: true } },
+        read_receipts: { where: { user_id: userId }, take: 1, select: { last_read_at: true } },
+      },
+    });
+
+    const otherUserIds = rooms.map((room) =>
+      room.dm_user_a_id === userId ? room.dm_user_b_id! : room.dm_user_a_id!,
+    );
+
+    const otherUsers = await this.prisma.user.findMany({
+      where: { id: { in: otherUserIds } },
+      select: SENDER_SELECT,
+    });
+    const otherUsersById = new Map(otherUsers.map((user) => [user.id, user]));
+
+    const data = rooms.map((room) => {
+      const otherUserId = room.dm_user_a_id === userId ? room.dm_user_b_id! : room.dm_user_a_id!;
+      const lastMessageAt = room.messages[0]?.created_at ?? null;
+      const lastReadAt = room.read_receipts[0]?.last_read_at ?? null;
+      const unread = !!lastMessageAt && (!lastReadAt || lastReadAt < lastMessageAt);
+
+      return {
+        room: {
+          id: room.id,
+          workspace_id: room.workspace_id,
+          name: room.name,
+          is_direct: room.is_direct,
+          dm_user_a_id: room.dm_user_a_id,
+          dm_user_b_id: room.dm_user_b_id,
+          created_at: room.created_at,
+          updated_at: room.updated_at,
+        },
+        otherParticipant: otherUsersById.get(otherUserId)!,
+        unread,
+      };
+    });
+
+    return { success: true, data };
+  }
+
   async toggleReaction(
     workspaceId: string,
     roomId: string,
