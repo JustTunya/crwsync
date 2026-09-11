@@ -387,6 +387,9 @@ model ChatRoom {
   id           String   @id @default(uuid()) @db.Uuid
   workspace_id String   @db.Uuid
   name         String?  @db.Text
+  is_direct    Boolean  @default(false)
+  dm_user_a_id String?  @db.Uuid
+  dm_user_b_id String?  @db.Uuid
   created_at   DateTime @default(now()) @db.Timestamptz
   updated_at   DateTime @updatedAt @db.Timestamptz
 
@@ -394,6 +397,7 @@ model ChatRoom {
   messages      ChatMessage[]
   read_receipts ChatReadReceipt[]
 
+  @@unique([workspace_id, dm_user_a_id, dm_user_b_id], map: "idx_chatroom_dm_unique")
   @@index([workspace_id], map: "idx_chatroom_workspace_id")
   @@map("chat_rooms")
 }
