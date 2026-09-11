@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-import { WorkspaceInvite, MentionNotification, TaskCommentMentionNotification } from "@crwsync/types";
+import { WorkspaceInvite, ChatMentionNotification, TaskCommentMentionNotification, TaskAssignedNotification } from "@crwsync/types";
 import { acceptInvite, declineInvite } from "@/services/workspace.service";
 import { UserAvatar } from "@/components/user-avatar";
 import { GlassBox } from "@/components/ui/glassbox";
 import { useTimeAgo } from "@/hooks/use-time-ago";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AtIcon, Hold05Icon } from "@hugeicons/core-free-icons";
+import { AtIcon, Hold05Icon, UserAdd01Icon } from "@hugeicons/core-free-icons";
 
 // ─── Workspace Invite ────────────────────────────────────────────────────────
 
@@ -89,7 +89,7 @@ export function InviteNotification({ invite }: InviteNotificationProps) {
 // ─── Mention Notification ────────────────────────────────────────────────────
 
 interface MentionNotificationCardProps {
-  notification: MentionNotification;
+  notification: ChatMentionNotification;
   onDismiss: (id: string) => void;
 }
 
@@ -102,7 +102,7 @@ function stripTokens(text: string): string {
 export function MentionNotificationCard({ notification, onDismiss }: MentionNotificationCardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const timeAgo = useTimeAgo(notification.receivedAt);
+  const timeAgo = useTimeAgo(notification.createdAt);
   const { message, room, workspace } = notification;
 
   const senderName = message.sender
@@ -176,7 +176,7 @@ interface TaskCommentMentionCardProps {
 
 export function TaskCommentMentionCard({ notification, onDismiss }: TaskCommentMentionCardProps) {
   const router = useRouter();
-  const timeAgo = useTimeAgo(notification.receivedAt);
+  const timeAgo = useTimeAgo(notification.createdAt);
   const { comment, task, board, workspace } = notification;
 
   const authorName = comment.author ? `${comment.author.firstname} ${comment.author.lastname}` : "Someone";
@@ -205,6 +205,52 @@ export function TaskCommentMentionCard({ notification, onDismiss }: TaskCommentM
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground">{authorName}</p>
             <p className="text-sm text-muted-foreground line-clamp-2">{previewText}</p>
+          </div>
+        </div>
+      </GlassBox>
+    </div>
+  );
+}
+
+// ─── Task Assigned Notification ──────────────────────────────────────────────
+
+interface TaskAssignedNotificationCardProps {
+  notification: TaskAssignedNotification;
+  onDismiss: (id: string) => void;
+}
+
+export function TaskAssignedNotificationCard({ notification, onDismiss }: TaskAssignedNotificationCardProps) {
+  const router = useRouter();
+  const timeAgo = useTimeAgo(notification.createdAt);
+  const { task, board, workspace, assignedBy } = notification;
+
+  const assignerName = assignedBy ? `${assignedBy.firstname} ${assignedBy.lastname}` : "Someone";
+  const targetPath = `/${workspace.slug}/board/${board.id}`;
+
+  const handleNavigate = () => {
+    router.push(targetPath);
+    onDismiss(notification.notificationId);
+  };
+
+  return (
+    <div onClick={handleNavigate} className="cursor-pointer">
+      <GlassBox className="w-full! gap-3 p-4">
+        <div className="flex items-center gap-2 w-full">
+          <div className="flex items-center justify-center size-5 rounded-full bg-primary/10 shrink-0">
+            <HugeiconsIcon icon={UserAdd01Icon} className="size-3.5 text-primary" strokeWidth={2} />
+          </div>
+          <span className="text-xs text-primary flex-1 truncate">
+            Assigned in <span className="font-semibold">{board.name}</span>
+          </span>
+          <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">{timeAgo}</span>
+        </div>
+        <div className="flex items-start gap-2.5 w-full">
+          {assignedBy && <UserAvatar user={assignedBy} size={7} />}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground">{assignerName}</p>
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              Assigned you to {task.shortId}: {task.title}
+            </p>
           </div>
         </div>
       </GlassBox>

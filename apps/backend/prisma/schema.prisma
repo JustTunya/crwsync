@@ -97,6 +97,7 @@ model User {
   chat_read_receipts    ChatReadReceipt[]
   pinned_modules        UserPinnedModule[]
   workspace_files       WorkspaceFile[]
+  notifications         Notification[]
 
   @@map("users")
 }
@@ -165,6 +166,7 @@ model Workspace {
   chat_rooms    ChatRoom[]
   chat_messages ChatMessage[]
   file_rooms    FileRoom[]
+  notifications Notification[]
 
   @@unique([slug], map: "idx_workspace_slug_unique")
   @@index([slug], map: "idx_workspace_slug_index")
@@ -524,4 +526,26 @@ model UserPinnedModule {
   @@unique([user_id, module_id], map: "idx_user_pinned_module_unique")
   @@index([user_id], map: "idx_user_pinned_module_user_id")
   @@map("user_pinned_modules")
+}
+
+enum NotificationTypeEnum {
+  CHAT_MENTION
+  TASK_COMMENT_MENTION
+  TASK_ASSIGNED
+}
+
+model Notification {
+  id           String               @id @default(uuid()) @db.Uuid
+  user_id      String               @db.Uuid
+  workspace_id String               @db.Uuid
+  type         NotificationTypeEnum
+  payload      Json
+  is_read      Boolean              @default(false)
+  created_at   DateTime             @default(now()) @db.Timestamptz
+
+  user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, is_read, created_at], map: "idx_notification_user_unread")
+  @@map("notifications")
 }

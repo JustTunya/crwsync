@@ -9,6 +9,7 @@ import { CacheService, CacheKeys, CacheTTL } from "src/redis";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
 import { StorageService } from "src/storage/storage.service";
+import { NotificationService } from "src/notification/notification.service";
 
 const COMMENT_AUTHOR_SELECT = { id: true, firstname: true, lastname: true, avatar_key: true };
 
@@ -19,6 +20,7 @@ export class WorkspaceService {
     private cache: CacheService,
     private statusGateway: StatusGateway,
     private storageService: StorageService,
+    private notificationService: NotificationService,
   ) {}
 
   private async invMembershipCaches(workspaceId: string, userId: string) {
@@ -798,9 +800,7 @@ export class WorkspaceService {
       };
       for (const mentionedId of validMentionIds) {
         if (mentionedId !== authorId) {
-          this.statusGateway.server
-            .to(`user_${mentionedId}`)
-            .emit("task_comment_mention_notification", mentionPayload);
+          await this.notificationService.create(mentionedId, workspaceId, "TASK_COMMENT_MENTION", mentionPayload);
         }
       }
     }

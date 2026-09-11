@@ -119,8 +119,8 @@ The following bugs, structural flaws, and incomplete implementations were detect
    * `components/user-avatar.tsx` and `components/workspace-avatar.tsx` attempt to resolve avatar URLs via `/api/avatars/${avatar_key}`. No such route, controller, or storage handler exists in either the Next.js app or NestJS backend, causing 404s when an avatar key is set.
 3. **Double `WorkspaceProvider` Nesting**:
    * `WorkspaceProvider` is mounted at the root in `apps/frontend/dash/app/layout.tsx` and mounted **again** in `apps/frontend/dash/app/[slug]/layout.tsx`. This causes duplicate React Query subscriptions, duplicate network requests for workspace metadata, and redundant renders.
-4. **Transient Mention Notifications**:
-   * In `hooks/use-mentions.ts`, notifications are maintained strictly in local React component state (`useState`). There is no Prisma `Notification` table or backend endpoint to fetch them. Navigating away or refreshing the browser permanently clears all mention alerts.
+4. ~~**Transient Mention Notifications**~~ (Resolved in Milestone 3 — see `Notification` model, `hooks/use-notifications.ts`):
+   * ~~In `hooks/use-mentions.ts`, notifications are maintained strictly in local React component state (`useState`). There is no Prisma `Notification` table or backend endpoint to fetch them. Navigating away or refreshing the browser permanently clears all mention alerts.~~
 5. **Local Type Duplication with Pending TODOs**:
    * `components/r-sidebar.tsx` and `components/inv-modal.tsx` duplicate the `WorkspaceRoleEnum` declaration locally with `//! TODO: Use enum from packages/types`, bypassing the authoritative definition in `@crwsync/types`.
 6. **Incomplete Frontend Role-Gating (RBAC)**:
@@ -286,7 +286,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
   * Add toggle between Kanban board view and List/Table view.
 * [x] **Direct Messaging (DMs)**:
   * Add support for 1-on-1 private rooms between workspace members.
-* [ ] **Persistent Notifications**:
+* [x] **Persistent Notifications**:
   * Add `Notification` model to Prisma schema.
   * Hydrate notification bell in `RSidebar.tsx` on load and provide "Mark all as read".
 
@@ -297,7 +297,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 **Goal**: Unify platform search, harden performance, and achieve production certification.
 
 * [ ] **Global Omni-Search (`Cmd+K`)**:
-  * Upgrade search modal to index modules, tasks (`CRW-12`), chat messages, and workspace members.
+  * Upgrade search modal to index modules, tasks (`CRW-12`), chat messages, files, and workspace members.
 * [ ] **Desktop & Audio Notifications**:
   * Integrate Web Notifications API for incoming mentions and task assignments.
 * [ ] **Comprehensive Test Coverage**:

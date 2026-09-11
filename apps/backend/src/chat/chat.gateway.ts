@@ -16,6 +16,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { ChatService } from "src/chat/chat.service";
 import { StatusGateway } from "src/status/status.gateway";
 import { SessionService } from "src/session/session.service";
+import { NotificationService } from "src/notification/notification.service";
 import { CacheService } from "src/redis";
 import { SendMessageDto, EditMessageDto, DeleteMessageDto, MarkAsReadDto } from "src/chat/dto/chat.dto";
 import { InjectQueue } from "@nestjs/bullmq";
@@ -41,6 +42,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly statusGateway: StatusGateway,
     private readonly sessionService: SessionService,
     private readonly cache: CacheService,
+    private readonly notificationService: NotificationService,
     @InjectQueue("chat_messages") private readonly messageQueue: Queue,
   ) {}
 
@@ -268,7 +270,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             });
 
             const mentionPayload = {
-              ...socketPayload,
+              message: socketPayload,
               room: { id: roomId, name: roomWithWorkspace?.name ?? null },
               workspace: {
                 slug: roomWithWorkspace?.workspace.slug ?? workspaceId,
@@ -283,17 +285,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
               });
               for (const member of members) {
                 if (member.user_id !== userId) {
-                  this.statusGateway.server
-                    .to(`user_${member.user_id}`)
-                    .emit("mention_notification", mentionPayload);
+                  await this.notificationService.create(member.user_id, workspaceId, "CHAT_MENTION", mentionPayload);
                 }
               }
             } else if (dto.mentionedUserIds?.length) {
               for (const mentionedId of dto.mentionedUserIds) {
                 if (mentionedId !== userId) {
-                  this.statusGateway.server
-                    .to(`user_${mentionedId}`)
-                    .emit("mention_notification", mentionPayload);
+                  await this.notificationService.create(mentionedId, workspaceId, "CHAT_MENTION", mentionPayload);
                 }
               }
             }

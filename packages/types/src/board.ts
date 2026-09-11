@@ -157,15 +157,6 @@ export interface TaskActivityPage {
   has_more: boolean;
 }
 
-export interface TaskCommentMentionNotification {
-  notificationId: string;
-  comment: TaskComment;
-  task: { id: string; shortId: string; title: string };
-  board: { id: string; name: string };
-  workspace: { slug: string; name: string };
-  receivedAt: string;
-}
-
 export interface WorkspaceProject {
   id: string;
   workspace_id: string;

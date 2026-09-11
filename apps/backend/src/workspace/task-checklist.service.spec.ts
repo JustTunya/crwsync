@@ -5,6 +5,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
 import { StorageService } from "src/storage/storage.service";
+import { NotificationService } from "src/notification/notification.service";
 
 describe("WorkspaceService task checklist items", () => {
   let service: WorkspaceService;
@@ -40,6 +41,7 @@ describe("WorkspaceService task checklist items", () => {
       {} as unknown as CacheService,
       statusGateway as unknown as StatusGateway,
       {} as unknown as StorageService,
+      {} as unknown as NotificationService,
     );
   });
 

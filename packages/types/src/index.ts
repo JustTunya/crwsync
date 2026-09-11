@@ -9,3 +9,4 @@ export * from "./board";
 export * from "./chat";
 export * from "./files";
 export * from "./storage";
+export * from "./notification";

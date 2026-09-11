@@ -3,6 +3,7 @@ import { ModuleTypeEnum, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
+import { NotificationService } from "src/notification/notification.service";
 import {
   CreateBoardDto,
   UpdateBoardDto,
@@ -25,6 +26,7 @@ export class BoardService {
     private prisma: PrismaService,
     private cache: CacheService,
     private statusGateway: StatusGateway,
+    private notificationService: NotificationService,
   ) {}
 
   async createBoard(workspaceId: string, userId: string, dto: CreateBoardDto) {
@@ -339,7 +341,14 @@ export class BoardService {
   ) {
     const existing = await this.prisma.task.findFirst({
       where: { id: taskId, column: { board: { id: boardId, workspace_id: workspaceId } } },
-      select: { priority: true, assignee_id: true, due_date: true },
+      select: {
+        priority: true,
+        assignee_id: true,
+        due_date: true,
+        shortId: true,
+        title: true,
+        column: { select: { board: { select: { name: true, workspace: { select: { slug: true, name: true } } } } } },
+      },
     });
     if (!existing) throw new NotFoundException("Task not found");
 
@@ -379,6 +388,16 @@ export class BoardService {
       this.statusGateway.server
         .to(`workspace_${workspaceId}`)
         .emit("task:activity:created", { boardId, taskId, activities: createdActivities });
+    }
+
+    if (dto.assignee_id && dto.assignee_id !== existing.assignee_id && dto.assignee_id !== userId) {
+      const assignedBy = await this.prisma.user.findUnique({ where: { id: userId }, select: ACTIVITY_ACTOR_SELECT });
+      await this.notificationService.create(dto.assignee_id, workspaceId, "TASK_ASSIGNED", {
+        task: { id: taskId, shortId: existing.shortId, title: existing.title },
+        board: { id: boardId, name: existing.column.board.name },
+        workspace: { slug: existing.column.board.workspace.slug, name: existing.column.board.workspace.name },
+        assignedBy,
+      });
     }
 
     return { success: true, data: task };

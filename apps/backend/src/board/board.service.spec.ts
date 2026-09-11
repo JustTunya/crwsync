@@ -3,13 +3,16 @@ import { NotFoundException, ForbiddenException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
-import { UpdateBoardDto, CreateTaskDto, MoveTaskDto, UpdateModuleDto, ReorderModulesDto } from "src/board/dto/board.dto";
+import { NotificationService } from "src/notification/notification.service";
+import { UpdateBoardDto, CreateTaskDto, UpdateTaskDto, MoveTaskDto, UpdateModuleDto, ReorderModulesDto } from "src/board/dto/board.dto";
 
 function makeService() {
   const prisma = {
     board: { findFirst: jest.fn(), update: jest.fn(), delete: jest.fn() },
     boardColumn: { findFirst: jest.fn(), findMany: jest.fn(), count: jest.fn() },
     task: { findFirst: jest.fn(), findMany: jest.fn(), update: jest.fn() },
+    taskActivity: { create: jest.fn() },
+    user: { findMany: jest.fn().mockResolvedValue([]), findUnique: jest.fn() },
     workspace: { update: jest.fn() },
     workspaceModule: { count: jest.fn(), update: jest.fn(), findFirst: jest.fn(), delete: jest.fn() },
     workspaceProject: { findMany: jest.fn() },
@@ -20,13 +23,16 @@ function makeService() {
 
   const cache = { acquireLock: jest.fn().mockResolvedValue(true), releaseLock: jest.fn() };
   const statusGateway = { server: { to: jest.fn().mockReturnValue({ emit: jest.fn() }) } };
+  const notificationService = { create: jest.fn() };
   return {
     service: new BoardService(
       prisma as unknown as PrismaService,
       cache as unknown as CacheService,
       statusGateway as unknown as StatusGateway,
+      notificationService as unknown as NotificationService,
     ),
     prisma,
+    notificationService,
   };
 }
 
@@ -142,6 +148,75 @@ describe("BoardService module/project workspace scoping", () => {
     const result = await service.reorderModules("ws-1", dto);
     expect(result).toEqual({ success: true });
     expect(prisma.$transaction).toHaveBeenCalled();
+  });
+});
+
+describe("BoardService updateTask assignee notifications", () => {
+  const existingTask = {
+    priority: "NONE",
+    assignee_id: null as string | null,
+    due_date: null,
+    shortId: "CRW-1",
+    title: "Ship it",
+    column: { board: { name: "Main board", workspace: { slug: "acme", name: "Acme" } } },
+  };
+
+  it("notifies the newly assigned user", async () => {
+    const { service, prisma, notificationService } = makeService();
+    prisma.task.findFirst.mockResolvedValue(existingTask);
+    prisma.task.update.mockResolvedValue({ id: "task-1" });
+    prisma.user.findUnique.mockResolvedValue({ id: "actor-1", firstname: "A", lastname: "B", avatar_key: null });
+
+    await service.updateTask(
+      "ws-1",
+      "board-1",
+      "task-1",
+      { assignee_id: "user-2" } as unknown as UpdateTaskDto,
+      "actor-1",
+    );
+
+    expect(notificationService.create).toHaveBeenCalledWith(
+      "user-2",
+      "ws-1",
+      "TASK_ASSIGNED",
+      expect.objectContaining({
+        task: { id: "task-1", shortId: "CRW-1", title: "Ship it" },
+        board: { id: "board-1", name: "Main board" },
+        workspace: { slug: "acme", name: "Acme" },
+      }),
+    );
+  });
+
+  it("does not notify when the actor assigns the task to themselves", async () => {
+    const { service, prisma, notificationService } = makeService();
+    prisma.task.findFirst.mockResolvedValue(existingTask);
+    prisma.task.update.mockResolvedValue({ id: "task-1" });
+
+    await service.updateTask(
+      "ws-1",
+      "board-1",
+      "task-1",
+      { assignee_id: "actor-1" } as unknown as UpdateTaskDto,
+      "actor-1",
+    );
+
+    expect(notificationService.create).not.toHaveBeenCalled();
+  });
+
+  it("does not notify when the task is unassigned", async () => {
+    const { service, prisma, notificationService } = makeService();
+    prisma.task.findFirst.mockResolvedValue({ ...existingTask, assignee_id: "user-2" });
+    prisma.task.update.mockResolvedValue({ id: "task-1" });
+
+    await service.updateTask(
+      "ws-1",
+      "board-1",
+      "task-1",
+      { assignee_id: null } as unknown as UpdateTaskDto,
+      "actor-1",
+    );
+
+    expect(notificationService.create).not.toHaveBeenCalled();
   });
 });
 
