@@ -195,25 +195,36 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
     };
 
     it("getRoom returns the room for a DM participant", async () => {
-      prisma.chatRoom.findUnique.mockResolvedValue(dmRoom);
+      prisma.chatRoom.findFirst.mockResolvedValue(dmRoom);
 
-      const result = await chatService.getRoom("room-dm", "user-a");
+      const result = await chatService.getRoom("room-dm", "ws-1", "user-a");
 
+      expect(prisma.chatRoom.findFirst).toHaveBeenCalledWith({
+        where: { id: "room-dm", workspace_id: "ws-1" },
+      });
       expect(result).toEqual({ success: true, data: dmRoom });
     });
 
     it("getRoom throws NotFoundException for a non-participant", async () => {
-      prisma.chatRoom.findUnique.mockResolvedValue(dmRoom);
+      prisma.chatRoom.findFirst.mockResolvedValue(dmRoom);
 
-      await expect(chatService.getRoom("room-dm", "user-c")).rejects.toThrow(
+      await expect(chatService.getRoom("room-dm", "ws-1", "user-c")).rejects.toThrow(
+        "Chat room not found",
+      );
+    });
+
+    it("getRoom throws NotFoundException for a room in another workspace", async () => {
+      prisma.chatRoom.findFirst.mockResolvedValue(null);
+
+      await expect(chatService.getRoom("room-group", "ws-2", "user-c")).rejects.toThrow(
         "Chat room not found",
       );
     });
 
     it("getRoom allows any workspace member into a non-DM room", async () => {
-      prisma.chatRoom.findUnique.mockResolvedValue(groupRoom);
+      prisma.chatRoom.findFirst.mockResolvedValue(groupRoom);
 
-      const result = await chatService.getRoom("room-group", "user-c");
+      const result = await chatService.getRoom("room-group", "ws-1", "user-c");
 
       expect(result).toEqual({ success: true, data: groupRoom });
     });

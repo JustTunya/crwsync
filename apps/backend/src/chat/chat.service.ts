@@ -81,9 +81,9 @@ export class ChatService {
     return { success: true, data: room };
   }
 
-  async getRoom(roomId: string, userId: string) {
-    const room = await this.prisma.chatRoom.findUnique({
-      where: { id: roomId },
+  async getRoom(roomId: string, workspaceId: string, userId: string) {
+    const room = await this.prisma.chatRoom.findFirst({
+      where: { id: roomId, workspace_id: workspaceId },
     });
 
     if (!room) {
@@ -114,13 +114,14 @@ export class ChatService {
 
   async getMessages(
     roomId: string,
+    workspaceId: string,
     userId: string,
     cursor?: string,
     limit: number = 50,
     direction: "before" | "after" = "before",
   ) {
-    const room = await this.prisma.chatRoom.findUnique({
-      where: { id: roomId },
+    const room = await this.prisma.chatRoom.findFirst({
+      where: { id: roomId, workspace_id: workspaceId },
     });
     if (!room) throw new NotFoundException("Chat room not found");
     this.assertDmAccess(room, userId);
