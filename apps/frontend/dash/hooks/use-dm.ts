@@ -26,7 +26,10 @@ export function useOpenDirectMessage(workspaceId: string, slug: string) {
     mutationFn: (otherUserId: string) =>
       dmService.openDirectMessage(workspaceId, { otherUserId }),
     onSuccess: (result) => {
-      if (!result.success || !result.data) return;
+      if (!result.success || !result.data) {
+        console.error(result.message ?? "Failed to open direct message");
+        return;
+      }
       const room = result.data;
 
       queryClient.setQueryData<BoardOperationState<DmRoomSummary[]>>(
@@ -43,6 +46,9 @@ export function useOpenDirectMessage(workspaceId: string, slug: string) {
       );
 
       router.push(`/${slug}/chat/${room.id}`);
+    },
+    onError: (error) => {
+      console.error(error);
     },
   });
 }
