@@ -17,6 +17,7 @@ While the real-time foundation (optimistic UI updates, WebSocket reconciliation,
 The following features have been verified across the dashboard and backend, functioning end-to-end as intended:
 
 ### A. Workspace Management & Routing
+
 * **Multi-Workspace Context Switcher (`SidebarWorkspace.tsx`)**:
   * Seamless workspace switching directly from the left sidebar.
   * Active workspace persisted via `localStorage` (`crw-ws`) and dynamic URL routing (`/[slug]`).
@@ -35,6 +36,7 @@ The following features have been verified across the dashboard and backend, func
   * Real-time synchronization of sidebar modules and projects when teammates create, rename, reorder, or delete modules.
 
 ### B. Real-Time Kanban Board (`/[slug]/board/[boardId]`)
+
 * **Drag-and-Drop Task Flow**:
   * Powered by `@dnd-kit/core` and `@dnd-kit/sortable` with collision detection (`closestCorners`) and pointer activation constraints.
   * Moves tasks across columns and reorders tasks within columns with optimistic cache updates.
@@ -60,6 +62,7 @@ The following features have been verified across the dashboard and backend, func
   * Idempotency guards to eliminate self-mutation flickering.
 
 ### C. Real-Time Team Chat (`/[slug]/chat/[roomId]`)
+
 * **Dedicated WebSocket Connection (`use-chat-socket.ts`)**:
   * Scoped `/chat` gateway backed by Redis adapter for horizontal scaling.
 * **Optimistic Message Pipeline (`use-chat-store.ts`)**:
@@ -79,6 +82,7 @@ The following features have been verified across the dashboard and backend, func
   * Read receipts tracking viewer timestamps (`ChatReadReceipt`).
 
 ### D. Organization & Navigation
+
 * **Modular Project Tree (`l-sidebar.tsx`)**:
   * Grouping of boards and chat rooms under custom projects or root workspace modules.
   * Fluid drag-and-drop reordering of modules into and out of projects (`use-module-dnd.ts`).
@@ -91,6 +95,7 @@ The following features have been verified across the dashboard and backend, func
   * Live unread message counters updated via `chat:unread_increment` socket events, cleared on channel focus.
 
 ### E. Analytics & Personal Overview
+
 * **Home Dashboard (`/[slug]/home-dashboard.tsx`)**:
   * Dynamic time-of-day greeting and formatted date.
   * Quick-stat indicators: Active Workload, Velocity (completed tasks), and Total Tasks.
@@ -130,13 +135,16 @@ The following bugs, structural flaws, and incomplete implementations were detect
 To fulfill its stated architectural mission and compete as an all-around collaboration tool, crwsync must address the following missing capabilities:
 
 ### A. The "Files" System (Core Brand Promise Gap)
+>
 > **Note**: Both `README.md` and `PRODUCT.md` claim crwsync keeps *"tasks, files, and distributed teams in perfect sync"*. Currently, **no file model, file storage service, or file upload UI exists in the repository**.
+
 * **Object Storage Engine**: Integration of an S3-compatible service (MinIO for local dev, AWS S3/Cloudflare R2 for production) in `apps/backend` for presigned uploads, virus scanning, and mime-type validation.
 * **Workspace "Files" Module**: A 3rd workspace module type alongside `BOARD` and `CHAT` (`ModuleTypeEnum.FILES`), providing a team drive with folder/grid views, search, previews, and download links.
 * **Task Attachments**: File and image upload zone inside `TaskDetailModal.tsx` with thumbnail previews.
 * **Chat File Attachments**: Attachment button in `ChatInput.tsx` supporting drag-and-drop file sharing and image lightbox popups in `MessageBubble.tsx`.
 
 ### B. Task Collaboration Depth (Linear / Asana Caliber)
+
 * **Task Comments & Discussion Thread**:
   * A dedicated comment stream inside `TaskDetailModal.tsx`.
   * Support for markdown, `@mentions`, and real-time comment synchronization over WebSockets.
@@ -149,6 +157,7 @@ To fulfill its stated architectural mission and compete as an all-around collabo
   * View switcher allowing teams to toggle between the Kanban Board and a List/Table view.
 
 ### C. Complete Settings & Administration Suite
+
 * **Account Settings (`/settings`)**:
   * Profile editor: First/last name, username, email, and avatar image upload.
   * Security management: Password change with verification, active session roster with IP/User-Agent data, and remote session revocation.
@@ -158,6 +167,7 @@ To fulfill its stated architectural mission and compete as an all-around collabo
   * Danger Zone: Workspace deletion with confirmation modal.
 
 ### D. Communication & Notifications Polish
+
 * **Direct Messaging (DMs)**:
   * 1-on-1 private chat rooms between workspace members initiated directly from the member list.
 * **Persistent In-App Notifications**:
@@ -167,6 +177,7 @@ To fulfill its stated architectural mission and compete as an all-around collabo
   * Web Notifications API integration for foreground/background mention alerts.
 
 ### E. Omni-Search (`Cmd+K` Spotlight)
+
 * Expanding the quick search dialog from a simple module filter into a global search bar indexing:
   * Modules (boards, chats, files).
   * Tasks (searchable by short ID like `CRW-12` or text query).
@@ -174,7 +185,9 @@ To fulfill its stated architectural mission and compete as an all-around collabo
   * Workspace members.
 
 ### F. Operational, Security & Compliance Gaps (Not Covered by Feature Milestones)
+>
 > **Note**: These are gaps in the roadmap's original scope, not just the codebase — flagged in review because completing Milestones 1–4 produces a *feature-complete* product, not necessarily a *production-hardened* one. See revised Finish Line definition in §6.
+
 * **CI/CD Pipeline**: No GitHub Actions (or equivalent) workflow exists to run lint/typecheck/tests on PRs. `pnpm lint` and test suites are currently manual, developer-run steps only.
 * **Observability & Error Tracking**: No APM or error-tracking integration (e.g., Sentry) beyond the existing `LoggingInterceptor`/`AllExceptionsFilter`. No structured log aggregation or alerting exists for production incidents.
 * **Ongoing Security Hardening Process**: The recent SSRF fix in `chat.service.ts` (commit `80e9aad`) shows security issues surface reactively. No recurring dependency vulnerability scan, rate-limit audit, or secret-rotation policy is scheduled.
@@ -190,7 +203,7 @@ To fulfill its stated architectural mission and compete as an all-around collabo
 
 ## 5. Strategic 4-Milestone Roadmap
 
-```
+```text
 Milestone 1: Architectural Fixes & Settings Foundation
    │
    ▼
@@ -209,115 +222,120 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 ---
 
 ### Milestone 1: Architectural Integrity & Settings Foundation
+
 **Goal**: Eliminate technical debt, resolve broken routing, and establish complete administrative control.
 
-- [x] **Fix Provider Hierarchy**:
-  - Remove redundant `<WorkspaceProvider>` from `apps/frontend/dash/app/[slug]/layout.tsx`.
-- [x] **Consolidate Domain Enums**:
-  - Remove local `WorkspaceRoleEnum` definitions in `r-sidebar.tsx` and `inv-modal.tsx`; import directly from `@crwsync/types`.
-- [x] **Build Account Settings (`/settings`)**:
-  - Implement user profile edit form (first name, last name, username).
-  - Implement security tab: password update and session management table with "Revoke Session" actions.
-- [x] **Build Workspace Settings (`/[slug]/settings`)**:
-  - Build workspace general settings: rename workspace, update slug.
-  - Build member role administration: promote/demote members, transfer ownership.
-  - Build Danger Zone: workspace deletion with validation input.
-- [x] **Enforce UI Role-Gating**:
-  - Conditionally render administrative actions (delete column, delete project, kick member) based on current user's workspace role.
-- [x] **Fix Root Page Redirection**:
-  - Refactor `apps/frontend/dash/app/page.tsx` to handle routing via `router.replace()` inside `useEffect`.
+* [x] **Fix Provider Hierarchy**:
+  * Remove redundant `<WorkspaceProvider>` from `apps/frontend/dash/app/[slug]/layout.tsx`.
+* [x] **Consolidate Domain Enums**:
+  * Remove local `WorkspaceRoleEnum` definitions in `r-sidebar.tsx` and `inv-modal.tsx`; import directly from `@crwsync/types`.
+* [x] **Build Account Settings (`/settings`)**:
+  * Implement user profile edit form (first name, last name, username).
+  * Implement security tab: password update and session management table with "Revoke Session" actions.
+* [x] **Build Workspace Settings (`/[slug]/settings`)**:
+  * Build workspace general settings: rename workspace, update slug.
+  * Build member role administration: promote/demote members, transfer ownership.
+  * Build Danger Zone: workspace deletion with validation input.
+* [x] **Enforce UI Role-Gating**:
+  * Conditionally render administrative actions (delete column, delete project, kick member) based on current user's workspace role.
+* [x] **Fix Root Page Redirection**:
+  * Refactor `apps/frontend/dash/app/page.tsx` to handle routing via `router.replace()` inside `useEffect`.
 
 ---
 
 ### Milestone 2: Files & Media Storage Engine
+
 **Goal**: Deliver the missing file storage pillar and fulfill the platform's core promise of syncing tasks and files.
 
-- [x] **Backend Storage Service**:
-  - Implement S3/MinIO service in `apps/backend` for presigned upload URLs and file retrieval.
-  - Implement `/avatars/:key` and `/workspaces/:workspaceId/files/:key` streaming endpoints.
-  - Both are live; the files endpoint is workspace-scoped and auth-gated (unlike the public avatar route) since attachments are private to a workspace.
-- [x] **User & Workspace Avatar Upload**:
-  - Add image upload components to User Settings and Workspace Settings.
-- [x] **Task Attachments**:
-  - Add `TaskAttachment` model in Prisma schema.
-  - Add drag-and-drop file upload zone in `TaskDetailModal.tsx`.
-  - Display attachment previews, download links, and file size badges.
-  - Real-time sync via `task:attachment:added`/`task:attachment:removed` socket events.
-- [x] **Chat Media & File Attachments**:
-  - Add attachment trigger to `ChatInput.tsx`.
-  - Render image previews with lightbox modal and downloadable file cards in `MessageBubble.tsx`.
-- [x] **Workspace "Files" Module**:
-  - Add `FILES` to `ModuleTypeEnum` in `schema.prisma`.
-  - Build team file drive page (`/[slug]/files/[fileRoomId]`) with grid/list views, file uploads, and deletion.
+* [x] **Backend Storage Service**:
+  * Implement S3/MinIO service in `apps/backend` for presigned upload URLs and file retrieval.
+  * Implement `/avatars/:key` and `/workspaces/:workspaceId/files/:key` streaming endpoints.
+  * Both are live; the files endpoint is workspace-scoped and auth-gated (unlike the public avatar route) since attachments are private to a workspace.
+* [x] **User & Workspace Avatar Upload**:
+  * Add image upload components to User Settings and Workspace Settings.
+* [x] **Task Attachments**:
+  * Add `TaskAttachment` model in Prisma schema.
+  * Add drag-and-drop file upload zone in `TaskDetailModal.tsx`.
+  * Display attachment previews, download links, and file size badges.
+  * Real-time sync via `task:attachment:added`/`task:attachment:removed` socket events.
+* [x] **Chat Media & File Attachments**:
+  * Add attachment trigger to `ChatInput.tsx`.
+  * Render image previews with lightbox modal and downloadable file cards in `MessageBubble.tsx`.
+* [x] **Workspace "Files" Module**:
+  * Add `FILES` to `ModuleTypeEnum` in `schema.prisma`.
+  * Build team file drive page (`/[slug]/files/[fileRoomId]`) with grid/list views, file uploads, and deletion.
 
 ---
 
 ### Milestone 3: Deep Collaboration & Task Enhancements
+
 **Goal**: Upgrade task tracking and communication from basic cards into an enterprise-grade collaboration engine.
 
-- [x] **Task Comments & Discussion**:
-  - Add `TaskComment` model in Prisma schema with foreign keys to `Task` and `User`.
-  - Build comment feed inside `TaskDetailModal.tsx` with `@mentions` and timestamps.
-  - Broadcast `task:comment:created` and `task:comment:deleted` events via `StatusGateway`.
-- [x] **Task Subtasks / Checklists**:
-  - Add `TaskChecklistItem` model in Prisma.
-  - Implement interactive checklists in `TaskDetailModal.tsx` and progress indicators on Kanban cards.
-- [x] **Task Activity Audit Trail**:
-  - Track column moves, priority changes, assignee updates, and deadline edits in a `TaskActivity` table.
-  - Display chronological activity tab in `TaskDetailModal.tsx`.
-- [x] **Board Filters & View Modes**:
-  - Implement filter bar in `BoardPage` (Assignee, Priority, Label).
-  - Add toggle between Kanban board view and List/Table view.
-- [ ] **Direct Messaging (DMs)**:
-  - Add support for 1-on-1 private rooms between workspace members.
-- [ ] **Persistent Notifications**:
-  - Add `Notification` model to Prisma schema.
-  - Hydrate notification bell in `RSidebar.tsx` on load and provide "Mark all as read".
+* [x] **Task Comments & Discussion**:
+  * Add `TaskComment` model in Prisma schema with foreign keys to `Task` and `User`.
+  * Build comment feed inside `TaskDetailModal.tsx` with `@mentions` and timestamps.
+  * Broadcast `task:comment:created` and `task:comment:deleted` events via `StatusGateway`.
+* [x] **Task Subtasks / Checklists**:
+  * Add `TaskChecklistItem` model in Prisma.
+  * Implement interactive checklists in `TaskDetailModal.tsx` and progress indicators on Kanban cards.
+* [x] **Task Activity Audit Trail**:
+  * Track column moves, priority changes, assignee updates, and deadline edits in a `TaskActivity` table.
+  * Display chronological activity tab in `TaskDetailModal.tsx`.
+* [x] **Board Filters & View Modes**:
+  * Implement filter bar in `BoardPage` (Assignee, Priority, Label).
+  * Add toggle between Kanban board view and List/Table view.
+* [x] **Direct Messaging (DMs)**:
+  * Add support for 1-on-1 private rooms between workspace members.
+* [ ] **Persistent Notifications**:
+  * Add `Notification` model to Prisma schema.
+  * Hydrate notification bell in `RSidebar.tsx` on load and provide "Mark all as read".
 
 ---
 
 ### Milestone 4: Omni-Search, Polish & Production Certification
+
 **Goal**: Unify platform search, harden performance, and achieve production certification.
 
-- [ ] **Global Omni-Search (`Cmd+K`)**:
-  - Upgrade search modal to index modules, tasks (`CRW-12`), chat messages, and workspace members.
-- [ ] **Desktop & Audio Notifications**:
-  - Integrate Web Notifications API for incoming mentions and task assignments.
-- [ ] **Comprehensive Test Coverage**:
-  - Add frontend integration tests for Kanban drag-and-drop and chat stores.
-  - Implement end-to-end Playwright test suite covering:
+* [ ] **Global Omni-Search (`Cmd+K`)**:
+  * Upgrade search modal to index modules, tasks (`CRW-12`), chat messages, and workspace members.
+* [ ] **Desktop & Audio Notifications**:
+  * Integrate Web Notifications API for incoming mentions and task assignments.
+* [ ] **Comprehensive Test Coverage**:
+  * Add frontend integration tests for Kanban drag-and-drop and chat stores.
+  * Implement end-to-end Playwright test suite covering:
     `Sign In → Create Workspace → Add Board → Create & Move Task → Send Chat → Upload File`.
-- [ ] **Production Deployment Validation**:
-  - Verify standalone Docker multi-stage builds (`Dockerfile` and `stack.yml`).
-  - Run full benchmark suite to validate Redis fan-out latency under load, against a defined pass/fail threshold (target p95 latency, concurrent connection count).
+* [ ] **Production Deployment Validation**:
+  * Verify standalone Docker multi-stage builds (`Dockerfile` and `stack.yml`).
+  * Run full benchmark suite to validate Redis fan-out latency under load, against a defined pass/fail threshold (target p95 latency, concurrent connection count).
 
 ---
 
 ### Milestone 5: Operational Hardening & Long-Term Maintainability
+
 **Goal**: Move crwsync from feature-complete to operationally production-hardened — the gap between "works when demoed" and "safe to leave running unattended."
 
-- [ ] **CI/CD Pipeline**:
-  - Add GitHub Actions workflow running `pnpm lint`, typecheck, and test suites on every PR; block merge on failure.
-- [ ] **Observability & Error Tracking**:
-  - Integrate an error-tracking service (e.g., Sentry) across `apps/backend`, `apps/frontend/web`, and `apps/frontend/dash`.
-  - Add structured log aggregation and basic alerting for production incidents.
-- [ ] **Recurring Security Process**:
-  - Add scheduled dependency vulnerability scanning (e.g., `pnpm audit` / Dependabot).
-  - Document a rate-limit and secret-rotation review cadence.
-- [ ] **Backend Test Coverage**:
-  - Set an explicit coverage target (e.g., 70%+) for `apps/backend` services/guards.
-  - Wire coverage reporting into the CI pipeline from the milestone above.
-- [ ] **Legal & Compliance Pages**:
-  - Add Terms of Service and Privacy Policy pages.
-  - Add account data export and deletion flow.
-- [ ] **Accessibility & Internationalization Pass**:
-  - Audit contrast, keyboard navigation, and screen-reader labels across dashboard and public portal.
-- [ ] **Demo/Seed Data**:
-  - Add a seed script (or demo mode) that populates a fresh workspace with realistic boards, chat history, and members.
-- [ ] **Environment & Config Reference**:
-  - Publish a documented `.env.example` covering every required environment variable per app.
-- [ ] **Complete Auth Flows**:
-  - Implement forgot-password/reset flow and signup email verification.
+* [ ] **CI/CD Pipeline**:
+  * Add GitHub Actions workflow running `pnpm lint`, typecheck, and test suites on every PR; block merge on failure.
+* [ ] **Observability & Error Tracking**:
+  * Integrate an error-tracking service (e.g., Sentry) across `apps/backend`, `apps/frontend/web`, and `apps/frontend/dash`.
+  * Add structured log aggregation and basic alerting for production incidents.
+* [ ] **Recurring Security Process**:
+  * Add scheduled dependency vulnerability scanning (e.g., `pnpm audit` / Dependabot).
+  * Document a rate-limit and secret-rotation review cadence.
+* [ ] **Backend Test Coverage**:
+  * Set an explicit coverage target (e.g., 70%+) for `apps/backend` services/guards.
+  * Wire coverage reporting into the CI pipeline from the milestone above.
+* [ ] **Legal & Compliance Pages**:
+  * Add Terms of Service and Privacy Policy pages.
+  * Add account data export and deletion flow.
+* [ ] **Accessibility & Internationalization Pass**:
+  * Audit contrast, keyboard navigation, and screen-reader labels across dashboard and public portal.
+* [ ] **Demo/Seed Data**:
+  * Add a seed script (or demo mode) that populates a fresh workspace with realistic boards, chat history, and members.
+* [ ] **Environment & Config Reference**:
+  * Publish a documented `.env.example` covering every required environment variable per app.
+* [ ] **Complete Auth Flows**:
+  * Implement forgot-password/reset flow and signup email verification.
 
 ---
 

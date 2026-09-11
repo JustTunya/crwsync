@@ -61,3 +61,6 @@ banchmark.js
 graphify-out/
 # === Worktrees ===
 .worktrees/
+
+# === Superpowers SDD scratch ===
+.superpowers/

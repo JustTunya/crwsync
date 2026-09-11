@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { m, Transition, LazyMotion, domAnimation } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon, Door01Icon, Message01Icon } from "@hugeicons/core-free-icons";
@@ -18,6 +19,8 @@ import { useMentions } from "@/hooks/use-mentions";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { InviteNotification, MentionNotificationCard, TaskCommentMentionCard } from "@/components/notifications";
 import { useUser } from "@/providers/user.provider";
+import { useDirectMessages, useOpenDirectMessage, dmKeys } from "@/hooks/use-dm";
+import type { BoardOperationState, DmRoomSummary } from "@crwsync/types";
 
 import { cn } from "@/lib/utils";
 
@@ -26,6 +29,8 @@ const spring: Transition = { type: "spring", stiffness: 300, damping: 30 };
 export function RSidebar() {
   const { activeWorkspace: workspace } = useWorkspace();
   const { socket, isConnected } = useSocket();
+  const pathname = usePathname();
+  const self = useUser();
 
   const { open, toggleOpen, view, setView, setOpen } = useRSidebar();
   const { open: lOpen, setOpen: setLOpen } = useLSidebar();
@@ -46,6 +51,14 @@ export function RSidebar() {
     enabled: !!workspace?.id,
   });
 
+  const { data: dmSummaries } = useDirectMessages(workspace?.id);
+  const queryClient = useQueryClient();
+
+  const unreadDmUserIds = useMemo(
+    () => new Set((dmSummaries ?? []).filter((dm) => dm.unread).map((dm) => dm.otherParticipant.id)),
+    [dmSummaries],
+  );
+
   useEffect(() => {
     if (!socket || !workspace?.id || !isConnected) return;
 
@@ -65,16 +78,44 @@ export function RSidebar() {
       setStatuses(initialStatuses);
     };
 
+    const handleDmRoomCreated = () => {
+      if (workspace?.id) {
+        queryClient.invalidateQueries({ queryKey: dmKeys.list(workspace.id) });
+      }
+    };
+
+    const handleUnreadIncrement = ({ roomId, senderId, isDirect }: { roomId: string; senderId: string; isDirect?: boolean }) => {
+      if (!isDirect || !workspace?.id || senderId === self?.id) return;
+      queryClient.setQueryData<BoardOperationState<DmRoomSummary[]>>(
+        dmKeys.list(workspace.id),
+        (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((dm) =>
+              dm.room.id === roomId && pathname !== `/${workspace.slug}/chat/${dm.room.id}`
+                ? { ...dm, unread: true }
+                : dm,
+            ),
+          };
+        },
+      );
+    };
+
     socket.on("status:update", handleStatusUpdate);
     socket.on("ws_statuses", handleWorkspaceStatuses);
+    socket.on("dm:room_created", handleDmRoomCreated);
+    socket.on("chat:unread_increment", handleUnreadIncrement);
 
     socket.emit("sub_ws", workspace.id);
 
     return () => {
       socket.off("status:update", handleStatusUpdate);
       socket.off("ws_statuses", handleWorkspaceStatuses);
+      socket.off("dm:room_created", handleDmRoomCreated);
+      socket.off("chat:unread_increment", handleUnreadIncrement);
     };
-  }, [socket, workspace?.id, isConnected]);
+  }, [socket, workspace?.id, workspace?.slug, isConnected, queryClient, pathname, self?.id]);
 
   const groupedMembers = useMemo(() => {
     if (!data?.data) return [];
@@ -211,6 +252,7 @@ export function RSidebar() {
                   workspace={workspace}
                   open={openInviteModal}
                   setOpen={setOpenInviteModal}
+                  unreadDmUserIds={unreadDmUserIds}
                 />
               ) : (
                 <SidebarNotifications />
@@ -334,9 +376,10 @@ interface SidebarMembersProps {
   workspace: Workspace | null;
   open: boolean;
   setOpen: (open: boolean) => void;
+  unreadDmUserIds: Set<string>;
 }
 
-export function SidebarMembers({ groups, statuses, isLoading, workspace, open, setOpen }: SidebarMembersProps) {
+export function SidebarMembers({ groups, statuses, isLoading, workspace, open, setOpen, unreadDmUserIds }: SidebarMembersProps) {
   return (
     <>
       {isLoading ? (
@@ -359,6 +402,7 @@ export function SidebarMembers({ groups, statuses, isLoading, workspace, open, s
                       <SidebarProfile
                         user={member.user}
                         status={statuses[member.user_id] || "OFFLINE"}
+                        hasUnreadDm={unreadDmUserIds.has(member.user_id)}
                       />
                     </li>
                   ))}
@@ -389,9 +433,10 @@ interface SidebarProfileProps {
   user: WorkspaceUser | undefined;
   status?: UserStatus;
   className?: string;
+  hasUnreadDm?: boolean;
 }
 
-export function SidebarProfile({ user, status, className }: SidebarProfileProps) {
+export function SidebarProfile({ user, status, className, hasUnreadDm }: SidebarProfileProps) {
   const [open, setOpen] = useState(false);
   const [contextPos, setContextPos] = useState<{ x: number; y: number } | null>(null);
 
@@ -419,6 +464,9 @@ export function SidebarProfile({ user, status, className }: SidebarProfileProps)
         <div className="px-2 flex-nowrap flex flex-row items-center gap-3 w-full">
           <div className="relative">
             <UserAvatar key={"user-avatar"} user={user} status={status?.toLowerCase()} />
+            {hasUnreadDm && (
+              <div className="absolute -top-px -left-px size-2 rounded-full outline-2 outline-base-200 bg-primary" />
+            )}
           </div>
 
           <div className="flex flex-col">
@@ -460,7 +508,10 @@ function ContextMenu({ isOpen, onClose, position, user }: { isOpen: boolean; onC
     }
   });
 
+  const openDm = useOpenDirectMessage(workspace?.id ?? "", workspace?.slug ?? "");
+
   const handleMessageUser = () => {
+    if (workspace) openDm.mutate(user.id);
     onClose();
   };
 

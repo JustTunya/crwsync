@@ -119,7 +119,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const room = await this.prisma.chatRoom.findUnique({
       where: { id: data.roomId },
-      select: { id: true, workspace_id: true },
+      select: { id: true, workspace_id: true, is_direct: true, dm_user_a_id: true, dm_user_b_id: true },
     });
 
     if (!room || room.workspace_id !== data.workspaceId) {
@@ -127,8 +127,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
+    if (room.is_direct && room.dm_user_a_id !== userId && room.dm_user_b_id !== userId) {
+      client.emit("error", { message: "Room not found" });
+      return;
+    }
+
     await client.join(`chat_${data.roomId}`);
     client.data.currentRoom = data.roomId;
+    client.data.currentRoomIsDirect = room.is_direct;
+    client.data.currentRoomDmUserAId = room.dm_user_a_id;
+    client.data.currentRoomDmUserBId = room.dm_user_b_id;
     client.data.workspaceId = data.workspaceId;
 
     return { event: "joined_room", data: data.roomId };
@@ -235,11 +243,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             preGeneratedId: messageId,
           });
 
-          this.statusGateway.server
-            .to(`workspace_${workspaceId}`)
-            .emit("chat:unread_increment", { roomId, senderId: userId });
+          const isDirect = !!client.data.currentRoomIsDirect;
+          const unreadPayload = { roomId, senderId: userId, isDirect };
 
-          if (dto.isEveryoneMention || dto.mentionedUserIds?.length) {
+          if (isDirect) {
+            this.statusGateway.server
+              .to(`user_${client.data.currentRoomDmUserAId}`)
+              .to(`user_${client.data.currentRoomDmUserBId}`)
+              .emit("chat:unread_increment", unreadPayload);
+          } else {
+            this.statusGateway.server
+              .to(`workspace_${workspaceId}`)
+              .emit("chat:unread_increment", unreadPayload);
+          }
+
+          if (!isDirect && (dto.isEveryoneMention || dto.mentionedUserIds?.length)) {
             // Fetch room name + workspace slug once for the notification payload
             const roomWithWorkspace = await this.prisma.chatRoom.findUnique({
               where: { id: roomId },

@@ -169,17 +169,23 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private async broadcastUserStatus(userId: string, forceStatus?: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { status_preference: true, ws_memberships: { select: { workspace_id: true } } },
-    });
+    let user;
+    try {
+      user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { status_preference: true, ws_memberships: { select: { workspace_id: true } } },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to broadcast status for user ${userId}: ${error}`);
+      return;
+    }
 
     if (!user) return;
 
     const status = forceStatus || user.status_preference;
 
     const rooms = user.ws_memberships.map((m) => `workspace_${m.workspace_id}`);
-    
+
     rooms.push(`user_${userId}`);
 
     this.server.to(rooms).emit("status:update", {
