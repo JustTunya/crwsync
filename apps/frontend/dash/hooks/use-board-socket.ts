@@ -2,12 +2,12 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Board, BoardColumn, Task, TaskAttachment, TaskComment, TaskCommentPage, TaskChecklistItem } from "@crwsync/types";
+import type { Board, BoardColumn, Task, TaskAttachment, TaskComment, TaskCommentPage, TaskChecklistItem, TaskActivity, TaskActivityPage } from "@crwsync/types";
 import { useSocket } from "@/providers/socket.provider";
 import { useUser } from "@/providers/user.provider";
 import { boardKeys } from "@/hooks/use-boards";
 import { moduleKeys } from "@/hooks/use-workspace-modules";
-import { commentKeys } from "@/hooks/query-keys";
+import { commentKeys, activityKeys } from "@/hooks/query-keys";
 
 // ---------------------------------------------------------------------------
 // Types for incoming socket payloads
@@ -111,6 +111,12 @@ interface TaskChecklistDeletedPayload {
   boardId: string;
   taskId: string;
   itemId: string;
+}
+
+interface TaskActivityCreatedPayload {
+  boardId: string;
+  taskId: string;
+  activities: TaskActivity[];
 }
 
 // ---------------------------------------------------------------------------
@@ -503,6 +509,21 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
       );
     };
 
+    // ----- task:activity:created -------------------------------------------
+    const onTaskActivityCreated = ({ boardId: bId, taskId, activities }: TaskActivityCreatedPayload) => {
+      if (bId !== boardId) return;
+
+      queryClient.setQueryData(
+        activityKeys.list(taskId),
+        (old: { data: TaskActivityPage } | undefined) => {
+          if (!old?.data) return old;
+          const existingIds = new Set(old.data.activities.map((a) => a.id));
+          const merged = [...old.data.activities, ...activities.filter((a) => !existingIds.has(a.id))];
+          return { ...old, data: { ...old.data, activities: merged } };
+        },
+      );
+    };
+
     // ----- reconnect: recover missed events -----------------------------
     const onReconnect = () => {
       queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
@@ -526,6 +547,7 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
     socket.on("task:checklist:created", onTaskChecklistCreated);
     socket.on("task:checklist:updated", onTaskChecklistUpdated);
     socket.on("task:checklist:deleted", onTaskChecklistDeleted);
+    socket.on("task:activity:created", onTaskActivityCreated);
     socket.io.on("reconnect", onReconnect);
 
     return () => {
@@ -546,6 +568,7 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
       socket.off("task:checklist:created", onTaskChecklistCreated);
       socket.off("task:checklist:updated", onTaskChecklistUpdated);
       socket.off("task:checklist:deleted", onTaskChecklistDeleted);
+      socket.off("task:activity:created", onTaskActivityCreated);
       socket.io.off("reconnect", onReconnect);
     };
   }, [socket, boardId, workspaceId, queryClient, user?.id]);

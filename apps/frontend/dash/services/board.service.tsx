@@ -24,6 +24,7 @@ import {
   TaskChecklistItem,
   CreateTaskChecklistItemPayload,
   UpdateTaskChecklistItemPayload,
+  TaskActivityPage,
 } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
@@ -415,6 +416,24 @@ export async function deleteTaskComment(
   } catch (error) {
     if (isAxiosError(error)) {
       return { success: false, message: error.response?.data?.message || "Failed to delete comment" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function getTaskActivity(
+  workspaceId: string,
+  taskId: string,
+  cursor?: string,
+): Promise<BoardOperationState<TaskActivityPage>> {
+  try {
+    const response = await api.get(`/workspaces/${workspaceId}/tasks/${taskId}/activity`, {
+      params: cursor ? { cursor } : undefined,
+    });
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return { success: false, message: error.response?.data?.message || "Failed to fetch activity" };
     }
     return { success: false, message: "An unexpected error occurred" };
   }

@@ -134,6 +134,29 @@ export interface TaskCommentPage {
   has_more: boolean;
 }
 
+export enum TaskActivityTypeEnum {
+  COLUMN_MOVED = "COLUMN_MOVED",
+  PRIORITY_CHANGED = "PRIORITY_CHANGED",
+  ASSIGNEE_CHANGED = "ASSIGNEE_CHANGED",
+  DUE_DATE_CHANGED = "DUE_DATE_CHANGED",
+}
+
+export interface TaskActivity {
+  id: string;
+  task_id: string;
+  actor_id: string;
+  type: TaskActivityTypeEnum;
+  metadata: Record<string, string | null>;
+  created_at: string;
+  actor?: TaskCommentAuthor;
+}
+
+export interface TaskActivityPage {
+  activities: TaskActivity[];
+  next_cursor: string | null;
+  has_more: boolean;
+}
+
 export interface TaskCommentMentionNotification {
   notificationId: string;
   comment: TaskComment;

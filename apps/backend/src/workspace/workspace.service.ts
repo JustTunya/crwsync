@@ -895,6 +895,44 @@ export class WorkspaceService {
     return { success: true };
   }
 
+  async listTaskActivity(
+    workspaceId: string,
+    taskId: string,
+    cursor?: string,
+    limit: number = 50,
+  ) {
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, column: { board: { workspace_id: workspaceId } } },
+      select: { id: true },
+    });
+    if (!task) throw new NotFoundException("Task not found");
+
+    const take = Math.min(Number(limit) || 50, 100);
+
+    const activities = await this.prisma.taskActivity.findMany({
+      where: {
+        task_id: taskId,
+        ...(cursor ? { created_at: { lt: new Date(cursor) } } : {}),
+      },
+      orderBy: { created_at: "desc" },
+      take: take + 1,
+      include: { actor: { select: COMMENT_AUTHOR_SELECT } },
+    });
+
+    const hasMore = activities.length > take;
+    if (hasMore) activities.pop();
+    const ordered = activities.reverse();
+
+    return {
+      success: true,
+      data: {
+        activities: ordered,
+        next_cursor: hasMore && ordered.length > 0 ? ordered[0].created_at.toISOString() : null,
+        has_more: hasMore,
+      },
+    };
+  }
+
   async createTaskChecklistItem(
     workspaceId: string,
     taskId: string,

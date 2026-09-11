@@ -15,3 +15,8 @@ export const commentKeys = {
   all: ["taskComments"] as const,
   list: (taskId: string) => [...commentKeys.all, "list", taskId] as const,
 };
+
+export const activityKeys = {
+  all: ["taskActivity"] as const,
+  list: (taskId: string) => [...activityKeys.all, "list", taskId] as const,
+};

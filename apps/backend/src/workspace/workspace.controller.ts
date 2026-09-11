@@ -304,6 +304,18 @@ export class WorkspaceController {
     return this.workspaceService.deleteTaskComment(workspaceId, taskId, commentId, user.userId);
   }
 
+  @Get(":workspaceId/tasks/:taskId/activity")
+  @SkipThrottle()
+  @UseGuards(IsMemberGuard)
+  listTaskActivity(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @Query("cursor") cursor?: string,
+    @Query("limit") limit?: number,
+  ) {
+    return this.workspaceService.listTaskActivity(workspaceId, taskId, cursor, limit);
+  }
+
   @Post(":workspaceId/tasks/:taskId/checklist-items")
   @UseGuards(IsMemberGuard)
   createTaskChecklistItem(

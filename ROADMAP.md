@@ -262,7 +262,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 - [x] **Task Subtasks / Checklists**:
   - Add `TaskChecklistItem` model in Prisma.
   - Implement interactive checklists in `TaskDetailModal.tsx` and progress indicators on Kanban cards.
-- [ ] **Task Activity Audit Trail**:
+- [x] **Task Activity Audit Trail**:
   - Track column moves, priority changes, assignee updates, and deadline edits in a `TaskActivity` table.
   - Display chronological activity tab in `TaskDetailModal.tsx`.
 - [ ] **Board Filters & View Modes**:
