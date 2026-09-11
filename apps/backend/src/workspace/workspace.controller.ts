@@ -354,11 +354,12 @@ export class WorkspaceController {
   async getFile(
     @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
     @Param("key") key: string,
+    @ActiveUserParam() user: ActiveUser,
     @Res() res: Response,
   ): Promise<void> {
     if (!/^[A-Za-z0-9_-]+\.[a-z0-9]{1,10}$/.test(key)) throw new BadRequestException("Invalid file key");
 
-    const url = await this.workspaceService.getTaskAttachmentDownloadUrl(workspaceId, key);
+    const url = await this.workspaceService.getTaskAttachmentDownloadUrl(workspaceId, key, user.userId);
     res.redirect(HttpStatus.FOUND, url);
   }
 }

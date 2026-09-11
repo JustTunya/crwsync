@@ -622,7 +622,7 @@ export class WorkspaceService {
     return { success: true, data: updatedTask };
   }
 
-  async getTaskAttachmentDownloadUrl(workspaceId: string, key: string): Promise<string> {
+  async getTaskAttachmentDownloadUrl(workspaceId: string, key: string, userId: string): Promise<string> {
     // Chat attachments are authorized by room-membership via the key's room-id prefix
     // (the same check presignAttachment applies), not by the ChatAttachment row —
     // that row is written asynchronously by the chat persist queue, so a freshly-sent
@@ -638,7 +638,7 @@ export class WorkspaceService {
       isUuid
         ? this.prisma.chatRoom.findFirst({
             where: { id: keyPrefix, workspace_id: workspaceId },
-            select: { id: true },
+            select: { id: true, is_direct: true, dm_user_a_id: true, dm_user_b_id: true },
           })
         : null,
       isUuid
@@ -649,6 +649,14 @@ export class WorkspaceService {
         : null,
     ]);
     if (!taskAttachment && !chatRoom && !fileRoom) throw new NotFoundException("File not found");
+
+    if (
+      chatRoom?.is_direct &&
+      chatRoom.dm_user_a_id !== userId &&
+      chatRoom.dm_user_b_id !== userId
+    ) {
+      throw new NotFoundException("File not found");
+    }
 
     return this.storageService.presignFileGet(key);
   }
