@@ -9,11 +9,11 @@ import type { Task, BoardColumn } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { KanbanCol } from "@/components/kanban/KanbanCol";
 import { KanbanTaskOverlay } from "@/components/kanban/KanbanTask";
+import { BoardToolbar } from "@/components/kanban/BoardToolbar";
+import { BoardListView } from "@/components/kanban/BoardListView";
 import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/use-boards";
 import { useBoardSocket } from "@/hooks/use-board-socket";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useBoardFilters } from "@/hooks/use-board-filters";
 
 const TaskDetailModal = dynamic(
   () => import("@/components/kanban/TaskDetailModal").then((mod) => mod.TaskDetailModal),
@@ -79,12 +79,23 @@ export default function BoardPage() {
 
   useBoardSocket(workspaceId, boardId);
 
-  const isMobile = useMediaQuery("(max-width: 768px)");
-
   const { data: board, isLoading } = useBoard(workspaceId, boardId);
   const createColumn = useCreateColumn(workspaceId, boardId);
   const createTask = useCreateTask(workspaceId, boardId);
   const moveTask = useMoveTask(workspaceId, boardId);
+
+  const {
+    filters,
+    view,
+    setView,
+    toggleListParam,
+    setDue,
+    clearFilters,
+    activeFilterCount,
+    availableAssigneeIds,
+    availableLabels,
+    filteredColumns,
+  } = useBoardFilters(board);
 
   const [state, dispatch] = useReducer(boardReducer, initialState);
   const { addingTaskFor, editingTask, activeTask, addingColumn, columnName, taskTitle } = state;
@@ -116,11 +127,11 @@ export default function BoardPage() {
 
   const findColumnByTaskId = useCallback(
     (taskId: string): BoardColumn | undefined => {
-      return board?.columns?.find((col) =>
+      return filteredColumns.find((col) =>
         col.tasks?.some((t) => t.id === taskId),
       );
     },
-    [board],
+    [filteredColumns],
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -166,12 +177,12 @@ export default function BoardPage() {
 
   const allSortableIds = useMemo(
     () => [
-      ...(board?.columns?.flatMap((col) => [
+      ...filteredColumns.flatMap((col) => [
         `column-${col.id}`,
         ...(col.tasks?.map((t) => t.id) || []),
-      ]) || []),
+      ]),
     ],
-    [board?.columns],
+    [filteredColumns],
   );
 
   if (isLoading || !workspaceId) {
@@ -203,32 +214,33 @@ export default function BoardPage() {
 
   return (
     <div className="size-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200 shrink-0">
-        <div className="w-0 flex-1">
-          <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{board.name}</h1>
-        </div>
-        {isMobile ? (
-          <button
-            type="button"
-            aria-label="Add column"
-            onClick={() => dispatch({ type: "SET_ADDING_COLUMN", payload: true })}
-            className="flex items-center gap-1 bg-foreground text-background p-1.5 rounded-full text-sm font-semibold cursor-pointer"
-          >
-            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            aria-label="Add column"
-            onClick={() => dispatch({ type: "SET_ADDING_COLUMN", payload: true })}
-            className="flex items-center gap-1 bg-foreground text-background px-2 py-1 rounded-md text-sm font-semibold cursor-pointer"
-          >
-            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
-            Add Column
-          </button>
-        )}
+      <div className="flex items-center h-16 pl-16 pr-24 border-b border-base-200 shrink-0">
+        <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{board.name}</h1>
       </div>
 
+      <BoardToolbar
+        workspaceId={workspaceId}
+        filters={filters}
+        view={view}
+        activeFilterCount={activeFilterCount}
+        availableAssigneeIds={availableAssigneeIds}
+        availableLabels={availableLabels}
+        onToggleListParam={toggleListParam}
+        onSetDue={setDue}
+        onSetView={setView}
+        onClearFilters={clearFilters}
+        onAddColumn={() => dispatch({ type: "SET_ADDING_COLUMN", payload: true })}
+      />
+
+      {view === "list" ? (
+        <div className="flex-1 min-h-0 px-6 py-4">
+          <BoardListView
+            columns={filteredColumns}
+            workspaceId={workspaceId}
+            onTaskClick={(task) => dispatch({ type: "SET_EDITING_TASK", payload: task })}
+          />
+        </div>
+      ) : (
       <div className="flex-1 min-h-0 overflow-x-auto p-6">
         <DndContext
           sensors={sensors}
@@ -243,7 +255,7 @@ export default function BoardPage() {
                   <p className="text-sm">No columns yet. Create one to begin.</p>
                 </div>
               )}
-              {board.columns?.map((column) => (
+              {filteredColumns.map((column) => (
                 <KanbanCol
                   key={column.id}
                   column={column}
@@ -297,6 +309,7 @@ export default function BoardPage() {
           </DragOverlay>
         </DndContext>
       </div>
+      )}
 
       {editingTask && (
         <TaskDetailModal
