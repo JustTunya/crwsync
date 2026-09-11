@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import { UserType, UserOperationState, WorkspaceInvite, UpdateUserProfilePayload, ChangePasswordPayload, ActiveSession, PresignedAvatarUpload } from "@crwsync/types";
+import { UserType, UserOperationState, WorkspaceInvite, UpdateUserProfilePayload, ChangePasswordPayload, ActiveSession, PresignedAvatarUpload, NotificationRecord } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
 export async function getUserById(userId: string): Promise<UserOperationState<UserType>> {
@@ -40,6 +40,45 @@ export async function getInvites(userId: string): Promise<UserOperationState<Wor
     if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, message: resp?.message || "Failed to fetch invites" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function getNotifications(userId: string): Promise<UserOperationState<NotificationRecord[]>> {
+  try {
+    const response = await api.get<NotificationRecord[]>(`/users/${userId}/notifications`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to fetch notifications" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function markNotificationRead(userId: string, notificationId: string): Promise<UserOperationState> {
+  try {
+    await api.patch(`/users/${userId}/notifications/${notificationId}/read`);
+    return { success: true };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to mark notification as read" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function markAllNotificationsRead(userId: string): Promise<UserOperationState> {
+  try {
+    await api.patch(`/users/${userId}/notifications/read-all`);
+    return { success: true };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to mark notifications as read" };
     }
     return { success: false, message: "An unexpected error occurred" };
   }

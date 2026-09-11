@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { StatusModule } from "src/status/status.module";
 import { SessionModule } from "src/session/session.module";
+import { NotificationModule } from "src/notification/notification.module";
 import { ChatService } from "src/chat/chat.service";
 import { ChatGateway } from "src/chat/chat.gateway";
 import { ChatController } from "src/chat/chat.controller";
@@ -16,6 +17,7 @@ import { ChatProcessor } from "src/chat/chat.processor";
     PrismaModule,
     StatusModule,
     SessionModule,
+    NotificationModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

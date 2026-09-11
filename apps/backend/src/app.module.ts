@@ -17,6 +17,7 @@ import { StatusModule } from "src/status/status.module";
 import { BoardModule } from "src/board/board.module";
 import { ChatModule } from "src/chat/chat.module";
 import { FilesModule } from "src/files/files.module";
+import { NotificationModule } from "src/notification/notification.module";
 import { UserModule } from "src/user/user.module";
 import { AuthModule } from "src/auth/auth.module";
 // CONTROLLERS & SERVICES
@@ -62,6 +63,7 @@ import { ContactModule } from "src/contact/contact.module";
     ChatModule,
     FilesModule,
     ContactModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

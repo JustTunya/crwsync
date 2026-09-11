@@ -6,7 +6,7 @@ import { m, Transition, LazyMotion, domAnimation } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon, Door01Icon, Message01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Workspace, WorkspaceMember, WorkspaceRoleEnum, WorkspaceUser } from "@crwsync/types";
+import { Workspace, WorkspaceMember, WorkspaceRoleEnum, WorkspaceUser, NotificationTypeEnum } from "@crwsync/types";
 import { useSocket } from "@/providers/socket.provider";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { getWorkspaceMembers, kickWorkspaceMember } from "@/services/workspace.service";
@@ -15,9 +15,9 @@ import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { UserAvatar } from "@/components/user-avatar";
 import InviteMemberModal from "@/components/inv-modal";
 import { useInvites } from "@/hooks/use-invites";
-import { useMentions } from "@/hooks/use-mentions";
+import { useNotifications } from "@/hooks/use-notifications";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { InviteNotification, MentionNotificationCard, TaskCommentMentionCard } from "@/components/notifications";
+import { InviteNotification, MentionNotificationCard, TaskCommentMentionCard, TaskAssignedNotificationCard } from "@/components/notifications";
 import { useUser } from "@/providers/user.provider";
 import { useDirectMessages, useOpenDirectMessage, dmKeys } from "@/hooks/use-dm";
 import type { BoardOperationState, DmRoomSummary } from "@crwsync/types";
@@ -267,11 +267,11 @@ export function RSidebar() {
 
 export function SidebarNotifications() {
   const { invites, isLoading } = useInvites();
-  const { mentions, dismissMention, taskCommentMentions, dismissTaskCommentMention } = useMentions();
+  const { notifications, isLoading: notificationsLoading, dismiss, markAllAsRead } = useNotifications();
 
-  const isEmpty = invites.length === 0 && mentions.length === 0 && taskCommentMentions.length === 0;
+  const isEmpty = invites.length === 0 && notifications.length === 0;
 
-  if (isLoading) {
+  if (isLoading || notificationsLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <span className="text-sm text-muted-foreground">Loading notifications...</span>
@@ -291,20 +291,29 @@ export function SidebarNotifications() {
 
   return (
     <div className="flex flex-col gap-3 w-full">
-      {mentions.map((notification) => (
-        <MentionNotificationCard
-          key={notification.notificationId}
-          notification={notification}
-          onDismiss={dismissMention}
-        />
-      ))}
-      {taskCommentMentions.map((notification) => (
-        <TaskCommentMentionCard
-          key={notification.notificationId}
-          notification={notification}
-          onDismiss={dismissTaskCommentMention}
-        />
-      ))}
+      {notifications.length > 0 && (
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-muted-foreground">Notifications</span>
+          <button
+            onClick={markAllAsRead}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+          >
+            Mark all as read
+          </button>
+        </div>
+      )}
+      {notifications.map((notification) => {
+        switch (notification.type) {
+          case NotificationTypeEnum.CHAT_MENTION:
+            return <MentionNotificationCard key={notification.notificationId} notification={notification} onDismiss={dismiss} />;
+          case NotificationTypeEnum.TASK_COMMENT_MENTION:
+            return <TaskCommentMentionCard key={notification.notificationId} notification={notification} onDismiss={dismiss} />;
+          case NotificationTypeEnum.TASK_ASSIGNED:
+            return <TaskAssignedNotificationCard key={notification.notificationId} notification={notification} onDismiss={dismiss} />;
+          default:
+            return null;
+        }
+      })}
       {invites.map((invite) => (
         <InviteNotification key={invite.id} invite={invite} />
       ))}
@@ -324,10 +333,10 @@ interface NotificationBellButtonProps {
 
 function NotificationBellButton({ open, view, isMobile, toggleOpen, setView }: NotificationBellButtonProps) {
   const { invites } = useInvites();
-  const { mentions, taskCommentMentions } = useMentions();
+  const { notifications } = useNotifications();
 
   const pendingInvites = invites.filter((i) => i.status === "pending").length;
-  const totalBadge = pendingInvites + mentions.length + taskCommentMentions.length;
+  const totalBadge = pendingInvites + notifications.length;
 
   return (
     <div

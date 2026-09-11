@@ -5,6 +5,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
 import { StorageService } from "src/storage/storage.service";
+import { NotificationService } from "src/notification/notification.service";
 
 describe("WorkspaceService task comments", () => {
   let service: WorkspaceService;
@@ -20,11 +21,13 @@ describe("WorkspaceService task comments", () => {
     workspaceMember: { findMany: jest.Mock };
   };
   let statusGateway: { server: { to: jest.Mock } };
+  let notificationService: { create: jest.Mock };
   let emit: jest.Mock;
 
   beforeEach(() => {
     emit = jest.fn();
     statusGateway = { server: { to: jest.fn().mockReturnValue({ emit }) } };
+    notificationService = { create: jest.fn() };
     prisma = {
       task: { findFirst: jest.fn() },
       taskComment: {
@@ -42,6 +45,7 @@ describe("WorkspaceService task comments", () => {
       {} as unknown as CacheService,
       statusGateway as unknown as StatusGateway,
       {} as unknown as StorageService,
+      notificationService as unknown as NotificationService,
     );
   });
 
@@ -79,8 +83,7 @@ describe("WorkspaceService task comments", () => {
         "task:comment:created",
         expect.objectContaining({ boardId: "board-1", taskId: "task-1", comment, commentCount: 1 }),
       );
-      expect(statusGateway.server.to).toHaveBeenCalledWith("user_user-2");
-      expect(emit).toHaveBeenCalledWith("task_comment_mention_notification", expect.any(Object));
+      expect(notificationService.create).toHaveBeenCalledWith("user-2", "ws-1", "TASK_COMMENT_MENTION", expect.any(Object));
     });
 
     it("does not notify the author if they mention themselves", async () => {
@@ -96,7 +99,7 @@ describe("WorkspaceService task comments", () => {
 
       await service.createTaskComment("ws-1", "task-1", "user-1", { content: "note to self", mentionedUserIds: ["user-1"] });
 
-      expect(statusGateway.server.to).not.toHaveBeenCalledWith("user_user-1");
+      expect(notificationService.create).not.toHaveBeenCalled();
     });
 
     it("does not notify or connect a mentioned user who is not a workspace member", async () => {
@@ -115,7 +118,7 @@ describe("WorkspaceService task comments", () => {
       expect(prisma.taskComment.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.not.objectContaining({ mentions: expect.anything() }) }),
       );
-      expect(statusGateway.server.to).not.toHaveBeenCalledWith("user_user-99");
+      expect(notificationService.create).not.toHaveBeenCalled();
     });
   });
 
