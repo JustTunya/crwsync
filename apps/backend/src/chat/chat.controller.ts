@@ -45,18 +45,20 @@ export class ChatController {
   @Get(":roomId")
   findOne(
     @Param("roomId", new ParseUUIDPipe({ version: "4" })) roomId: string,
+    @ActiveUserParam() user: ActiveUser,
   ) {
-    return this.chatService.getRoom(roomId);
+    return this.chatService.getRoom(roomId, user.userId);
   }
 
   @Get(":roomId/messages")
   getMessages(
     @Param("roomId", new ParseUUIDPipe({ version: "4" })) roomId: string,
+    @ActiveUserParam() user: ActiveUser,
     @Query("cursor") cursor?: string,
     @Query("limit") limit?: number,
     @Query("direction") direction?: "before" | "after",
   ) {
-    return this.chatService.getMessages(roomId, cursor, limit, direction);
+    return this.chatService.getMessages(roomId, user.userId, cursor, limit, direction);
   }
 
   @Post(":roomId/attachments/presign")
@@ -64,8 +66,9 @@ export class ChatController {
   presignAttachment(
     @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
     @Param("roomId", new ParseUUIDPipe({ version: "4" })) roomId: string,
+    @ActiveUserParam() user: ActiveUser,
     @Body() dto: PresignFileDto,
   ): Promise<PresignedAvatarUpload> {
-    return this.chatService.presignAttachment(workspaceId, roomId, dto.contentType, dto.fileName);
+    return this.chatService.presignAttachment(workspaceId, roomId, user.userId, dto.contentType, dto.fileName);
   }
 }

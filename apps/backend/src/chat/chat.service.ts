@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { ModuleTypeEnum } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
@@ -29,6 +29,15 @@ export class ChatService {
     private statusGateway: StatusGateway,
     private storageService: StorageService,
   ) {}
+
+  private assertDmAccess(
+    room: { is_direct: boolean; dm_user_a_id: string | null; dm_user_b_id: string | null },
+    userId: string,
+  ) {
+    if (room.is_direct && room.dm_user_a_id !== userId && room.dm_user_b_id !== userId) {
+      throw new NotFoundException("Chat room not found");
+    }
+  }
 
   async createRoom(
     workspaceId: string,
@@ -72,7 +81,7 @@ export class ChatService {
     return { success: true, data: room };
   }
 
-  async getRoom(roomId: string) {
+  async getRoom(roomId: string, userId: string) {
     const room = await this.prisma.chatRoom.findUnique({
       where: { id: roomId },
     });
@@ -81,30 +90,41 @@ export class ChatService {
       throw new NotFoundException("Chat room not found");
     }
 
+    this.assertDmAccess(room, userId);
+
     return { success: true, data: room };
   }
 
   async presignAttachment(
     workspaceId: string,
     roomId: string,
+    userId: string,
     contentType: string,
     fileName: string,
   ): Promise<PresignedAvatarUpload> {
     const room = await this.prisma.chatRoom.findFirst({
       where: { id: roomId, workspace_id: workspaceId },
-      select: { id: true },
     });
     if (!room) throw new NotFoundException("Chat room not found");
+
+    this.assertDmAccess(room, userId);
 
     return this.storageService.presignFileUpload(contentType, fileName, roomId);
   }
 
   async getMessages(
     roomId: string,
+    userId: string,
     cursor?: string,
     limit: number = 50,
     direction: "before" | "after" = "before",
   ) {
+    const room = await this.prisma.chatRoom.findUnique({
+      where: { id: roomId },
+    });
+    if (!room) throw new NotFoundException("Chat room not found");
+    this.assertDmAccess(room, userId);
+
     const take = Math.min(limit, 100);
 
     const where: Record<string, unknown> = {

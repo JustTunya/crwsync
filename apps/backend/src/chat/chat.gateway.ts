@@ -119,7 +119,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const room = await this.prisma.chatRoom.findUnique({
       where: { id: data.roomId },
-      select: { id: true, workspace_id: true },
+      select: { id: true, workspace_id: true, is_direct: true, dm_user_a_id: true, dm_user_b_id: true },
     });
 
     if (!room || room.workspace_id !== data.workspaceId) {
@@ -127,8 +127,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
+    if (room.is_direct && room.dm_user_a_id !== userId && room.dm_user_b_id !== userId) {
+      client.emit("error", { message: "Room not found" });
+      return;
+    }
+
     await client.join(`chat_${data.roomId}`);
     client.data.currentRoom = data.roomId;
+    client.data.currentRoomIsDirect = room.is_direct;
     client.data.workspaceId = data.workspaceId;
 
     return { event: "joined_room", data: data.roomId };

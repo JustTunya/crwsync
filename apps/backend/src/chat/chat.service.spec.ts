@@ -17,6 +17,10 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
     chatReadReceipt: {
       upsert: jest.Mock;
     };
+    chatRoom: {
+      findUnique: jest.Mock;
+      findFirst: jest.Mock;
+    };
   };
   let statusGateway: {
     server: {
@@ -32,6 +36,10 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
       },
       chatReadReceipt: {
         upsert: jest.fn().mockResolvedValue({ id: "receipt-1" }),
+      },
+      chatRoom: {
+        findUnique: jest.fn(),
+        findFirst: jest.fn(),
       },
     };
 
@@ -151,6 +159,55 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
           }),
         }),
       );
+    });
+  });
+
+  describe("DM room access control", () => {
+    const dmRoom = {
+      id: "room-dm",
+      workspace_id: "ws-1",
+      is_direct: true,
+      dm_user_a_id: "user-a",
+      dm_user_b_id: "user-b",
+    };
+    const groupRoom = {
+      id: "room-group",
+      workspace_id: "ws-1",
+      is_direct: false,
+      dm_user_a_id: null,
+      dm_user_b_id: null,
+    };
+
+    it("getRoom returns the room for a DM participant", async () => {
+      prisma.chatRoom.findUnique.mockResolvedValue(dmRoom);
+
+      const result = await chatService.getRoom("room-dm", "user-a");
+
+      expect(result).toEqual({ success: true, data: dmRoom });
+    });
+
+    it("getRoom throws NotFoundException for a non-participant", async () => {
+      prisma.chatRoom.findUnique.mockResolvedValue(dmRoom);
+
+      await expect(chatService.getRoom("room-dm", "user-c")).rejects.toThrow(
+        "Chat room not found",
+      );
+    });
+
+    it("getRoom allows any workspace member into a non-DM room", async () => {
+      prisma.chatRoom.findUnique.mockResolvedValue(groupRoom);
+
+      const result = await chatService.getRoom("room-group", "user-c");
+
+      expect(result).toEqual({ success: true, data: groupRoom });
+    });
+
+    it("presignAttachment throws NotFoundException for a non-participant", async () => {
+      prisma.chatRoom.findFirst.mockResolvedValue(dmRoom);
+
+      await expect(
+        chatService.presignAttachment("ws-1", "room-dm", "user-c", "image/png", "a.png"),
+      ).rejects.toThrow("Chat room not found");
     });
   });
 });
