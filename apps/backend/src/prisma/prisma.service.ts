@@ -25,7 +25,13 @@ export class PrismaService
     const max = Number(url.searchParams.get("connection_limit")) || 10;
     const connectionTimeoutMillis = (Number(url.searchParams.get("pool_timeout")) || 10) * 1000;
 
-    const adapter = new PrismaPg({ connectionString, max, connectionTimeoutMillis });
+    const adapter = new PrismaPg({
+      connectionString,
+      max,
+      connectionTimeoutMillis,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10_000,
+    });
 
     super({
       adapter,
