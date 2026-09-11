@@ -21,6 +21,9 @@ import {
   CreateTaskCommentPayload,
   UpdateTaskCommentPayload,
   TaskCommentPage,
+  TaskChecklistItem,
+  CreateTaskChecklistItemPayload,
+  UpdateTaskChecklistItemPayload,
 } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
@@ -412,6 +415,55 @@ export async function deleteTaskComment(
   } catch (error) {
     if (isAxiosError(error)) {
       return { success: false, message: error.response?.data?.message || "Failed to delete comment" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function createChecklistItem(
+  workspaceId: string,
+  taskId: string,
+  data: CreateTaskChecklistItemPayload,
+): Promise<BoardOperationState<TaskChecklistItem>> {
+  try {
+    const response = await api.post(`/workspaces/${workspaceId}/tasks/${taskId}/checklist-items`, data);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return { success: false, message: error.response?.data?.message || "Failed to add checklist item" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function updateChecklistItem(
+  workspaceId: string,
+  taskId: string,
+  itemId: string,
+  data: UpdateTaskChecklistItemPayload,
+): Promise<BoardOperationState<TaskChecklistItem>> {
+  try {
+    const response = await api.patch(`/workspaces/${workspaceId}/tasks/${taskId}/checklist-items/${itemId}`, data);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return { success: false, message: error.response?.data?.message || "Failed to update checklist item" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function deleteChecklistItem(
+  workspaceId: string,
+  taskId: string,
+  itemId: string,
+): Promise<BoardOperationState> {
+  try {
+    await api.delete(`/workspaces/${workspaceId}/tasks/${taskId}/checklist-items/${itemId}`);
+    return { success: true };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return { success: false, message: error.response?.data?.message || "Failed to delete checklist item" };
     }
     return { success: false, message: "An unexpected error occurred" };
   }

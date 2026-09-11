@@ -3,7 +3,7 @@
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
-import { Calendar04Icon, Flag02Icon, Comment01Icon } from "@hugeicons/core-free-icons";
+import { Calendar04Icon, Flag02Icon, Comment01Icon, CheckmarkSquare02Icon } from "@hugeicons/core-free-icons";
 import type { Task } from "@crwsync/types";
 import { UserAvatar } from "@/components/user-avatar";
 import { ReadOnlyDescription } from "@/components/kanban/RichTextEditor";
@@ -45,7 +45,7 @@ export function KanbanTask({ task, onClick, workspaceId }: { task: Task; onClick
       )}
       <div className={cn(
         "flex items-center justify-between",
-        (task.priority && task.priority !== "NONE" || task.due_date || task.labels?.length || task._count?.comments || (task.assignee_id && assignee)) && "mt-4"
+        (task.priority && task.priority !== "NONE" || task.due_date || task.labels?.length || task._count?.comments || task.checklistItems?.length || (task.assignee_id && assignee)) && "mt-4"
       )}>
         <div className="flex items-center gap-2">
           {task.priority && task.priority !== "NONE" && (
@@ -57,6 +57,12 @@ export function KanbanTask({ task, onClick, workspaceId }: { task: Task; onClick
           {task.labels && task.labels.length > 0 && (
             <span className="text-xs text-muted-foreground">
               {task.labels.length} label{task.labels.length > 1 ? "s" : ""}
+            </span>
+          )}
+          {!!task.checklistItems?.length && (
+            <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+              <HugeiconsIcon icon={CheckmarkSquare02Icon} strokeWidth={2} className="size-3" />
+              {task.checklistItems.filter((i) => i.is_completed).length}/{task.checklistItems.length}
             </span>
           )}
           {!!task._count?.comments && (

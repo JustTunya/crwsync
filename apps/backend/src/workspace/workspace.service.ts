@@ -4,6 +4,7 @@ import { WorkspaceInviteStatusEnum, PresignedAvatarUpload } from "@crwsync/types
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto } from "src/workspace/dto/workspace.dto";
 import { CreateTaskAttachmentDto } from "src/workspace/dto/task-attachment.dto";
 import { CreateTaskCommentDto, UpdateTaskCommentDto } from "src/workspace/dto/task-comment.dto";
+import { CreateTaskChecklistItemDto, UpdateTaskChecklistItemDto } from "src/workspace/dto/task-checklist.dto";
 import { CacheService, CacheKeys, CacheTTL } from "src/redis";
 import { PrismaService } from "src/prisma/prisma.service";
 import { StatusGateway } from "src/status/status.gateway";
@@ -890,6 +891,76 @@ export class WorkspaceService {
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("task:comment:deleted", { boardId: comment.task.column.board_id, taskId, commentId, commentCount });
+
+    return { success: true };
+  }
+
+  async createTaskChecklistItem(
+    workspaceId: string,
+    taskId: string,
+    userId: string,
+    dto: CreateTaskChecklistItemDto,
+  ) {
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, column: { board: { workspace_id: workspaceId } } },
+      include: { column: { select: { board_id: true } } },
+    });
+    if (!task) throw new NotFoundException("Task not found");
+
+    const position = await this.prisma.taskChecklistItem.count({ where: { task_id: taskId } });
+
+    const item = await this.prisma.taskChecklistItem.create({
+      data: {
+        task_id: taskId,
+        content: dto.content,
+        created_by: userId,
+        position,
+      },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("task:checklist:created", { boardId: task.column.board_id, taskId, item });
+
+    return { success: true, data: item };
+  }
+
+  async updateTaskChecklistItem(
+    workspaceId: string,
+    taskId: string,
+    itemId: string,
+    dto: UpdateTaskChecklistItemDto,
+  ) {
+    const item = await this.prisma.taskChecklistItem.findFirst({
+      where: { id: itemId, task_id: taskId, task: { column: { board: { workspace_id: workspaceId } } } },
+      include: { task: { include: { column: { select: { board_id: true } } } } },
+    });
+    if (!item) throw new NotFoundException("Checklist item not found");
+
+    const updated = await this.prisma.taskChecklistItem.update({
+      where: { id: itemId },
+      data: { ...(dto.content !== undefined && { content: dto.content }), ...(dto.is_completed !== undefined && { is_completed: dto.is_completed }) },
+    });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("task:checklist:updated", { boardId: item.task.column.board_id, taskId, item: updated });
+
+    return { success: true, data: updated };
+  }
+
+  async deleteTaskChecklistItem(workspaceId: string, taskId: string, itemId: string) {
+    const item = await this.prisma.taskChecklistItem.findFirst({
+      where: { id: itemId, task_id: taskId, task: { column: { board: { workspace_id: workspaceId } } } },
+      include: { task: { include: { column: { select: { board_id: true } } } } },
+    });
+    if (!item) throw new NotFoundException("Checklist item not found");
+
+    await this.prisma.taskChecklistItem.delete({ where: { id: itemId } });
+
+    this.statusGateway.server
+      .to(`workspace_${workspaceId}`)
+      .emit("task:checklist:deleted", { boardId: item.task.column.board_id, taskId, itemId });
 
     return { success: true };
   }

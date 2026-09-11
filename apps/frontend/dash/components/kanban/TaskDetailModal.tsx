@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 import { TaskPriorityEnum } from "../../lib/kanban.utils";
 import { RichTextEditor } from "./RichTextEditor";
+import { TaskChecklist } from "./TaskChecklist";
 import { TaskAttachments } from "./TaskAttachments";
 import { TaskComments } from "./TaskComments";
 
@@ -376,6 +377,8 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
             </div>
           </div>
         </div>
+
+        <TaskChecklist task={liveTask} workspaceId={workspaceId} boardId={boardId} />
 
         <TaskAttachments task={liveTask} workspaceId={workspaceId} boardId={boardId} />
 

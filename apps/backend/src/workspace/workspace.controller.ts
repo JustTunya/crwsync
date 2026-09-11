@@ -6,6 +6,7 @@ import type { Response } from "express";
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto, UpdateMemberRoleDto } from "src/workspace/dto/workspace.dto";
 import { CreateTaskAttachmentDto } from "src/workspace/dto/task-attachment.dto";
 import { CreateTaskCommentDto, UpdateTaskCommentDto } from "src/workspace/dto/task-comment.dto";
+import { CreateTaskChecklistItemDto, UpdateTaskChecklistItemDto } from "src/workspace/dto/task-checklist.dto";
 import { PresignFileDto } from "src/storage/dto/presign-file.dto";
 import { RequireWorkspaceRoles } from "src/workspace/decorators/ws-roles.decorator";
 import { HasPendingInviteGuard } from "src/workspace/guards/ws-invite.guard";
@@ -301,6 +302,38 @@ export class WorkspaceController {
     @ActiveUserParam() user: ActiveUser,
   ) {
     return this.workspaceService.deleteTaskComment(workspaceId, taskId, commentId, user.userId);
+  }
+
+  @Post(":workspaceId/tasks/:taskId/checklist-items")
+  @UseGuards(IsMemberGuard)
+  createTaskChecklistItem(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @ActiveUserParam() user: ActiveUser,
+    @Body() dto: CreateTaskChecklistItemDto,
+  ) {
+    return this.workspaceService.createTaskChecklistItem(workspaceId, taskId, user.userId, dto);
+  }
+
+  @Patch(":workspaceId/tasks/:taskId/checklist-items/:itemId")
+  @UseGuards(IsMemberGuard)
+  updateTaskChecklistItem(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @Param("itemId", new ParseUUIDPipe({ version: "4" })) itemId: string,
+    @Body() dto: UpdateTaskChecklistItemDto,
+  ) {
+    return this.workspaceService.updateTaskChecklistItem(workspaceId, taskId, itemId, dto);
+  }
+
+  @Delete(":workspaceId/tasks/:taskId/checklist-items/:itemId")
+  @UseGuards(IsMemberGuard)
+  deleteTaskChecklistItem(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
+    @Param("taskId", new ParseUUIDPipe({ version: "4" })) taskId: string,
+    @Param("itemId", new ParseUUIDPipe({ version: "4" })) itemId: string,
+  ) {
+    return this.workspaceService.deleteTaskChecklistItem(workspaceId, taskId, itemId);
   }
 
   @Get(":workspaceId/files/:key")

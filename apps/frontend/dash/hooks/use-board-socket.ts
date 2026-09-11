@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Board, BoardColumn, Task, TaskAttachment, TaskComment, TaskCommentPage } from "@crwsync/types";
+import type { Board, BoardColumn, Task, TaskAttachment, TaskComment, TaskCommentPage, TaskChecklistItem } from "@crwsync/types";
 import { useSocket } from "@/providers/socket.provider";
 import { useUser } from "@/providers/user.provider";
 import { boardKeys } from "@/hooks/use-boards";
@@ -93,6 +93,24 @@ interface TaskCommentDeletedPayload {
   taskId: string;
   commentId: string;
   commentCount: number;
+}
+
+interface TaskChecklistCreatedPayload {
+  boardId: string;
+  taskId: string;
+  item: TaskChecklistItem;
+}
+
+interface TaskChecklistUpdatedPayload {
+  boardId: string;
+  taskId: string;
+  item: TaskChecklistItem;
+}
+
+interface TaskChecklistDeletedPayload {
+  boardId: string;
+  taskId: string;
+  itemId: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -421,6 +439,70 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
       );
     };
 
+    // ----- task:checklist:created -------------------------------------------
+    const onTaskChecklistCreated = ({ boardId: bId, taskId, item }: TaskChecklistCreatedPayload) => {
+      if (bId !== boardId) return;
+
+      queryClient.setQueryData<BoardCache>(
+        boardKeys.detail(boardId),
+        (old) =>
+          patchBoardCache(old, (board) => ({
+            ...board,
+            columns: (board.columns ?? []).map((col) => ({
+              ...col,
+              tasks: (col.tasks ?? []).map((t) => {
+                if (t.id !== taskId) return t;
+                const alreadyExists = (t.checklistItems ?? []).some((i) => i.id === item.id);
+                if (alreadyExists) return t;
+                return { ...t, checklistItems: [...(t.checklistItems ?? []), item] };
+              }),
+            })),
+          })),
+      );
+    };
+
+    // ----- task:checklist:updated -------------------------------------------
+    const onTaskChecklistUpdated = ({ boardId: bId, taskId, item }: TaskChecklistUpdatedPayload) => {
+      if (bId !== boardId) return;
+
+      queryClient.setQueryData<BoardCache>(
+        boardKeys.detail(boardId),
+        (old) =>
+          patchBoardCache(old, (board) => ({
+            ...board,
+            columns: (board.columns ?? []).map((col) => ({
+              ...col,
+              tasks: (col.tasks ?? []).map((t) =>
+                t.id === taskId
+                  ? { ...t, checklistItems: (t.checklistItems ?? []).map((i) => (i.id === item.id ? item : i)) }
+                  : t,
+              ),
+            })),
+          })),
+      );
+    };
+
+    // ----- task:checklist:deleted -------------------------------------------
+    const onTaskChecklistDeleted = ({ boardId: bId, taskId, itemId }: TaskChecklistDeletedPayload) => {
+      if (bId !== boardId) return;
+
+      queryClient.setQueryData<BoardCache>(
+        boardKeys.detail(boardId),
+        (old) =>
+          patchBoardCache(old, (board) => ({
+            ...board,
+            columns: (board.columns ?? []).map((col) => ({
+              ...col,
+              tasks: (col.tasks ?? []).map((t) =>
+                t.id === taskId
+                  ? { ...t, checklistItems: (t.checklistItems ?? []).filter((i) => i.id !== itemId) }
+                  : t,
+              ),
+            })),
+          })),
+      );
+    };
+
     // ----- reconnect: recover missed events -----------------------------
     const onReconnect = () => {
       queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
@@ -441,6 +523,9 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
     socket.on("task:comment:created", onTaskCommentCreated);
     socket.on("task:comment:updated", onTaskCommentUpdated);
     socket.on("task:comment:deleted", onTaskCommentDeleted);
+    socket.on("task:checklist:created", onTaskChecklistCreated);
+    socket.on("task:checklist:updated", onTaskChecklistUpdated);
+    socket.on("task:checklist:deleted", onTaskChecklistDeleted);
     socket.io.on("reconnect", onReconnect);
 
     return () => {
@@ -458,6 +543,9 @@ export function useBoardSocket(workspaceId: string, boardId: string) {
       socket.off("task:comment:created", onTaskCommentCreated);
       socket.off("task:comment:updated", onTaskCommentUpdated);
       socket.off("task:comment:deleted", onTaskCommentDeleted);
+      socket.off("task:checklist:created", onTaskChecklistCreated);
+      socket.off("task:checklist:updated", onTaskChecklistUpdated);
+      socket.off("task:checklist:deleted", onTaskChecklistDeleted);
       socket.io.off("reconnect", onReconnect);
     };
   }, [socket, boardId, workspaceId, queryClient, user?.id]);
