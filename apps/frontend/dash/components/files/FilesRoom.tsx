@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useMemo, useCallback, DragEvent, ChangeEvent } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -27,6 +28,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { Input } from "@/components/ui/input";
 import { ChatLightbox } from "@/components/chat/ChatLightbox";
 import { cn } from "@/lib/utils";
+import { highlightTarget } from "@/hooks/use-highlight-target";
 
 const MAX_CONCURRENT_UPLOADS = 12;
 
@@ -68,6 +70,23 @@ export function FilesRoom({ workspaceId, roomId }: FilesRoomProps) {
   const queryClient = useQueryClient();
 
   useFilesSocket(roomId);
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const fileId = searchParams.get("fileId");
+    if (!fileId || files.length === 0) return;
+
+    highlightTarget(`file-${fileId}`);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("fileId");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, files.length]);
 
   const [view, setView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
@@ -333,7 +352,7 @@ function FileCard({ file, workspaceId, onDelete, onPreview }: FileItemProps) {
   const isImage = file.mime_type.startsWith("image/");
 
   return (
-    <div className="group relative flex flex-col rounded-xl bg-card border-[1.5px] border-base-200 hover:border-base-300 transition-colors overflow-hidden">
+    <div id={`file-${file.id}`} className="group relative flex flex-col rounded-xl bg-card border-[1.5px] border-base-200 hover:border-base-300 transition-colors overflow-hidden">
       <button
         type="button"
         onClick={onPreview}
@@ -383,7 +402,7 @@ function FileRow({ file, workspaceId, onDelete, onPreview }: FileItemProps) {
   const isImage = file.mime_type.startsWith("image/");
 
   return (
-    <div className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-base-200/40 transition-colors">
+    <div id={`file-${file.id}`} className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-base-200/40 transition-colors">
       <button
         type="button"
         onClick={onPreview}
