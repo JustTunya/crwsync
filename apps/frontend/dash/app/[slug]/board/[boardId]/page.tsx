@@ -2,7 +2,7 @@
 
 import { useReducer, useCallback, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SortableContext } from "@dnd-kit/sortable";
 import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent } from "@dnd-kit/core";
 import type { Task, BoardColumn } from "@crwsync/types";
@@ -73,6 +73,9 @@ function boardReducer(state: BoardPageState, action: BoardPageAction): BoardPage
 
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const { activeId } = useWorkspace();
   const workspaceId = activeId || "";
@@ -105,6 +108,22 @@ export default function BoardPage() {
       document.title = `${board.name} | crwsync`;
     }
   }, [board?.name]);
+
+  useEffect(() => {
+    const taskId = searchParams.get("taskId");
+    if (!taskId || !board?.columns) return;
+
+    const task = board.columns.flatMap((c) => c.tasks || []).find((t) => t.id === taskId);
+    if (!task) return;
+
+    dispatch({ type: "SET_EDITING_TASK", payload: task });
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("taskId");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [board, searchParams]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
