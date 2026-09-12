@@ -392,6 +392,16 @@ export class ChatService {
     });
 
     if (existing) {
+      const latestMessage = await this.prisma.chatMessage.findFirst({
+        where: { room_id: existing.id },
+        orderBy: { created_at: "desc" },
+        select: { id: true },
+      });
+
+      if (latestMessage) {
+        await this.markAsRead(workspaceId, existing.id, userId, latestMessage.id);
+      }
+
       return { success: true, data: existing };
     }
 
