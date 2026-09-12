@@ -166,16 +166,7 @@ export function LSidebar() {
 
   useHotkey(["ctrl", "k"], (e) => {
     e.preventDefault();
-    if (!open) {
-      setSearchModalOpen(true);
-    } else {
-      setTimeout(
-        () => {
-          searchRef.current?.focus();
-        },
-        0,
-      );
-    }
+    setSearchModalOpen(true);
   });
 
   const sidebarVariants = {
@@ -467,6 +458,17 @@ export function LSidebar() {
             className="size-5"
           />
         </m.div>
+      {isMobile && !open && (
+        <m.div
+          initial={false}
+          animate={{ opacity: rOpen ? 0 : 1, pointerEvents: rOpen ? "none" : "auto" }}
+          transition={spring}
+          className="fixed top-4 left-14 flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer z-50"
+          onClick={() => setSearchModalOpen(true)}
+        >
+          <HugeiconsIcon icon={Search01Icon} strokeWidth={2} className="size-5" />
+        </m.div>
+      )}
       <OmniSearchModal
         open={searchModalOpen}
         onOpenChange={setSearchModalOpen}
@@ -474,6 +476,7 @@ export function LSidebar() {
         workspaceId={activeWorkspaceId || ""}
         localModules={localModules}
         pathname={pathname}
+        onNavigate={() => { if (isMobile) setOpen(false); }}
       />
       </LazyMotion>
     </>
