@@ -20,3 +20,8 @@ export const activityKeys = {
   all: ["taskActivity"] as const,
   list: (taskId: string) => [...activityKeys.all, "list", taskId] as const,
 };
+
+export const searchKeys = {
+  all: ["search"] as const,
+  query: (workspaceId: string, q: string) => [...searchKeys.all, workspaceId, q] as const,
+};

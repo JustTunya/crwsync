@@ -7,6 +7,8 @@ export const CacheKeys = {
   workspaceSlug: (slug: string) => `workspace:slug:${slug.toLowerCase()}`,
   workspaceMember: (workspaceId: string, userId: string) => `workspace:${workspaceId}:member:${userId}`,
   verification: (email: string) => `verification:${email.toLowerCase()}`,
+  workspaceSearch: (workspaceId: string, userId: string, q: string) =>
+    `workspace:${workspaceId}:user:${userId}:search:${q.toLowerCase().trim()}`,
 };
 
 export const CacheTTL = {
@@ -16,4 +18,5 @@ export const CacheTTL = {
   WORKSPACE_MEMBER: 600, // 10 minutes
   USER_WORKSPACES: 600, // 10 minutes
   VERIFICATION: 300, // 5 minutes
+  SEARCH: 30, // 30 seconds
 };

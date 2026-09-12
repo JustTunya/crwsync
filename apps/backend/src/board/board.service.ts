@@ -307,6 +307,7 @@ export class BoardService {
       const task = await this.prisma.task.create({
         data: {
           column_id: dto.column_id,
+          workspace_id: workspaceId,
           shortId,
           title: dto.title,
           description: dto.description,

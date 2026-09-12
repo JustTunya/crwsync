@@ -109,6 +109,7 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     await client.join(`workspace_${workspaceId}`);
+    await this.broadcastUserStatus(userId);
 
     const members = await this.prisma.workspaceMember.findMany({
       where: { workspace_id: workspaceId },

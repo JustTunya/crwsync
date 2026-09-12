@@ -2,7 +2,7 @@
 
 import { useReducer, useCallback, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SortableContext } from "@dnd-kit/sortable";
 import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent } from "@dnd-kit/core";
 import type { Task, BoardColumn } from "@crwsync/types";
@@ -14,6 +14,8 @@ import { BoardListView } from "@/components/kanban/BoardListView";
 import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/use-boards";
 import { useBoardSocket } from "@/hooks/use-board-socket";
 import { useBoardFilters } from "@/hooks/use-board-filters";
+import { LSidebarToggle } from "@/components/l-sidebar";
+import { RSidebarToggle } from "@/components/r-sidebar";
 
 const TaskDetailModal = dynamic(
   () => import("@/components/kanban/TaskDetailModal").then((mod) => mod.TaskDetailModal),
@@ -73,6 +75,9 @@ function boardReducer(state: BoardPageState, action: BoardPageAction): BoardPage
 
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const { activeId } = useWorkspace();
   const workspaceId = activeId || "";
@@ -105,6 +110,22 @@ export default function BoardPage() {
       document.title = `${board.name} | crwsync`;
     }
   }, [board?.name]);
+
+  useEffect(() => {
+    const taskId = searchParams.get("taskId");
+    if (!taskId || !board?.columns) return;
+
+    const task = board.columns.flatMap((c) => c.tasks || []).find((t) => t.id === taskId);
+    if (!task) return;
+
+    dispatch({ type: "SET_EDITING_TASK", payload: task });
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("taskId");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [board, searchParams]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -188,10 +209,14 @@ export default function BoardPage() {
   if (isLoading || !workspaceId) {
     return (
       <div className="size-full flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200 shrink-0">
-          <div className="w-0 flex-1">
-            <div className="h-5 w-40 bg-base-200 rounded animate-pulse" />
+        <div className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <LSidebarToggle />
+            <div className="w-0 flex-1">
+              <div className="h-5 w-40 bg-base-200 rounded animate-pulse" />
+            </div>
           </div>
+          <RSidebarToggle />
         </div>
         <div className="flex-1 flex items-center justify-center" role="status" aria-label="Loading board">
           <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -214,8 +239,12 @@ export default function BoardPage() {
 
   return (
     <div className="size-full flex flex-col overflow-hidden">
-      <div className="flex items-center h-16 pl-16 pr-24 border-b border-base-200 shrink-0">
-        <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{board.name}</h1>
+      <div className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <LSidebarToggle />
+          <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{board.name}</h1>
+        </div>
+        <RSidebarToggle />
       </div>
 
       <BoardToolbar

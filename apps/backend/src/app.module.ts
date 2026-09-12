@@ -15,6 +15,7 @@ import { EmailModule } from "src/email/email.module";
 import { WorkspaceModule } from "src/workspace/workspace.module";
 import { StatusModule } from "src/status/status.module";
 import { BoardModule } from "src/board/board.module";
+import { SearchModule } from "src/search/search.module";
 import { ChatModule } from "src/chat/chat.module";
 import { FilesModule } from "src/files/files.module";
 import { NotificationModule } from "src/notification/notification.module";
@@ -60,6 +61,7 @@ import { ContactModule } from "src/contact/contact.module";
     WorkspaceModule,
     StatusModule,
     BoardModule,
+    SearchModule,
     ChatModule,
     FilesModule,
     ContactModule,

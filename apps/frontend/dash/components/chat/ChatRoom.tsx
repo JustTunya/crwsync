@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import type { ChatMessage } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { useChatSocket } from "@/hooks/use-chat-socket";
 import { useChatRoom, useChatMessages } from "@/hooks/use-chat";
 import { useDirectMessages } from "@/hooks/use-dm";
+import { highlightTarget } from "@/hooks/use-highlight-target";
 import { MessageList } from "@/components/chat/MessageList";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { UserAvatar } from "@/components/user-avatar";
+import { LSidebarToggle } from "@/components/l-sidebar";
+import { RSidebarToggle } from "@/components/r-sidebar";
 
 const EMPTY_MESSAGES: ChatMessage[] = [];
 
@@ -26,6 +30,10 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
     ? dmSummaries?.find((dm) => dm.room.id === roomId)?.otherParticipant
     : undefined;
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const { setMessages, clearRoom } = useChatStore();
   const messages = useChatStore((s) => s.messages.get(roomId)) ?? EMPTY_MESSAGES;
   const typingUsers = useChatStore((s) => s.typingUsers.get(roomId)) ?? [];
@@ -42,6 +50,25 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
   }, [initialMessages, roomId, setMessages, messages.length]);
 
   useEffect(() => {
+    const messageId = searchParams.get("messageId");
+    if (!messageId) return;
+
+    const clearParam = () => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("messageId");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    };
+
+    const existing = document.getElementById(`message-${messageId}`);
+    if (existing) {
+      highlightTarget(`message-${messageId}`, ".message-highlight-target");
+    }
+    clearParam();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, messages]);
+
+  useEffect(() => {
     return () => {
       clearRoom(roomId);
     };
@@ -49,17 +76,21 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
 
   return (
     <div className="size-full flex flex-col">
-      <div className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200">
-        {room?.is_direct ? (
-          <div className="flex items-center gap-3">
-            <UserAvatar user={dmParticipant} size={8} />
-            <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">
-              {dmParticipant ? `${dmParticipant.firstname} ${dmParticipant.lastname}` : "Direct Message"}
-            </h1>
-          </div>
-        ) : (
-          <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{room?.name || "Chat"}</h1>
-        )}
+      <div className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200">
+        <div className="flex items-center gap-3 min-w-0">
+          <LSidebarToggle />
+          {room?.is_direct ? (
+            <div className="flex items-center gap-3 min-w-0">
+              <UserAvatar user={dmParticipant} size={8} />
+              <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">
+                {dmParticipant ? `${dmParticipant.firstname} ${dmParticipant.lastname}` : "Direct Message"}
+              </h1>
+            </div>
+          ) : (
+            <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{room?.name || "Chat"}</h1>
+          )}
+        </div>
+        <RSidebarToggle />
       </div>
 
       {!isConnected && (

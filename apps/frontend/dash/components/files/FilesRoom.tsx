@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useMemo, useCallback, DragEvent, ChangeEvent } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -26,7 +27,10 @@ import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
 import { UserAvatar } from "@/components/user-avatar";
 import { Input } from "@/components/ui/input";
 import { ChatLightbox } from "@/components/chat/ChatLightbox";
+import { LSidebarToggle } from "@/components/l-sidebar";
+import { RSidebarToggle } from "@/components/r-sidebar";
 import { cn } from "@/lib/utils";
+import { highlightTarget } from "@/hooks/use-highlight-target";
 
 const MAX_CONCURRENT_UPLOADS = 12;
 
@@ -68,6 +72,23 @@ export function FilesRoom({ workspaceId, roomId }: FilesRoomProps) {
   const queryClient = useQueryClient();
 
   useFilesSocket(roomId);
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const fileId = searchParams.get("fileId");
+    if (!fileId || files.length === 0) return;
+
+    highlightTarget(`file-${fileId}`);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("fileId");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, files.length]);
 
   const [view, setView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
@@ -145,10 +166,14 @@ export function FilesRoom({ workspaceId, roomId }: FilesRoomProps) {
 
   return (
     <div className="size-full flex flex-col">
-      <div className="flex items-center h-16 pl-16 pr-24 border-b border-base-200">
-        <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis shrink-0">
-          {room?.name || "Files"}
-        </h1>
+      <div className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200">
+        <div className="flex items-center gap-3 min-w-0">
+          <LSidebarToggle />
+          <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis shrink-0">
+            {room?.name || "Files"}
+          </h1>
+        </div>
+        <RSidebarToggle />
       </div>
 
       <div className="flex items-center justify-between gap-3 px-6 py-3 border-b border-base-200">
@@ -243,7 +268,9 @@ export function FilesRoom({ workspaceId, roomId }: FilesRoomProps) {
             No files match &ldquo;{search}&rdquo;
           </div>
         ) : view === "grid" ? (
-          <div className="grid gap-4 p-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))" }}>
+          <div
+            className="grid grid-cols-2 gap-4 p-6 sm:[grid-template-columns:repeat(auto-fill,minmax(168px,1fr))]"
+          >
             {uploading.map((u) => (
               <UploadingCard key={u.id} upload={u} />
             ))}
@@ -333,7 +360,7 @@ function FileCard({ file, workspaceId, onDelete, onPreview }: FileItemProps) {
   const isImage = file.mime_type.startsWith("image/");
 
   return (
-    <div className="group relative flex flex-col rounded-xl bg-card border-[1.5px] border-base-200 hover:border-base-300 transition-colors overflow-hidden">
+    <div id={`file-${file.id}`} className="group relative flex flex-col rounded-xl bg-card border-[1.5px] border-base-200 hover:border-base-300 transition-colors overflow-hidden">
       <button
         type="button"
         onClick={onPreview}
@@ -383,7 +410,7 @@ function FileRow({ file, workspaceId, onDelete, onPreview }: FileItemProps) {
   const isImage = file.mime_type.startsWith("image/");
 
   return (
-    <div className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-base-200/40 transition-colors">
+    <div id={`file-${file.id}`} className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-base-200/40 transition-colors">
       <button
         type="button"
         onClick={onPreview}
