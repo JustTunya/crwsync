@@ -269,7 +269,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
         </div>
       )}
 
-      <div className={cn("flex flex-col w-[70%] max-w-lg", isSelf ? "items-end" : "items-start")}>
+      <div className={cn("flex flex-col w-[75%] max-w-lg", isSelf ? "items-end" : "items-start")}>
         {!isConsecutive && !isSelf && message.sender && (
           <span className="text-xs text-muted-foreground font-medium mb-0.5 ml-1">
             {message.sender.firstname} {message.sender.lastname}
@@ -313,7 +313,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
         )}
 
         <div className={cn("relative z-10 group/bubble flex flex-col gap-1", isSelf ? "items-end" : "items-start")}>
-          <div className={cn("flex items-center gap-2", isSelf ? "flex-row-reverse" : "flex-row")}>
+          <div className="relative">
             {(message.content || message.is_deleted || isEditing) && (
             <div
               className={cn(
@@ -375,8 +375,9 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
 
           {!message.is_deleted && !isPending && !isEditing && (
             <div className={cn(
-              "opacity-0 group-hover/bubble:opacity-100 flex items-center gap-1 transition-opacity",
+              "absolute top-1/2 -translate-y-1/2 opacity-0 group-hover/bubble:opacity-100 flex items-center gap-1 transition-opacity",
               isEmojiPickerOpen && "opacity-100",
+              isSelf ? "right-full mr-2" : "left-full ml-2",
               !isSelf && "flex-row-reverse"
             )}>
               <Popover open={isEmojiPickerOpen} onOpenChange={handlePickerOpenChange}>

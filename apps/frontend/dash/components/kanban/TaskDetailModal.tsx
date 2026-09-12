@@ -358,6 +358,7 @@ export function TaskDetailModal({ task, workspaceId, boardId, onClose }: TaskDet
               </div>
               <Input
                 type="text"
+                enterKeyHint="done"
                 value={state.labelInput}
                 onChange={(e) => dispatch({ labelInput: e.target.value })}
                 onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
