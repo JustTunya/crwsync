@@ -768,6 +768,7 @@ export class WorkspaceService {
     const comment = await this.prisma.taskComment.create({
       data: {
         task_id: taskId,
+        workspace_id: workspaceId,
         author_id: authorId,
         content: dto.content,
         ...(validMentionIds.length ? { mentions: { connect: validMentionIds.map((id) => ({ id })) } } : {}),

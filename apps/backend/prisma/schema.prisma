@@ -161,6 +161,7 @@ model Workspace {
   members       WorkspaceMember[]
   invites       WorkspaceInvite[]
   boards        Board[]
+  tasks         Task[]
   projects      WorkspaceProject[]
   modules       WorkspaceModule[]
   chat_rooms    ChatRoom[]
@@ -245,6 +246,7 @@ model BoardColumn {
 model Task {
   id             String           @id @default(uuid()) @db.Uuid
   column_id      String           @db.Uuid
+  workspace_id   String           @db.Uuid
   shortId        String           @unique(map: "idx_task_short_id") @map("short_id") @db.Text
   title          String           @db.Text
   description    String?          @db.Text
@@ -263,6 +265,7 @@ model Task {
   updated_at     DateTime         @updatedAt @db.Timestamptz
 
   column         BoardColumn         @relation(fields: [column_id], references: [id], onDelete: Cascade)
+  workspace      Workspace           @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   assignee       User?               @relation("TaskAssignee", fields: [assignee_id], references: [id], onDelete: SetNull)
   creator        User                @relation("TaskCreator", fields: [created_by], references: [id], onDelete: Cascade)
   attachments    TaskAttachment[]
@@ -272,6 +275,7 @@ model Task {
 
   @@index([column_id], map: "idx_task_column_id")
   @@index([assignee_id], map: "idx_task_assignee_id")
+  @@index([workspace_id], map: "idx_task_workspace_id")
   @@map("tasks")
 }
 
@@ -293,20 +297,22 @@ model TaskAttachment {
 }
 
 model TaskComment {
-  id         String   @id @default(uuid()) @db.Uuid
-  task_id    String   @db.Uuid
-  author_id  String   @db.Uuid
-  content    String   @db.Text
-  is_edited  Boolean  @default(false)
-  is_deleted Boolean  @default(false)
-  created_at DateTime @default(now()) @db.Timestamptz
-  updated_at DateTime @updatedAt @db.Timestamptz
+  id           String   @id @default(uuid()) @db.Uuid
+  task_id      String   @db.Uuid
+  workspace_id String   @db.Uuid
+  author_id    String   @db.Uuid
+  content      String   @db.Text
+  is_edited    Boolean  @default(false)
+  is_deleted   Boolean  @default(false)
+  created_at   DateTime @default(now()) @db.Timestamptz
+  updated_at   DateTime @updatedAt @db.Timestamptz
 
   task     Task   @relation(fields: [task_id], references: [id], onDelete: Cascade)
   author   User   @relation("TaskCommentAuthor", fields: [author_id], references: [id], onDelete: Cascade)
   mentions User[] @relation("TaskCommentMentions")
 
   @@index([task_id, created_at], map: "idx_task_comment_task_id_created")
+  @@index([workspace_id], map: "idx_task_comment_workspace_id")
   @@map("task_comments")
 }
 
