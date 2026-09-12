@@ -78,7 +78,7 @@ FROM tasks t WHERE t.id = tc.task_id;
 
 New `search` module (mirrors `board` module structure exactly):
 
-```
+```text
 src/search/
   search.module.ts       — imports PrismaModule; declares SearchController, SearchService
   search.controller.ts   — @Controller("workspaces/:workspaceId/search"), @UseGuards(IsMemberGuard)
@@ -94,7 +94,7 @@ src/search/
   - **Files**: `similarity(file_name, $2) > 0.2 ORDER BY similarity(file_name, $2) DESC LIMIT 5`, scoped via `file_room_id IN (SELECT id FROM file_rooms WHERE workspace_id = $1)`, select `id, file_name, file_room_id, file_room_name`.
   - **Members**: `similarity(firstname || ' ' || lastname, $2) > 0.2 OR username ILIKE $3 OR email ILIKE $3`, joined through `workspace_members WHERE workspace_id = $1`, `LIMIT 5`, select `id, firstname, lastname, username, avatar_url, role`. New method on `SearchService`, not a reuse of `UserService.searchByEmailOrUsername` (that one's `NOT`-excludes existing members for invite flows — opposite intent here — but same query shape).
   - Response: `{ success: true, data: { tasks: [...], chats: [...], files: [...], members: [...] } }`.
-- Cache: `CacheKeys.workspaceSearch(workspaceId, q)` → `` `workspace:${workspaceId}:search:${q.toLowerCase().trim()}` ``, `CacheTTL.SEARCH = 30` (seconds). No explicit invalidation on mutation — a few seconds of staleness on search results is an acceptable tradeoff (unlike auth/session caches), and invalidating per-query-string on every task/message/file/member write would require tracking every cached query, not worth it for this read path.
+- Cache: `CacheKeys.workspaceSearch(workspaceId, q)` → "workspace:" + workspaceId + ":search:" + q.toLowerCase().trim(), `CacheTTL.SEARCH = 30` (seconds). No explicit invalidation on mutation — a few seconds of staleness on search results is an acceptable tradeoff (unlike auth/session caches), and invalidating per-query-string on every task/message/file/member write would require tracking every cached query, not worth it for this read path.
 
 ## Frontend
 
@@ -103,16 +103,24 @@ src/search/
 - `services/search.service.ts` — `searchWorkspace(workspaceId, q)`, same `{success, data?, message?}` shape as every other service.
 - `hooks/use-search.ts` — `searchKeys = { all, query: (workspaceId, q) => [...] }` factory (mirrors `boardKeys`); `useOmniSearch(workspaceId, query)`: debounce via existing `use-debounce` (`useDebouncedCallback` or `useDebounce(query, 300)`), `useQuery({ enabled: debounced.length >= 2, staleTime: 10_000, queryKey: searchKeys.query(...) })`.
 - `OmniSearchModal.tsx` renders, in order: Modules (unchanged, instant), then Tasks / Chats / Files / Members sections from `useOmniSearch` — each a small header label (semibold, tracked wide, per DESIGN.md section-header convention) + up to 5 rows. Each row: type icon (HugeIcons, matching existing module icon usage), primary text, muted secondary context line (board › column for tasks, room name for chats, file room for files, role for members), muted-neutral type badge (not the 8-hue tag palette — reserved for user content tags per DESIGN.md). Framer `m.div` stagger-fade on the results list, matching the existing motion idiom already in this file. Loading: simple "Searching…" muted row (no skeleton — small dataset, not worth the extra markup). Empty: `` No results for "{query}" `` mirroring the existing "No modules found." copy/style exactly.
-- Keyboard nav: one `activeIndex` state over the flattened visible-row list, `onKeyDown` on the `Input` handles `ArrowUp`/`ArrowDown`/`Enter` — no new dependency, no `cmdk`.
+- Keyboard nav: one `activeIndex` state over the flattened visible-row list, `onKeyDown` on the `Input` handles `ArrowUp`/`ArrowDown`/`Enter` — no new dependency, no `cmdk`. Desktop-only enhancement (no physical keyboard on mobile); tap works regardless of `activeIndex`.
 
-**Shared highlight utility** — `hooks/use-highlight-target.ts`: `highlightTarget(id: string)` → `document.getElementById(id)?.scrollIntoView({behavior:"smooth", block:"center"})` + add `bg-primary/20` (or the existing `.message-highlight-target` class) for ~1.5s. Used by chat/file/member deep-link handlers below (3 real call sites — genuine dedup, not speculative). While touching this: fix the pre-existing bug in `MessageBubble.tsx`'s reply-jump (`getElementById("message-" + id)`) which doesn't match the actual DOM id set by `MessageList.tsx` (`` `msg-${message.id}` ``) — change the reply-jump to use `msg-${id}` so it (and the new search deep-link) both work.
+**Mobile** (breakpoint: existing `useMediaQuery("(max-width: 768px)")`, same hook already used in this file and in `TaskDetailModal.tsx`):
+
+- **Trigger gap, fixed as part of this work**: today the modal only opens via `Ctrl/Cmd+K` or the collapsed-rail search icon (`l-sidebar.tsx:264-278`), which only renders in the desktop collapsed-icon-rail state — on mobile there is no tap-reachable way to open it at all (the sidebar is either fully hidden or fully open as a drawer showing the *local* filter `Input`, never the icon rail). Add a persistent floating search button next to the existing hamburger toggle (`l-sidebar.tsx:446-474`, same fixed-positioning group, visible whenever `isMobile && !open`) that calls `setSearchModalOpen(true)`.
+- `OmniSearchModal`'s `DialogContent` switches from the centered `max-w-md` card to a full-screen sheet on mobile (`isMobile ? "max-w-full h-dvh rounded-none" : "max-w-md rounded-2xl"` — same `isMobile ? ... : ...` className pattern `TaskDetailModal.tsx:138` already uses), so the on-screen keyboard doesn't eat most of a small fixed-height dialog.
+- Results container: `isMobile ? "flex-1 overflow-y-auto" : "max-h-[300px] overflow-y-auto"` — uses the freed-up sheet height instead of the fixed 300px desktop cap.
+- Row height/padding bumped to a minimum 44px tap target on mobile (existing desktop rows are more compact/mouse-sized).
+- Tapping a result on mobile also closes the sidebar drawer (`setOpen(false)`) in addition to the modal, so navigation doesn't leave the drawer covering the destination page underneath.
+
+**Shared highlight utility** — `hooks/use-highlight-target.ts`: `highlightTarget(id: string)` → `document.getElementById(id)?.scrollIntoView({behavior:"smooth", block:"center"})` + add `bg-primary/20` (or the existing `.message-highlight-target` class) for ~1.5s. Used by chat/file/member deep-link handlers below (3 real call sites — genuine dedup, not speculative). While touching this: fix the pre-existing bug in `MessageBubble.tsx`'s reply-jump (`getElementById("message-" + id)`) which doesn't match the actual DOM id set by `MessageList.tsx` (`id={"msg-" + message.id}`) — change the reply-jump to use `msg-` + id so it (and the new search deep-link) both work.
 
 **Deep links** (each destination reads its query param via `useSearchParams()`, acts once, then `router.replace(pathname, { scroll: false })` to strip it — idiom already established in `use-board-filters.ts`):
 
-- **Task** → `router.push(\`/${slug}/board/${boardId}?taskId=${id}\`)`. `BoardPage`: once `useBoard` data is loaded, find the task across `columns[].tasks`, `dispatch({ type: "SET_EDITING_TASK", payload: task })`, clear param.
-- **Chat message** → `router.push(\`/${slug}/chat/${roomId}?messageId=${id}\`)`. `ChatRoom`: if `` document.getElementById(`msg-${id}`) `` exists, `highlightTarget` immediately. Else (message predates the initial load, `useChatMessages` isn't paginated in) call the existing `getChatMessages(workspaceId, roomId, cursor, 50, "before")` from `chat.service.tsx`, using the search result's `created_at` as `cursor`, prepend the page into `useChatStore`, then `highlightTarget` on next tick.
-- **File** → `router.push(\`/${slug}/files/${fileRoomId}?fileId=${id}\`)`. File row gains `id={\`file-${file.id}\`}` (doesn't exist today); page calls `highlightTarget` on mount if the param is present.
-- **Member** → `router.push(\`/${slug}/settings/members?memberId=${id}\`)`. Member row gains `id={\`member-${member.id}\`}`; same `highlightTarget` on mount.
+- **Task** → `router.push("/" + slug + "/board/" + boardId + "?taskId=" + id)`. `BoardPage`: once `useBoard` data is loaded, find the task across `columns[].tasks`, `dispatch({ type: "SET_EDITING_TASK", payload: task })`, clear param.
+- **Chat message** → `router.push("/" + slug + "/chat/" + roomId + "?messageId=" + id)`. `ChatRoom`: if `document.getElementById("msg-" + id)` exists, `highlightTarget` immediately. Else (message predates the initial load, `useChatMessages` isn't paginated in) call the existing `getChatMessages(workspaceId, roomId, cursor, 50, "before")` from `chat.service.tsx`, using the search result's `created_at` as `cursor`, prepend the page into `useChatStore`, then `highlightTarget` on next tick.
+- **File** → `router.push("/" + slug + "/files/" + fileRoomId + "?fileId=" + id)`. File row gains `id={"file-" + file.id}` (doesn't exist today); page calls `highlightTarget` on mount if the param is present.
+- **Member** → `router.push("/" + slug + "/settings/members?memberId=" + id)`. Member row gains `id={"member-" + member.id}`; same `highlightTarget` on mount.
 - **Module** → `router.push(getModuleHref(slug, mod))` directly — already a full nav target, no param/highlight needed.
 
 ## Testing
