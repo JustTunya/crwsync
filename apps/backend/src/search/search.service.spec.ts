@@ -67,4 +67,18 @@ describe("SearchService", () => {
     expect(prisma.$queryRaw).toHaveBeenCalledTimes(4); // only the first call hits Postgres
     expect(cache.set).toHaveBeenCalledTimes(1);
   });
+
+  it("returns empty arrays without querying or caching on a whitespace-only query", async () => {
+    const { service, prisma, cache } = makeService();
+
+    const result = await service.search("ws-1", "   ");
+
+    expect(result).toEqual({
+      success: true,
+      data: { tasks: [], chats: [], files: [], members: [] },
+    });
+    expect(prisma.$queryRaw).not.toHaveBeenCalled();
+    expect(cache.get).not.toHaveBeenCalled();
+    expect(cache.set).not.toHaveBeenCalled();
+  });
 });

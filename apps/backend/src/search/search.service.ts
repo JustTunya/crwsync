@@ -52,6 +52,10 @@ export class SearchService {
 
   async search(workspaceId: string, q: string): Promise<{ success: true; data: SearchResults }> {
     const query = q.trim();
+    if (query === "") {
+      return { success: true, data: { tasks: [], chats: [], files: [], members: [] } };
+    }
+
     const cacheKey = CacheKeys.workspaceSearch(workspaceId, query);
     const cached = await this.cache.get<{ success: true; data: SearchResults }>(cacheKey);
     if (cached) return cached;
