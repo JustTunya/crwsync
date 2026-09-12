@@ -296,9 +296,9 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 
 **Goal**: Unify platform search, harden performance, and achieve production certification.
 
-* [ ] **Global Omni-Search (`Cmd+K`)**:
+* [x] **Global Omni-Search (`Cmd+K`)**:
   * Upgrade search modal to index modules, tasks (`CRW-12`), chat messages, files, and workspace members.
-* [ ] **Desktop & Audio Notifications**:
+* [x] **Desktop & Audio Notifications**:
   * Integrate Web Notifications API for incoming mentions and task assignments.
 * [ ] **Comprehensive Test Coverage**:
   * Add frontend integration tests for Kanban drag-and-drop and chat stores.

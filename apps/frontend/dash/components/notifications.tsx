@@ -93,7 +93,7 @@ interface MentionNotificationCardProps {
   onDismiss: (id: string) => void;
 }
 
-function stripTokens(text: string): string {
+export function stripTokens(text: string): string {
   return text
     .replace(/@\[(.*?)\]\(user:[a-zA-Z0-9-]+\)/g, "@$1")
     .replace(/#\[(.*?)\]\(task:[a-zA-Z0-9-]+:[a-zA-Z0-9-]+\)/g, "#$1");

@@ -16,6 +16,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import InviteMemberModal from "@/components/inv-modal";
 import { useInvites } from "@/hooks/use-invites";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useDesktopNotifications } from "@/hooks/use-desktop-notifications";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { InviteNotification, MentionNotificationCard, TaskCommentMentionCard, TaskAssignedNotificationCard } from "@/components/notifications";
 import { useUser } from "@/providers/user.provider";
@@ -35,6 +36,8 @@ export function RSidebar() {
   const { open, toggleOpen, view, setView, setOpen } = useRSidebar();
   const { open: lOpen, setOpen: setLOpen } = useLSidebar();
   const isMobile = useMediaQuery("(max-width: 768px)");
+
+  useDesktopNotifications();
 
   useEffect(() => {
     if (isMobile && open) {
