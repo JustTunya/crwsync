@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -10,6 +11,7 @@ import { useUser } from "@/providers/user.provider";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { workspaceKeys, useWorkspaceMembers, useWorkspaceRole, useUpdateMemberRole, useTransferOwnership } from "@/hooks/use-workspaces";
 import { kickWorkspaceMember } from "@/services/workspace.service";
+import { highlightTarget } from "@/hooks/use-highlight-target";
 import { UserAvatar } from "@/components/user-avatar";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
@@ -26,6 +28,23 @@ export function WorkspaceMembersAdmin() {
 
   const { data: members, isLoading } = useWorkspaceMembers(workspaceId);
   const { isOwner } = useWorkspaceRole(workspaceId, user?.id);
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const memberId = searchParams.get("memberId");
+    if (!memberId || !members?.length) return;
+
+    highlightTarget(`member-${memberId}`);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("memberId");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, members]);
 
   const queryClient = useQueryClient();
   const roleMutation = useUpdateMemberRole(workspaceId);
@@ -64,7 +83,7 @@ export function WorkspaceMembersAdmin() {
             const isMemberOwner = member.role === WorkspaceRoleEnum.OWNER;
 
             return (
-              <div key={member.id} className="flex items-center gap-3 py-3 border-b border-border last:border-0">
+              <div key={member.id} id={`member-${member.id}`} className="flex items-center gap-3 py-3 border-b border-border last:border-0">
                 <UserAvatar user={member.user} size={8} />
 
                 <div className="flex-1 min-w-0">
