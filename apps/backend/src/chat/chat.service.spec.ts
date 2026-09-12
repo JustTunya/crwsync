@@ -13,6 +13,7 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
     chatMessage: {
       create: jest.Mock;
       upsert: jest.Mock;
+      findFirst: jest.Mock;
     };
     chatReadReceipt: {
       upsert: jest.Mock;
@@ -41,6 +42,7 @@ describe("ChatService (Cluster 2 SSRF & Idempotency)", () => {
       chatMessage: {
         create: jest.fn(),
         upsert: jest.fn(),
+        findFirst: jest.fn(),
       },
       chatReadReceipt: {
         upsert: jest.fn().mockResolvedValue({ id: "receipt-1" }),
