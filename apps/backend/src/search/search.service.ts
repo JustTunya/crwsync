@@ -50,13 +50,13 @@ export class SearchService {
     private readonly cache: CacheService,
   ) {}
 
-  async search(workspaceId: string, q: string): Promise<{ success: true; data: SearchResults }> {
+  async search(workspaceId: string, userId: string, q: string): Promise<{ success: true; data: SearchResults }> {
     const query = q.trim();
     if (query === "") {
       return { success: true, data: { tasks: [], chats: [], files: [], members: [] } };
     }
 
-    const cacheKey = CacheKeys.workspaceSearch(workspaceId, query);
+    const cacheKey = CacheKeys.workspaceSearch(workspaceId, userId, query);
     const cached = await this.cache.get<{ success: true; data: SearchResults }>(cacheKey);
     if (cached) return cached;
 
@@ -79,6 +79,7 @@ export class SearchService {
         FROM chat_messages cm
         JOIN chat_rooms cr ON cr.id = cm.room_id
         WHERE cm.workspace_id = ${workspaceId}::uuid AND cm.is_deleted = false
+          AND (cr.is_direct = false OR cr.dm_user_a_id = ${userId}::uuid OR cr.dm_user_b_id = ${userId}::uuid)
           AND cm.search_vector @@ websearch_to_tsquery('english', ${query})
         ORDER BY ts_rank(cm.search_vector, websearch_to_tsquery('english', ${query})) DESC
         LIMIT 5

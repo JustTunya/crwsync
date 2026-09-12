@@ -83,7 +83,7 @@ export function WorkspaceMembersAdmin() {
             const isMemberOwner = member.role === WorkspaceRoleEnum.OWNER;
 
             return (
-              <div key={member.id} id={`member-${member.id}`} className="flex items-center gap-3 py-3 border-b border-border last:border-0">
+              <div key={member.id} id={`member-${member.user_id}`} className="flex items-center gap-3 py-3 border-b border-border last:border-0">
                 <UserAvatar user={member.user} size={8} />
 
                 <div className="flex-1 min-w-0">

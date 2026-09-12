@@ -7,8 +7,8 @@ export const CacheKeys = {
   workspaceSlug: (slug: string) => `workspace:slug:${slug.toLowerCase()}`,
   workspaceMember: (workspaceId: string, userId: string) => `workspace:${workspaceId}:member:${userId}`,
   verification: (email: string) => `verification:${email.toLowerCase()}`,
-  workspaceSearch: (workspaceId: string, q: string) =>
-    `workspace:${workspaceId}:search:${q.toLowerCase().trim()}`,
+  workspaceSearch: (workspaceId: string, userId: string, q: string) =>
+    `workspace:${workspaceId}:user:${userId}:search:${q.toLowerCase().trim()}`,
 };
 
 export const CacheTTL = {

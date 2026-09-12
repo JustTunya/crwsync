@@ -8,7 +8,6 @@ import { useChatSocket } from "@/hooks/use-chat-socket";
 import { useChatRoom, useChatMessages } from "@/hooks/use-chat";
 import { useDirectMessages } from "@/hooks/use-dm";
 import { highlightTarget } from "@/hooks/use-highlight-target";
-import { getChatMessages } from "@/services/chat.service";
 import { MessageList } from "@/components/chat/MessageList";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { UserAvatar } from "@/components/user-avatar";
@@ -33,7 +32,7 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { setMessages, clearRoom, prependMessages } = useChatStore();
+  const { setMessages, clearRoom } = useChatStore();
   const messages = useChatStore((s) => s.messages.get(roomId)) ?? EMPTY_MESSAGES;
   const typingUsers = useChatStore((s) => s.typingUsers.get(roomId)) ?? [];
   const isConnected = useChatStore((s) => s.isConnected);
@@ -62,18 +61,8 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
     const existing = document.getElementById(`message-${messageId}`);
     if (existing) {
       highlightTarget(`message-${messageId}`, ".message-highlight-target");
-      clearParam();
-      return;
     }
-
-    (async () => {
-      const result = await getChatMessages(workspaceId, roomId, undefined, 50, "before");
-      if (result.success && result.data) {
-        prependMessages(roomId, result.data.messages);
-        setTimeout(() => highlightTarget(`message-${messageId}`, ".message-highlight-target"), 100);
-      }
-      clearParam();
-    })();
+    clearParam();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, messages]);
 

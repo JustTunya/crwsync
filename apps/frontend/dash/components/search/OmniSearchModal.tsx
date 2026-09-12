@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -90,6 +90,10 @@ export function OmniSearchModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredGlobal, filteredLocal, results]);
 
+  useEffect(() => {
+    document.getElementById(`search-row-${activeIndex}`)?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
+
   const rowClass = cn(
     "flex items-center gap-2.5 px-2.5 rounded-lg cursor-pointer hover:bg-base-200/70 transition-colors",
     isMobile ? "min-h-11 py-2" : "py-1.5",
@@ -102,12 +106,14 @@ export function OmniSearchModal({
   const hasServerResults = !!results && (results.tasks.length || results.chats.length || results.files.length || results.members.length);
   const showEmpty = query.trim().length >= 2 && !isLoading && noModuleResults && !hasServerResults;
 
+  let rowIndex = 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
           "gap-0 p-0 overflow-hidden bg-base-100",
-          isMobile ? "max-w-full h-dvh rounded-none" : "max-w-md rounded-2xl",
+          isMobile ? "max-w-full h-dvh rounded-none flex flex-col" : "max-w-md rounded-2xl",
         )}
         showCloseButton={false}
       >
@@ -146,34 +152,50 @@ export function OmniSearchModal({
             <p className="text-sm text-muted-foreground text-center py-6">No modules found.</p>
           )}
 
-          {filteredGlobal.map((module) => (
-            <div key={module.name} onClick={() => { router.push(module.href); close(); }} className={rowClass}>
-              <SidebarGlobalModule
-                icon={module.icon}
-                name={module.name}
-                href={module.href}
-                shortcut={module.shortcut}
-                active={pathname === module.href}
-                extended={true}
-              />
-            </div>
-          ))}
+          {filteredGlobal.map((module) => {
+            const index = rowIndex++;
+            return (
+              <div
+                key={module.name}
+                id={`search-row-${index}`}
+                onClick={() => { router.push(module.href); close(); }}
+                className={cn(rowClass, index === activeIndex && "bg-base-200/70")}
+              >
+                <SidebarGlobalModule
+                  icon={module.icon}
+                  name={module.name}
+                  href={module.href}
+                  shortcut={module.shortcut}
+                  active={pathname === module.href}
+                  extended={true}
+                />
+              </div>
+            );
+          })}
 
-          {filteredLocal.map((mod) => (
-            <div key={mod.id} onClick={() => goToModule(mod)}>
-              <SidebarModule
-                id={mod.id}
-                activeWorkspaceId={workspaceId}
-                icon={getModuleIcon(mod.type)}
-                name={mod.name}
-                href={getModuleHref(slug, mod)}
-                active={isModuleActive(pathname, slug, mod)}
-                extended={true}
-                unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
-                isPinned={mod.isPinned}
-              />
-            </div>
-          ))}
+          {filteredLocal.map((mod) => {
+            const index = rowIndex++;
+            return (
+              <div
+                key={mod.id}
+                id={`search-row-${index}`}
+                onClick={() => goToModule(mod)}
+                className={cn("rounded-lg transition-colors", index === activeIndex && "bg-base-200/70")}
+              >
+                <SidebarModule
+                  id={mod.id}
+                  activeWorkspaceId={workspaceId}
+                  icon={getModuleIcon(mod.type)}
+                  name={mod.name}
+                  href={getModuleHref(slug, mod)}
+                  active={isModuleActive(pathname, slug, mod)}
+                  extended={true}
+                  unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
+                  isPinned={mod.isPinned}
+                />
+              </div>
+            );
+          })}
 
           {isLoading && query.trim().length >= 2 && (
             <p className="text-sm text-muted-foreground text-center py-3">Searching...</p>
@@ -182,64 +204,96 @@ export function OmniSearchModal({
           {!!results?.tasks.length && (
             <>
               <div className={sectionLabelClass}>Tasks</div>
-              {results.tasks.map((t) => (
-                <div key={t.id} onClick={() => goToTask(t.boardId, t.id)} className={rowClass}>
-                  <HugeiconsIcon icon={CheckmarkSquare02Icon} className="size-4 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{t.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{t.boardName} › {t.columnName}</p>
+              {results.tasks.map((t) => {
+                const index = rowIndex++;
+                return (
+                  <div
+                    key={t.id}
+                    id={`search-row-${index}`}
+                    onClick={() => goToTask(t.boardId, t.id)}
+                    className={cn(rowClass, index === activeIndex && "bg-base-200/70")}
+                  >
+                    <HugeiconsIcon icon={CheckmarkSquare02Icon} className="size-4 text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{t.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{t.boardName} › {t.columnName}</p>
+                    </div>
+                    <span className={badgeClass}>{t.shortId}</span>
                   </div>
-                  <span className={badgeClass}>{t.shortId}</span>
-                </div>
-              ))}
+                );
+              })}
             </>
           )}
 
           {!!results?.chats.length && (
             <>
               <div className={sectionLabelClass}>Chats</div>
-              {results.chats.map((c) => (
-                <div key={c.id} onClick={() => goToChat(c.roomId, c.id)} className={rowClass}>
-                  <HugeiconsIcon icon={Chat01Icon} className="size-4 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{c.content}</p>
-                    <p className="text-xs text-muted-foreground truncate">{c.roomName || "Direct message"}</p>
+              {results.chats.map((c) => {
+                const index = rowIndex++;
+                return (
+                  <div
+                    key={c.id}
+                    id={`search-row-${index}`}
+                    onClick={() => goToChat(c.roomId, c.id)}
+                    className={cn(rowClass, index === activeIndex && "bg-base-200/70")}
+                  >
+                    <HugeiconsIcon icon={Chat01Icon} className="size-4 text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{c.content}</p>
+                      <p className="text-xs text-muted-foreground truncate">{c.roomName || "Direct message"}</p>
+                    </div>
+                    <span className={badgeClass}>Chat</span>
                   </div>
-                  <span className={badgeClass}>Chat</span>
-                </div>
-              ))}
+                );
+              })}
             </>
           )}
 
           {!!results?.files.length && (
             <>
               <div className={sectionLabelClass}>Files</div>
-              {results.files.map((f) => (
-                <div key={f.id} onClick={() => goToFile(f.fileRoomId, f.id)} className={rowClass}>
-                  <HugeiconsIcon icon={File01Icon} className="size-4 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{f.fileName}</p>
-                    <p className="text-xs text-muted-foreground truncate">{f.fileRoomName || "Files"}</p>
+              {results.files.map((f) => {
+                const index = rowIndex++;
+                return (
+                  <div
+                    key={f.id}
+                    id={`search-row-${index}`}
+                    onClick={() => goToFile(f.fileRoomId, f.id)}
+                    className={cn(rowClass, index === activeIndex && "bg-base-200/70")}
+                  >
+                    <HugeiconsIcon icon={File01Icon} className="size-4 text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{f.fileName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{f.fileRoomName || "Files"}</p>
+                    </div>
+                    <span className={badgeClass}>File</span>
                   </div>
-                  <span className={badgeClass}>File</span>
-                </div>
-              ))}
+                );
+              })}
             </>
           )}
 
           {!!results?.members.length && (
             <>
               <div className={sectionLabelClass}>Members</div>
-              {results.members.map((m) => (
-                <div key={m.id} onClick={() => goToMember(m.id)} className={rowClass}>
-                  <UserAvatar user={{ firstname: m.firstname, lastname: m.lastname, avatar_key: m.avatarKey }} size={6} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{m.firstname} {m.lastname}</p>
-                    <p className="text-xs text-muted-foreground truncate">@{m.username}</p>
+              {results.members.map((m) => {
+                const index = rowIndex++;
+                return (
+                  <div
+                    key={m.id}
+                    id={`search-row-${index}`}
+                    onClick={() => goToMember(m.id)}
+                    className={cn(rowClass, index === activeIndex && "bg-base-200/70")}
+                  >
+                    <UserAvatar user={{ firstname: m.firstname, lastname: m.lastname, avatar_key: m.avatarKey }} size={6} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{m.firstname} {m.lastname}</p>
+                      <p className="text-xs text-muted-foreground truncate">@{m.username}</p>
+                    </div>
+                    <span className={badgeClass}>{m.role}</span>
                   </div>
-                  <span className={badgeClass}>{m.role}</span>
-                </div>
-              ))}
+                );
+              })}
             </>
           )}
         </div>

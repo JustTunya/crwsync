@@ -26,7 +26,7 @@ describe("SearchService", () => {
       .mockResolvedValueOnce([{ id: "f1", file_name: "spec.pdf", file_room_id: "fr1", file_room_name: "Docs" }])
       .mockResolvedValueOnce([{ id: "u1", firstname: "Ada", lastname: "Lovelace", username: "ada", avatar_key: null, role: "MEMBER" }]);
 
-    const result = await service.search("ws-1", "ship");
+    const result = await service.search("ws-1", "u1", "ship");
 
     expect(prisma.$queryRaw).toHaveBeenCalledTimes(4);
     expect(result).toEqual({
@@ -40,17 +40,32 @@ describe("SearchService", () => {
     });
   });
 
-  it("returns empty arrays instead of throwing on a SQL-injection-shaped query", async () => {
+  it("parameterizes a SQL-injection-shaped query instead of concatenating it into the SQL", async () => {
     const { service, prisma } = makeService();
     prisma.$queryRaw.mockResolvedValue([]);
+    const injection = "' OR 1=1--";
 
-    const result = await service.search("ws-1", "' OR 1=1--");
+    const result = await service.search("ws-1", "u1", injection);
 
     expect(result.success).toBe(true);
     expect(result.data.tasks).toEqual([]);
     expect(result.data.chats).toEqual([]);
     expect(result.data.files).toEqual([]);
     expect(result.data.members).toEqual([]);
+
+    const [tasksFragments, ...tasksValues] = prisma.$queryRaw.mock.calls[0];
+    expect(tasksFragments.some((fragment: string) => fragment.includes(injection))).toBe(false);
+    expect(tasksValues).toContain(injection);
+  });
+
+  it("scopes the chats query to the caller's own DMs by passing userId as an interpolated value", async () => {
+    const { service, prisma } = makeService();
+    prisma.$queryRaw.mockResolvedValue([]);
+
+    await service.search("ws-1", "user-42", "ship");
+
+    const [, ...chatsValues] = prisma.$queryRaw.mock.calls[1];
+    expect(chatsValues).toContain("user-42");
   });
 
   it("caches the result and returns the cached value on a repeat query", async () => {
@@ -61,8 +76,8 @@ describe("SearchService", () => {
       data: { tasks: [], chats: [], files: [], members: [] },
     });
 
-    await service.search("ws-1", "ship");
-    await service.search("ws-1", "ship");
+    await service.search("ws-1", "u1", "ship");
+    await service.search("ws-1", "u1", "ship");
 
     expect(prisma.$queryRaw).toHaveBeenCalledTimes(4); // only the first call hits Postgres
     expect(cache.set).toHaveBeenCalledTimes(1);
@@ -71,7 +86,7 @@ describe("SearchService", () => {
   it("returns empty arrays without querying or caching on a whitespace-only query", async () => {
     const { service, prisma, cache } = makeService();
 
-    const result = await service.search("ws-1", "   ");
+    const result = await service.search("ws-1", "u1", "   ");
 
     expect(result).toEqual({
       success: true,

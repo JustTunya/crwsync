@@ -17,7 +17,6 @@ import { SidebarProject } from "@/components/sidebar/SidebarProject";
 import { SectionHeader } from "@/components/sidebar/SectionHeader";
 import { AddModuleModal } from "@/components/add-module-modal";
 import { OmniSearchModal } from "@/components/search/OmniSearchModal";
-import { Shortcut } from "@/components/ui/shortcut";
 import { Input } from "@/components/ui/input";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
 import { useRSidebar } from "@/hooks/use-r-sidebar";
@@ -243,7 +242,6 @@ export function LSidebar() {
                     className="size-4 text-placeholder"
                   />
                 }
-                suffix={<Shortcut chars={["ctrl", "K"]} />}
               />
             </m.div>
           ) : (
