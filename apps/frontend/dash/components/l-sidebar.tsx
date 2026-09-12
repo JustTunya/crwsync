@@ -471,7 +471,7 @@ export function LSidebar() {
         open={searchModalOpen}
         onOpenChange={setSearchModalOpen}
         slug={slug}
-        activeWorkspaceId={activeWorkspaceId || ""}
+        workspaceId={activeWorkspaceId || ""}
         localModules={localModules}
         pathname={pathname}
       />
