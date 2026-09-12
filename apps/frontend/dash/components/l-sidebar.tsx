@@ -16,7 +16,7 @@ import { SidebarProfile } from "@/components/sidebar/SidebarProfile";
 import { SidebarProject } from "@/components/sidebar/SidebarProject";
 import { SectionHeader } from "@/components/sidebar/SectionHeader";
 import { AddModuleModal } from "@/components/add-module-modal";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { OmniSearchModal } from "@/components/search/OmniSearchModal";
 import { Shortcut } from "@/components/ui/shortcut";
 import { Input } from "@/components/ui/input";
 import { useLSidebar } from "@/hooks/use-l-sidebar";
@@ -71,7 +71,6 @@ export function LSidebar() {
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [modalSearchQuery, setModalSearchQuery] = useState("");
   const [prevOpen, setPrevOpen] = useState(open);
 
   if (open !== prevOpen) {
@@ -161,10 +160,6 @@ export function LSidebar() {
   const filteredModules = modules.filter(m => m.name.toLowerCase().includes(searchQueryLower));
   const filteredLocalModules = localModules?.filter(m => m.name.toLowerCase().includes(searchQueryLower));
   const sharedModules = filteredLocalModules?.filter(m => m.project_id === null) || [];
-
-  const modalQueryLower = modalSearchQuery.toLowerCase();
-  const modalFilteredGlobal = modules.filter(m => m.name.toLowerCase().includes(modalQueryLower));
-  const modalFilteredLocal = localModules?.filter(m => m.name.toLowerCase().includes(modalQueryLower)) || [];
 
   useHotkey(["ctrl", "1"], () => router.push(`/${slug}`));
   useHotkey(["ctrl", "2"], () => router.push(`/${slug}/statistics`));
@@ -472,60 +467,14 @@ export function LSidebar() {
             className="size-5"
           />
         </m.div>
-      <Dialog open={searchModalOpen} onOpenChange={setSearchModalOpen}>
-        <DialogContent className="max-w-md gap-0 p-0 overflow-hidden bg-base-100" showCloseButton={false}>
-          <DialogTitle className="sr-only">Search modules</DialogTitle>
-          <DialogDescription className="sr-only">Search across workspace modules</DialogDescription>
-          <div className="flex items-center px-4 border-b border-base-200">
-            <HugeiconsIcon icon={Search01Icon} className="mr-2 size-4 text-muted-foreground shrink-0" />
-            <Input
-              value={modalSearchQuery}
-              onChange={(e) => setModalSearchQuery(e.target.value)}
-              placeholder="Search modules..."
-              className="flex-1 focus-within:ring-0 focus-within:border-transparent border-0 px-0 shadow-none bg-transparent text-sm"
-              autoFocus
-            />
-          </div>
-          <div className="max-h-[300px] overflow-y-auto p-2 flex flex-col">
-            {modalFilteredGlobal.length === 0 && modalFilteredLocal.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-6">No modules found.</p>
-            )}
-            
-            {modalFilteredGlobal.map((module) => (
-              <div key={module.name} onClick={() => setSearchModalOpen(false)}>
-                <SidebarGlobalModule
-                  icon={module.icon}
-                  name={module.name}
-                  href={module.href}
-                  shortcut={module.shortcut}
-                  active={pathname === module.href}
-                  extended={true}
-                />
-              </div>
-            ))}
-
-            {modalFilteredGlobal.length > 0 && modalFilteredLocal.length > 0 && (
-              <div className="h-px w-full bg-base-200 rounded-full my-2 shrink-0" />
-            )}
-
-            {modalFilteredLocal.map((mod) => (
-              <div key={mod.id} onClick={() => setSearchModalOpen(false)}>
-                <SidebarModule
-                  id={mod.id}
-                  activeWorkspaceId={activeWorkspaceId || ""}
-                  icon={getModuleIcon(mod.type)}
-                  name={mod.name}
-                  href={getModuleHref(slug, mod)}
-                  active={isModuleActive(pathname, slug, mod)}
-                  extended={true}
-                  unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
-                  isPinned={mod.isPinned}
-                />
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <OmniSearchModal
+        open={searchModalOpen}
+        onOpenChange={setSearchModalOpen}
+        slug={slug}
+        activeWorkspaceId={activeWorkspaceId || ""}
+        localModules={localModules}
+        pathname={pathname}
+      />
       </LazyMotion>
     </>
   );
