@@ -404,6 +404,7 @@ async function seed() {
     prisma.task.create({
       data: {
         column_id: columnId,
+        workspace_id: workspace.id,
         shortId: nextShortId(),
         title: spec.title,
         priority: spec.priority ?? "NONE",
