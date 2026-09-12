@@ -268,7 +268,9 @@ export function FilesRoom({ workspaceId, roomId }: FilesRoomProps) {
             No files match &ldquo;{search}&rdquo;
           </div>
         ) : view === "grid" ? (
-          <div className="grid gap-4 p-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))" }}>
+          <div
+            className="grid grid-cols-2 gap-4 p-6 sm:[grid-template-columns:repeat(auto-fill,minmax(168px,1fr))]"
+          >
             {uploading.map((u) => (
               <UploadingCard key={u.id} upload={u} />
             ))}
