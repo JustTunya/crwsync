@@ -15,6 +15,8 @@ import Link from "next/link";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useStatistics } from "@/hooks/use-statistics";
 import { motion, Variants } from "framer-motion";
+import { LSidebarToggle } from "@/components/l-sidebar";
+import { RSidebarToggle } from "@/components/r-sidebar";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
@@ -131,13 +133,17 @@ export function HomeDashboard({ slug }: { slug: string }) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="flex items-center justify-between h-16 pl-16 pr-24 border-b border-base-200 shrink-0">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">Home</h1>
-          <p className="text-sm text-muted-foreground leading-4 font-mono">
-            Workspace overview
-          </p>
+      <header className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <LSidebarToggle />
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">Home</h1>
+            <p className="text-sm text-muted-foreground leading-4 font-mono">
+              Workspace overview
+            </p>
+          </div>
         </div>
+        <RSidebarToggle />
       </header>
 
       {/* Content */}

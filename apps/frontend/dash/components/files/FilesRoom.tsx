@@ -27,6 +27,8 @@ import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
 import { UserAvatar } from "@/components/user-avatar";
 import { Input } from "@/components/ui/input";
 import { ChatLightbox } from "@/components/chat/ChatLightbox";
+import { LSidebarToggle } from "@/components/l-sidebar";
+import { RSidebarToggle } from "@/components/r-sidebar";
 import { cn } from "@/lib/utils";
 import { highlightTarget } from "@/hooks/use-highlight-target";
 
@@ -164,10 +166,14 @@ export function FilesRoom({ workspaceId, roomId }: FilesRoomProps) {
 
   return (
     <div className="size-full flex flex-col">
-      <div className="flex items-center h-16 pl-16 pr-24 border-b border-base-200">
-        <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis shrink-0">
-          {room?.name || "Files"}
-        </h1>
+      <div className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200">
+        <div className="flex items-center gap-3 min-w-0">
+          <LSidebarToggle />
+          <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis shrink-0">
+            {room?.name || "Files"}
+          </h1>
+        </div>
+        <RSidebarToggle />
       </div>
 
       <div className="flex items-center justify-between gap-3 px-6 py-3 border-b border-base-200">

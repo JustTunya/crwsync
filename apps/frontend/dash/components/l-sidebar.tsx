@@ -7,7 +7,7 @@ import { m, AnimatePresence, Transition, LazyMotion, domAnimation } from "framer
 import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon, Menu05Icon } from "@hugeicons/core-free-icons";
+import { Search01Icon, Menu05Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { getModules, getModuleIcon, getModuleHref, isModuleActive } from "@/lib/sidebar.utils";
 import { SidebarModule, SidebarGlobalModule, SidebarNoModule } from "@/components/sidebar/SidebarModule";
@@ -45,7 +45,7 @@ export function LSidebar() {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const { activeId: activeWorkspaceId, activeWorkspace } = useWorkspace();
-  const { open, toggleOpen, setOpen } = useLSidebar();
+  const { open, setOpen } = useLSidebar();
 
   const { status, handleStatusChange } = useUserStatus();
   const user = useUser();
@@ -182,7 +182,7 @@ export function LSidebar() {
     },
   };
 
-  const { open: rOpen, setOpen: setROpen } = useRSidebar();
+  const { setOpen: setROpen } = useRSidebar();
 
   useEffect(() => {
     if (isMobile && open) {
@@ -214,9 +214,19 @@ export function LSidebar() {
             isMobile ? "fixed left-0 top-0 shadow-2xl" : "sticky top-0",
           )}
         >
-          <div className="flex items-center">
+          <div className="flex items-center justify-between">
             {/* WORKSPACE */}
             <SidebarWorkspace extended={open} />
+            {isMobile && (
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Close sidebar"
+                className="flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer shrink-0"
+              >
+                <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-5" />
+              </button>
+            )}
           </div>
 
           {/* SEARCH BAR */}
@@ -427,46 +437,6 @@ export function LSidebar() {
           />
         </m.aside>
 
-        <m.div
-          initial={false}
-          transition={spring}
-          animate={
-            isMobile
-              ? {
-                  left: open ? "calc(91vw - 1rem)" : 16,
-                  x: 0,
-                  opacity: rOpen ? 0 : 1,
-                  pointerEvents: rOpen ? "none" : "auto",
-                }
-              : {
-                  left: open ? 296 : 96,
-                  x: 0,
-                  opacity: 1,
-                  pointerEvents: "auto",
-                }
-          }
-          className={cn(
-            "fixed top-4 flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer z-50",
-          )}
-          onClick={toggleOpen}
-        >
-          <HugeiconsIcon
-            icon={Menu05Icon}
-            strokeWidth={2}
-            className="size-5"
-          />
-        </m.div>
-      {isMobile && !open && (
-        <m.div
-          initial={false}
-          animate={{ opacity: rOpen ? 0 : 1, pointerEvents: rOpen ? "none" : "auto" }}
-          transition={spring}
-          className="fixed top-4 left-14 flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer z-50"
-          onClick={() => setSearchModalOpen(true)}
-        >
-          <HugeiconsIcon icon={Search01Icon} strokeWidth={2} className="size-5" />
-        </m.div>
-      )}
       <OmniSearchModal
         open={searchModalOpen}
         onOpenChange={setSearchModalOpen}
@@ -478,5 +448,27 @@ export function LSidebar() {
       />
       </LazyMotion>
     </>
+  );
+}
+
+export function LSidebarToggle({ className }: { className?: string }) {
+  const { open: lOpen, toggleOpen } = useLSidebar();
+  const { open: rOpen } = useRSidebar();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  if (isMobile && (lOpen || rOpen)) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={toggleOpen}
+      aria-label="Toggle sidebar"
+      className={cn(
+        "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer shrink-0",
+        className,
+      )}
+    >
+      <HugeiconsIcon icon={Menu05Icon} strokeWidth={2} className="size-5" />
+    </button>
   );
 }

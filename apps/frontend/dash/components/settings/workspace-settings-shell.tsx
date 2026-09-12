@@ -10,6 +10,8 @@ import { useUser } from "@/providers/user.provider";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useWorkspaceRole } from "@/hooks/use-workspaces";
 import { WorkspaceAvatar } from "@/components/workspace-avatar";
+import { LSidebarToggle } from "@/components/l-sidebar";
+import { RSidebarToggle } from "@/components/r-sidebar";
 import { cn } from "@/lib/utils";
 
 const containerVariants: Variants = {
@@ -50,21 +52,25 @@ export function WorkspaceSettingsShell({ children }: { children: React.ReactNode
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center gap-4 h-16 pl-16 pr-24 border-b border-base-200">
-        <Link
-          href={`/${workspace.slug}`}
-          className="flex items-center justify-center size-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-        >
-          <HugeiconsIcon icon={ArrowLeft01Icon} className="size-5" strokeWidth={2} />
-          <span className="sr-only">Back to workspace</span>
-        </Link>
+      <header className="flex items-center justify-between gap-4 h-16 px-4 border-b border-base-200">
+        <div className="flex items-center gap-4 min-w-0">
+          <LSidebarToggle />
+          <Link
+            href={`/${workspace.slug}`}
+            className="flex items-center justify-center size-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            <HugeiconsIcon icon={ArrowLeft01Icon} className="size-5" strokeWidth={2} />
+            <span className="sr-only">Back to workspace</span>
+          </Link>
 
-        <WorkspaceAvatar avatar_key={workspace.logo_key || ""} name={workspace.name} className="size-8 text-xs" />
+          <WorkspaceAvatar avatar_key={workspace.logo_key || ""} name={workspace.name} className="size-8 text-xs" />
 
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">{workspace.name}</h1>
-          <p className="text-sm text-muted-foreground leading-4">Workspace settings</p>
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">{workspace.name}</h1>
+            <p className="text-sm text-muted-foreground leading-4">Workspace settings</p>
+          </div>
         </div>
+        <RSidebarToggle />
       </header>
 
       <nav className="flex items-center gap-1 px-4 sm:px-8 h-12 border-b border-base-200">

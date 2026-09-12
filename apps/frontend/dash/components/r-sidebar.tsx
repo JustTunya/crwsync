@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { m, Transition, LazyMotion, domAnimation } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon, Door01Icon, Message01Icon } from "@hugeicons/core-free-icons";
+import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon, Door01Icon, Message01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Workspace, WorkspaceMember, WorkspaceRoleEnum, WorkspaceUser, NotificationTypeEnum } from "@crwsync/types";
 import { useSocket } from "@/providers/socket.provider";
@@ -33,8 +33,8 @@ export function RSidebar() {
   const pathname = usePathname();
   const self = useUser();
 
-  const { open, toggleOpen, view, setView, setOpen } = useRSidebar();
-  const { open: lOpen, setOpen: setLOpen } = useLSidebar();
+  const { open, view, setOpen } = useRSidebar();
+  const { setOpen: setLOpen } = useLSidebar();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   useDesktopNotifications();
@@ -162,22 +162,6 @@ export function RSidebar() {
     },
   };
 
-  const toggleBtnVariants = {
-    desktop: {
-      right: open ? (view === "MEMBERS" ? 256 : 376) : 16,
-      x: 0,
-      opacity: 1,
-      pointerEvents: "auto" as const,
-    },
-    mobile: {
-      right: 16,
-      x: 0,
-      zIndex: 60, 
-      opacity: lOpen ? 0 : 1,
-      pointerEvents: lOpen ? "none" as const : "auto" as const,
-    },
-  };
-
   return (
     <>
       <LazyMotion features={domAnimation} strict>
@@ -192,51 +176,6 @@ export function RSidebar() {
               />
             )}
 
-          <m.div
-            initial={false}
-            variants={toggleBtnVariants}
-            animate={isMobile ? "mobile" : "desktop"}
-            transition={spring}
-            className={cn(
-              "absolute top-4 flex flex-row gap-2 z-50",
-              isMobile && open ? "fixed right-4" : "absolute"
-            )}
-          >
-            <NotificationBellButton
-              open={open}
-              view={view}
-              isMobile={isMobile}
-              toggleOpen={toggleOpen}
-              setView={setView}
-            />
-            <div
-              data-testid="rsidebar-members-toggle"
-              role="button"
-              aria-label="Toggle workspace members"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (open && view === "MEMBERS") toggleOpen();
-                  else setView("MEMBERS");
-                }
-              }}
-              onClick={() =>
-                open && view === "MEMBERS" ? toggleOpen() : setView("MEMBERS")
-              }
-              className={cn(
-                "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
-                isMobile && open && view === "MEMBERS" && "bg-base-200"
-              )}
-            >
-              <HugeiconsIcon
-                icon={UserMultiple02Icon}
-                fill={view === "MEMBERS" && open ? "currentColor" : "none"}
-                strokeWidth={2}
-                className="size-5 text-foreground"
-              />
-            </div>
-          </m.div>
-
           <m.aside
             variants={sidebarVariants}
             animate={isMobile ? "mobile" : "desktop"}
@@ -247,6 +186,18 @@ export function RSidebar() {
             )}
           >
             <div className={cn("flex-1 overflow-y-auto", open ? "p-4" : "p-0")}>
+              {isMobile && (
+                <div className="flex justify-end mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    aria-label="Close panel"
+                    className="flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer"
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-5 text-foreground" />
+                  </button>
+                </div>
+              )}
               {view === "MEMBERS" ? (
                 <SidebarMembers
                   groups={groupedMembers}
@@ -265,6 +216,52 @@ export function RSidebar() {
         </React.Fragment>
       </LazyMotion>
     </>
+  );
+}
+
+export function RSidebarToggle({ className }: { className?: string }) {
+  const { open, toggleOpen, view, setView } = useRSidebar();
+  const { open: lOpen } = useLSidebar();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  if (isMobile && (open || lOpen)) return null;
+
+  return (
+    <div className={cn("flex flex-row items-center gap-2 shrink-0", className)}>
+      <NotificationBellButton
+        open={open}
+        view={view}
+        isMobile={isMobile}
+        toggleOpen={toggleOpen}
+        setView={setView}
+      />
+      <div
+        data-testid="rsidebar-members-toggle"
+        role="button"
+        aria-label="Toggle workspace members"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            if (open && view === "MEMBERS") toggleOpen();
+            else setView("MEMBERS");
+          }
+        }}
+        onClick={() =>
+          open && view === "MEMBERS" ? toggleOpen() : setView("MEMBERS")
+        }
+        className={cn(
+          "flex items-center justify-center size-8 rounded-full hover:bg-base-300/75 transition-colors cursor-pointer",
+          isMobile && open && view === "MEMBERS" && "bg-base-200"
+        )}
+      >
+        <HugeiconsIcon
+          icon={UserMultiple02Icon}
+          fill={view === "MEMBERS" && open ? "currentColor" : "none"}
+          strokeWidth={2}
+          className="size-5 text-foreground"
+        />
+      </div>
+    </div>
   );
 }
 
