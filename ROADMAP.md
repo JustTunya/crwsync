@@ -304,7 +304,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
   * Add frontend integration tests for Kanban drag-and-drop and chat stores.
   * Implement end-to-end Playwright test suite covering:
     `Sign In → Create Workspace → Add Board → Create & Move Task → Send Chat → Upload File`.
-* [ ] **Production Deployment Validation**:
+* [x] **Production Deployment Validation**:
   * Verify standalone Docker multi-stage builds (`Dockerfile` and `stack.yml`).
   * Run full benchmark suite to validate Redis fan-out latency under load, against a defined pass/fail threshold (target p95 latency, concurrent connection count).
 
