@@ -17,6 +17,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "benchmark:redis": "node scripts/benchmark-redis-fanout.mjs",
     "prisma:generate": "prisma generate --config=prisma.config.ts",
     "prisma:migrate:dev": "prisma migrate dev --config=prisma.config.ts",
     "prisma:migrate:deploy": "prisma migrate deploy --config=prisma.config.ts",

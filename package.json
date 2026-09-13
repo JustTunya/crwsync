@@ -8,6 +8,7 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "benchmark:redis": "pnpm --filter @crwsync/backend run benchmark:redis",
     "dev": "turbo run dev",
     "demo:seed": "node apps/backend/prisma/seed.demo.mjs"
   },

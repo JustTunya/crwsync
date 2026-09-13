@@ -1,5 +1,5 @@
 FROM node:26-alpine AS base
-RUN npm install -g pnpm@11.5.1
+RUN npm install -g pnpm@10.29.3
 ENV PNPM_HOME="/pnpm"
 ENV PATH="${PNPM_HOME}:${PATH}"
 RUN pnpm config set store-dir /pnpm/store

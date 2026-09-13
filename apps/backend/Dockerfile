@@ -1,5 +1,5 @@
 FROM node:26-alpine AS base
-RUN npm install -g pnpm@11.5.1
+RUN npm install -g pnpm@10.29.3
 ENV CI=true
 ENV PNPM_HOME="/pnpm"
 ENV PATH="${PNPM_HOME}:${PATH}"
@@ -27,9 +27,9 @@ COPY turbo.json turbo.json
 COPY tsconfig.json tsconfig.json
 COPY tsconfig.base.json tsconfig.base.json
 
-RUN --mount=type=secret,id=DATABASE_URL \
+RUN --mount=type=secret,id=DATABASE_URL,required=false \
     --mount=type=cache,id=turbo,target=/app/node_modules/.cache/turbo \
-    DATABASE_URL=$(cat /run/secrets/DATABASE_URL) \
+    DATABASE_URL="$( [ -f /run/secrets/DATABASE_URL ] && cat /run/secrets/DATABASE_URL || echo "${DATABASE_URL:-postgresql://postgres:password@localhost:5432/crwsync}" )" \
     pnpm --filter @crwsync/backend run prisma:generate && \
     pnpm turbo run build --filter=@crwsync/backend...
 
@@ -37,10 +37,10 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm deploy --filter=@crwsync/backend --prod --legacy /app/pruned
 
 WORKDIR /app/pruned
-RUN --mount=type=secret,id=DATABASE_URL \
+RUN --mount=type=secret,id=DATABASE_URL,required=false \
     --mount=type=cache,id=pnpm,target=/pnpm/store \
     rm -f /app/pnpm-workspace.yaml && \
-    DATABASE_URL=$(cat /run/secrets/DATABASE_URL) npx prisma generate --config=prisma.config.ts
+    DATABASE_URL="$( [ -f /run/secrets/DATABASE_URL ] && cat /run/secrets/DATABASE_URL || echo "${DATABASE_URL:-postgresql://postgres:password@localhost:5432/crwsync}" )" npx prisma generate --config=prisma.config.ts
 
 # --- RUNNER STAGE ---
 FROM base AS runner
