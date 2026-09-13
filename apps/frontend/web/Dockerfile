@@ -30,14 +30,25 @@ ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_DASH_URL
 ARG NEXT_PUBLIC_DEMO_IDENTIFIER
 ARG NEXT_PUBLIC_DEMO_PASSWORD
+ARG NEXT_PUBLIC_SENTRY_DSN
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
+ARG SENTRY_RELEASE
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_DASH_URL=${NEXT_PUBLIC_DASH_URL}
 ENV NEXT_PUBLIC_DEMO_IDENTIFIER=${NEXT_PUBLIC_DEMO_IDENTIFIER}
 ENV NEXT_PUBLIC_DEMO_PASSWORD=${NEXT_PUBLIC_DEMO_PASSWORD}
+ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
+ENV SENTRY_ORG=${SENTRY_ORG}
+ENV SENTRY_PROJECT=${SENTRY_PROJECT}
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+ENV CI=true
 
-RUN --mount=type=cache,id=turbo,target=/app/node_modules/.cache/turbo \
+RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN,required=false \
+    --mount=type=cache,id=turbo,target=/app/node_modules/.cache/turbo \
     --mount=type=cache,id=next-web,target=/app/apps/frontend/web/.next/cache \
+    export SENTRY_AUTH_TOKEN="$( [ -f /run/secrets/SENTRY_AUTH_TOKEN ] && cat /run/secrets/SENTRY_AUTH_TOKEN || true )" && \
     pnpm turbo run build --filter=@crwsync/web...
 
 # --- RUNNER STAGE ---

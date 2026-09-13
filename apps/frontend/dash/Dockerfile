@@ -28,12 +28,23 @@ COPY tsconfig.base.json tsconfig.base.json
 
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_WEB_URL
+ARG NEXT_PUBLIC_SENTRY_DSN
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
+ARG SENTRY_RELEASE
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL}
+ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
+ENV SENTRY_ORG=${SENTRY_ORG}
+ENV SENTRY_PROJECT=${SENTRY_PROJECT}
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+ENV CI=true
 
-RUN --mount=type=cache,id=turbo,target=/app/node_modules/.cache/turbo \
+RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN,required=false \
+    --mount=type=cache,id=turbo,target=/app/node_modules/.cache/turbo \
     --mount=type=cache,id=next-dash,target=/app/apps/frontend/dash/.next/cache \
+    export SENTRY_AUTH_TOKEN="$( [ -f /run/secrets/SENTRY_AUTH_TOKEN ] && cat /run/secrets/SENTRY_AUTH_TOKEN || true )" && \
     pnpm turbo run build --filter=@crwsync/dash...
 
 # --- RUNNER STAGE ---
