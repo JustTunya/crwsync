@@ -4,6 +4,7 @@ import { ChatService } from "src/chat/chat.service";
 import { StatusGateway } from "src/status/status.gateway";
 import { SessionService } from "src/session/session.service";
 import { CacheService } from "src/redis";
+import { NotificationService } from "src/notification/notification.service";
 import { JwtService } from "@nestjs/jwt";
 import { Queue } from "bullmq";
 import { Socket } from "socket.io";
@@ -15,6 +16,7 @@ function makeGateway() {
   const chatService = {};
   const statusGateway = {};
   const cache = {};
+  const notificationService = {};
   const messageQueue = {};
 
   const gateway = new ChatGateway(
@@ -24,6 +26,7 @@ function makeGateway() {
     statusGateway as unknown as StatusGateway,
     sessionService as unknown as SessionService,
     cache as unknown as CacheService,
+    notificationService as unknown as NotificationService,
     messageQueue as unknown as Queue,
   );
   return { gateway, prisma, jwtService, sessionService };
