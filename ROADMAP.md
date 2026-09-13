@@ -319,7 +319,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 * [x] **Observability & Error Tracking**:
   * Integrate an error-tracking service (e.g., Sentry) across `apps/backend`, `apps/frontend/web`, and `apps/frontend/dash`.
   * Add structured log aggregation and basic alerting for production incidents.
-* [ ] **Recurring Security Process**:
+* [x] **Recurring Security Process**:
   * Add scheduled dependency vulnerability scanning (e.g., `pnpm audit` / Dependabot).
   * Document a rate-limit and secret-rotation review cadence.
 * [ ] **Backend Test Coverage**:
