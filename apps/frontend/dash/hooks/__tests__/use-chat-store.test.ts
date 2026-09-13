@@ -5,13 +5,17 @@ import type { ChatMessage, ChatReadReceipt } from "@crwsync/types";
 function createMockMessage(id: string, content = "test", roomId = "room-1", clientId?: string): ChatMessage {
   return {
     id,
+    workspace_id: "workspace-1",
     room_id: roomId,
     sender_id: "user-1",
     content,
     client_id: clientId,
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     is_edited: false,
     is_deleted: false,
+    is_pinned: false,
+    reply_to_id: null,
     reactions: [],
     read_receipts: [],
     attachments: [],
@@ -19,7 +23,6 @@ function createMockMessage(id: string, content = "test", roomId = "room-1", clie
       id: "user-1",
       firstname: "Alice",
       lastname: "Smith",
-      username: "alice",
       avatar_key: null,
     },
   };
@@ -42,9 +45,10 @@ describe("useChatStore", () => {
     it("sets messages for a room and extracts initial read receipts", () => {
       const receipt: ChatReadReceipt = {
         id: "r-1",
+        room_id: "room-1",
         message_id: "m-1",
         user_id: "user-2",
-        last_read_at: new Date("2026-01-01T12:00:00Z"),
+        last_read_at: new Date("2026-01-01T12:00:00Z").toISOString(),
       };
       const msg = { ...createMockMessage("m-1"), read_receipts: [receipt] };
 
@@ -160,7 +164,15 @@ describe("useChatStore", () => {
   describe("updateMessage cascading", () => {
     it("updates message content and cascades the update to nested reply_to quotes", () => {
       const target = createMockMessage("m-1", "original text");
-      const reply = { ...createMockMessage("m-2", "I agree"), reply_to: { ...target } };
+      const reply = {
+        ...createMockMessage("m-2", "I agree"),
+        reply_to: {
+          id: target.id,
+          content: target.content,
+          is_deleted: target.is_deleted,
+          sender: { firstname: target.sender!.firstname, lastname: target.sender!.lastname },
+        },
+      };
 
       useChatStore.getState().setMessages("room-1", [target, reply]);
       useChatStore.getState().updateMessage("room-1", "m-1", { content: "edited text", is_edited: true });
@@ -174,7 +186,7 @@ describe("useChatStore", () => {
 
   describe("Typing indicators & read receipts", () => {
     it("adds and removes typing users correctly", () => {
-      const typingUser = { id: "user-2", username: "bob", name: "Bob", avatar: null };
+      const typingUser = { id: "user-2", firstname: "Bob", lastname: "Roberts", avatar_key: null };
 
       useChatStore.getState().addTypingUser("room-1", typingUser);
       expect(useChatStore.getState().typingUsers.get("room-1")).toContainEqual(typingUser);
@@ -190,15 +202,17 @@ describe("useChatStore", () => {
     it("updates read receipt only if the new timestamp is newer", () => {
       const olderReceipt: ChatReadReceipt = {
         id: "r-1",
+        room_id: "room-1",
         message_id: "m-1",
         user_id: "user-2",
-        last_read_at: new Date("2026-01-01T10:00:00Z"),
+        last_read_at: new Date("2026-01-01T10:00:00Z").toISOString(),
       };
       const newerReceipt: ChatReadReceipt = {
         id: "r-2",
+        room_id: "room-1",
         message_id: "m-2",
         user_id: "user-2",
-        last_read_at: new Date("2026-01-01T12:00:00Z"),
+        last_read_at: new Date("2026-01-01T12:00:00Z").toISOString(),
       };
 
       useChatStore.getState().updateReadReceipt("room-1", olderReceipt);
