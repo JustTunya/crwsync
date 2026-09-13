@@ -1,3 +1,5 @@
+import "src/instrument";
+
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory, Reflector } from "@nestjs/core";
