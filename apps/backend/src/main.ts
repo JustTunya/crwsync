@@ -1,13 +1,15 @@
+import "src/instrument";
+
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory, Reflector } from "@nestjs/core";
+import { Logger as PinoLogger } from "nestjs-pino";
 import { json, urlencoded } from "express";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import helmet from "helmet";
 import { AppModule } from "src/app.module";
 import { AllExceptionsFilter } from "src/common/filters/all-exceptions.filter";
-import { LoggingInterceptor } from "src/common/interceptors/logging.interceptor";
 import { TimeoutInterceptor } from "src/common/interceptors/timeout.interceptor";
 import { RedisIoAdapter } from "src/common/adapters/redis-io.adapter";
 
@@ -16,7 +18,9 @@ async function bootstrap() {
   const logger = new Logger("Bootstrap");
   const config = app.get(ConfigService);
   const reflector = app.get(Reflector);
-  
+
+  app.useLogger(app.get(PinoLogger));
+
   app.enableShutdownHooks(["SIGINT", "SIGTERM"]);
 
   app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
@@ -72,7 +76,6 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(
     new ClassSerializerInterceptor(reflector),
-    new LoggingInterceptor(),
     new TimeoutInterceptor(10000)
   );
 

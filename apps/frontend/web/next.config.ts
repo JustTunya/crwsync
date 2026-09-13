@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
@@ -30,4 +31,9 @@ const nextConfig: NextConfig = {
   output: process.env.NEXT_NO_STANDALONE ? undefined : 'standalone',
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+});

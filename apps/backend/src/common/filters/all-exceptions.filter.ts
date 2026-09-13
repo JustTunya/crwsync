@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from "@nestjs/common";
 import type { Request } from "express";
+import * as Sentry from "@sentry/nestjs";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -24,6 +25,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const path = req.path || rawUrl.split("?")[0] || rawUrl;
 
     this.logger.error(`[${req.method}] ${path} -> ${status}`);
+
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      Sentry.captureException(exception);
+    }
 
     res.status(status).json({
       statusCode: status,

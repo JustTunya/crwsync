@@ -24,6 +24,7 @@ jobs:
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      SENTRY_AUTH_TOKEN_SET: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,6 +64,17 @@ jobs:
 
       - name: Lint, typecheck & test project
         run: pnpm turbo run lint typecheck test
+
+      - name: Build backend & upload source maps to Sentry
+        if: github.event_name == 'push' && env.SENTRY_AUTH_TOKEN_SET == 'true'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_BACKEND }}
+        run: |
+          pnpm --filter @crwsync/backend run build
+          pnpm exec sentry-cli sourcemaps inject apps/backend/dist
+          pnpm exec sentry-cli sourcemaps upload --release=${{ github.sha }} apps/backend/dist
 
   lint-docker:
     name: 🐳 Lint Dockerfiles
@@ -138,9 +150,14 @@ jobs:
             NEXT_PUBLIC_WEB_URL=${{ matrix.app == 'dash' && secrets.NEXT_PUBLIC_WEB_URL || '' }}
             NEXT_PUBLIC_DEMO_IDENTIFIER=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DEMO_IDENTIFIER || '' }}
             NEXT_PUBLIC_DEMO_PASSWORD=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DEMO_PASSWORD || '' }}
-          # Expose the database URL using build-time secure context isolation
+            NEXT_PUBLIC_SENTRY_DSN=${{ (matrix.app == 'web' && secrets.NEXT_PUBLIC_SENTRY_DSN_WEB) || (matrix.app == 'dash' && secrets.NEXT_PUBLIC_SENTRY_DSN_DASH) || '' }}
+            SENTRY_ORG=${{ (matrix.app == 'web' || matrix.app == 'dash') && secrets.SENTRY_ORG || '' }}
+            SENTRY_PROJECT=${{ (matrix.app == 'web' && secrets.SENTRY_PROJECT_WEB) || (matrix.app == 'dash' && secrets.SENTRY_PROJECT_DASH) || '' }}
+            SENTRY_RELEASE=${{ (matrix.app == 'web' || matrix.app == 'dash') && github.sha || '' }}
+          # Expose the database URL and Sentry auth token using build-time secure context isolation
           secrets: |
             ${{ matrix.app == 'backend' && format('DATABASE_URL={0}', secrets.DATABASE_URL) || '' }}
+            ${{ (matrix.app == 'web' || matrix.app == 'dash') && format('SENTRY_AUTH_TOKEN={0}', secrets.SENTRY_AUTH_TOKEN) || '' }}
           tags: ghcr.io/${{ secrets.GH_REPO }}/${{ matrix.app }}:${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
@@ -158,6 +175,10 @@ jobs:
       NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
       NEXT_PUBLIC_WEB_URL: ${{ secrets.NEXT_PUBLIC_WEB_URL }}
       NEXT_PUBLIC_DASH_URL: ${{ secrets.NEXT_PUBLIC_DASH_URL }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      SENTRY_RELEASE: ${{ github.sha }}
+      NEXT_PUBLIC_SENTRY_DSN_WEB: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN_WEB }}
+      NEXT_PUBLIC_SENTRY_DSN_DASH: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN_DASH }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PRISMA_LOG_QUERY: ${{ secrets.PRISMA_LOG_QUERY }}
       REDIS_PASS: ${{ secrets.REDIS_PASS }}
