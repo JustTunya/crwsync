@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { SentryModule } from "@sentry/nestjs/setup";
+import { LoggerModule } from "nestjs-pino";
 // MODULES
 import { VerificationModule } from "src/email-verification/email-verification.module";
 import { PasswordResetModule } from "src/password-reset/password-reset.module";
@@ -34,6 +35,12 @@ import { ContactModule } from "src/contact/contact.module";
 @Module({
   imports: [
     SentryModule.forRoot(),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.LOG_LEVEL || "info",
+        redact: ["req.headers.cookie", "req.headers.authorization"],
+      },
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 100 }]),
