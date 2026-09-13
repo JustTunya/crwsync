@@ -9,6 +9,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "baseUrl": "./",
+    "sourceMap": true,
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"],
