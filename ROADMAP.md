@@ -300,7 +300,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
   * Upgrade search modal to index modules, tasks (`CRW-12`), chat messages, files, and workspace members.
 * [x] **Desktop & Audio Notifications**:
   * Integrate Web Notifications API for incoming mentions and task assignments.
-* [ ] **Comprehensive Test Coverage**:
+* [x] **Comprehensive Test Coverage**:
   * Add frontend integration tests for Kanban drag-and-drop and chat stores.
   * Implement end-to-end Playwright test suite covering:
     `Sign In → Create Workspace → Add Board → Create & Move Task → Send Chat → Upload File`.
