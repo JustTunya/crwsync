@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
@@ -34,10 +35,15 @@ const nextConfig: NextConfig = {
       { source: "/:path*.png", headers: [{ key: "Cache-Control", value: `public, max-age=${ONE_YEAR_SECONDS}, immutable` }] }
     ];
   },
-  
+
   // Standalone output symlinks node_modules, which needs Developer Mode on
   // Windows. NEXT_NO_STANDALONE=1 skips it for local production builds.
   output: process.env.NEXT_NO_STANDALONE ? undefined : 'standalone',
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+});
