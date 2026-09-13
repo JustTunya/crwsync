@@ -33,3 +33,8 @@ export function setAuthCookies(
     domain: refreshCookieDomain,
   });
 }
+
+export function clearAuthCookies(res: Response) {
+  res.clearCookie("crw-at", { path: "/", domain: accessCookieDomain });
+  res.clearCookie("crw-rt", { path: "/", domain: refreshCookieDomain });
+}

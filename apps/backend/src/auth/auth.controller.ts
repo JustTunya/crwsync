@@ -9,7 +9,7 @@ import { Public } from "src/common/decorators/public.decorator";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { ActiveUserParam } from "src/common/decorators/active-user.decorator";
 import { ActiveUser } from "src/common/types/active-user.type";
-import { setAuthCookies } from "./auth.cookie";
+import { setAuthCookies, clearAuthCookies } from "./auth.cookie";
 
 @Controller("auth")
 export class AuthController {
@@ -62,24 +62,34 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response
   ) {
-    const { accessToken, refreshToken, persistent } = await this.authService.refresh(req);
+    try {
+      const { accessToken, refreshToken, persistent } = await this.authService.refresh(req);
 
-    setAuthCookies(res, accessToken, refreshToken, persistent);
+      setAuthCookies(res, accessToken, refreshToken, persistent);
 
-    return { message: "Tokens refreshed" };
+      return { message: "Tokens refreshed" };
+    } catch (err) {
+      clearAuthCookies(res);
+      throw err;
+    }
   }
 
   @Public()
   @SkipThrottle()
   @Post("session")
   async session(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const { user, refresh } = await this.authService.sessionBootstrap(req);
+    try {
+      const { user, refresh } = await this.authService.sessionBootstrap(req);
 
-    if (refresh) {
-      setAuthCookies(res, refresh.accessToken, refresh.refreshToken, refresh.persistent);
+      if (refresh) {
+        setAuthCookies(res, refresh.accessToken, refresh.refreshToken, refresh.persistent);
+      }
+
+      return user;
+    } catch (err) {
+      clearAuthCookies(res);
+      throw err;
     }
-
-    return user;
   }
 
   @UseGuards(JwtAuthGuard)
