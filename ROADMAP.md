@@ -316,7 +316,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 
 * [x] **CI/CD Pipeline**:
   * Add GitHub Actions workflow running `pnpm lint`, typecheck, and test suites on every PR; block merge on failure.
-* [ ] **Observability & Error Tracking**:
+* [x] **Observability & Error Tracking**:
   * Integrate an error-tracking service (e.g., Sentry) across `apps/backend`, `apps/frontend/web`, and `apps/frontend/dash`.
   * Add structured log aggregation and basic alerting for production incidents.
 * [ ] **Recurring Security Process**:
