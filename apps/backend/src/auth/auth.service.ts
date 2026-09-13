@@ -109,22 +109,14 @@ export class AuthService {
       throw new BadRequestException("Refresh token not found");
     }
 
-    const session = await this.sessionService.verify({ token: oldRefreshToken });
-
-    if (!session) {
-      throw new BadRequestException("Invalid refresh token");
-    }
-
     const { session: newSession, refreshToken } = await this.sessionService.rotate(
       {
-        user_id: session.user_id,
         old_token: oldRefreshToken,
-        persistent: session.persistent,
       },
       req,
     );
 
-    const user = await this.userService.findOne(session.user_id);
+    const user = await this.userService.findOne(newSession.user_id);
 
     const accessToken = this.jwtService.sign(this.payload(user, newSession.id));
 

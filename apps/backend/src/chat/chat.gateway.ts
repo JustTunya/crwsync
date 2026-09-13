@@ -62,13 +62,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      client.data.userId = payload.sub;
-      client.data.sessionId = payload.jti;
-
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
-        select: { id: true, firstname: true, lastname: true, avatar_key: true },
+        select: { id: true, firstname: true, lastname: true, avatar_key: true, role_version: true },
       });
+
+      if (!user || user.role_version !== payload.rver) {
+        client.disconnect();
+        return;
+      }
+
+      client.data.userId = payload.sub;
+      client.data.sessionId = payload.jti;
       client.data.user = user;
 
       this.revocationChecks.set(
@@ -76,6 +81,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         setInterval(async () => {
           const current = await this.sessionService.findOne(payload.jti).catch(() => null);
           if (!current || current.revoked_at) {
+            client.disconnect();
+            return;
+          }
+          const stillValid = await this.prisma.user.findUnique({
+            where: { id: payload.sub },
+            select: { role_version: true },
+          });
+          if (!stillValid || stillValid.role_version !== payload.rver) {
             client.disconnect();
           }
         }, 60_000),
