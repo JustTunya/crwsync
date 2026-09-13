@@ -44,7 +44,8 @@ ENV CI=true
 RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN,required=false \
     --mount=type=cache,id=turbo,target=/app/node_modules/.cache/turbo \
     --mount=type=cache,id=next-dash,target=/app/apps/frontend/dash/.next/cache \
-    export SENTRY_AUTH_TOKEN="$( [ -f /run/secrets/SENTRY_AUTH_TOKEN ] && cat /run/secrets/SENTRY_AUTH_TOKEN || true )" && \
+    SENTRY_AUTH_TOKEN="$( [ -f /run/secrets/SENTRY_AUTH_TOKEN ] && cat /run/secrets/SENTRY_AUTH_TOKEN || true )" && \
+    export SENTRY_AUTH_TOKEN && \
     pnpm turbo run build --filter=@crwsync/dash...
 
 # --- RUNNER STAGE ---
