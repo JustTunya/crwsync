@@ -53,6 +53,11 @@ export function addInterceptors(client: AxiosInstance): AxiosInstance {
       await refreshSession(client);
       return client(request);
     } catch {
+      if (typeof window !== "undefined") {
+        const target = new URL("/auth/signin", process.env.NEXT_PUBLIC_WEB_URL!);
+        target.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
+        window.location.assign(target.toString());
+      }
       return Promise.reject(error);
     }
   });

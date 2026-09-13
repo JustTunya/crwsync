@@ -43,6 +43,16 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { role_version: true },
+      });
+
+      if (!user || user.role_version !== payload.rver) {
+        client.disconnect();
+        return;
+      }
+
       const userId = payload.sub;
       client.data.userId = userId;
       client.data.sessionId = payload.jti;
@@ -60,6 +70,14 @@ export class StatusGateway implements OnGatewayConnection, OnGatewayDisconnect {
         setInterval(async () => {
           const current = await this.sessionService.findOne(payload.jti).catch(() => null);
           if (!current || current.revoked_at) {
+            client.disconnect();
+            return;
+          }
+          const stillValid = await this.prisma.user.findUnique({
+            where: { id: payload.sub },
+            select: { role_version: true },
+          });
+          if (!stillValid || stillValid.role_version !== payload.rver) {
             client.disconnect();
           }
         }, 60_000),

@@ -1,4 +1,4 @@
-import { BadRequestException } from "@nestjs/common";
+import { BadRequestException, UnauthorizedException } from "@nestjs/common";
 import { Request } from "express";
 import { AuthService } from "./auth.service";
 import { UserService } from "src/user/user.service";
@@ -11,7 +11,7 @@ describe("AuthService (Cluster 1 signin verification)", () => {
   let authService: AuthService;
   let userService: { recordLogin: jest.Mock; findOne: jest.Mock; findByEmailOrUsername: jest.Mock };
   let verificationService: { findByEmail: jest.Mock };
-  let sessionService: { create: jest.Mock };
+  let sessionService: { create: jest.Mock; rotate: jest.Mock; verify: jest.Mock; revoke: jest.Mock };
   let jwtService: { sign: jest.Mock };
 
   beforeEach(() => {
@@ -25,6 +25,9 @@ describe("AuthService (Cluster 1 signin verification)", () => {
     };
     sessionService = {
       create: jest.fn().mockResolvedValue({ token: "refresh-token" }),
+      rotate: jest.fn(),
+      verify: jest.fn(),
+      revoke: jest.fn(),
     };
     jwtService = {
       sign: jest.fn().mockReturnValue("access-token"),
@@ -71,5 +74,52 @@ describe("AuthService (Cluster 1 signin verification)", () => {
     expect(result.accessToken).toBe("access-token");
     expect(result.refreshToken).toBe("refresh-token");
     expect(userService.recordLogin).toHaveBeenCalledWith("u-1");
+  });
+
+  describe("refresh", () => {
+    it("throws BadRequestException when refresh token cookie is missing", async () => {
+      const req = { cookies: {} } as unknown as Request;
+
+      await expect(authService.refresh(req)).rejects.toThrow(BadRequestException);
+      expect(sessionService.rotate).not.toHaveBeenCalled();
+    });
+
+    it("delegates directly to sessionService.rotate with old_token and issues new tokens", async () => {
+      const req = { cookies: { "crw-rt": "old-token-val" } } as unknown as Request;
+      sessionService.rotate.mockResolvedValue({
+        session: { id: "new-session-id", user_id: "user-1", persistent: true },
+        refreshToken: "new-refresh-token",
+      });
+      userService.findOne.mockResolvedValue({
+        id: "user-1",
+        email: "u1@example.com",
+        role: "MEMBER",
+        role_version: 1,
+        status_preference: "ONLINE",
+      });
+
+      const result = await authService.refresh(req);
+
+      expect(sessionService.verify).not.toHaveBeenCalled();
+      expect(sessionService.rotate).toHaveBeenCalledWith({ old_token: "old-token-val" }, req);
+      expect(userService.findOne).toHaveBeenCalledWith("user-1");
+      expect(jwtService.sign).toHaveBeenCalled();
+      expect(result).toEqual({
+        accessToken: "access-token",
+        refreshToken: "new-refresh-token",
+        persistent: true,
+      });
+    });
+
+    it("propagates errors thrown by sessionService.rotate", async () => {
+      const req = { cookies: { "crw-rt": "reused-token" } } as unknown as Request;
+      sessionService.rotate.mockRejectedValue(
+        new UnauthorizedException("Session already used — possible token reuse detected"),
+      );
+
+      await expect(authService.refresh(req)).rejects.toThrow(UnauthorizedException);
+      expect(sessionService.verify).not.toHaveBeenCalled();
+      expect(userService.findOne).not.toHaveBeenCalled();
+    });
   });
 });

@@ -1,12 +1,15 @@
 import { IsBoolean, IsOptional, IsUUID } from "class-validator";
 
-
 export class CreateSessionDto {
   @IsUUID()
   id!: string;
 
   @IsUUID()
   user_id!: string;
+
+  @IsOptional()
+  @IsUUID()
+  family_id?: string;
 
   @IsOptional()
   @IsBoolean()

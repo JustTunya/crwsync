@@ -53,10 +53,14 @@ describe("StatusGateway.handleSubscribeWorkspace", () => {
 
 describe("StatusGateway.handleConnection", () => {
   it("keeps the revocation interval out of client.data so the Redis adapter can serialize it", async () => {
-    const { gateway, jwtService, sessionService } = makeGateway();
-    jwtService.verify.mockReturnValue({ sub: "user-1", jti: "session-1" });
+    const { gateway, prisma, jwtService, sessionService } = makeGateway();
+    jwtService.verify.mockReturnValue({ sub: "user-1", jti: "session-1", rver: 1 });
     sessionService.findOne.mockResolvedValue({ revoked_at: null, expires_at: null });
-    (gateway as unknown as { server: unknown }).server = { in: () => ({ fetchSockets: async () => [] }) };
+    prisma.user.findUnique.mockResolvedValue({ id: "user-1", role_version: 1, status_preference: "ONLINE", ws_memberships: [] });
+    (gateway as unknown as { server: unknown }).server = {
+      in: () => ({ fetchSockets: async () => [] }),
+      to: () => ({ emit: jest.fn() }),
+    };
 
     const client = {
       id: "socket-1",
@@ -72,5 +76,61 @@ describe("StatusGateway.handleConnection", () => {
     expect(() => JSON.stringify(client.data)).not.toThrow();
 
     await gateway.handleDisconnect(client);
+  });
+});
+
+describe("StatusGateway.handleConnection (role_version check)", () => {
+  it("disconnects when the token's role version no longer matches the user's current role_version", async () => {
+    const { gateway, prisma, jwtService, sessionService } = makeGateway();
+    jwtService.verify.mockReturnValue({ sub: "user-1", jti: "session-1", rver: 1 });
+    sessionService.findOne.mockResolvedValue({ revoked_at: null, expires_at: null });
+    prisma.user.findUnique.mockResolvedValue({ id: "user-1", role_version: 2 });
+    (gateway as unknown as { server: unknown }).server = { in: () => ({ fetchSockets: async () => [] }) };
+
+    const client = {
+      id: "socket-1",
+      data: {} as Record<string, unknown>,
+      handshake: { auth: { token: "token" }, headers: {} },
+      join: jest.fn(),
+      disconnect: jest.fn(),
+    } as unknown as Socket;
+
+    await gateway.handleConnection(client);
+
+    expect(client.disconnect).toHaveBeenCalled();
+  });
+
+  it("disconnects active client after 60s when role_version is updated in database", async () => {
+    jest.useFakeTimers();
+    try {
+      const { gateway, prisma, jwtService, sessionService } = makeGateway();
+      jwtService.verify.mockReturnValue({ sub: "user-1", jti: "session-1", rver: 1 });
+      sessionService.findOne.mockResolvedValue({ id: "session-1", revoked_at: null, expires_at: null });
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ role_version: 1 })
+        .mockResolvedValueOnce({ role_version: 2 });
+      (gateway as unknown as { server: unknown }).server = {
+        in: () => ({ fetchSockets: async () => [] }),
+        to: () => ({ emit: jest.fn() }),
+      };
+
+      const client = {
+        id: "socket-1",
+        data: {} as Record<string, unknown>,
+        handshake: { auth: { token: "token" }, headers: {} },
+        join: jest.fn(),
+        disconnect: jest.fn(),
+      } as unknown as Socket;
+
+      await gateway.handleConnection(client);
+      expect(client.disconnect).not.toHaveBeenCalled();
+
+      await jest.advanceTimersByTimeAsync(60_000);
+
+      expect(client.disconnect).toHaveBeenCalled();
+      await gateway.handleDisconnect(client);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

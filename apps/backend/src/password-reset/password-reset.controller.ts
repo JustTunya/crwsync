@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch, ParseUUIDPipe, Query, UseGuards, NotFoundException } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { PasswordResetStatus, RoleEnum } from "@crwsync/types";
 import { CreatePasswordResetDto } from "src/password-reset/dto/create-password-reset.dto";
 import { UpdatePasswordResetDto } from "src/password-reset/dto/update-password-reset.dto";
@@ -15,6 +16,7 @@ export class PasswordResetController {
   constructor(private readonly passwordResetService: PasswordResetService) {}
 
   @Public()
+  @Throttle({ default: { ttl: 3_600_000, limit: 5 } })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreatePasswordResetDto): Promise<PasswordResetPublic> {

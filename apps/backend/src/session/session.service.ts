@@ -34,6 +34,7 @@ export class SessionService {
       data: {
         id: dto.id,
         user: { connect: { id: dto.user_id } },
+        family_id: dto.family_id ?? dto.id,
         refresh_token_hash: hashedToken,
         persistent: dto.persistent ?? false,
         expires_at: exp,
@@ -118,8 +119,11 @@ export class SessionService {
   async rotate(dto: RotateSessionDto, req: Request): Promise<{ session: SessionPublic; refreshToken: string }> {
     const oldHashedToken = createHash("sha256").update(dto.old_token).digest("hex");
     const oldSession = await this.prisma.session.findFirst({
-      where: { user_id: dto.user_id, refresh_token_hash: oldHashedToken },
-      select: { id: true, expires_at: true, revoked_at: true },
+      where: {
+        refresh_token_hash: oldHashedToken,
+        ...(dto.user_id ? { user_id: dto.user_id } : {}),
+      },
+      select: { id: true, user_id: true, family_id: true, persistent: true, expires_at: true, revoked_at: true },
     });
     if (!oldSession) {
       throw new NotFoundException("Old session not found");
@@ -133,12 +137,18 @@ export class SessionService {
       data: { revoked_at: new Date() },
     });
     if (claimed.count === 0) {
-      throw new BadRequestException("Old session has already been rotated");
+      await this.revokeFamily(oldSession.family_id);
+      throw new UnauthorizedException("Session already used — possible token reuse detected");
     }
     await this.cache.del(CacheKeys.session(oldSession.id));
 
     const { session: newSession, token: refreshToken } = await this.create(
-      { id: randomUUID(), user_id: dto.user_id, persistent: dto.persistent },
+      {
+        id: randomUUID(),
+        user_id: oldSession.user_id,
+        persistent: dto.persistent ?? oldSession.persistent,
+        family_id: oldSession.family_id,
+      },
       req,
     );
 
@@ -148,6 +158,23 @@ export class SessionService {
   async revoke(id: string): Promise<void> {
     await this.prisma.session.updateMany({ where: { id }, data: { revoked_at: new Date() } });
     await this.cache.del(CacheKeys.session(id));
+  }
+
+  async revokeFamily(familyId: string): Promise<void> {
+    const sessions = await this.prisma.session.findMany({
+      where: { family_id: familyId, revoked_at: null },
+      select: { id: true },
+    });
+
+    await this.prisma.session.updateMany({
+      where: { family_id: familyId, revoked_at: null },
+      data: { revoked_at: new Date() },
+    });
+
+    const cacheKeys = sessions.map((s) => CacheKeys.session(s.id));
+    if (cacheKeys.length > 0) {
+      await this.cache.del(cacheKeys);
+    }
   }
 
   async revokeOwned(userId: string, sessionId: string): Promise<void> {
