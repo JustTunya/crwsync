@@ -57,4 +57,55 @@ describe("StorageService", () => {
     await expect(service.deleteObject("some-key.png")).resolves.toBeUndefined();
     expect(send).toHaveBeenCalled();
   });
+
+  describe("onModuleInit", () => {
+    it("checks existing bucket without creating", async () => {
+      const send = jest.fn().mockResolvedValue({});
+      (service as unknown as { client: { send: typeof send } }).client = { send };
+
+      await service.onModuleInit();
+      expect(send).toHaveBeenCalledTimes(1);
+    });
+
+    it("creates bucket if head bucket fails", async () => {
+      const send = jest.fn().mockRejectedValueOnce(new Error("not found")).mockResolvedValueOnce({});
+      (service as unknown as { client: { send: typeof send } }).client = { send };
+
+      await service.onModuleInit();
+      expect(send).toHaveBeenCalledTimes(2);
+    });
+
+    it("handles bucket creation error gracefully", async () => {
+      const send = jest.fn().mockRejectedValue(new Error("create failed"));
+      (service as unknown as { client: { send: typeof send } }).client = { send };
+
+      await expect(service.onModuleInit()).resolves.toBeUndefined();
+    });
+  });
+
+  describe("file attachments", () => {
+    it("presigns file upload with file extension", async () => {
+      const result = await service.presignFileUpload("application/pdf", "document.pdf", "user-1");
+      expect(result.key).toMatch(/^user-1_[0-9a-f-]{36}\.pdf$/);
+      expect(result.url).toContain("test-bucket");
+    });
+
+    it("presigns file upload with fallback extension when no ext found", async () => {
+      const result = await service.presignFileUpload("application/octet-stream", "noextension", "user-1");
+      expect(result.key).toMatch(/^user-1_[0-9a-f-]{36}\.bin$/);
+    });
+
+    it("returns a presigned GET url for files", async () => {
+      const url = await service.presignFileGet("attachment-key.pdf");
+      expect(url).toContain("attachment-key.pdf");
+    });
+
+    it("deletes file object by key and swallows errors", async () => {
+      const send = jest.fn().mockRejectedValue(new Error("delete file error"));
+      (service as unknown as { client: { send: typeof send } }).client = { send };
+
+      await expect(service.deleteFileObject("attachment-key.pdf")).resolves.toBeUndefined();
+      expect(send).toHaveBeenCalled();
+    });
+  });
 });

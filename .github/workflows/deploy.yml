@@ -65,6 +65,17 @@ jobs:
       - name: Lint, typecheck & test project
         run: pnpm turbo run lint typecheck test
 
+      - name: Backend coverage gate (services & guards)
+        run: pnpm --filter @crwsync/backend run test:cov
+
+      - name: Upload backend coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-report
+          path: apps/backend/coverage
+          retention-days: 14
+
       - name: Build backend & upload source maps to Sentry
         if: github.event_name == 'push' && env.SENTRY_AUTH_TOKEN_SET == 'true'
         env:
