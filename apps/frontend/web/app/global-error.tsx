@@ -42,7 +42,7 @@ export default function GlobalError({
               </p>
             </div>
             {error.digest && (
-              <span className="rounded-full bg-muted px-3 py.5 text-xs font-semibold tracking-wide text-muted-foreground">
+              <span className="rounded-full bg-muted px-3 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground">
                 Error ref: {error.digest}
               </span>
             )}
