@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from "@nestjs/common";
+import { ArgumentsHost, HttpException, HttpStatus } from "@nestjs/common";
 import * as Sentry from "@sentry/nestjs";
 import { AllExceptionsFilter } from "./all-exceptions.filter";
 
@@ -14,7 +14,7 @@ function makeHost(req: { method: string; url: string }) {
       getResponse: () => res,
     }),
   };
-  return { host: host as any, status };
+  return { host: host as unknown as ArgumentsHost, status };
 }
 
 describe("AllExceptionsFilter", () => {
