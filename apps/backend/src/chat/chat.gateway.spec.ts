@@ -78,4 +78,41 @@ describe("ChatGateway.handleConnection (role_version check)", () => {
     expect(client.disconnect).not.toHaveBeenCalled();
     await gateway.handleDisconnect(client);
   });
+
+  it("disconnects active client after 60s when role_version is updated in database", async () => {
+    jest.useFakeTimers();
+    try {
+      const { gateway, prisma, jwtService, sessionService } = makeGateway();
+      jwtService.verify.mockReturnValue({ sub: "user-1", jti: "session-1", rver: 1 });
+      sessionService.findOne.mockResolvedValue({ id: "session-1", revoked_at: null, expires_at: null });
+      prisma.user.findUnique
+        .mockResolvedValueOnce({
+          id: "user-1",
+          firstname: "A",
+          lastname: "B",
+          avatar_key: null,
+          role_version: 1,
+        })
+        .mockResolvedValueOnce({
+          role_version: 2,
+        });
+
+      const client = {
+        id: "socket-1",
+        data: {} as Record<string, unknown>,
+        handshake: { auth: { token: "token" }, headers: {} },
+        disconnect: jest.fn(),
+      } as unknown as Socket;
+
+      await gateway.handleConnection(client);
+      expect(client.disconnect).not.toHaveBeenCalled();
+
+      await jest.advanceTimersByTimeAsync(60_000);
+
+      expect(client.disconnect).toHaveBeenCalled();
+      await gateway.handleDisconnect(client);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });

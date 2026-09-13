@@ -1,8 +1,9 @@
-import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class RotateSessionDto {
+  @IsOptional()
   @IsUUID()
-  user_id!: string;
+  user_id?: string;
 
   @IsString()
   old_token!: string;

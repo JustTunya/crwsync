@@ -68,11 +68,13 @@ describe("SessionService.create (family_id defaulting)", () => {
 });
 
 describe("SessionService.rotate (family_id propagation + reuse detection)", () => {
-  it("propagates the old session's family_id to the newly rotated session", async () => {
+  it("propagates the old session's family_id and user_id to the newly rotated session", async () => {
     const { service, prisma } = makeService();
     prisma.session.findFirst.mockResolvedValue({
       id: "old-session",
+      user_id: "user-1",
       family_id: "family-root",
+      persistent: false,
       expires_at: null,
       revoked_at: null,
     });
@@ -80,22 +82,27 @@ describe("SessionService.rotate (family_id propagation + reuse detection)", () =
     prisma.user.findUnique.mockResolvedValue({ id: "user-1" });
     prisma.session.create.mockImplementation(({ data }) => ({
       id: data.id,
+      user_id: data.user.connect.id,
       family_id: data.family_id,
+      persistent: data.persistent,
     }));
 
     const { session } = await service.rotate(
-      { user_id: "user-1", old_token: "raw-token", persistent: false },
+      { old_token: "raw-token" },
       req,
     );
 
-    expect((session as { family_id?: string }).family_id).toBe("family-root");
+    expect((session as { family_id?: string; user_id?: string }).family_id).toBe("family-root");
+    expect((session as { family_id?: string; user_id?: string }).user_id).toBe("user-1");
   });
 
   it("revokes the entire session family and throws Unauthorized when the token was already rotated", async () => {
     const { service, prisma, cache } = makeService();
     prisma.session.findFirst.mockResolvedValue({
       id: "old-session",
+      user_id: "user-1",
       family_id: "family-root",
+      persistent: false,
       expires_at: null,
       revoked_at: null,
     });

@@ -119,8 +119,11 @@ export class SessionService {
   async rotate(dto: RotateSessionDto, req: Request): Promise<{ session: SessionPublic; refreshToken: string }> {
     const oldHashedToken = createHash("sha256").update(dto.old_token).digest("hex");
     const oldSession = await this.prisma.session.findFirst({
-      where: { user_id: dto.user_id, refresh_token_hash: oldHashedToken },
-      select: { id: true, family_id: true, expires_at: true, revoked_at: true },
+      where: {
+        refresh_token_hash: oldHashedToken,
+        ...(dto.user_id ? { user_id: dto.user_id } : {}),
+      },
+      select: { id: true, user_id: true, family_id: true, persistent: true, expires_at: true, revoked_at: true },
     });
     if (!oldSession) {
       throw new NotFoundException("Old session not found");
@@ -140,7 +143,12 @@ export class SessionService {
     await this.cache.del(CacheKeys.session(oldSession.id));
 
     const { session: newSession, token: refreshToken } = await this.create(
-      { id: randomUUID(), user_id: dto.user_id, persistent: dto.persistent, family_id: oldSession.family_id },
+      {
+        id: randomUUID(),
+        user_id: oldSession.user_id,
+        persistent: dto.persistent ?? oldSession.persistent,
+        family_id: oldSession.family_id,
+      },
       req,
     );
 
