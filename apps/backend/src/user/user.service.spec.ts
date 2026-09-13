@@ -12,6 +12,8 @@ describe("UserService (Cluster 1 fixes)", () => {
   let userService: UserService;
   let prisma: {
     user: {
+      create: jest.Mock;
+      findMany: jest.Mock;
       findUnique: jest.Mock;
       findFirst: jest.Mock;
       update: jest.Mock;
@@ -19,6 +21,9 @@ describe("UserService (Cluster 1 fixes)", () => {
     };
     emailVerification: {
       deleteMany: jest.Mock;
+    };
+    workspaceInvite: {
+      findMany: jest.Mock;
     };
   };
   let cache: {
@@ -39,6 +44,8 @@ describe("UserService (Cluster 1 fixes)", () => {
   beforeEach(() => {
     prisma = {
       user: {
+        create: jest.fn(),
+        findMany: jest.fn(),
         findUnique: jest.fn(),
         findFirst: jest.fn(),
         update: jest.fn(),
@@ -46,6 +53,9 @@ describe("UserService (Cluster 1 fixes)", () => {
       },
       emailVerification: {
         deleteMany: jest.fn(),
+      },
+      workspaceInvite: {
+        findMany: jest.fn(),
       },
     };
 
@@ -221,6 +231,109 @@ describe("UserService (Cluster 1 fixes)", () => {
         }),
       );
       expect(cache.del).toHaveBeenCalled();
+    });
+
+    it("create hashes password and creates user", async () => {
+      prisma.user.create.mockResolvedValue({ id: "new-user", email: "new@example.com" });
+      const result = await userService.create({
+        email: "new@example.com",
+        username: "newuser",
+        firstname: "First",
+        lastname: "Last",
+        birthdate: "2000-01-01",
+        password: "Password123!",
+      });
+      expect(prisma.user.create).toHaveBeenCalledTimes(1);
+      expect(result.id).toBe("new-user");
+    });
+
+    it("findAll returns all users", async () => {
+      prisma.user.findMany.mockResolvedValue([{ id: "u-1" }, { id: "u-2" }]);
+      const result = await userService.findAll();
+      expect(result).toHaveLength(2);
+    });
+
+    it("findOne returns cached user if present", async () => {
+      cache.get.mockResolvedValue({ id: "user-1", username: "cached" });
+      const result = await userService.findOne("user-1");
+      expect(result.username).toBe("cached");
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it("findOne throws NotFoundException when user does not exist", async () => {
+      cache.get.mockResolvedValue(null);
+      prisma.user.findUnique.mockResolvedValue(null);
+      await expect(userService.findOne("non-existent")).rejects.toThrow("User not found");
+    });
+
+    it("findByEmailOrUsername handles cache hits, misses, and not-found", async () => {
+      cache.get.mockResolvedValueOnce({ id: "user-1" });
+      expect(await userService.findByEmailOrUsername("test@example.com")).toEqual({ id: "user-1" });
+
+      cache.get.mockResolvedValueOnce(null);
+      prisma.user.findFirst.mockResolvedValueOnce({ id: "user-2" });
+      expect(await userService.findByEmailOrUsername("test2@example.com")).toEqual({ id: "user-2" });
+      expect(cache.set).toHaveBeenCalled();
+
+      cache.get.mockResolvedValueOnce(null);
+      prisma.user.findFirst.mockResolvedValueOnce(null);
+      expect(await userService.findByEmailOrUsername("unknown")).toBeNull();
+    });
+
+    it("searchByEmailOrUsername queries with and without workspaceId", async () => {
+      prisma.user.findMany.mockResolvedValue([]);
+      await userService.searchByEmailOrUsername("query");
+      expect(prisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 5 }));
+
+      await userService.searchByEmailOrUsername("query", "ws-1");
+      expect(prisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ NOT: expect.anything() }) }));
+    });
+
+    it("checkEmailOrUsername checks email and username availability", async () => {
+      prisma.user.findUnique.mockResolvedValueOnce(null);
+      expect(await userService.checkEmailOrUsername("email", "free@example.com")).toEqual({ available: true });
+
+      prisma.user.findUnique.mockResolvedValueOnce({ id: "user-1" });
+      expect(await userService.checkEmailOrUsername("username", "taken")).toEqual({ available: false });
+    });
+
+    it("findInvites returns pending invites for user", async () => {
+      prisma.workspaceInvite.findMany.mockResolvedValue([{ id: "inv-1" }]);
+      const result = await userService.findInvites("user-1");
+      expect(result).toHaveLength(1);
+    });
+
+    it("remove deletes user and cleans cache", async () => {
+      const mockUser = { id: "user-1", email: "del@example.com", username: "deluser" };
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+      prisma.user.delete.mockResolvedValue(mockUser);
+
+      await userService.remove("user-1");
+      expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: "user-1" } });
+      expect(cache.del).toHaveBeenCalled();
+    });
+
+    it("update cleans old avatar and updates birthdate/lastname", async () => {
+      const mockUser = { id: "user-1", email: "u@example.com", username: "u", avatar_key: "user-1_old.png" };
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+      prisma.user.update.mockResolvedValue({ ...mockUser, avatar_key: "user-1_new.png" });
+
+      await userService.update("user-1", {
+        avatar_key: "user-1_new.png",
+        birthdate: "1995-05-05",
+        lastname: "NewLast",
+        username: "newname",
+      });
+
+      expect(storageService.deleteObject).toHaveBeenCalledWith("user-1_old.png");
+      expect(cache.del).toHaveBeenCalled();
+    });
+
+    it("changePassword throws when user not found in DB", async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      await expect(
+        userService.changePassword("non-existent", { currentPassword: "p", newPassword: "n" }, "sess-1"),
+      ).rejects.toThrow("User not found");
     });
   });
 });

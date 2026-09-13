@@ -124,6 +124,20 @@
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
+    "coverageThreshold": {
+      "./**/*.service.ts": {
+        "statements": 70,
+        "branches": 60,
+        "functions": 70,
+        "lines": 70
+      },
+      "./**/*.guard.ts": {
+        "statements": 70,
+        "branches": 60,
+        "functions": 70,
+        "lines": 70
+      }
+    },
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
   },

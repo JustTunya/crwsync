@@ -322,7 +322,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 * [x] **Recurring Security Process**:
   * Add scheduled dependency vulnerability scanning (e.g., `pnpm audit` / Dependabot).
   * Document a rate-limit and secret-rotation review cadence.
-* [ ] **Backend Test Coverage**:
+* [x] **Backend Test Coverage**:
   * Set an explicit coverage target (e.g., 70%+) for `apps/backend` services/guards.
   * Wire coverage reporting into the CI pipeline from the milestone above.
 * [ ] **Legal & Compliance Pages**:

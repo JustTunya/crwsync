@@ -51,6 +51,30 @@ describe("NotificationService", () => {
     });
   });
 
+  describe("list", () => {
+    it("returns notifications with default limit 50", async () => {
+      prisma.notification.findMany.mockResolvedValue([]);
+      const result = await service.list("user-1");
+      expect(prisma.notification.findMany).toHaveBeenCalledWith({
+        where: { user_id: "user-1" },
+        orderBy: { created_at: "desc" },
+        take: 50,
+      });
+      expect(result).toEqual([]);
+    });
+
+    it("returns notifications with custom limit", async () => {
+      prisma.notification.findMany.mockResolvedValue([{ id: "notif-1" }]);
+      const result = await service.list("user-1", 10);
+      expect(prisma.notification.findMany).toHaveBeenCalledWith({
+        where: { user_id: "user-1" },
+        orderBy: { created_at: "desc" },
+        take: 10,
+      });
+      expect(result).toHaveLength(1);
+    });
+  });
+
   describe("markRead", () => {
     it("throws NotFoundException when no row matches the user + id", async () => {
       prisma.notification.updateMany.mockResolvedValue({ count: 0 });
