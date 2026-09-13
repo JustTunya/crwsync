@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Body, HttpCode, HttpStatus, UnauthorizedException, Req, Res, UseGuards } from "@nestjs/common"
-import { SkipThrottle } from "@nestjs/throttler";
+import { SkipThrottle, Throttle } from "@nestjs/throttler";
 import { Request, Response } from "express";
 import { AuthService } from "src/auth/auth.service";
 import { SignupDto } from "src/auth/dto/signup.dto";
@@ -19,6 +19,7 @@ export class AuthController {
   ) {}
 
   @Public()
+  @Throttle({ default: { ttl: 3_600_000, limit: 5 } })
   @Post("signup")
   @HttpCode(HttpStatus.CREATED)
   async signup(@Body() dto: SignupDto) {
@@ -26,6 +27,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { ttl: 300_000, limit: 10 } })
   @Post("signin")
   @HttpCode(HttpStatus.OK)
   async signin(
