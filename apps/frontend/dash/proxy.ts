@@ -9,9 +9,7 @@ export function proxy(req: NextRequest) {
   if (!hasSession) {
     const target = new URL("/auth/signin", WEB_URL);
     target.searchParams.set("next", `${pathname}${search}`);
-    const res = NextResponse.redirect(target);
-    res.cookies.set("crw-rt", "", { path: "/auth", maxAge: 0 });
-    return res;
+    return NextResponse.redirect(target);
   }
 
   return NextResponse.next();

@@ -12,11 +12,7 @@ import { SignupDto } from "src/auth/dto/signup.dto";
 import { SessionUserDto } from "src/auth/dto/session-user.dto";
 import { RefreshDto } from "src/auth/dto/refresh.dto";
 import { UserPublic } from "src/prisma/selects";
-
-// --- COOKIE SETTINGS ---
-const isProduction = process.env.NODE_ENV === "production";
-const accessCookieDomain = isProduction ? process.env.ACCESS_COOKIE_DOMAIN : undefined;
-const refreshCookieDomain = isProduction ? process.env.REFRESH_COOKIE_DOMAIN : undefined;
+import { clearAuthCookies } from "./auth.cookie";
 
 @Injectable()
 export class AuthService {
@@ -85,20 +81,7 @@ export class AuthService {
         await this.sessionService.revoke(payload.jti);
       }
     } finally {
-      res.clearCookie("crw-at", {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: "lax",
-        path: "/",
-        domain: accessCookieDomain,
-      });
-      res.clearCookie("crw-rt", {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: "lax",
-        path: "/",
-        domain: refreshCookieDomain,
-      });
+      clearAuthCookies(res);
     }
   }
 
