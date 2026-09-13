@@ -47,6 +47,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_DASH_URL=${NEXT_PUBLIC_DASH_URL}
+      - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN_WEB}
     deploy:
       <<: *deploy-settings
     logging:
@@ -64,6 +65,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL}
+      - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN_DASH}
     deploy:
       <<: *deploy-settings
     logging:
@@ -105,6 +107,9 @@ services:
       - STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY}
       - STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY}
       - STORAGE_REGION=${STORAGE_REGION}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_ENVIRONMENT=production
+      - SENTRY_RELEASE=${SENTRY_RELEASE}
     deploy:
       <<: *deploy-settings
     logging:
