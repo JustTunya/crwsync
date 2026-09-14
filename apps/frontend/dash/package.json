@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@crwsync/i18n": "workspace:*",
     "@crwsync/styles": "workspace:*",
     "@crwsync/types": "workspace:*",
     "@dnd-kit/core": "^6.3.1",

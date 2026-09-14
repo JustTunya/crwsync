@@ -5,7 +5,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   return (
     <div className="relative flex h-screen w-full overflow-hidden">
       <LSidebar />
-      <main className="flex-1 min-w-0 h-full overflow-hidden">{children}</main>
+      <main id="main-content" className="flex-1 min-w-0 h-full overflow-hidden">{children}</main>
       <RSidebar />
     </div>
   );

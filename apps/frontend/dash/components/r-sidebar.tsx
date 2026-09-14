@@ -180,6 +180,7 @@ export function RSidebar() {
             variants={sidebarVariants}
             animate={isMobile ? "mobile" : "desktop"}
             transition={spring}
+            aria-label="Context sidebar"
             className={cn(
               "flex flex-col gap-4 h-screen bg-base-100 border-l border-base-200 overflow-hidden",
               isMobile ? "fixed right-0 top-0 shadow-2xl border-l" : "border-l"
@@ -296,6 +297,7 @@ export function SidebarNotifications() {
           <span className="text-xs text-muted-foreground">Notifications</span>
           <button
             onClick={markAllAsRead}
+            aria-label="Mark all notifications as read"
             className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
           >
             Mark all as read
@@ -422,6 +424,7 @@ export function SidebarMembers({ groups, statuses, isLoading, workspace, open, s
 
           <button
             data-testid="invite-members"
+            aria-label="Invite Members"
             onClick={() => setOpen(true)}
             className="flex flex-row items-center gap-2 justify-center p-2 mt-auto bg-base-200 rounded-lg hover:bg-base-300/75 transition-colors cursor-pointer"
           >

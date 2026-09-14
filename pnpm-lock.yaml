@@ -298,6 +298,9 @@ importers:
 
   apps/frontend/dash:
     dependencies:
+      '@crwsync/i18n':
+        specifier: workspace:*
+        version: link:../../../packages/i18n
       '@crwsync/styles':
         specifier: workspace:*
         version: link:../../../packages/styles

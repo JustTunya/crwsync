@@ -209,6 +209,7 @@ export function LSidebar() {
           variants={sidebarVariants}
           animate={isMobile ? "mobile" : "desktop"}
           transition={spring}
+          aria-label="Workspace navigation"
           className={cn(
             "flex flex-col gap-4 h-screen p-4 bg-base-100 border-r border-base-200 z-100",
             isMobile ? "fixed left-0 top-0 shadow-2xl" : "sticky top-0",
@@ -244,6 +245,7 @@ export function LSidebar() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search..."
+                aria-label="Search workspace modules and projects"
                 className="bg-base-200"
                 prefix={
                   <HugeiconsIcon
@@ -261,6 +263,15 @@ export function LSidebar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
+              role="button"
+              tabIndex={0}
+              aria-label="Search workspace"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSearchModalOpen(true);
+                }
+              }}
               className="flex justify-center cursor-pointer hover:bg-base-200 rounded-lg transition-colors py-2"
               onClick={() => setSearchModalOpen(true)}
             >

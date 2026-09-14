@@ -64,6 +64,7 @@ export function InviteNotification({ invite }: InviteNotificationProps) {
             <button
               disabled={loading}
               onClick={() => handleAction("decline")}
+              aria-label="Decline invitation"
               className="flex-1 py-1 text-xs font-medium text-foreground bg-base-200 hover:bg-base-300 border border-foreground rounded-md disabled:opacity-50 transition-colors cursor-pointer"
             >
               Decline
@@ -71,6 +72,7 @@ export function InviteNotification({ invite }: InviteNotificationProps) {
             <button
               disabled={loading}
               onClick={() => handleAction("accept")}
+              aria-label="Accept invitation"
               className="flex-1 py-1 text-xs font-medium text-primary-foreground bg-primary hover:bg-primary-hover rounded-md disabled:opacity-50 transition-colors cursor-pointer"
             >
               Accept
@@ -139,7 +141,19 @@ export function MentionNotificationCard({ notification, onDismiss }: MentionNoti
 
 
   return (
-    <div onClick={handleNavigate} className="cursor-pointer">
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Mentioned in #${roomName} by ${senderName}`}
+      onClick={handleNavigate}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleNavigate();
+        }
+      }}
+      className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
+    >
       <GlassBox className="w-full! gap-3 p-4">
         {/* Header row */}
         <div className="flex items-center gap-2 w-full">
@@ -189,7 +203,19 @@ export function TaskCommentMentionCard({ notification, onDismiss }: TaskCommentM
   };
 
   return (
-    <div onClick={handleNavigate} className="cursor-pointer">
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Mentioned in task ${task.shortId} by ${authorName}`}
+      onClick={handleNavigate}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleNavigate();
+        }
+      }}
+      className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
+    >
       <GlassBox className="w-full! gap-3 p-4">
         <div className="flex items-center gap-2 w-full">
           <div className="flex items-center justify-center size-5 rounded-full bg-primary/10 shrink-0">
@@ -233,7 +259,19 @@ export function TaskAssignedNotificationCard({ notification, onDismiss }: TaskAs
   };
 
   return (
-    <div onClick={handleNavigate} className="cursor-pointer">
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Assigned to task ${task.shortId} by ${assignerName}`}
+      onClick={handleNavigate}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleNavigate();
+        }
+      }}
+      className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
+    >
       <GlassBox className="w-full! gap-3 p-4">
         <div className="flex items-center gap-2 w-full">
           <div className="flex items-center justify-center size-5 rounded-full bg-primary/10 shrink-0">

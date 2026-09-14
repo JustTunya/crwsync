@@ -183,14 +183,18 @@ export function SidebarProject({
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
+                  type="button"
+                  aria-label={`Add module to ${project.name}`}
                   onClick={handleAddModuleClick}
-                  className="text-placeholder hover:text-foreground cursor-pointer"
+                  className="text-placeholder hover:text-foreground cursor-pointer p-0.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <HugeiconsIcon icon={PlusSignIcon} className="size-4" strokeWidth={2} />
                 </button>
                 <button
+                  type="button"
+                  aria-label={`Settings for ${project.name}`}
                   onClick={handleSettingsClick}
-                  className="text-placeholder hover:text-foreground relative cursor-pointer"
+                  className="text-placeholder hover:text-foreground relative cursor-pointer p-0.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <HugeiconsIcon icon={Settings02Icon} className="size-4" strokeWidth={2} />
                 </button>

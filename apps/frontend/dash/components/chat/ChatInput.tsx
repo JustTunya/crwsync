@@ -746,6 +746,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, isDirect, onT
                 }}
                 rows={1}
                 disabled={disabled}
+                aria-label="Type a message"
                 className={cn(
                   "block w-full bg-transparent text-transparent caret-foreground text-sm resize-none outline-none max-h-40 scrollbar-thin",
                   disabled && "opacity-50 cursor-not-allowed",
@@ -767,6 +768,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, isDirect, onT
               <button
                 type="button"
                 title="Attach files"
+                aria-label="Attach files"
                 disabled={disabled}
                 onClick={() => fileInputRef.current?.click()}
                 className="p-1.75 text-muted-foreground hover:text-foreground hover:bg-base-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
@@ -776,6 +778,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, isDirect, onT
               <button
                 ref={emojiButtonRef}
                 type="button"
+                aria-label="Choose emoji"
                 disabled={disabled}
                 onClick={() => setEmojiPickerOpen((prev) => !prev)}
                 className={cn(
@@ -786,7 +789,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, isDirect, onT
                 <HugeiconsIcon icon={Happy01Icon} strokeWidth={2} className="size-4.5" />
               </button>
 
-              <div 
+              <div
                 ref={emojiPickerRef}
                 className={cn(
                   "absolute bottom-full right-0 mb-3 z-50 origin-bottom-right transition-all duration-200 ease-out flex",
@@ -798,6 +801,7 @@ export function ChatInput({ workspaceId, roomId, onSend, disabled, isDirect, onT
               <button
                 type="button"
                 data-testid="chat-send"
+                aria-label="Send message"
                 onClick={handleSubmit}
                 disabled={(!content.trim() && readyAttachments.length === 0) || isUploadingAttachment || disabled}
                 className={cn(
