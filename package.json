@@ -11,6 +11,7 @@
     "test": "turbo run test",
     "benchmark:redis": "pnpm --filter @crwsync/backend run benchmark:redis",
     "dev": "turbo run dev",
+    "seed": "node apps/backend/prisma/seed.demo.mjs",
     "demo:seed": "node apps/backend/prisma/seed.demo.mjs"
   },
   "keywords": [

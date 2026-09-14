@@ -330,7 +330,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
   * Add account data export and deletion flow.
 * [x] **Accessibility & Internationalization Pass**:
   * Audit contrast, keyboard navigation, and screen-reader labels across dashboard and public portal.
-* [ ] **Demo/Seed Data**:
+* [x] **Demo/Seed Data**:
   * Add a seed script (or demo mode) that populates a fresh workspace with realistic boards, chat history, and members.
 * [ ] **Environment & Config Reference**:
   * Publish a documented `.env.example` covering every required environment variable per app.
