@@ -70,7 +70,7 @@ export default function SignupStep2(props: SignupStep2Props) {
           <div className="w-full space-y-2 sm:space-y-3">
             <Label htmlFor="firstname">First Name</Label>
             {(validFirstName?.value === false) && (
-              <Label error>This first name is invalid</Label>
+              <Label id="firstname-error" error>This first name is invalid</Label>
             )}
             <Input
               id="firstname"
@@ -78,6 +78,9 @@ export default function SignupStep2(props: SignupStep2Props) {
               placeholder="John"
               value={props.form.firstname}
               onChange={(e) => props.updateForm("firstname", e.target.value)}
+              aria-invalid={validFirstName?.value === false}
+              aria-describedby={validFirstName?.value === false ? "firstname-error" : undefined}
+              error={validFirstName?.value === false}
               className={(validFirstName?.value === false) ? "border-error" : ""}
               autoFocus
             />
@@ -86,7 +89,7 @@ export default function SignupStep2(props: SignupStep2Props) {
           <div className="w-full space-y-2 sm:space-y-3">
             <Label htmlFor="lastname">Last Name</Label>
             {(validLastName?.value === false) && (
-              <Label error>This last name is invalid</Label>
+              <Label id="lastname-error" error>This last name is invalid</Label>
             )}
             <Input
               id="lastname"
@@ -94,6 +97,9 @@ export default function SignupStep2(props: SignupStep2Props) {
               placeholder="Doe"
               value={props.form.lastname}
               onChange={(e) => props.updateForm("lastname", e.target.value)}
+              aria-invalid={validLastName?.value === false}
+              aria-describedby={validLastName?.value === false ? "lastname-error" : undefined}
+              error={validLastName?.value === false}
               className={(validLastName?.value === false) ? "border-error" : ""}
             />
           </div>
@@ -101,10 +107,10 @@ export default function SignupStep2(props: SignupStep2Props) {
       </div>
 
       <div className="space-y-2 sm:space-y-3">
-        <Label htmlFor="birthdate">Birthdate</Label>
+        <Label id="birthdate-label">Birthdate</Label>
         <div className="flex flex-row justify-center items-center gap-4">
           <Select value={props.form.birthyear} onValueChange={(value) => props.updateForm("birthyear", value)}>
-            <SelectTrigger size="full">
+            <SelectTrigger size="full" aria-label="Birth year" aria-describedby={validBirthdate === false ? "birthdate-error" : undefined}>
               <SelectValue placeholder="Year">
                 {props.form.birthyear}
               </SelectValue>
@@ -119,7 +125,7 @@ export default function SignupStep2(props: SignupStep2Props) {
           </Select>
 
           <Select value={props.form.birthmonth} onValueChange={(value) => props.updateForm("birthmonth", value)}>
-            <SelectTrigger  size="full">
+            <SelectTrigger size="full" aria-label="Birth month" aria-describedby={validBirthdate === false ? "birthdate-error" : undefined}>
               <SelectValue placeholder="Month">
                 {props.form.birthmonth}
               </SelectValue>
@@ -134,7 +140,7 @@ export default function SignupStep2(props: SignupStep2Props) {
           </Select>
 
           <Select value={props.form.birthday} onValueChange={(value) => props.updateForm("birthday", value)}>
-            <SelectTrigger size="full">
+            <SelectTrigger size="full" aria-label="Birth day" aria-describedby={validBirthdate === false ? "birthdate-error" : undefined}>
               <SelectValue placeholder="Day">
                 {props.form.birthday}
               </SelectValue>
@@ -149,7 +155,7 @@ export default function SignupStep2(props: SignupStep2Props) {
           </Select>
         </div>
         {(validBirthdate === false) && (
-          <Label error>You must be at least 13 years old to register</Label>
+          <Label id="birthdate-error" error>You must be at least 13 years old to register</Label>
         )}
       </div>
 

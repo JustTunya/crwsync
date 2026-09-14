@@ -82,22 +82,31 @@ export function SigninForm({ next } : { next: string | null }) {
       >
         <form action={handleSignin} className="w-full space-y-5">
           {(!state.success && state.message) && (
-            <Label error>{state.message}</Label>
+            <Label id="signin-error" error>{state.message}</Label>
           )}
           <div className="space-y-2 sm:space-y-3">
             <Label htmlFor="identifier">Username or Email</Label>
+            {state.errors?.identifier && (
+              <Label id="identifier-error" error>{state.errors.identifier}</Label>
+            )}
             <Input
               id="identifier"
               type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               className={cn(state.errors?.identifier && "border-error")}
+              aria-invalid={!!state.errors?.identifier}
+              aria-describedby={state.errors?.identifier ? "identifier-error" : undefined}
+              error={!!state.errors?.identifier}
               autoFocus
             />
           </div>
 
           <div className="space-y-2 sm:space-y-3">
             <Label htmlFor="password">Password</Label>
+            {state.errors?.password && (
+              <Label id="password-error" error>{state.errors.password}</Label>
+            )}
             <Input
               id="password"
               type="password"
@@ -106,6 +115,9 @@ export function SigninForm({ next } : { next: string | null }) {
               setVisible={() => setShowPass(!showPass)}
               onChange={(e) => setPassword(e.target.value)}
               className={cn(state.errors?.password && "border-error")}
+              aria-invalid={!!state.errors?.password}
+              aria-describedby={state.errors?.password ? "password-error" : undefined}
+              error={!!state.errors?.password}
             />
           </div>
 

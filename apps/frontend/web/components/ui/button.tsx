@@ -58,7 +58,7 @@ function Button({
       data-slot="button"
       className={cn(
         buttonVariants({ variant, size, className }),
-        "focus-visible:ring-3 focus-visible:ring-primary/50 focus-visible:border-primary",
+        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none",
         "cursor-pointer"
       )}
       {...props}

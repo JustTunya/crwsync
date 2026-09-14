@@ -30,6 +30,7 @@ export default function Header() {
   return (
     <>
       <header
+        role="banner"
         className={cn(
           "fixed inset-x-0 z-40 flex flex-col items-start gap-12 w-[calc(100vw-2rem)] h-auto m-4 px-3 py-2 bg-background/15 dark:bg-foreground/10 border border-foreground/15 backdrop-saturate-100 shadow-lg shadow-black/5 rounded-xl",
           open ? "backdrop-blur-xl" : "backdrop-blur-sm",
@@ -85,37 +86,21 @@ export default function Header() {
               Get Started
             </Link>
             {isMobile && (
-              open ? (
-                <button
-                  type="button"
-                  aria-label="Close menu"
-                  onClick={() => {
-                    setOpen(false);
-                  }}
-                  className="ml-2"
-                >
-                  <HugeiconsIcon
-                    icon={Cancel01Icon}
-                    strokeWidth={2}
-                    className="size-5 text-muted-foreground hover:text-foreground transition-colors"
-                  />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  aria-label="Open menu"
-                  onClick={() => {
-                    setOpen(true);
-                  }}
-                  className="ml-2"
-                >
-                  <HugeiconsIcon
-                    icon={Menu01Icon}
-                    strokeWidth={2}
-                    className="size-5 text-muted-foreground hover:text-foreground transition-colors"
-                  />
-                </button>
-              )
+              <button
+                type="button"
+                aria-label="Toggle navigation menu"
+                aria-expanded={open}
+                onClick={() => {
+                  setOpen(!open);
+                }}
+                className="ml-2"
+              >
+                <HugeiconsIcon
+                  icon={open ? Cancel01Icon : Menu01Icon}
+                  strokeWidth={2}
+                  className="size-5 text-muted-foreground hover:text-foreground transition-colors"
+                />
+              </button>
             )}
           </div>
         </div>
@@ -138,7 +123,7 @@ export function NavMenu() {
   }
 
   return (
-    <NavigationMenu>
+    <NavigationMenu aria-label="Main navigation">
       <NavigationMenuList className="flex items-center justify-center lg:gap-6">
         <NavigationMenuItem>
           <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
@@ -241,6 +226,7 @@ export function MobileMenu({ setOpen }: MobileMenuProps) {
   return (
     <LazyMotion features={domAnimation} strict>
       <m.nav
+        aria-label="Main navigation"
         className="flex flex-col gap-2 w-full"
         variants={container}
         initial="hidden"
