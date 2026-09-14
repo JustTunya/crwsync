@@ -13,6 +13,7 @@
     "paths": {
       "@crwsync/types": ["packages/types/src"],
       "@crwsync/styles": ["packages/styles/src"],
+      "@crwsync/i18n": ["packages/i18n/src"]
     },
   },
   "exclude": ["node_modules", "dist"],

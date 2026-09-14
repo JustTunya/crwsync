@@ -49,3 +49,55 @@ export interface ChangePasswordPayload {
   currentPassword: string;
   newPassword: string;
 }
+
+export interface CloseAccountPayload {
+  password: string;
+}
+
+export interface UserDataExport {
+  exportedAt: string;
+  profile: {
+    id: string;
+    email: string;
+    username: string;
+    firstname: string;
+    lastname: string;
+    birthdate: string;
+    created_at: string;
+  };
+  workspaces: {
+    name: string;
+    slug: string;
+    role: string;
+    joined_at: string;
+  }[];
+  tasksCreated: {
+    shortId: string;
+    title: string;
+    priority: string;
+    workspace: string;
+    created_at: string;
+  }[];
+  tasksAssigned: {
+    shortId: string;
+    title: string;
+    priority: string;
+    workspace: string;
+  }[];
+  comments: {
+    content: string;
+    task: string;
+    created_at: string;
+  }[];
+  chatMessages: {
+    content: string;
+    room: string | null;
+    created_at: string;
+  }[];
+  checklistItems: {
+    content: string;
+    isCompleted: boolean;
+    task: string;
+    created_at: string;
+  }[];
+}

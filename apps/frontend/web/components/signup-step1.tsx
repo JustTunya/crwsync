@@ -47,7 +47,7 @@ export default function SignupStep1(props: SignupStep1Props) {
         <Label htmlFor="email">Email Address</Label>
         {(validEmail?.available === false && validEmail?.message) && (
           <div className="w-full flex justify-center">
-            <Label error>{validEmail.message}</Label>
+            <Label id="email-error" error>{validEmail.message}</Label>
           </div>
         )}
         <Input
@@ -56,6 +56,8 @@ export default function SignupStep1(props: SignupStep1Props) {
           value={props.form.email}
           placeholder="johndoe@example.com"
           onChange={(e) => props.updateForm("email", e.target.value)}
+          aria-invalid={validEmail?.available === false}
+          aria-describedby={validEmail?.available === false && validEmail?.message ? "email-error" : undefined}
           error={validEmail?.available === false}
           autoFocus
         />
@@ -65,7 +67,7 @@ export default function SignupStep1(props: SignupStep1Props) {
         <Label htmlFor="username">Username</Label>
         {(validUsername?.available === false && validUsername?.message) && (
           <div className="w-full flex justify-center">
-            <Label error>{validUsername.message}</Label>
+            <Label id="username-error" error>{validUsername.message}</Label>
           </div>
         )}
         <Input
@@ -74,6 +76,8 @@ export default function SignupStep1(props: SignupStep1Props) {
           value={props.form.username}
           placeholder="johndoe"
           onChange={(e) => props.updateForm("username", e.target.value)}
+          aria-invalid={validUsername?.available === false}
+          aria-describedby={validUsername?.available === false && validUsername?.message ? "username-error" : undefined}
           error={validUsername?.available === false}
         />
       </div>
@@ -82,7 +86,7 @@ export default function SignupStep1(props: SignupStep1Props) {
         <Label htmlFor="password">Password</Label>
         {(validPassword?.legit === false) && (
           <div className="w-full flex justify-center">
-            <Label error>The password contains invalid characters.</Label>
+            <Label id="password-error" error>The password contains invalid characters.</Label>
           </div>
         )}
         <Input
@@ -92,6 +96,8 @@ export default function SignupStep1(props: SignupStep1Props) {
           visible={showPass}
           setVisible={() => setShowPass(!showPass)}
           onChange={(e) => props.updateForm("password", e.target.value)}
+          aria-invalid={validPassword?.legit === false || (matchingPasswords === false && validPassword?.value === true)}
+          aria-describedby={validPassword?.legit === false ? "password-error" : undefined}
           error={matchingPasswords === false && validPassword?.value === true}
         />
         {validPassword?.legit && (
@@ -104,7 +110,7 @@ export default function SignupStep1(props: SignupStep1Props) {
         <Label htmlFor="confpassword">Confirm Password</Label>
         {(matchingPasswords === false) && (
           <div className="w-full flex justify-center">
-            <Label error>Passwords do not match</Label>
+            <Label id="confpassword-error" error>Passwords do not match</Label>
           </div>
         )}
         <Input
@@ -114,6 +120,8 @@ export default function SignupStep1(props: SignupStep1Props) {
           visible={showConfPass}
           setVisible={() => setShowConfPass(!showConfPass)}
           onChange={(e) => props.updateForm("confpassword", e.target.value)}
+          aria-invalid={matchingPasswords === false && validPassword?.value === true}
+          aria-describedby={matchingPasswords === false ? "confpassword-error" : undefined}
           error={matchingPasswords === false && validPassword?.value === true}
         />
       </div>

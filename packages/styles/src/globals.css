@@ -89,7 +89,7 @@
   --destructive:                oklch(0.70 0.190 25.00);
   --border:                     oklch(0.87 0.015 64.35);
   --input:                      oklch(0.97 0.010 64.35);
-  --placeholder:                oklch(0.64 0.020 64.35);
+  --placeholder:                oklch(0.50 0.020 64.35);
   --ring:                       oklch(0.78 0.190 36.91);
   --chart-1:                    oklch(0.80 0.190 36.91);
   --chart-2:                    oklch(0.70 0.190 36.91);
@@ -111,7 +111,7 @@
   --secondary:                  oklch(0.966 0.003 49.76);
   --secondary-foreground:       oklch(0.210 0.006 49.76);
   --muted:                      oklch(0.966 0.003 49.76);
-  --muted-foreground:           oklch(0.492 0.016 49.76);
+  --muted-foreground:           oklch(0.42 0.016 49.76);
   /* SURFACE & SHADES */
   --base-100:                   oklch(0.940 0.0035 64.35);
   --base-200:                   oklch(0.880 0.0035 64.35);
@@ -150,7 +150,7 @@
   --destructive:                oklch(0.55 0.180 25.00);
   --border:                     oklch(0.58 0.015 64.35);
   --input:                      oklch(0.97 0.015 64.35);
-  --placeholder:                oklch(0.58 0.015 64.35);
+  --placeholder:                oklch(0.65 0.020 64.35);
   --ring:                       oklch(0.70 0.190 36.91);
   /* CHARTS */
   --chart-1:                    oklch(0.75 0.180 36.91);
@@ -174,7 +174,7 @@
   --secondary:                  oklch(0.28 0.015 64.35);
   --secondary-foreground:       oklch(0.95 0.010 64.35);
   --muted:                      oklch(0.25 0.015 64.35);
-  --muted-foreground:           oklch(0.75 0.015 64.35);
+  --muted-foreground:           oklch(0.72 0.016 49.76);
   /* SURFACE & SHADES */
   --base-100:                   oklch(0.21 0.015 64.35);
   --base-200:                   oklch(0.27 0.015 64.35);
@@ -238,9 +238,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

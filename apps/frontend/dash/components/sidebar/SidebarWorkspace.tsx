@@ -46,6 +46,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
         <button
           data-testid="workspace-switcher"
           onClick={toggleMenu}
+          aria-label={`Switch workspace, current: ${activeWorkspace.name}`}
           className={cn(
             "flex flex-row items-center gap-3 w-full h-10 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
             !extended && "justify-center",
@@ -80,6 +81,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
       ) : (
         <button
           onClick={toggleMenu}
+          aria-label="Switch workspace"
           className={cn(
             "flex flex-row items-center gap-3 h-10 p-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
             !extended && "justify-center",
@@ -135,6 +137,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
                     <button
                       key={ws.id}
                       onClick={() => handleSwitch(ws.slug)}
+                      aria-label={`Switch to workspace ${ws.name}`}
                       className={cn(
                         "flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-base-200 transition-colors",
                         isActive && "bg-base-200",
@@ -166,6 +169,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
                 <Link
                   href={`/${activeWorkspace.slug}/settings`}
                   onClick={() => setOpenWorkspaces(false)}
+                  aria-label="Workspace Settings"
                   className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-200 transition-colors text-left cursor-pointer group"
                 >
                   <HugeiconsIcon
@@ -180,6 +184,7 @@ export function SidebarWorkspace({ extended }: { extended?: boolean }) {
 
               <Link
                 href="/create-workspace"
+                aria-label="Create Workspace"
                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-200 transition-colors text-left cursor-pointer group"
               >
                 <HugeiconsIcon

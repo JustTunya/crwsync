@@ -54,10 +54,10 @@ export function ForgotPasswordForm() {
             <Label htmlFor="email">Email Address</Label>
 
             {(validEmail?.available === true) && (
-              <Label error>This email address is not linked to any account.</Label>
+              <Label id="email-error" error>This email address is not linked to any account.</Label>
             )}
             {(validEmail?.valid === false && validEmail?.message) && (
-              <Label error>{validEmail.message}</Label>
+              <Label id="email-error" error>{validEmail.message}</Label>
             )}
 
             <Input
@@ -66,6 +66,8 @@ export function ForgotPasswordForm() {
               value={email}
               placeholder="johndoe@example.com"
               onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={validEmail?.available === true || validEmail?.valid === false || !!state.errors?.email}
+              aria-describedby={(validEmail?.available === true || (validEmail?.valid === false && !!validEmail?.message)) ? "email-error" : undefined}
               className={cn(
                 (validEmail?.available === true
                   || validEmail?.valid === false

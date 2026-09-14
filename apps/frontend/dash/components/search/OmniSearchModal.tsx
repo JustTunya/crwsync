@@ -111,6 +111,9 @@ export function OmniSearchModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search Workspace"
         className={cn(
           "gap-0 p-0 overflow-hidden bg-base-100",
           isMobile ? "max-w-full h-dvh rounded-none flex flex-col" : "max-w-md rounded-2xl",
@@ -128,7 +131,10 @@ export function OmniSearchModal({
               setActiveIndex(0);
             }}
             onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                close();
+              } else if (e.key === "ArrowDown") {
                 e.preventDefault();
                 setActiveIndex((i) => Math.min(i + 1, rows.length - 1));
               } else if (e.key === "ArrowUp") {
@@ -140,6 +146,7 @@ export function OmniSearchModal({
               }
             }}
             placeholder="Search modules, tasks, chats, files, members..."
+            aria-label="Search modules, tasks, chats, files, members"
             className="flex-1 focus-within:ring-0 focus-within:border-transparent border-0 px-0 shadow-none bg-transparent text-sm"
             autoFocus
           />

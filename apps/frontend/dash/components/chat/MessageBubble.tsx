@@ -382,14 +382,18 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
             )}>
               <Popover open={isEmojiPickerOpen} onOpenChange={handlePickerOpenChange}>
                 <PopoverTrigger asChild>
-                  <button data-testid="message-react" className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer">
+                  <button
+                    data-testid="message-react"
+                    aria-label="Add reaction"
+                    className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer"
+                  >
                     <HugeiconsIcon icon={HappyIcon} strokeWidth={2} className="size-4" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent 
-                  side="top" 
-                  align={isSelf ? "end" : "start"} 
-                  className={cn("w-full p-0 shadow-none border-none bg-transparent outline-none z-50", !showFullPicker && "w-auto")} 
+                <PopoverContent
+                  side="top"
+                  align={isSelf ? "end" : "start"}
+                  className={cn("w-full p-0 shadow-none border-none bg-transparent outline-none z-50", !showFullPicker && "w-auto")}
                   sideOffset={10}
                 >
                   {!showFullPicker ? (
@@ -399,6 +403,7 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                           key={quickEmoji}
                           data-testid="quick-reaction"
                           data-emoji={quickEmoji}
+                          aria-label={`React with ${quickEmoji}`}
                           onClick={() => {
                             onToggleReaction?.(message.id, quickEmoji);
                             setIsEmojiPickerOpen(false);
@@ -409,8 +414,9 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                         </button>
                       ))}
                       <div className="w-px h-6 bg-base-300 mx-1.5" />
-                      <button 
-                        onClick={() => setShowFullPicker(true)} 
+                      <button
+                        onClick={() => setShowFullPicker(true)}
+                        aria-label="More reactions"
                         className="flex items-center justify-center py-1.5 px-2 mr-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-base-200 transition-colors"
                       >
                         <HugeiconsIcon icon={HappyIcon} strokeWidth={2} className="size-5" />
@@ -425,15 +431,27 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                 </PopoverContent>
               </Popover>
 
-              <button onClick={() => setReplyingTo(message)} className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer">
+              <button
+                onClick={() => setReplyingTo(message)}
+                aria-label="Reply to message"
+                className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer"
+              >
                 <HugeiconsIcon icon={ArrowTurnBackwardIcon} strokeWidth={2} className="size-4 -scale-y-100" />
               </button>
               {isSelf && (
                 <>
-                  <button onClick={() => setIsEditing(true)} className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    aria-label="Edit message"
+                    className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer"
+                  >
                     <HugeiconsIcon icon={Edit03Icon} strokeWidth={2} className="size-4" />
                   </button>
-                  <button onClick={() => onDeleteMessage?.(message.id)} className="p-1 text-muted-foreground hover:text-error transition-colors rounded-md hover:bg-error/10 cursor-pointer">
+                  <button
+                    onClick={() => onDeleteMessage?.(message.id)}
+                    aria-label="Delete message"
+                    className="p-1 text-muted-foreground hover:text-error transition-colors rounded-md hover:bg-error/10 cursor-pointer"
+                  >
                     <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
                   </button>
                 </>

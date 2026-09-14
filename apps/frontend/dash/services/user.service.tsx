@@ -1,5 +1,16 @@
 import { isAxiosError } from "axios";
-import { UserType, UserOperationState, WorkspaceInvite, UpdateUserProfilePayload, ChangePasswordPayload, ActiveSession, PresignedAvatarUpload, NotificationRecord } from "@crwsync/types";
+import {
+  UserType,
+  UserOperationState,
+  WorkspaceInvite,
+  UpdateUserProfilePayload,
+  ChangePasswordPayload,
+  ActiveSession,
+  PresignedAvatarUpload,
+  NotificationRecord,
+  UserDataExport,
+  CloseAccountPayload,
+} from "@crwsync/types";
 import { api } from "@/services/auth.service";
 
 export async function getUserById(userId: string): Promise<UserOperationState<UserType>> {
@@ -144,6 +155,32 @@ export async function presignUserAvatar(userId: string, contentType: string): Pr
     if (isAxiosError(error)) {
       const resp = error.response?.data;
       return { success: false, message: resp?.message || "Failed to get upload URL" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function exportUserData(userId: string): Promise<UserOperationState<UserDataExport>> {
+  try {
+    const response = await api.get<UserDataExport>(`/users/${userId}/export`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to export data" };
+    }
+    return { success: false, message: "An unexpected error occurred" };
+  }
+}
+
+export async function closeUserAccount(userId: string, data: CloseAccountPayload): Promise<UserOperationState> {
+  try {
+    await api.post(`/users/${userId}/close-account`, data);
+    return { success: true, message: "Account closed" };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const resp = error.response?.data;
+      return { success: false, message: resp?.message || "Failed to close account" };
     }
     return { success: false, message: "An unexpected error occurred" };
   }

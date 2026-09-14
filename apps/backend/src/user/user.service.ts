@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { randomUUID } from "crypto";
+import { Prisma, WorkspaceRoleEnum } from "@prisma/client";
 import { compare, hash } from "bcrypt";
+import { UserDataExport } from "@crwsync/types";
 import { CreateUserDto } from "src/user/dto/create-user.dto";
 import { UpdateUserDto } from "src/user/dto/update-user.dto";
 import { ChangePasswordDto } from "src/user/dto/change-password.dto";
@@ -219,6 +221,165 @@ export class UserService {
       this.cache.del(CacheKeys.user(id)),
       this.cache.del(CacheKeys.userByIdentifier(user.email)),
       this.cache.del(CacheKeys.userByIdentifier(user.username)),
+    ]);
+  }
+
+  async exportData(id: string): Promise<UserDataExport> {
+    const [profile, memberships, tasksCreated, tasksAssigned, comments, chatMessages, checklistItems] = await Promise.all([
+      this.findOne(id),
+      this.prisma.workspaceMember.findMany({
+        where: { user_id: id },
+        select: { role: true, joined_at: true, workspace: { select: { name: true, slug: true } } },
+      }),
+      this.prisma.task.findMany({
+        where: { created_by: id },
+        select: { shortId: true, title: true, priority: true, created_at: true, workspace: { select: { name: true } } },
+      }),
+      this.prisma.task.findMany({
+        where: { assignee_id: id },
+        select: { shortId: true, title: true, priority: true, workspace: { select: { name: true } } },
+      }),
+      this.prisma.taskComment.findMany({
+        where: { author_id: id },
+        select: { content: true, created_at: true, task: { select: { shortId: true, title: true } } },
+      }),
+      this.prisma.chatMessage.findMany({
+        where: { sender_id: id },
+        select: { content: true, created_at: true, room: { select: { name: true } } },
+      }),
+      this.prisma.taskChecklistItem.findMany({
+        where: { created_by: id },
+        select: { content: true, is_completed: true, created_at: true, task: { select: { shortId: true, title: true } } },
+      }),
+    ]);
+
+    return {
+      exportedAt: new Date().toISOString(),
+      profile: {
+        id: profile.id,
+        email: profile.email,
+        username: profile.username,
+        firstname: profile.firstname,
+        lastname: profile.lastname,
+        birthdate: profile.birthdate.toISOString(),
+        created_at: profile.created_at.toISOString(),
+      },
+      workspaces: memberships.map((m) => ({
+        name: m.workspace.name,
+        slug: m.workspace.slug,
+        role: m.role,
+        joined_at: m.joined_at.toISOString(),
+      })),
+      tasksCreated: tasksCreated.map((t) => ({
+        shortId: t.shortId,
+        title: t.title,
+        priority: t.priority,
+        workspace: t.workspace.name,
+        created_at: t.created_at.toISOString(),
+      })),
+      tasksAssigned: tasksAssigned.map((t) => ({
+        shortId: t.shortId,
+        title: t.title,
+        priority: t.priority,
+        workspace: t.workspace.name,
+      })),
+      comments: comments.map((c) => ({
+        content: c.content,
+        task: `${c.task.shortId} - ${c.task.title}`,
+        created_at: c.created_at.toISOString(),
+      })),
+      chatMessages: chatMessages.map((m) => ({
+        content: m.content,
+        room: m.room.name,
+        created_at: m.created_at.toISOString(),
+      })),
+      checklistItems: checklistItems.map((i) => ({
+        content: i.content,
+        isCompleted: i.is_completed,
+        task: `${i.task.shortId} - ${i.task.title}`,
+        created_at: i.created_at.toISOString(),
+      })),
+    };
+  }
+
+  async closeAccount(id: string, password: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id }, select: { ...userAuthSelect, avatar_key: true } });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const valid = await compare(password, user.password_hash);
+    if (!valid) {
+      throw new BadRequestException("Password is incorrect");
+    }
+
+    const memberships = await this.prisma.workspaceMember.findMany({
+      where: { user_id: id },
+      select: {
+        id: true,
+        role: true,
+        workspace_id: true,
+        workspace: { select: { name: true, slug: true, _count: { select: { members: true } } } },
+      },
+    });
+
+    const blockers = memberships.filter((m) => m.role === WorkspaceRoleEnum.OWNER && m.workspace._count.members > 1);
+    if (blockers.length > 0) {
+      throw new BadRequestException(
+        `Transfer ownership or delete these workspaces before closing your account: ${blockers.map((b) => b.workspace.name).join(", ")}`,
+      );
+    }
+
+    const soloOwnerWorkspaceIds = memberships
+      .filter((m) => m.role === WorkspaceRoleEnum.OWNER)
+      .map((m) => m.workspace_id);
+    const membershipsToLeave = memberships.filter((m) => !soloOwnerWorkspaceIds.includes(m.workspace_id));
+
+    const anonymizedEmail = `deleted+${id}@crwsync.invalid`;
+    const anonymizedUsername = `deleted-${id}`;
+
+    await this.prisma.$transaction(async (tx) => {
+      if (soloOwnerWorkspaceIds.length > 0) {
+        await tx.workspace.deleteMany({ where: { id: { in: soloOwnerWorkspaceIds } } });
+      }
+
+      if (membershipsToLeave.length > 0) {
+        await tx.workspaceMember.deleteMany({ where: { id: { in: membershipsToLeave.map((m) => m.id) } } });
+      }
+
+      await tx.user.update({
+        where: { id },
+        data: {
+          email: anonymizedEmail,
+          username: anonymizedUsername,
+          firstname: "Deleted",
+          lastname: "User",
+          avatar_key: null,
+          password_hash: await hash(randomUUID(), 10),
+        },
+      });
+
+      await tx.emailVerification.deleteMany({ where: { user_id: id } });
+      await tx.passwordReset.deleteMany({ where: { user_id: id } });
+    });
+
+    if (user.avatar_key) {
+      await this.storageService.deleteObject(user.avatar_key);
+    }
+
+    await this.sessionService.revokeAll(id);
+
+    const affectedWorkspaces = memberships.map((m) => ({ id: m.workspace_id, slug: m.workspace.slug }));
+    await Promise.all([
+      this.cache.del(CacheKeys.user(id)),
+      this.cache.del(CacheKeys.userByIdentifier(user.email)),
+      this.cache.del(CacheKeys.userByIdentifier(user.username)),
+      this.cache.del(CacheKeys.userWorkspaces(id)),
+      ...affectedWorkspaces.flatMap((w) => [
+        this.cache.del(CacheKeys.workspaceMember(w.id, id)),
+        this.cache.del(CacheKeys.workspace(w.id)),
+        this.cache.del(CacheKeys.workspaceSlug(w.slug)),
+      ]),
     ]);
   }
 }

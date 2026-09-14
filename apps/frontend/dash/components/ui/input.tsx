@@ -22,7 +22,7 @@ function Input({ className, type, visible, setVisible, validation, error, prefix
   return (
     <div className={cn(
       "w-full flex bg-foreground/10 border-[1.5px] shadow-lg/5 rounded-lg transition",
-      "focus-within:ring-3 focus-within:ring-primary/25 focus-within:border-primary",
+      "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:outline-none",
       error ? "border-error" : "border-foreground/20",
       className
       )}>
@@ -33,6 +33,7 @@ function Input({ className, type, visible, setVisible, validation, error, prefix
           className={cn(
             "flex h-9 w-full px-3 text-xs sm:text-sm rounded-md",
             "placeholder:text-placeholder selection:bg-primary/25 outline-none",
+            "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none",
             "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
             "file:text-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
             "aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
@@ -42,8 +43,17 @@ function Input({ className, type, visible, setVisible, validation, error, prefix
           {...props}
         />
         <div className={cn("h-9 flex justify-center items-center", (hasVisibilityIcon || hasValidationIcon) && "px-3")}>
-          {hasVisibilityIcon && <HugeiconsIcon icon={visible ? ViewOffSlashIcon : ViewIcon} size={iconSize} strokeWidth={iconWidth} onClick={setVisible} className="cursor-pointer text-primary" />}
-          {hasValidationIcon && <HugeiconsIcon icon={validation ? CheckmarkCircle02Icon : CancelCircleIcon} size={iconSize} strokeWidth={iconWidth} className={cn(validation ? "text-success" : "text-error")} />}
+          {hasVisibilityIcon && (
+            <button
+              type="button"
+              aria-label={visible ? "Hide password" : "Show password"}
+              onClick={setVisible}
+              className="cursor-pointer text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none rounded"
+            >
+              <HugeiconsIcon icon={visible ? ViewOffSlashIcon : ViewIcon} size={iconSize} strokeWidth={iconWidth} />
+            </button>
+          )}
+          {hasValidationIcon && <HugeiconsIcon icon={validation ? CheckmarkCircle02Icon : CancelCircleIcon} size={iconSize} strokeWidth={iconWidth} className={cn(validation ? "text-success" : "text-error")} aria-hidden="true" />}
         </div>
         {suffix && <div className="h-9 flex justify-center items-center pr-2">{suffix}</div>}
     </div>

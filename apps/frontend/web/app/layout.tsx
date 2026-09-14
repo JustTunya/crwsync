@@ -4,6 +4,8 @@ import { Figtree } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/providers/user.provider";
 import { getSession } from "@/lib/auth.server";
+import { I18nProvider } from "@crwsync/i18n";
+import { SkipToContent } from "@/components/a11y/skip-to-content";
 import "@crwsync/styles";
 
 const figtree = Figtree({
@@ -38,11 +40,14 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${figtree.variable} font-figtree antialiased`} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <Suspense fallback={<div className="min-h-screen w-screen bg-background overflow-x-hidden" />}>
-            <UserSession>{children}</UserSession>
-          </Suspense>
-        </ThemeProvider>
+        <I18nProvider>
+          <SkipToContent />
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <Suspense fallback={<div className="min-h-screen w-screen bg-background overflow-x-hidden" />}>
+              <UserSession>{children}</UserSession>
+            </Suspense>
+          </ThemeProvider>
+        </I18nProvider>
       </body>
     </html>
   );

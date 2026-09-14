@@ -56,9 +56,13 @@ export function SidebarProfile({ status, setStatus, extended }: SidebarProfilePr
       data-testid="sidebar-profile"
       role="button"
       tabIndex={0}
+      aria-label="User profile and settings"
       onClick={handleMenuToggle}
       onKeyDown={(e) => {
-        if (e.key === "Enter") handleMenuToggle();
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleMenuToggle();
+        }
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -174,6 +178,7 @@ export function SidebarProfile({ status, setStatus, extended }: SidebarProfilePr
                   >
                     <button
                       onClick={() => setEditStatus(true)}
+                      aria-label={`Change status, current: ${status}`}
                       className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors cursor-pointer"
                     >
                       <StatusItem label={status} status={status} asContainer />
@@ -189,6 +194,7 @@ export function SidebarProfile({ status, setStatus, extended }: SidebarProfilePr
                     <button
                       onClick={handleSignout}
                       disabled={pending}
+                      aria-label="Sign Out"
                       className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors disabled:opacity-60 disabled:pointer-events-none"
                     >
                       <HugeiconsIcon icon={Logout02Icon} className="size-4" />
@@ -229,6 +235,7 @@ export function StatusItem({ label, status, onClick, asContainer }: StatusItemPr
   return (
     <button
       onClick={onClick}
+      aria-label={`Set status to ${label}`}
       className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-base-300 transition-colors cursor-pointer"
     >
       {content}

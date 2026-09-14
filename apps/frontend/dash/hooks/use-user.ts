@@ -1,8 +1,16 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { UpdateUserProfilePayload, ChangePasswordPayload } from "@crwsync/types";
-import { presignUserAvatar, updateUserProfile, changePassword, getUserSessions, revokeUserSession } from "@/services/user.service";
+import { UpdateUserProfilePayload, ChangePasswordPayload, CloseAccountPayload } from "@crwsync/types";
+import {
+  presignUserAvatar,
+  updateUserProfile,
+  changePassword,
+  getUserSessions,
+  revokeUserSession,
+  exportUserData,
+  closeUserAccount,
+} from "@/services/user.service";
 import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
 import { sessionKeys } from "@/hooks/use-session";
 import { commentKeys } from "@/hooks/query-keys";
@@ -88,6 +96,25 @@ export function useRevokeSession() {
     },
     onSuccess: (_data, { userId }) => {
       queryClient.invalidateQueries({ queryKey: userKeys.sessions(userId) });
+    },
+  });
+}
+
+export function useExportUserData() {
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { success, data, message } = await exportUserData(userId);
+      if (!success || !data) throw new Error(message || "Failed to export data");
+      return data;
+    },
+  });
+}
+
+export function useCloseAccount() {
+  return useMutation({
+    mutationFn: async ({ userId, data }: { userId: string; data: CloseAccountPayload }) => {
+      const { success, message } = await closeUserAccount(userId, data);
+      if (!success) throw new Error(message);
     },
   });
 }

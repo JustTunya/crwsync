@@ -22,13 +22,18 @@ export function SectionHeader({
             className="flex items-center justify-between overflow-hidden px-2"
           >
             <p className="text-xs text-muted-foreground">{label}</p>
-            <span data-testid={`section-add-${label.toLowerCase()}`} className="inline-flex">
+            <button
+              type="button"
+              data-testid={`section-add-${label.toLowerCase()}`}
+              aria-label={`Add ${label.toLowerCase()}`}
+              onClick={onAdd}
+              className="inline-flex cursor-pointer text-muted-foreground hover:text-foreground p-0.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <HugeiconsIcon
                 icon={Add01Icon}
-                className="size-4 text-muted-foreground hover:text-foreground cursor-pointer"
-                onClick={onAdd}
+                className="size-4"
               />
-            </span>
+            </button>
           </m.div>
         )}
       </AnimatePresence>

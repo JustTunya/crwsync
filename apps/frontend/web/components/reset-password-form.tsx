@@ -105,6 +105,7 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
                 visible={showPass}
                 setVisible={() => setShowPass(!showPass)}
                 onChange={(e) => setPassword(e.target.value)}
+                aria-invalid={matchingPasswords === false && validPassword?.value === true}
                 error={matchingPasswords === false && validPassword?.value === true}
               />
             </div>
@@ -120,6 +121,7 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
                 visible={showConfPass}
                 setVisible={() => setShowConfPass(!showConfPass)}
                 onChange={(e) => setConfPass(e.target.value)}
+                aria-invalid={matchingPasswords === false && validPassword?.value === true}
                 error={matchingPasswords === false && validPassword?.value === true}
               />
             </div>

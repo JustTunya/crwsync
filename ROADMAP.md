@@ -325,10 +325,10 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
 * [x] **Backend Test Coverage**:
   * Set an explicit coverage target (e.g., 70%+) for `apps/backend` services/guards.
   * Wire coverage reporting into the CI pipeline from the milestone above.
-* [ ] **Legal & Compliance Pages**:
+* [x] **Legal & Compliance Pages**:
   * Add Terms of Service and Privacy Policy pages.
   * Add account data export and deletion flow.
-* [ ] **Accessibility & Internationalization Pass**:
+* [x] **Accessibility & Internationalization Pass**:
   * Audit contrast, keyboard navigation, and screen-reader labels across dashboard and public portal.
 * [ ] **Demo/Seed Data**:
   * Add a seed script (or demo mode) that populates a fresh workspace with realistic boards, chat history, and members.

@@ -6,6 +6,9 @@ import { UserProvider } from "@/providers/user.provider";
 import { QueryProvider } from "@/providers/query.provider";
 import { WorkspaceProvider } from "@/providers/workspace.provider";
 import { SocketProvider } from "@/providers/socket.provider";
+import { I18nProvider } from "@crwsync/i18n";
+import { LiveAnnouncerProvider } from "@/components/a11y/live-announcer";
+import { SkipToContent } from "@/components/a11y/skip-to-content";
 import "@crwsync/styles";
 
 const figtree = Figtree({
@@ -44,11 +47,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${figtree.variable} font-figtree antialiased`} suppressHydrationWarning>
-        <Suspense fallback={<div />}>
-          <Providers>
-            {children}
-          </Providers>
-        </Suspense>
+        <I18nProvider>
+          <LiveAnnouncerProvider>
+            <SkipToContent />
+            <Suspense fallback={<div />}>
+              <Providers>
+                {children}
+              </Providers>
+            </Suspense>
+          </LiveAnnouncerProvider>
+        </I18nProvider>
       </body>
     </html>
   );

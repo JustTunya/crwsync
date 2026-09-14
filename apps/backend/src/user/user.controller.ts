@@ -1,9 +1,10 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, Patch, Delete, Query, ParseUUIDPipe, UseGuards } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
-import { ActiveSession, RoleEnum, PresignedAvatarUpload } from "@crwsync/types";
+import { ActiveSession, RoleEnum, PresignedAvatarUpload, UserDataExport } from "@crwsync/types";
 import { CreateUserDto } from "src/user/dto/create-user.dto";
 import { UpdateUserDto } from "src/user/dto/update-user.dto";
 import { ChangePasswordDto } from "src/user/dto/change-password.dto";
+import { CloseAccountDto } from "src/user/dto/close-account.dto";
 import { UserService } from "src/user/user.service";
 import { SessionService } from "src/session/session.service";
 import { Roles } from "src/common/decorators/roles.decorator";
@@ -106,6 +107,25 @@ export class UserController {
     @ActiveUserParam() activeUser: ActiveUser,
   ): Promise<void> {
     await this.userService.changePassword(userId, dto, activeUser.sessionId);
+  }
+
+  @UseGuards(new OwnershipGuard("userId"))
+  @Throttle({ default: { ttl: 3600, limit: 5 } })
+  @Get(":userId/export")
+  @HttpCode(HttpStatus.OK)
+  exportData(@Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string): Promise<UserDataExport> {
+    return this.userService.exportData(userId);
+  }
+
+  @UseGuards(new OwnershipGuard("userId"))
+  @Throttle({ default: { ttl: 3600, limit: 5 } })
+  @Post(":userId/close-account")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async closeAccount(
+    @Param("userId", new ParseUUIDPipe({ version: "4" })) userId: string,
+    @Body() dto: CloseAccountDto,
+  ): Promise<void> {
+    await this.userService.closeAccount(userId, dto.password);
   }
 
   @UseGuards(new OwnershipGuard("userId"))
