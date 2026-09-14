@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, HttpCode, HttpStatus, Delete, Patch, ParseUUIDPipe, Query, UseGuards, NotFoundException } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { MailVerificationStatus, RoleEnum } from "@crwsync/types";
 import { CreateVerificationDto } from "src/email-verification/dto/create-email-verification.dto";
 import { UpdateVerificationDto } from "src/email-verification/dto/update-email-verification.dto";
@@ -16,6 +17,7 @@ export class VerificationController {
   ) {}
 
   @Public()
+  @Throttle({ default: { ttl: 3_600_000, limit: 5 } })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateVerificationDto): Promise<VerificationPublic> {
@@ -23,6 +25,7 @@ export class VerificationController {
   }
 
   @Public()
+  @Throttle({ default: { ttl: 3_600_000, limit: 5 } })
   @Post("resend-token")
   @HttpCode(HttpStatus.OK)
   async resendToken(@Body("token") token: string): Promise<{ success: boolean; message?: string }> {

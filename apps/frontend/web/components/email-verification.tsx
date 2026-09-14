@@ -11,6 +11,8 @@ type Status = "pending" | "success" | "expired" | "error";
 export function EmailVerification({ token }: { token: string | null }) {
   const router = useRouter();
   const [status, setStatus] = useState<Status>(token ? "pending" : "error");
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -28,7 +30,7 @@ export function EmailVerification({ token }: { token: string | null }) {
         }
 
         if (resp.status === "verified") {
-          router.push("/auth/signin");
+          router.push("/auth/signin?verified=true");
           return;
         }
 
@@ -48,7 +50,7 @@ export function EmailVerification({ token }: { token: string | null }) {
         if (success) {
           setStatus("success");
           const timeoutId = setTimeout(() => {
-            router.push("/auth/signin");
+            router.push("/auth/signin?verified=true");
           }, 3000);
 
           return () => clearTimeout(timeoutId);
@@ -70,14 +72,17 @@ export function EmailVerification({ token }: { token: string | null }) {
   }, [token, router]);
 
   const handleResend = async () => {
-    if (!token) return;
+    if (!token || resending) return;
 
-    const { success, message } = await resendVerificationEmail(token);
-    
-    if (success) {
-      alert(message || "Verification email resent successfully");
-    } else {
-      alert(message || "Failed to resend verification email");
+    setResending(true);
+    setResendMessage(null);
+    try {
+      const { success, message } = await resendVerificationEmail(token);
+      setResendMessage(message || (success ? "Verification email resent successfully" : "Failed to resend verification email"));
+    } catch {
+      setResendMessage("Failed to resend verification email");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -88,22 +93,28 @@ export function EmailVerification({ token }: { token: string | null }) {
         <p className="text-sm text-foreground/50">Verifying your email...</p>
       )}
       {status === "success" && (
-        <>
-          <p className="text-sm text-center text-success">
-            Your email has been verified successfully!<br/>
-            Shortly you will be redirected to the login page...
-          </p>
-        </>
+        <p className="text-sm text-center text-success">
+          Your email has been verified successfully!<br/>
+          Shortly you will be redirected to the sign in page...
+        </p>
       )}
       {status === "expired" && (
-        <>
+        <div className="flex flex-col items-center space-y-4">
           <p className="text-sm text-center text-error">
-            It seems like this email verification link has expired. 
+            It seems like this email verification link has expired.
             Please request a new one by pressing the button below.
           </p>
 
-          <Button className="mt-4" variant="outline" onClick={handleResend}>Request New Email</Button>
-        </>
+          {resendMessage && (
+            <p className="text-xs text-center text-foreground/75">
+              {resendMessage}
+            </p>
+          )}
+
+          <Button variant="outline" disabled={resending} onClick={handleResend}>
+            {resending ? "Requesting..." : "Request New Email"}
+          </Button>
+        </div>
       )}
       {status === "error" && (
         <>
