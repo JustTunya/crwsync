@@ -22,9 +22,32 @@ describe("UserService (Cluster 1 fixes)", () => {
     emailVerification: {
       deleteMany: jest.Mock;
     };
+    passwordReset: {
+      deleteMany: jest.Mock;
+    };
     workspaceInvite: {
       findMany: jest.Mock;
     };
+    workspaceMember: {
+      findMany: jest.Mock;
+      deleteMany: jest.Mock;
+    };
+    workspace: {
+      deleteMany: jest.Mock;
+    };
+    task: {
+      findMany: jest.Mock;
+    };
+    taskComment: {
+      findMany: jest.Mock;
+    };
+    taskChecklistItem: {
+      findMany: jest.Mock;
+    };
+    chatMessage: {
+      findMany: jest.Mock;
+    };
+    $transaction: jest.Mock;
   };
   let cache: {
     get: jest.Mock;
@@ -54,9 +77,32 @@ describe("UserService (Cluster 1 fixes)", () => {
       emailVerification: {
         deleteMany: jest.fn(),
       },
+      passwordReset: {
+        deleteMany: jest.fn(),
+      },
       workspaceInvite: {
         findMany: jest.fn(),
       },
+      workspaceMember: {
+        findMany: jest.fn(),
+        deleteMany: jest.fn(),
+      },
+      workspace: {
+        deleteMany: jest.fn(),
+      },
+      task: {
+        findMany: jest.fn(),
+      },
+      taskComment: {
+        findMany: jest.fn(),
+      },
+      taskChecklistItem: {
+        findMany: jest.fn(),
+      },
+      chatMessage: {
+        findMany: jest.fn(),
+      },
+      $transaction: jest.fn(async (cb: (tx: unknown) => unknown) => cb(prisma)),
     };
 
     cache = {
@@ -334,6 +380,97 @@ describe("UserService (Cluster 1 fixes)", () => {
       await expect(
         userService.changePassword("non-existent", { currentPassword: "p", newPassword: "n" }, "sess-1"),
       ).rejects.toThrow("User not found");
+    });
+  });
+
+  describe("exportData", () => {
+    it("aggregates the user's data across all domains into one payload", async () => {
+      cache.get.mockResolvedValue(null);
+      prisma.user.findUnique.mockResolvedValue({
+        id: "user-1",
+        email: "u@example.com",
+        username: "u",
+        firstname: "First",
+        lastname: "Last",
+        birthdate: new Date("2000-01-01"),
+        created_at: new Date("2020-01-01"),
+      });
+      prisma.workspaceMember.findMany.mockResolvedValue([
+        { role: "MEMBER", joined_at: new Date("2021-01-01"), workspace: { name: "Crew", slug: "crew" } },
+      ]);
+      prisma.task.findMany
+        .mockResolvedValueOnce([{ shortId: "CRW-1", title: "Task", priority: "HIGH", created_at: new Date(), workspace: { name: "Crew" } }])
+        .mockResolvedValueOnce([{ shortId: "CRW-2", title: "Assigned", priority: "LOW", workspace: { name: "Crew" } }]);
+      prisma.taskComment.findMany.mockResolvedValue([{ content: "hi", created_at: new Date(), task: { shortId: "CRW-1", title: "Task" } }]);
+      prisma.chatMessage.findMany.mockResolvedValue([{ content: "hey", created_at: new Date(), room: { name: "general" } }]);
+      prisma.taskChecklistItem.findMany.mockResolvedValue([{ content: "step 1", is_completed: true, created_at: new Date(), task: { shortId: "CRW-1", title: "Task" } }]);
+
+      const result = await userService.exportData("user-1");
+
+      expect(result.profile.email).toBe("u@example.com");
+      expect(result.workspaces).toHaveLength(1);
+      expect(result.tasksCreated).toHaveLength(1);
+      expect(result.tasksAssigned).toHaveLength(1);
+      expect(result.comments).toHaveLength(1);
+      expect(result.chatMessages).toHaveLength(1);
+      expect(result.checklistItems).toHaveLength(1);
+    });
+  });
+
+  describe("closeAccount", () => {
+    const mockUser = {
+      id: "user-1",
+      email: "u@example.com",
+      username: "u",
+      role: "MEMBER",
+      role_version: 1,
+    };
+
+    it("rejects when the password does not match", async () => {
+      const { hash } = await import("bcrypt");
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, password_hash: await hash("Correct123!", 10) });
+
+      await expect(userService.closeAccount("user-1", "Wrong123!")).rejects.toThrow(BadRequestException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it("blocks closure while the user is sole OWNER of a multi-member workspace", async () => {
+      const { hash } = await import("bcrypt");
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, password_hash: await hash("Correct123!", 10) });
+      prisma.workspaceMember.findMany.mockResolvedValue([
+        {
+          id: "mem-1",
+          role: "OWNER",
+          workspace_id: "ws-1",
+          workspace: { name: "Crew", slug: "crew", _count: { members: 3 } },
+        },
+      ]);
+
+      await expect(userService.closeAccount("user-1", "Correct123!")).rejects.toThrow(BadRequestException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it("deletes solo-owned workspaces, leaves the rest, and anonymizes the account", async () => {
+      const { hash } = await import("bcrypt");
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, password_hash: await hash("Correct123!", 10) });
+      prisma.workspaceMember.findMany.mockResolvedValue([
+        { id: "mem-1", role: "OWNER", workspace_id: "ws-1", workspace: { name: "Solo", slug: "solo", _count: { members: 1 } } },
+        { id: "mem-2", role: "MEMBER", workspace_id: "ws-2", workspace: { name: "Shared", slug: "shared", _count: { members: 3 } } },
+      ]);
+
+      await userService.closeAccount("user-1", "Correct123!");
+
+      expect(prisma.workspace.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["ws-1"] } } });
+      expect(prisma.workspaceMember.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["mem-2"] } } });
+
+      const updateCall = prisma.user.update.mock.calls[0][0];
+      expect(updateCall.where).toEqual({ id: "user-1" });
+      expect(updateCall.data.email).toBe("deleted+user-1@crwsync.invalid");
+      expect(updateCall.data.username).toBe("deleted-user-1");
+      expect(updateCall.data.avatar_key).toBeNull();
+
+      expect(sessionService.revokeAll).toHaveBeenCalledWith("user-1");
+      expect(cache.del).toHaveBeenCalled();
     });
   });
 });

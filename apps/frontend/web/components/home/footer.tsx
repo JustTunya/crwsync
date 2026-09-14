@@ -10,6 +10,15 @@ export default function Footer() {
         </Link>
 
         <p className="text-xs text-foreground font-light">© 2026 Tunya Lénárd-Sándor. All rights reserved.</p>
+
+        <div className="flex items-center gap-4">
+          <Link href="/legal/terms" className="text-xs text-foreground/70 hover:text-foreground underline underline-offset-2 transition-colors">
+            Terms of Service
+          </Link>
+          <Link href="/legal/privacy" className="text-xs text-foreground/70 hover:text-foreground underline underline-offset-2 transition-colors">
+            Privacy Policy
+          </Link>
+        </div>
       </div>
 
       <div className="flex items-center justify-center gap-4">

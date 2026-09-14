@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, Variants } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon, UserIcon, ShieldIcon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, UserIcon, ShieldIcon, LockKeyIcon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/settings", label: "Profile", icon: UserIcon },
   { href: "/settings/security", label: "Security", icon: ShieldIcon },
+  { href: "/settings/privacy", label: "Privacy", icon: LockKeyIcon },
 ] as const;
 
 const containerVariants: Variants = {
