@@ -71,7 +71,7 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
 
   useEffect(() => {
     if (state.success) {
-      router.push("/auth/signin");
+      router.push("/auth/signin?reset=success");
     }
   }, [state.success, router]);
 

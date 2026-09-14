@@ -334,7 +334,7 @@ Milestone 5: Operational Hardening & Long-Term Maintainability
   * Add a seed script (or demo mode) that populates a fresh workspace with realistic boards, chat history, and members.
 * [x] **Environment & Config Reference**:
   * Publish a documented `.env.example` covering every required environment variable per app.
-* [ ] **Complete Auth Flows**:
+* [x] **Complete Auth Flows**:
   * Implement forgot-password/reset flow and signup email verification.
 
 ---

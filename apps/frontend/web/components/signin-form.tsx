@@ -19,7 +19,12 @@ const initState: SigninState = {
   message: "",
 };
 
-export function SigninForm({ next } : { next: string | null }) {
+interface SigninFormProps {
+  next: string | null;
+  banner?: string | null;
+}
+
+export function SigninForm({ next, banner }: SigninFormProps) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -71,7 +76,7 @@ export function SigninForm({ next } : { next: string | null }) {
     <GlassBox>
       <Lead title="Welcome back" description="Please enter your credentials to access your account." />
 
-      <motion.div 
+      <motion.div
         key="signin"
         variants={variants}
         initial="enter"
@@ -80,9 +85,22 @@ export function SigninForm({ next } : { next: string | null }) {
         transition={{ duration: 0.3 }}
         className="w-full space-y-5"
       >
+        {banner && !state.message && (
+          <div className="p-3 text-xs sm:text-sm text-center text-success bg-success/10 border border-success/30 rounded-md">
+            {banner}
+          </div>
+        )}
+
         <form action={handleSignin} className="w-full space-y-5">
           {(!state.success && state.message) && (
-            <Label id="signin-error" error>{state.message}</Label>
+            <div className="p-3 text-xs sm:text-sm text-center text-error bg-error/10 border border-error/30 rounded-md space-y-1">
+              <p>{state.message}</p>
+              {state.message.toLowerCase().includes("not verified") && (
+                <p className="text-xs text-muted-foreground">
+                  Please check your inbox for the verification link.
+                </p>
+              )}
+            </div>
           )}
           <div className="space-y-2 sm:space-y-3">
             <Label htmlFor="identifier">Username or Email</Label>
