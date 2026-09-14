@@ -24,7 +24,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const rawUrl = req.originalUrl || req.url || "";
     const path = req.path || rawUrl.split("?")[0] || rawUrl;
 
-    this.logger.error(`[${req.method}] ${path} -> ${status}`);
+    if (exception instanceof Error) {
+      this.logger.error(`[${req.method}] ${path} -> ${status}: ${exception.message}`, exception.stack);
+    } else {
+      this.logger.error(`[${req.method}] ${path} -> ${status}`, String(exception));
+    }
 
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       Sentry.captureException(exception);
