@@ -138,6 +138,7 @@ export function SidebarProject({
         }}
         onClick={() => !isEditing && setCollapsed(!collapsed)}
         onDoubleClick={(e) => {
+          if (!extended) return;
           e.preventDefault();
           e.stopPropagation();
           setShowSettings(false);

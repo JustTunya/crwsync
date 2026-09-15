@@ -119,7 +119,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
       onMouseEnter={() => handleMouseEvent(true)}
       onMouseLeave={() => handleMouseEvent(false)}
       onDoubleClick={(e) => {
-        if (!canManage) return;
+        if (!extended || !canManage) return;
         e.preventDefault();
         e.stopPropagation();
         setShowSettings(false);
