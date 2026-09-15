@@ -18,6 +18,7 @@ import {
   CreateProjectDto,
   UpdateProjectDto,
 } from "src/board/dto/board.dto";
+import { GetSchedulesQueryDto } from "src/board/dto/schedule.dto";
 
 const POSITION_GAP = 1000;
 const ACTIVITY_ACTOR_SELECT = { id: true, firstname: true, lastname: true, avatar_key: true };
@@ -951,5 +952,150 @@ export class BoardService {
       .emit("project:deleted", { projectId });
 
     return { success: true };
+  }
+
+  async getSchedules(workspaceId: string, userId: string, query: GetSchedulesQueryDto = {}) {
+    const where: Prisma.TaskWhereInput = {
+      workspace_id: workspaceId,
+      is_deleted: false,
+      is_archived: false,
+    };
+
+    if (query.scope === "created_by_me") {
+      where.created_by = userId;
+    } else if (query.scope === "all") {
+    } else {
+      where.assignee_id = userId;
+    }
+
+    if (query.boardId) {
+      where.column = {
+        ...(where.column as Prisma.BoardColumnWhereInput || {}),
+        board_id: query.boardId,
+      };
+    }
+
+    if (query.priority) {
+      where.priority = query.priority;
+    }
+
+    if (!query.includeCompleted) {
+      where.column = {
+        ...(where.column as Prisma.BoardColumnWhereInput || {}),
+        type: { not: "COMPLETE" },
+      };
+    }
+
+    if (query.from || query.to) {
+      const dueDateFilter: Prisma.DateTimeNullableFilter = {};
+      if (query.from) dueDateFilter.gte = new Date(query.from);
+      if (query.to) dueDateFilter.lte = new Date(query.to);
+      where.due_date = dueDateFilter;
+    }
+
+    const tasks = await this.prisma.task.findMany({
+      where,
+      select: {
+        id: true,
+        shortId: true,
+        column_id: true,
+        title: true,
+        description: true,
+        priority: true,
+        labels: true,
+        tags: true,
+        assignee_id: true,
+        due_date: true,
+        position: true,
+        is_deleted: true,
+        is_archived: true,
+        in_progress_at: true,
+        completed_at: true,
+        created_by: true,
+        created_at: true,
+        updated_at: true,
+        column: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            color: true,
+            board_id: true,
+            board: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        assignee: {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstname: true,
+            lastname: true,
+            avatar_key: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+            checklistItems: true,
+          },
+        },
+      },
+      orderBy: [
+        { due_date: "asc" },
+        { priority: "desc" },
+      ],
+    });
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 7);
+
+    let overdue = 0;
+    let today = 0;
+    let thisWeek = 0;
+    let completedThisWeek = 0;
+
+    for (const task of tasks) {
+      if (task.column?.type === "COMPLETE") {
+        if (task.completed_at && new Date(task.completed_at) >= startOfWeek && new Date(task.completed_at) < endOfWeek) {
+          completedThisWeek++;
+        }
+        continue;
+      }
+
+      if (task.due_date) {
+        const d = new Date(task.due_date);
+        if (d < startOfToday) {
+          overdue++;
+        } else if (d.toDateString() === startOfToday.toDateString()) {
+          today++;
+        } else if (d < endOfWeek) {
+          thisWeek++;
+        }
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        tasks,
+        counts: {
+          overdue,
+          today,
+          thisWeek,
+          completedThisWeek,
+          total: tasks.length,
+        },
+      },
+    };
   }
 }

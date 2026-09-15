@@ -33,6 +33,7 @@ import {
   CreateProjectDto,
   UpdateProjectDto,
 } from "src/board/dto/board.dto";
+import { GetSchedulesQueryDto } from "src/board/dto/schedule.dto";
 
 @Controller("workspaces/:workspaceId/boards")
 @UseGuards(IsMemberGuard)
@@ -65,6 +66,16 @@ export class BoardController {
     @Query("q") q: string,
   ) {
     return this.boardService.searchTasks(workspaceId, q || "");
+  }
+
+  @Get("schedules")
+  getSchedules(
+    @Param("workspaceId", new ParseUUIDPipe({ version: "4" }))
+    workspaceId: string,
+    @ActiveUserParam() user: ActiveUser,
+    @Query() query: GetSchedulesQueryDto,
+  ) {
+    return this.boardService.getSchedules(workspaceId, user.userId, query);
   }
 
   @Get(":boardId")
