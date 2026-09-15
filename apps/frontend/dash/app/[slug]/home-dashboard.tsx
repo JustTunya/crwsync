@@ -121,7 +121,7 @@ export function HomeDashboard({ slug }: { slug: string }) {
   const { activeId } = useWorkspace();
   const { data: modules, isLoading: isModulesLoading } = useWorkspaceModules(activeId);
   const togglePinModule = useTogglePinModule(activeId || "");
-  const { data: stats, isLoading: isStatsLoading } = useStatistics(activeId, "2w");
+  const { data: stats, isLoading: isStatsLoading } = useStatistics(activeId, { interval: "14d" });
 
 
   const pinnedModules = modules?.filter(m => m.isPinned) || [];
@@ -147,7 +147,7 @@ export function HomeDashboard({ slug }: { slug: string }) {
       </header>
 
       {/* Content */}
-      <motion.div 
+      <motion.div
         className="flex-1 overflow-y-auto p-6 space-y-12"
         variants={containerVariants}
         initial="hidden"
@@ -171,9 +171,9 @@ export function HomeDashboard({ slug }: { slug: string }) {
             </div>
           </div>
           <div className="flex gap-2">
-            <StatCard testId="quickstat-total" label="Total Tasks" value={(stats?.personalWorkload ?? 0) + (stats?.personalVelocity ?? 0)} unit="tasks" loading={isStatsLoading} />
-            <StatCard testId="quickstat-completed" label="Completed" value={stats?.personalVelocity ?? 0} unit="tasks" loading={isStatsLoading} />
-            <StatCard testId="quickstat-in-progress" label="In Progress" value={stats?.personalWorkload ?? 0} unit="tasks" loading={isStatsLoading} />
+            <StatCard testId="quickstat-total" label="Total Tasks" value={(stats?.personal?.activeWorkload ?? 0) + (stats?.personal?.velocity?.current ?? 0)} unit="tasks" loading={isStatsLoading} />
+            <StatCard testId="quickstat-completed" label="Completed" value={stats?.personal?.velocity?.current ?? 0} unit="tasks" loading={isStatsLoading} />
+            <StatCard testId="quickstat-in-progress" label="In Progress" value={stats?.personal?.activeWorkload ?? 0} unit="tasks" loading={isStatsLoading} />
           </div>
         </motion.section>
 

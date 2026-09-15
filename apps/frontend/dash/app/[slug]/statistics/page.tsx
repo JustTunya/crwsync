@@ -10,14 +10,15 @@ export default async function StatisticsPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ interval?: string }>;
+  searchParams: Promise<{ interval?: string; tab?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
 
   return (
     <Suspense fallback={<div className="p-6 text-sm text-muted-foreground animate-pulse">Loading statistics...</div>}>
-      <StatisticsDashboard 
-        initialInterval={resolvedSearchParams.interval} 
+      <StatisticsDashboard
+        initialInterval={resolvedSearchParams.interval}
+        initialTab={resolvedSearchParams.tab}
       />
     </Suspense>
   );
