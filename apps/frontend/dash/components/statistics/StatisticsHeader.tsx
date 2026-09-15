@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react";
 import {
   Activity01Icon,
   UserIcon,
   Folder01Icon,
-  FilterIcon,
+  Calendar04Icon,
+  Clock01Icon,
+  Tag01Icon,
   Tick02Icon,
   Cancel01Icon,
   ArrowReloadHorizontalIcon,
@@ -16,8 +17,6 @@ import type {
   StatisticsTab,
   ProjectStatBreakdown,
 } from "@crwsync/types";
-import { LSidebarToggle } from "@/components/l-sidebar";
-import { RSidebarToggle } from "@/components/r-sidebar";
 import {
   Popover,
   PopoverTrigger,
@@ -38,11 +37,13 @@ export interface StatisticsHeaderProps {
   onRefresh?: () => void;
   projects?: ProjectStatBreakdown[];
   velocityCount?: number;
+  overdueCount?: number;
+  throughputRatio?: number;
   className?: string;
 }
 
 const CONTROL =
-  "flex items-center h-8 gap-1.5 px-3 rounded-lg border-[1.5px] border-base-300 bg-foreground/10 shadow-md/5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/15 outline-none focus-visible:ring-3 focus-visible:ring-primary/50 focus-visible:border-primary cursor-pointer shrink-0";
+  "flex items-center h-8 gap-1.5 px-3 rounded-lg border-[1.5px] border-base-300 bg-foreground/10 shadow-md/5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/15 outline-none focus-visible:ring-3 focus-visible:ring-primary/50 focus-visible:border-primary cursor-pointer";
 
 const TABS: {
   value: StatisticsTab;
@@ -54,14 +55,18 @@ const TABS: {
   { value: "projects", label: "Projects & Boards", icon: Folder01Icon },
 ];
 
-const INTERVALS: { value: StatisticsInterval; label: string }[] = [
-  { value: "7d", label: "7D" },
-  { value: "14d", label: "14D" },
-  { value: "30d", label: "30D" },
-  { value: "90d", label: "90D" },
-  { value: "6m", label: "6M" },
-  { value: "1y", label: "1Y" },
-  { value: "all", label: "All" },
+const INTERVALS: {
+  value: StatisticsInterval;
+  label: string;
+  fullLabel: string;
+}[] = [
+  { value: "7d", label: "7 Days", fullLabel: "Last 7 days" },
+  { value: "14d", label: "14 Days", fullLabel: "Last 14 days" },
+  { value: "30d", label: "30 Days", fullLabel: "Last 30 days" },
+  { value: "90d", label: "90 Days", fullLabel: "Last 90 days" },
+  { value: "6m", label: "6 Months", fullLabel: "Last 6 months" },
+  { value: "1y", label: "1 Year", fullLabel: "Last 1 year" },
+  { value: "all", label: "All Time", fullLabel: "All time" },
 ];
 
 export function StatisticsHeader({
@@ -77,10 +82,10 @@ export function StatisticsHeader({
   onRefresh,
   projects = [],
   velocityCount,
+  overdueCount = 0,
+  throughputRatio,
   className,
 }: StatisticsHeaderProps) {
-  const [filterOpen, setFilterOpen] = useState(false);
-
   const selectedProject = projects.find((p) => p.projectId === projectId);
   const selectedBoard = selectedProject?.boards.find((b) => b.boardId === boardId);
 
@@ -91,229 +96,150 @@ export function StatisticsHeader({
       : "All Projects";
 
   const isFiltered = Boolean(projectId || boardId);
+  const tabLabel = TABS.find((t) => t.value === activeTab)?.label ?? "Overview";
+  const TabIcon = TABS.find((t) => t.value === activeTab)?.icon ?? Activity01Icon;
+  const intervalLabel =
+    INTERVALS.find((i) => i.value === interval)?.label ?? "30 Days";
 
   return (
-    <header
+    <div
       data-testid="statistics-header"
       className={cn(
-        "flex items-center justify-between gap-3 min-h-16 px-4 py-2.5 border-b border-base-200 shrink-0 flex-wrap lg:flex-nowrap bg-background/80 backdrop-blur-md sticky top-0 z-20",
+        "flex items-center justify-between gap-2 px-4 sm:px-6 py-2.5 border-b border-base-200 shrink-0 flex-wrap",
         className
       )}
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <LSidebarToggle />
-        <div className="flex items-center gap-2.5">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground tracking-tight leading-none">
-              Statistics
-            </h1>
-            <p className="text-xs text-muted-foreground font-medium mt-0.5">
-              Workspace analytics & performance
-            </p>
-          </div>
-          {typeof velocityCount === "number" && (
-            <div
-              data-testid="header-velocity-chip"
-              className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-primary/10 text-primary border-primary/20"
+      {/* Left side: Filter buttons */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Tab / Perspective Filter */}
+        <FilterPopover
+          label={tabLabel}
+          icon={TabIcon}
+          active={activeTab !== "overview"}
+          testId="tab-filter"
+        >
+          {TABS.map((t) => (
+            <SelectRow
+              key={t.value}
+              testId={`tab-${t.value}`}
+              checked={activeTab === t.value}
+              onClick={() => onTabChange(t.value)}
             >
-              <HugeiconsIcon
-                icon={Activity01Icon}
-                strokeWidth={2}
-                className="size-3"
-              />
-              <span className="tabular-nums">{velocityCount} Velocity</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="order-3 lg:order-2 w-full lg:w-auto flex items-center justify-center">
-        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1 w-full sm:w-auto overflow-x-auto">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.value;
-            return (
-              <button
-                key={tab.value}
-                type="button"
-                data-testid={`tab-${tab.value}`}
-                onClick={() => onTabChange(tab.value)}
-                className={cn(
-                  "flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all cursor-pointer whitespace-nowrap",
-                  isActive
-                    ? "bg-background text-foreground shadow-sm font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <HugeiconsIcon
-                  icon={tab.icon}
-                  strokeWidth={2}
-                  className="size-3.5"
-                />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div className="order-2 lg:order-3 flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
-        {/* Interval pills */}
-        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/40 p-0.5">
-          {INTERVALS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              data-testid={`interval-${opt.value}`}
-              onClick={() => onIntervalChange(opt.value)}
-              className={cn(
-                "px-2 py-1 rounded-md text-xs font-medium transition-all cursor-pointer",
-                interval === opt.value
-                  ? "bg-background text-foreground shadow-sm font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {opt.label}
-            </button>
+              <HugeiconsIcon icon={t.icon} strokeWidth={2} className="size-3.5" />
+              <span className="truncate">{t.label}</span>
+            </SelectRow>
           ))}
-        </div>
+        </FilterPopover>
+
+        {/* Time Range Filter */}
+        <FilterPopover
+          label={intervalLabel}
+          icon={Calendar04Icon}
+          active={interval !== "30d"}
+          testId="interval-filter"
+        >
+          {INTERVALS.map((opt) => (
+            <SelectRow
+              key={opt.value}
+              testId={`interval-${opt.value}`}
+              checked={interval === opt.value}
+              onClick={() => onIntervalChange(opt.value)}
+            >
+              <span className="truncate">{opt.fullLabel}</span>
+            </SelectRow>
+          ))}
+        </FilterPopover>
 
         {/* Project & Board Filter */}
         {projects.length > 0 && onProjectChange && (
-          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                data-testid="project-filter"
-                className={cn(
-                  CONTROL,
-                  isFiltered &&
-                    "border-primary text-primary bg-primary/10 hover:bg-primary/15"
-                )}
-              >
-                <HugeiconsIcon
-                  icon={FilterIcon}
-                  strokeWidth={2}
-                  className="size-3.5"
-                />
-                <span className="max-w-32 truncate">{filterLabel}</span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-2" align="end">
-              <div className="flex flex-col gap-1 max-h-72 overflow-y-auto">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onProjectChange(undefined);
-                    onBoardChange?.(undefined);
-                    setFilterOpen(false);
-                  }}
-                  className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium hover:bg-base-200 cursor-pointer w-full text-left"
-                >
-                  <span>All Projects</span>
-                  {!projectId && (
-                    <HugeiconsIcon
-                      icon={Tick02Icon}
-                      strokeWidth={2.5}
-                      className="size-3.5 text-primary"
+          <FilterPopover
+            label={filterLabel}
+            icon={Folder01Icon}
+            active={isFiltered}
+            testId="project-filter"
+          >
+            <SelectRow
+              checked={!projectId}
+              onClick={() => {
+                onProjectChange(undefined);
+                onBoardChange?.(undefined);
+              }}
+            >
+              <span className="truncate">All Projects</span>
+            </SelectRow>
+
+            {projects.map((proj) => {
+              const isProjActive = projectId === proj.projectId;
+              return (
+                <div key={proj.projectId} className="flex flex-col gap-0.5">
+                  <SelectRow
+                    checked={isProjActive && !boardId}
+                    onClick={() => {
+                      onProjectChange(proj.projectId);
+                      onBoardChange?.(undefined);
+                    }}
+                  >
+                    <span
+                      className="size-2 rounded-full shrink-0"
+                      style={{
+                        backgroundColor: proj.color || "var(--color-primary)",
+                      }}
                     />
-                  )}
-                </button>
+                    <span className="truncate">{proj.projectName}</span>
+                  </SelectRow>
 
-                <div className="h-px bg-border my-1" />
-
-                {projects.map((proj) => {
-                  const isProjActive = projectId === proj.projectId;
-                  return (
-                    <div key={proj.projectId} className="flex flex-col gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onProjectChange(proj.projectId);
-                          onBoardChange?.(undefined);
-                          setFilterOpen(false);
-                        }}
-                        className={cn(
-                          "flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium hover:bg-base-200 cursor-pointer w-full text-left",
-                          isProjActive && !boardId && "bg-primary/10 text-primary"
-                        )}
-                      >
-                        <div className="flex items-center gap-2 truncate">
-                          <span
-                            className="size-2 rounded-full shrink-0"
-                            style={{
-                              backgroundColor:
-                                proj.color || "var(--color-primary)",
-                            }}
-                          />
-                          <span className="truncate">{proj.projectName}</span>
-                        </div>
-                        {isProjActive && !boardId && (
-                          <HugeiconsIcon
-                            icon={Tick02Icon}
-                            strokeWidth={2.5}
-                            className="size-3.5 text-primary shrink-0"
-                          />
-                        )}
-                      </button>
-
-                      {isProjActive && proj.boards.length > 0 && onBoardChange && (
-                        <div className="pl-4 flex flex-col gap-0.5 border-l border-border ml-2 my-0.5">
-                          {proj.boards.map((board) => {
-                            const isBoardActive = boardId === board.boardId;
-                            return (
-                              <button
-                                key={board.boardId}
-                                type="button"
-                                onClick={() => {
-                                  onBoardChange(board.boardId);
-                                  setFilterOpen(false);
-                                }}
-                                className={cn(
-                                  "flex items-center justify-between px-2 py-1 rounded text-xs hover:bg-base-200 cursor-pointer w-full text-left",
-                                  isBoardActive &&
-                                    "bg-primary/15 text-primary font-medium"
-                                )}
-                              >
-                                <span className="truncate">
-                                  {board.boardName}
-                                </span>
-                                {isBoardActive && (
-                                  <HugeiconsIcon
-                                    icon={Tick02Icon}
-                                    strokeWidth={2.5}
-                                    className="size-3 text-primary shrink-0"
-                                  />
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
+                  {isProjActive && proj.boards.length > 0 && onBoardChange && (
+                    <div className="pl-4 flex flex-col gap-0.5 border-l border-border ml-2 my-0.5">
+                      {proj.boards.map((board) => {
+                        const isBoardActive = boardId === board.boardId;
+                        return (
+                          <button
+                            key={board.boardId}
+                            type="button"
+                            onClick={() => onBoardChange(board.boardId)}
+                            className={cn(
+                              "flex items-center justify-between px-2 py-1 rounded text-xs hover:bg-base-200 cursor-pointer w-full text-left",
+                              isBoardActive &&
+                                "bg-primary/15 text-primary font-medium"
+                            )}
+                          >
+                            <span className="truncate">{board.boardName}</span>
+                            {isBoardActive && (
+                              <HugeiconsIcon
+                                icon={Tick02Icon}
+                                strokeWidth={2.5}
+                                className="size-3 text-primary shrink-0"
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-            </PopoverContent>
-          </Popover>
+                  )}
+                </div>
+              );
+            })}
+          </FilterPopover>
         )}
 
-        {isFiltered && onProjectChange && (
+        {/* Clear Filters button */}
+        {(isFiltered || interval !== "30d" || activeTab !== "overview") && (
           <button
             type="button"
             onClick={() => {
-              onProjectChange(undefined);
+              onTabChange("overview");
+              onIntervalChange("30d");
+              onProjectChange?.(undefined);
               onBoardChange?.(undefined);
             }}
             className={cn(CONTROL, "text-muted-foreground")}
-            title="Clear project filter"
           >
             <HugeiconsIcon
               icon={Cancel01Icon}
               strokeWidth={2}
               className="size-3.5"
             />
+            <span>Clear filters</span>
           </button>
         )}
 
@@ -324,18 +250,145 @@ export function StatisticsHeader({
             data-testid="refresh-button"
             onClick={onRefresh}
             aria-label="Refresh statistics"
-            className={cn(CONTROL, "px-2")}
+            className={CONTROL}
           >
             <HugeiconsIcon
               icon={ArrowReloadHorizontalIcon}
               strokeWidth={2}
               className={cn("size-3.5", isFetching && "animate-spin")}
             />
+            <span>Refresh</span>
           </button>
         )}
-
-        <RSidebarToggle />
       </div>
-    </header>
+
+      {/* Right side: Metric summary chips */}
+      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        {typeof overdueCount === "number" && (
+          <div
+            data-testid="metric-overdue"
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+              overdueCount > 0
+                ? "bg-error/10 text-error border-error/20"
+                : "bg-base-200/50 text-muted-foreground border-base-300/60"
+            )}
+          >
+            <HugeiconsIcon
+              icon={Clock01Icon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
+            <span>{overdueCount} Overdue</span>
+          </div>
+        )}
+
+        {typeof velocityCount === "number" && (
+          <div
+            data-testid="metric-velocity"
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+              velocityCount > 0
+                ? "bg-primary/10 text-primary border-primary/20"
+                : "bg-base-200/50 text-muted-foreground border-base-300/60"
+            )}
+          >
+            <HugeiconsIcon
+              icon={Activity01Icon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
+            <span>{velocityCount} Completed</span>
+          </div>
+        )}
+
+        {typeof throughputRatio === "number" && (
+          <div
+            data-testid="metric-throughput"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-base-200/50 text-foreground border-base-300/60 transition-colors"
+          >
+            <HugeiconsIcon
+              icon={Tag01Icon}
+              strokeWidth={2}
+              className="size-3.5 text-info"
+            />
+            <span>{throughputRatio}x Throughput</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FilterPopover({
+  label,
+  icon,
+  active,
+  testId,
+  children,
+}: {
+  label: string;
+  icon: HugeiconsIconProps["icon"];
+  active?: boolean;
+  testId?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          data-testid={testId}
+          className={cn(
+            CONTROL,
+            active &&
+              "border-primary text-primary bg-primary/10 hover:bg-primary/15"
+          )}
+        >
+          <HugeiconsIcon icon={icon} strokeWidth={2} className="size-3.5" />
+          <span>{label}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1.5" align="start">
+        <div className="flex flex-col max-h-64 overflow-y-auto">{children}</div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function SelectRow({
+  checked,
+  onClick,
+  testId,
+  children,
+}: {
+  checked: boolean;
+  onClick: () => void;
+  testId?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      onClick={onClick}
+      className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-base-200 cursor-pointer w-full text-left"
+    >
+      <span
+        className={cn(
+          "flex items-center justify-center size-4 rounded-full border-[1.5px] shrink-0 transition-colors",
+          checked ? "border-primary bg-primary" : "border-base-300"
+        )}
+      >
+        {checked && (
+          <HugeiconsIcon
+            icon={Tick02Icon}
+            strokeWidth={3}
+            className="size-2.5 text-primary-foreground"
+          />
+        )}
+      </span>
+      <div className="flex items-center gap-2 min-w-0 truncate">{children}</div>
+    </button>
   );
 }

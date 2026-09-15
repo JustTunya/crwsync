@@ -6,6 +6,8 @@ import { motion, AnimatePresence, type Variants } from "framer-motion";
 import type { StatisticsInterval, StatisticsTab } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useStatistics } from "@/hooks/use-statistics";
+import { LSidebarToggle } from "@/components/l-sidebar";
+import { RSidebarToggle } from "@/components/r-sidebar";
 import { StatisticsHeader } from "@/components/statistics/StatisticsHeader";
 import { StatisticsOverviewTab } from "@/components/statistics/StatisticsOverviewTab";
 import { StatisticsPersonalTab } from "@/components/statistics/StatisticsPersonalTab";
@@ -116,7 +118,21 @@ export function StatisticsDashboard({
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background">
-      {/* Header */}
+      {/* Primary Header */}
+      <header className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <LSidebarToggle />
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">Statistics</h1>
+            <p className="text-sm text-muted-foreground leading-4 font-mono">
+              Workspace analytics
+            </p>
+          </div>
+        </div>
+        <RSidebarToggle />
+      </header>
+
+      {/* Secondary Filter Header */}
       <StatisticsHeader
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -130,6 +146,8 @@ export function StatisticsDashboard({
         onRefresh={() => refetch()}
         projects={data?.projects}
         velocityCount={data?.summary?.velocity?.current}
+        overdueCount={data?.summary?.overdueTasks?.current}
+        throughputRatio={data?.summary?.throughputRatio?.current}
       />
 
       {/* Main Content Area */}
