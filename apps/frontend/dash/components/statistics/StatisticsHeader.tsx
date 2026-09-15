@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react";
 import {
   Activity01Icon,
   UserIcon,
   Folder01Icon,
   Clock01Icon,
+  KanbanIcon,
   Tick02Icon,
   Cancel01Icon,
   ArrowReloadHorizontalIcon,
@@ -85,14 +87,23 @@ export function StatisticsHeader({
   overdueCount = 0,
   className,
 }: StatisticsHeaderProps) {
-  const selectedProject = projects.find((p) => p.projectId === projectId);
-  const selectedBoard = selectedProject?.boards.find((b) => b.boardId === boardId);
+  const [projectPopoverOpen, setProjectPopoverOpen] = useState(false);
 
-  const filterLabel = selectedBoard
-    ? `${selectedProject?.projectName} / ${selectedBoard.boardName}`
-    : selectedProject
-      ? selectedProject.projectName
-      : "All Projects";
+  let filterLabel = "All Projects";
+  if (boardId) {
+    for (const p of projects) {
+      const b = p.boards.find((board) => board.boardId === boardId);
+      if (b) {
+        filterLabel = `${p.projectName} / ${b.boardName}`;
+        break;
+      }
+    }
+  } else if (projectId) {
+    const p = projects.find((proj) => proj.projectId === projectId);
+    if (p) {
+      filterLabel = p.projectName;
+    }
+  }
 
   const isFiltered = Boolean(projectId || boardId);
 
@@ -139,76 +150,120 @@ export function StatisticsHeader({
 
         <div className="h-4 w-px bg-border/80 hidden sm:block" />
 
-        {/* Project & Board Filter */}
+        {/* Project & Board Filter Popover */}
         {projects.length > 0 && onProjectChange && (
-          <FilterPopover
-            label={filterLabel}
-            icon={Folder01Icon}
-            active={isFiltered}
-            testId="project-filter"
+          <Popover
+            open={projectPopoverOpen}
+            onOpenChange={setProjectPopoverOpen}
           >
-            <SelectRow
-              checked={!projectId}
-              onClick={() => {
-                onProjectChange(undefined);
-                onBoardChange?.(undefined);
-              }}
-            >
-              <span className="truncate">All Projects</span>
-            </SelectRow>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                data-testid="project-filter"
+                className={cn(
+                  CONTROL,
+                  isFiltered &&
+                    "border-primary text-primary bg-primary/10 hover:bg-primary/15"
+                )}
+              >
+                <HugeiconsIcon
+                  icon={Folder01Icon}
+                  strokeWidth={2}
+                  className="size-3.5"
+                />
+                <span className="truncate max-w-44">{filterLabel}</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-1.5" align="start">
+              <div className="flex flex-col gap-1 max-h-72 overflow-y-auto">
+                <SelectRow
+                  checked={!projectId && !boardId}
+                  onClick={() => {
+                    onProjectChange(undefined);
+                    onBoardChange?.(undefined);
+                    setProjectPopoverOpen(false);
+                  }}
+                >
+                  <span className="truncate font-medium">All Projects</span>
+                </SelectRow>
 
-            {projects.map((proj) => {
-              const isProjActive = projectId === proj.projectId;
-              return (
-                <div key={proj.projectId} className="flex flex-col gap-0.5">
-                  <SelectRow
-                    checked={isProjActive && !boardId}
-                    onClick={() => {
-                      onProjectChange(proj.projectId);
-                      onBoardChange?.(undefined);
-                    }}
-                  >
-                    <span
-                      className="size-2 rounded-full shrink-0"
-                      style={{
-                        backgroundColor: proj.color || "var(--color-primary)",
-                      }}
-                    />
-                    <span className="truncate">{proj.projectName}</span>
-                  </SelectRow>
+                <div className="h-px bg-border/80 my-1" />
 
-                  {isProjActive && proj.boards.length > 0 && onBoardChange && (
-                    <div className="pl-4 flex flex-col gap-0.5 border-l border-border ml-2 my-0.5">
-                      {proj.boards.map((board) => {
-                        const isBoardActive = boardId === board.boardId;
-                        return (
-                          <button
-                            key={board.boardId}
-                            type="button"
-                            onClick={() => onBoardChange(board.boardId)}
-                            className={cn(
-                              "flex items-center justify-between px-2 py-1 rounded text-xs hover:bg-base-200 cursor-pointer w-full text-left",
-                              isBoardActive &&
-                                "bg-primary/15 text-primary font-medium"
-                            )}
-                          >
-                            <span className="truncate">{board.boardName}</span>
-                            {isBoardActive && (
-                              <HugeiconsIcon
-                                icon={Tick02Icon}
-                                strokeWidth={2.5}
-                                className="size-3 text-primary shrink-0"
-                              />
-                            )}
-                          </button>
-                        );
-                      })}
+                {projects.map((proj) => {
+                  const isProjSelected = projectId === proj.projectId;
+                  return (
+                    <div key={proj.projectId} className="flex flex-col gap-0.5">
+                      <SelectRow
+                        checked={isProjSelected && !boardId}
+                        onClick={() => {
+                          onProjectChange(proj.projectId);
+                          onBoardChange?.(undefined);
+                          setProjectPopoverOpen(false);
+                        }}
+                      >
+                        <span
+                          className="size-2 rounded-full shrink-0"
+                          style={{
+                            backgroundColor: proj.color || "var(--color-primary)",
+                          }}
+                        />
+                        <span className="truncate font-medium">
+                          {proj.projectName}
+                        </span>
+                      </SelectRow>
+
+                      {proj.boards.length > 0 && onBoardChange && (
+                        <div className="pl-5 flex flex-col gap-0.5 border-l border-border/80 ml-2 my-0.5">
+                          {proj.boards.map((board) => {
+                            const isBoardSelected = boardId === board.boardId;
+                            return (
+                              <button
+                                key={board.boardId}
+                                type="button"
+                                onClick={() => {
+                                  onProjectChange(proj.projectId);
+                                  onBoardChange(board.boardId);
+                                  setProjectPopoverOpen(false);
+                                }}
+                                className={cn(
+                                  "flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs hover:bg-base-200 cursor-pointer w-full text-left transition-colors",
+                                  isBoardSelected &&
+                                    "bg-primary/15 text-primary font-semibold"
+                                )}
+                              >
+                                <div className="flex items-center gap-1.5 truncate">
+                                  <HugeiconsIcon
+                                    icon={KanbanIcon}
+                                    strokeWidth={2}
+                                    className={cn(
+                                      "size-3 shrink-0",
+                                      isBoardSelected
+                                        ? "text-primary"
+                                        : "text-muted-foreground"
+                                    )}
+                                  />
+                                  <span className="truncate">
+                                    {board.boardName}
+                                  </span>
+                                </div>
+                                {isBoardSelected && (
+                                  <HugeiconsIcon
+                                    icon={Tick02Icon}
+                                    strokeWidth={2.5}
+                                    className="size-3 text-primary shrink-0"
+                                  />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </FilterPopover>
+                  );
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
         )}
 
         {/* Clear Filters button */}
@@ -320,42 +375,6 @@ export function StatisticsHeader({
   );
 }
 
-function FilterPopover({
-  label,
-  icon,
-  active,
-  testId,
-  children,
-}: {
-  label: string;
-  icon: HugeiconsIconProps["icon"];
-  active?: boolean;
-  testId?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          data-testid={testId}
-          className={cn(
-            CONTROL,
-            active &&
-              "border-primary text-primary bg-primary/10 hover:bg-primary/15"
-          )}
-        >
-          <HugeiconsIcon icon={icon} strokeWidth={2} className="size-3.5" />
-          <span className="truncate max-w-44">{label}</span>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-56 p-1.5" align="start">
-        <div className="flex flex-col max-h-64 overflow-y-auto">{children}</div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 function SelectRow({
   checked,
   onClick,
@@ -372,11 +391,15 @@ function SelectRow({
       type="button"
       data-testid={testId}
       onClick={onClick}
-      className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-base-200 cursor-pointer w-full text-left"
+      className={cn(
+        "flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium cursor-pointer w-full text-left transition-colors",
+        checked ? "bg-primary/10 text-primary font-semibold" : "hover:bg-base-200"
+      )}
     >
+      <div className="flex items-center gap-2 min-w-0 truncate">{children}</div>
       <span
         className={cn(
-          "flex items-center justify-center size-4 rounded-full border-[1.5px] shrink-0 transition-colors",
+          "flex items-center justify-center size-4 rounded-full border-[1.5px] shrink-0 transition-colors ml-2",
           checked ? "border-primary bg-primary" : "border-base-300"
         )}
       >
@@ -388,7 +411,6 @@ function SelectRow({
           />
         )}
       </span>
-      <div className="flex items-center gap-2 min-w-0 truncate">{children}</div>
     </button>
   );
 }
