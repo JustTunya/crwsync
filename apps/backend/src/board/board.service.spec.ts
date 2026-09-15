@@ -1195,7 +1195,7 @@ describe("BoardService getSchedules", () => {
     expect(result).toEqual({
       success: true,
       data: {
-        tasks: mockTasks,
+        tasks: mockTasks.map((t) => ({ ...t, board: t.column.board })),
         counts: {
           overdue: 1,
           today: 1,

@@ -1052,6 +1052,8 @@ export class BoardService {
       ],
     });
 
+    const formattedTasks = tasks.map((t) => ({ ...t, board: t.column.board }));
+
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfWeek = new Date(startOfToday);
@@ -1064,8 +1066,8 @@ export class BoardService {
     let thisWeek = 0;
     let completedThisWeek = 0;
 
-    for (const task of tasks) {
-      if (task.column?.type === "COMPLETE") {
+    for (const task of formattedTasks) {
+      if (task.column?.type === "COMPLETE" || task.completed_at) {
         if (task.completed_at && new Date(task.completed_at) >= startOfWeek && new Date(task.completed_at) < endOfWeek) {
           completedThisWeek++;
         }
@@ -1087,13 +1089,13 @@ export class BoardService {
     return {
       success: true,
       data: {
-        tasks,
+        tasks: formattedTasks,
         counts: {
           overdue,
           today,
           thisWeek,
           completedThisWeek,
-          total: tasks.length,
+          total: formattedTasks.length,
         },
       },
     };

@@ -98,7 +98,7 @@ export function ScheduleTaskRow({
 
       <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground bg-base-200/70 border border-base-300/50 px-2 py-0.5 rounded-md shrink-0 max-w-[200px] truncate">
         <span className="font-medium text-foreground/80 truncate">
-          {task.board?.name}
+          {task.board?.name || (task.column as { board?: { name?: string } })?.board?.name || "Board"}
         </span>
         <span className="text-muted-foreground/60">/</span>
         {task.column?.color && (

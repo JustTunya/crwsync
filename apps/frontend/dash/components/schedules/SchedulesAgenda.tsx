@@ -68,18 +68,20 @@ export function SchedulesAgenda({
         const isCompleted =
           task.column?.type === "COMPLETE" || !!task.completed_at;
 
-        if (!isCompleted && taskStartDay < today) {
-          overdue.push(task);
+        if (taskStartDay < today) {
+          if (!isCompleted) {
+            overdue.push(task);
+          } else {
+            later.push(task);
+          }
         } else if (isSameDay(taskDate, today)) {
           dueToday.push(task);
         } else if (isSameDay(taskDate, tomorrow)) {
           dueTomorrow.push(task);
         } else if (taskStartDay > tomorrow && taskStartDay <= endThisWeek) {
           thisWeek.push(task);
-        } else if (taskStartDay > endThisWeek) {
-          later.push(task);
         } else {
-          overdue.push(task);
+          later.push(task);
         }
       }
 
