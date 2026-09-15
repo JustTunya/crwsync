@@ -102,16 +102,9 @@ export function StatisticsDashboard({
     [updateQueryParams]
   );
 
-  const handleProjectChange = useCallback(
-    (nextProjId?: string) => {
-      updateQueryParams({ projectId: nextProjId, boardId: undefined });
-    },
-    [updateQueryParams]
-  );
-
-  const handleBoardChange = useCallback(
-    (nextBoardId?: string) => {
-      updateQueryParams({ boardId: nextBoardId });
+  const handleScopeChange = useCallback(
+    (nextProjId?: string, nextBoardId?: string) => {
+      updateQueryParams({ projectId: nextProjId, boardId: nextBoardId });
     },
     [updateQueryParams]
   );
@@ -139,9 +132,8 @@ export function StatisticsDashboard({
         interval={interval}
         onIntervalChange={handleIntervalChange}
         projectId={projectId}
-        onProjectChange={handleProjectChange}
         boardId={boardId}
-        onBoardChange={handleBoardChange}
+        onScopeChange={handleScopeChange}
         isFetching={isFetching}
         onRefresh={() => refetch()}
         projects={data?.projects}

@@ -1,4 +1,4 @@
-import { IsOptional, IsEnum, IsString, IsUUID } from "class-validator";
+import { IsOptional, IsEnum, IsString } from "class-validator";
 import { StatisticsInterval } from "@crwsync/types";
 
 export const STATISTICS_INTERVALS: StatisticsInterval[] = [
@@ -21,6 +21,6 @@ export class StatisticsQueryDto {
   projectId?: string;
 
   @IsOptional()
-  @IsUUID("4")
+  @IsString()
   boardId?: string;
 }
