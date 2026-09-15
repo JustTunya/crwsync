@@ -187,6 +187,10 @@ export class CreateProjectDto {
   @IsString()
   @IsNotEmpty()
   name!: string;
+
+  @IsString()
+  @IsOptional()
+  color?: string | null;
 }
 
 export class UpdateProjectDto {
@@ -197,10 +201,22 @@ export class UpdateProjectDto {
   @IsInt()
   @IsOptional()
   position?: number;
+
+  @IsString()
+  @IsOptional()
+  color?: string | null;
+
+  @IsBoolean()
+  @IsOptional()
+  apply_to_modules?: boolean;
 }
 
 export class UpdateModuleDto {
   @IsString()
-  @IsNotEmpty()
-  name!: string;
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  color?: string | null;
 }

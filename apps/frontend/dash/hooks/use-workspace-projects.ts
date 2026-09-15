@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { WorkspaceProject, CreateProjectPayload, UpdateProjectPayload } from "@crwsync/types";
+import { WorkspaceProject, WorkspaceModule, CreateProjectPayload, UpdateProjectPayload } from "@crwsync/types";
 import { api } from "@/services/auth.service";
 import { moduleKeys } from "@/hooks/query-keys";
 
@@ -87,6 +87,24 @@ export function useUpdateProject(workspaceId: string) {
         }
       );
 
+      if (data.apply_to_modules) {
+        const prevProjects = previous as { data: WorkspaceProject[] } | undefined;
+        const currentProject = prevProjects?.data?.find((p) => p.id === projectId);
+        const targetColor = data.color !== undefined ? (data.color ?? null) : (currentProject?.color ?? null);
+
+        await queryClient.cancelQueries({ queryKey: moduleKeys.list(workspaceId) });
+        queryClient.setQueryData(
+          moduleKeys.list(workspaceId),
+          (old: { data: WorkspaceModule[] } | undefined) => {
+            if (!old?.data) return old;
+            return {
+              ...old,
+              data: old.data.map((m) => (m.project_id === projectId ? { ...m, color: targetColor } : m)),
+            };
+          }
+        );
+      }
+
       return { previous };
     },
     onError: (_, __, context) => {
@@ -97,6 +115,7 @@ export function useUpdateProject(workspaceId: string) {
     onSettled: () => {
       if (!workspaceId) return;
       queryClient.invalidateQueries({ queryKey: projectKeys.list(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
     },
   });
 }

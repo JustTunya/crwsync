@@ -3,15 +3,17 @@ import { useDroppable } from "@dnd-kit/core";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Folder01Icon, Folder03Icon, Settings02Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
-import { WorkspaceProject, WorkspaceRoleEnum } from "@crwsync/types";
+import { WorkspaceProject, WorkspaceModule, WorkspaceRoleEnum } from "@crwsync/types";
 import { useUpdateProject, useDeleteProject } from "@/hooks/use-workspace-projects";
 import { useWorkspace } from "@/providers/workspace.provider";
+import { COLUMN_COLORS } from "@/lib/kanban.utils";
 
 interface SidebarProjectProps {
   project: WorkspaceProject;
   activeWorkspaceId: string;
   extended?: boolean;
   children: React.ReactNode;
+  childModules?: WorkspaceModule[];
   isActiveContext?: boolean;
   isNewlyCreated?: boolean;
   onEditComplete?: () => void;
@@ -23,6 +25,7 @@ export function SidebarProject({
   activeWorkspaceId,
   extended,
   children,
+  childModules,
   isActiveContext,
   isNewlyCreated,
   onEditComplete,
@@ -33,6 +36,14 @@ export function SidebarProject({
   const [editName, setEditName] = useState(project.name);
   const [showSettingsBtn, setShowSettingsBtn] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
+  const projectColor = project.color || null;
+  const hasUnmatchedChild = Boolean(
+    childModules &&
+    childModules.length > 0 &&
+    childModules.some((m) => (m.color || null) !== projectColor)
+  );
 
   const [prevIsActiveContext, setPrevIsActiveContext] = useState(isActiveContext);
   const [prevIsNewlyCreated, setPrevIsNewlyCreated] = useState(isNewlyCreated);
@@ -53,8 +64,19 @@ export function SidebarProject({
   const updateProject = useUpdateProject(activeWorkspaceId);
   const deleteProject = useDeleteProject(activeWorkspaceId);
   const { currentRole } = useWorkspace();
-  const canDelete = currentRole === WorkspaceRoleEnum.OWNER || currentRole === WorkspaceRoleEnum.ADMIN;
+  const canManage = currentRole === WorkspaceRoleEnum.OWNER || currentRole === WorkspaceRoleEnum.ADMIN;
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!showSettings) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setShowSettings(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showSettings]);
 
   const { setNodeRef } = useDroppable({
     id: project.id,
@@ -108,6 +130,22 @@ export function SidebarProject({
     setShowSettings(!showSettings);
   };
 
+  const handleColorChange = (newColor: string | null) => {
+    updateProject.mutate({
+      projectId: project.id,
+      data: { color: newColor },
+    });
+    setShowSettings(false);
+  };
+
+  const handleApplyToContents = () => {
+    updateProject.mutate({
+      projectId: project.id,
+      data: { color: project.color, apply_to_modules: true },
+    });
+    setShowSettings(false);
+  };
+
   const handleAddModuleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -130,11 +168,10 @@ export function SidebarProject({
         )}
         onMouseEnter={() => {
           setShowSettingsBtn(true);
-          setShowSettings(false);
         }}
         onMouseLeave={() => {
           setShowSettingsBtn(false);
-          setShowSettings(false);
+          if (!showSettings) setShowSettings(false);
         }}
         onClick={() => !isEditing && setCollapsed(!collapsed)}
         onDoubleClick={(e) => {
@@ -152,18 +189,20 @@ export function SidebarProject({
           }
         }}
       >
-        <div className="relative inline-grid place-items-center size-5 shrink-0">
+        <div className="relative inline-grid place-items-center size-5 shrink-0" style={project.color ? { color: project.color } : undefined}>
           <HugeiconsIcon
             icon={Folder01Icon}
             className={cn(
-              "col-start-1 row-start-1 size-5 text-foreground transition-all duration-200 ease-out",
+              "col-start-1 row-start-1 size-5 transition-all duration-200 ease-out",
+              !project.color && "text-foreground",
               collapsed ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-75 -rotate-6 pointer-events-none"
             )}
           />
           <HugeiconsIcon
             icon={Folder03Icon}
             className={cn(
-              "col-start-1 row-start-1 size-5 text-foreground transition-all duration-200 ease-out",
+              "col-start-1 row-start-1 size-5 transition-all duration-200 ease-out",
+              !project.color && "text-foreground",
               collapsed ? "opacity-0 scale-75 rotate-6 pointer-events-none" : "opacity-100 scale-100 rotate-0"
             )}
           />
@@ -186,7 +225,10 @@ export function SidebarProject({
                 />
               </div>
             ) : (
-              <p className="text-foreground text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              <p
+                className={cn("text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis", !project.color && "text-foreground")}
+                style={project.color ? { color: project.color } : undefined}
+              >
                 {project.name}
               </p>
             )}
@@ -218,14 +260,73 @@ export function SidebarProject({
         )}
 
         {extended && showSettings && (
-          <div className="absolute right-2 top-8 flex flex-col gap-1 z-30 p-1 bg-base-100 border border-base-200 rounded-lg shadow-lg min-w-[100px]">
+          <div
+            ref={settingsRef}
+            className="absolute right-2 top-8 flex flex-col gap-1 z-30 min-w-36 p-1.5 bg-base-100 border border-base-200 rounded-lg shadow-lg"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
+            {canManage && (
+              <div className="px-1.5 py-1 border-b border-base-200 mb-1">
+                <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Color</p>
+                <div className="grid grid-cols-4 gap-1.5 mb-1.5">
+                  {COLUMN_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      aria-label={`Set project color to ${c}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleColorChange(`var(--label-${c})`);
+                      }}
+                      style={{ backgroundColor: `var(--label-${c})` }}
+                      className={cn(
+                        "size-4.5 mx-auto rounded-full hover:scale-110 transition-transform cursor-pointer",
+                        project.color === `var(--label-${c})` && "ring-2 ring-primary ring-offset-1 ring-offset-base-100"
+                      )}
+                    />
+                  ))}
+                  <button
+                    type="button"
+                    aria-label="Clear project color"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleColorChange(null);
+                    }}
+                    className={cn(
+                      "flex items-center justify-center size-4.5 mx-auto rounded-full border border-base-300 hover:scale-110 transition-transform cursor-pointer text-[10px] text-muted-foreground",
+                      !project.color && "ring-2 ring-primary ring-offset-1 ring-offset-base-100"
+                    )}
+                  >
+                    ✕
+                  </button>
+                </div>
+                {hasUnmatchedChild && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleApplyToContents();
+                    }}
+                    className="w-full px-1.5 py-1 text-[11px] font-medium text-center text-primary hover:bg-base-200 rounded transition-colors cursor-pointer"
+                  >
+                    Apply to contents
+                  </button>
+                )}
+              </div>
+            )}
             <button
               onClick={handleRenameClick}
               className="w-full px-2 py-1 text-xs text-left hover:bg-base-200 rounded-md transition-colors cursor-pointer"
             >
               Rename
             </button>
-            {canDelete && (
+            {canManage && (
               <button
                 onClick={handleDelete}
                 className="w-full px-2 py-1 text-xs text-left text-error hover:bg-base-200 rounded-md transition-colors cursor-pointer"
@@ -238,10 +339,17 @@ export function SidebarProject({
       </div>
 
       {!collapsed && (
-        <div className={cn(
-          "flex flex-col mt-1",
-          extended ? "ml-3 pl-2 border-l border-base-200" : "items-center gap-1 w-full bg-base-200/50 rounded-xl py-2 my-1"
-        )}>
+        <div
+          className={cn(
+            "flex flex-col mt-1",
+            extended ? "ml-3 pl-2 border-l border-base-200" : "items-center gap-1 w-full bg-base-200/50 rounded-xl py-2 my-1"
+          )}
+          style={
+            extended && project.color
+              ? { borderColor: `color-mix(in srgb, ${project.color} 40%, var(--base-200))` }
+              : undefined
+          }
+        >
           {children}
         </div>
       )}

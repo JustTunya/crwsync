@@ -15,6 +15,8 @@ import {
   ReorderColumnsDto,
   ReorderModulesDto,
   UpdateModuleDto,
+  CreateProjectDto,
+  UpdateProjectDto,
 } from "src/board/dto/board.dto";
 
 const POSITION_GAP = 1000;
@@ -717,16 +719,20 @@ export class BoardService {
   ) {
     const existing = await this.prisma.workspaceModule.findFirst({
       where: { id: moduleId, workspace_id: workspaceId },
-      select: { id: true },
+      select: { id: true, name: true, type: true, reference_id: true, color: true },
     });
     if (!existing) throw new NotFoundException("Module not found");
 
+    const updateData: { name?: string; color?: string | null } = {};
+    if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.color !== undefined) updateData.color = dto.color;
+
     const wsModule = await this.prisma.workspaceModule.update({
       where: { id: moduleId },
-      data: { name: dto.name },
+      data: updateData,
     });
 
-    if (wsModule.type === ModuleTypeEnum.BOARD && wsModule.reference_id) {
+    if (dto.name && wsModule.type === ModuleTypeEnum.BOARD && wsModule.reference_id) {
       await this.prisma.board.update({
         where: { id: wsModule.reference_id },
         data: { name: dto.name },
@@ -737,14 +743,14 @@ export class BoardService {
         .emit("board:updated", { boardId: wsModule.reference_id, data: { name: dto.name } });
     }
 
-    if (wsModule.type === ModuleTypeEnum.CHAT && wsModule.reference_id) {
+    if (dto.name && wsModule.type === ModuleTypeEnum.CHAT && wsModule.reference_id) {
       await this.prisma.chatRoom.update({
         where: { id: wsModule.reference_id },
         data: { name: dto.name },
       });
     }
 
-    if (wsModule.type === ModuleTypeEnum.FILES && wsModule.reference_id) {
+    if (dto.name && wsModule.type === ModuleTypeEnum.FILES && wsModule.reference_id) {
       await this.prisma.fileRoom.update({
         where: { id: wsModule.reference_id },
         data: { name: dto.name },
@@ -753,7 +759,7 @@ export class BoardService {
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
-      .emit("module:updated", { moduleId, data: dto });
+      .emit("module:updated", { moduleId, data: { name: wsModule.name, color: wsModule.color } });
 
     return { success: true, data: wsModule };
   }
@@ -841,7 +847,7 @@ export class BoardService {
     return { success: true };
   }
 
-  async createProject(workspaceId: string, dto: { name: string }) {
+  async createProject(workspaceId: string, dto: CreateProjectDto) {
     const lastProject = await this.prisma.workspaceProject.findFirst({
       where: { workspace_id: workspaceId },
       orderBy: { position: "desc" },
@@ -855,6 +861,7 @@ export class BoardService {
         workspace_id: workspaceId,
         name: dto.name,
         position: nextPosition,
+        color: dto.color ?? null,
       },
     });
 
@@ -877,22 +884,46 @@ export class BoardService {
   async updateProject(
     workspaceId: string,
     projectId: string,
-    dto: { name?: string; position?: number },
+    dto: UpdateProjectDto,
   ) {
     const existing = await this.prisma.workspaceProject.findFirst({
       where: { id: projectId, workspace_id: workspaceId },
-      select: { id: true },
+      select: { id: true, color: true },
     });
     if (!existing) throw new NotFoundException("Project not found");
 
+    const updateData: { name?: string; position?: number; color?: string | null } = {};
+    if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.position !== undefined) updateData.position = dto.position;
+    if (dto.color !== undefined) updateData.color = dto.color;
+
     const project = await this.prisma.workspaceProject.update({
       where: { id: projectId },
-      data: dto,
+      data: updateData,
     });
+
+    if (dto.apply_to_modules) {
+      const targetColor = dto.color !== undefined ? dto.color : existing.color;
+      await this.prisma.workspaceModule.updateMany({
+        where: { project_id: projectId, workspace_id: workspaceId },
+        data: { color: targetColor },
+      });
+
+      const updatedModules = await this.prisma.workspaceModule.findMany({
+        where: { project_id: projectId, workspace_id: workspaceId },
+        select: { id: true, color: true },
+      });
+
+      for (const mod of updatedModules) {
+        this.statusGateway.server
+          .to(`workspace_${workspaceId}`)
+          .emit("module:updated", { moduleId: mod.id, data: { color: mod.color } });
+      }
+    }
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
-      .emit("project:updated", { projectId, data: dto });
+      .emit("project:updated", { projectId, data: updateData });
 
     return { success: true, data: project };
   }

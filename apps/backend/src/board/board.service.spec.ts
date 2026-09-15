@@ -1024,20 +1024,57 @@ describe("BoardService deleteModule", () => {
 });
 
 describe("BoardService project management", () => {
-  it("creates a project positioned after the last one", async () => {
+  it("updates module color and emits module:updated with color", async () => {
     const { service, prisma, statusGateway } = makeService();
-    prisma.workspaceProject.findFirst.mockResolvedValue({ position: 1000 });
-    prisma.workspaceProject.create.mockResolvedValue({ id: "project-1", position: 2000 });
+    prisma.workspaceModule.findFirst.mockResolvedValue({ id: "mod-1", name: "Board", type: "BOARD", reference_id: "board-1", color: null });
+    prisma.workspaceModule.update.mockResolvedValue({ id: "mod-1", name: "Board", type: "BOARD", reference_id: "board-1", color: "var(--label-blue)" });
     const emit = jest.fn();
     statusGateway.server.to.mockReturnValue({ emit });
 
-    const result = await service.createProject("ws-1", { name: "Q1" });
+    const result = await service.updateModule("ws-1", "mod-1", { color: "var(--label-blue)" } as UpdateModuleDto);
 
-    expect(result).toEqual({ success: true, data: { id: "project-1", position: 2000 } });
+    expect(result).toEqual({ success: true, data: expect.objectContaining({ color: "var(--label-blue)" }) });
+    expect(prisma.workspaceModule.update).toHaveBeenCalledWith({ where: { id: "mod-1" }, data: { color: "var(--label-blue)" } });
+    expect(emit).toHaveBeenCalledWith("module:updated", { moduleId: "mod-1", data: { name: "Board", color: "var(--label-blue)" } });
+  });
+
+  it("creates a project with color", async () => {
+    const { service, prisma, statusGateway } = makeService();
+    prisma.workspaceProject.findFirst.mockResolvedValue({ position: 1000 });
+    prisma.workspaceProject.create.mockResolvedValue({ id: "project-1", position: 2000, name: "Q1", color: "var(--label-red)" });
+    const emit = jest.fn();
+    statusGateway.server.to.mockReturnValue({ emit });
+
+    const result = await service.createProject("ws-1", { name: "Q1", color: "var(--label-red)" });
+
+    expect(result).toEqual({ success: true, data: { id: "project-1", position: 2000, name: "Q1", color: "var(--label-red)" } });
     expect(prisma.workspaceProject.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ position: 2000, name: "Q1" }) }),
+      expect.objectContaining({ data: expect.objectContaining({ position: 2000, name: "Q1", color: "var(--label-red)" }) }),
     );
-    expect(emit).toHaveBeenCalledWith("project:created", { id: "project-1", position: 2000 });
+    expect(emit).toHaveBeenCalledWith("project:created", { id: "project-1", position: 2000, name: "Q1", color: "var(--label-red)" });
+  });
+
+  it("updates a project and propagates color to child modules when apply_to_modules is true", async () => {
+    const { service, prisma, statusGateway } = makeService();
+    prisma.workspaceProject.findFirst.mockResolvedValue({ id: "project-1" });
+    prisma.workspaceProject.update.mockResolvedValue({ id: "project-1", color: "var(--label-green)" });
+    prisma.workspaceModule.findMany.mockResolvedValue([
+      { id: "mod-1", color: "var(--label-green)" },
+      { id: "mod-2", color: "var(--label-green)" },
+    ]);
+    const emit = jest.fn();
+    statusGateway.server.to.mockReturnValue({ emit });
+
+    const result = await service.updateProject("ws-1", "project-1", { color: "var(--label-green)", apply_to_modules: true });
+
+    expect(result).toEqual({ success: true, data: { id: "project-1", color: "var(--label-green)" } });
+    expect(prisma.workspaceModule.updateMany).toHaveBeenCalledWith({
+      where: { project_id: "project-1", workspace_id: "ws-1" },
+      data: { color: "var(--label-green)" },
+    });
+    expect(emit).toHaveBeenCalledWith("project:updated", { projectId: "project-1", data: { color: "var(--label-green)" } });
+    expect(emit).toHaveBeenCalledWith("module:updated", { moduleId: "mod-1", data: { color: "var(--label-green)" } });
+    expect(emit).toHaveBeenCalledWith("module:updated", { moduleId: "mod-2", data: { color: "var(--label-green)" } });
   });
 
   it("returns workspace projects ordered by position", async () => {
