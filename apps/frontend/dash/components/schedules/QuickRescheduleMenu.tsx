@@ -5,7 +5,6 @@ import { format, addDays, addWeeks, startOfToday } from "date-fns";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Calendar04Icon,
-  Calendar03Icon,
   Clock01Icon,
   Cancel01Icon,
 } from "@hugeicons/core-free-icons";
@@ -146,7 +145,7 @@ export function QuickRescheduleMenu({
           >
             <span className="flex items-center gap-2">
               <HugeiconsIcon
-                icon={Calendar03Icon}
+                icon={Calendar04Icon}
                 strokeWidth={2}
                 className="size-3.5 text-info"
               />

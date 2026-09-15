@@ -10,7 +10,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { ScheduleCounts, ScheduleTask } from "@crwsync/types";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
@@ -102,56 +101,53 @@ export function SchedulesCalendarSidebar({
         )}
       </div>
 
-      <Card className="gap-3 py-4 bg-background">
-        <CardHeader className="px-4 py-0">
-          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+      <div className="flex flex-col gap-3 p-3.5 rounded-xl border border-base-200 bg-background shadow-xs">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <HugeiconsIcon
+            icon={Clock01Icon}
+            strokeWidth={2}
+            className="size-3.5 text-muted-foreground"
+          />
+          <span>Quick Triage</span>
+        </div>
+
+        {counts && counts.overdue > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onRescheduleOverdue}
+            disabled={isReschedulingOverdue}
+            data-testid="reschedule-overdue-button"
+            className="w-full justify-start text-xs border-error/30 hover:border-error/50 hover:bg-error/10 text-error gap-2 h-auto py-2 whitespace-normal text-left"
+          >
             <HugeiconsIcon
               icon={Clock01Icon}
               strokeWidth={2}
-              className="size-3.5 text-muted-foreground"
+              className="size-3.5 text-error shrink-0"
             />
-            Quick Triage
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 py-0 flex flex-col gap-2.5">
-          {counts && counts.overdue > 0 ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onRescheduleOverdue}
-              disabled={isReschedulingOverdue}
-              data-testid="reschedule-overdue-button"
-              className="w-full justify-start text-xs border-error/30 hover:border-error/50 hover:bg-error/10 text-error gap-2 h-auto py-2 whitespace-normal text-left"
-            >
-              <HugeiconsIcon
-                icon={Clock01Icon}
-                strokeWidth={2}
-                className="size-3.5 text-error shrink-0"
-              />
-              <span className="truncate">
-                Reschedule {counts.overdue} overdue to Today
-              </span>
-            </Button>
-          ) : null}
+            <span className="truncate">
+              Reschedule {counts.overdue} overdue to Today
+            </span>
+          </Button>
+        )}
 
-          <div className="flex items-center justify-between gap-2 pt-1 border-t border-base-200">
-            <label
-              htmlFor="toggle-completed-tasks"
-              className="text-xs font-medium text-foreground/80 cursor-pointer select-none"
-            >
-              {showCompleted ? "Hide Completed Tasks" : "Show Completed Tasks"}
-            </label>
-            <Checkbox
-              id="toggle-completed-tasks"
-              checked={showCompleted}
-              onCheckedChange={(checked) => onToggleShowCompleted?.(!!checked)}
-              data-testid="toggle-completed-tasks"
-              aria-label="Toggle completed tasks"
-            />
-          </div>
-        </CardContent>
-      </Card>
+        <div className="flex items-center justify-between gap-2 pt-3 border-t border-base-200">
+          <label
+            htmlFor="toggle-completed-tasks"
+            className="text-xs font-medium text-foreground/80 cursor-pointer select-none"
+          >
+            {showCompleted ? "Hide Completed Tasks" : "Show Completed Tasks"}
+          </label>
+          <Checkbox
+            id="toggle-completed-tasks"
+            checked={showCompleted}
+            onCheckedChange={(checked) => onToggleShowCompleted?.(!!checked)}
+            data-testid="toggle-completed-tasks"
+            aria-label="Toggle completed tasks"
+          />
+        </div>
+      </div>
     </aside>
   );
 }

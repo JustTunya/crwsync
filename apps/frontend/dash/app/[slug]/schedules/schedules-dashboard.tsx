@@ -147,7 +147,12 @@ export function SchedulesDashboard() {
         <header className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <LSidebarToggle />
-            <h1 className="text-lg font-semibold text-foreground">Schedules</h1>
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">Schedules</h1>
+              <p className="text-sm text-muted-foreground leading-4 font-mono">
+                Upcoming deadlines
+              </p>
+            </div>
           </div>
           <RSidebarToggle />
         </header>
@@ -168,20 +173,25 @@ export function SchedulesDashboard() {
       <header className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <LSidebarToggle />
-          <h1 className="text-lg font-semibold text-foreground">Schedules</h1>
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">Schedules</h1>
+            <p className="text-sm text-muted-foreground leading-4 font-mono">
+              Upcoming deadlines
+            </p>
+          </div>
         </div>
         <RSidebarToggle />
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-        <SchedulesHeader
-          scope={scope}
-          onScopeChange={setScope}
-          priority={priority}
-          onPriorityChange={setPriority}
-          counts={data?.counts}
-        />
+      <SchedulesHeader
+        scope={scope}
+        onScopeChange={setScope}
+        priority={priority}
+        onPriorityChange={setPriority}
+        counts={data?.counts}
+      />
 
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           <div className="flex-1 min-w-0 w-full">
             <SchedulesAgenda

@@ -11,7 +11,6 @@ import {
 } from "date-fns";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Calendar03Icon,
   Calendar04Icon,
   Clock01Icon,
   ArrowDown01Icon,
@@ -195,7 +194,7 @@ export function SchedulesAgenda({
         >
           <div className="size-12 rounded-full bg-base-200 flex items-center justify-center mb-3">
             <HugeiconsIcon
-              icon={Calendar03Icon}
+              icon={Calendar04Icon}
               strokeWidth={1.5}
               className="size-6 text-muted-foreground"
             />
@@ -313,7 +312,7 @@ export function SchedulesAgenda({
         >
           <div className="flex items-center gap-2 py-1 text-xs font-semibold uppercase tracking-wider text-foreground/80">
             <HugeiconsIcon
-              icon={Calendar03Icon}
+              icon={Calendar04Icon}
               strokeWidth={2}
               className="size-3.5 text-muted-foreground"
             />
@@ -343,7 +342,7 @@ export function SchedulesAgenda({
         >
           <div className="flex items-center gap-2 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <HugeiconsIcon
-              icon={Calendar03Icon}
+              icon={Calendar04Icon}
               strokeWidth={2}
               className="size-3.5 text-muted-foreground"
             />

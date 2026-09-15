@@ -74,7 +74,7 @@ Tasks are sorted and grouped dynamically into:
 Update `apps/frontend/dash/lib/sidebar.utils.ts`:
 - Add `Schedules` to `getModules(slug)`:
   - Label: `"Schedules"`
-  - Icon: `Calendar03Icon` (from `@hugeicons/core-free-icons`)
+  - Icon: `Calendar04Icon` (from `@hugeicons/core-free-icons`)
   - Route: `/${slug}/schedules`
   - Keyboard Shortcut: `Ctrl+3` / `Cmd+3`
 

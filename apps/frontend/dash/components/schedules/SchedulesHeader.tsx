@@ -1,11 +1,13 @@
 "use client";
 
-import { HugeiconsIcon } from "@hugeicons/react";
+import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react";
 import {
-  Calendar03Icon,
   Calendar04Icon,
   Clock01Icon,
   Flag02Icon,
+  UserIcon,
+  Tick02Icon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons";
 import {
   TaskPriorityEnum,
@@ -13,12 +15,10 @@ import {
   type ScheduleCounts,
 } from "@crwsync/types";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 export interface SchedulesHeaderProps {
@@ -29,6 +29,9 @@ export interface SchedulesHeaderProps {
   counts?: ScheduleCounts;
   className?: string;
 }
+
+const CONTROL =
+  "flex items-center h-8 gap-1.5 px-3 rounded-lg border-[1.5px] border-base-300 bg-foreground/10 shadow-md/5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/15 outline-none focus-visible:ring-3 focus-visible:ring-primary/50 focus-visible:border-primary cursor-pointer";
 
 const SCOPES: { value: ScheduleScope; label: string; testId: string }[] = [
   {
@@ -48,6 +51,22 @@ const SCOPES: { value: ScheduleScope; label: string; testId: string }[] = [
   },
 ];
 
+const PRIORITY_LABELS: Record<TaskPriorityEnum, string> = {
+  [TaskPriorityEnum.URGENT]: "Urgent",
+  [TaskPriorityEnum.HIGH]: "High",
+  [TaskPriorityEnum.MEDIUM]: "Medium",
+  [TaskPriorityEnum.LOW]: "Low",
+  [TaskPriorityEnum.NONE]: "None",
+};
+
+const PRIORITY_DOT: Record<TaskPriorityEnum, string> = {
+  [TaskPriorityEnum.NONE]: "bg-muted-foreground",
+  [TaskPriorityEnum.LOW]: "bg-info",
+  [TaskPriorityEnum.MEDIUM]: "bg-warning",
+  [TaskPriorityEnum.HIGH]: "bg-alert",
+  [TaskPriorityEnum.URGENT]: "bg-error",
+};
+
 export function SchedulesHeader({
   scope,
   onScopeChange,
@@ -60,95 +79,84 @@ export function SchedulesHeader({
   const todayCount = counts?.today ?? 0;
   const thisWeekCount = counts?.thisWeek ?? 0;
 
+  const scopeLabel =
+    SCOPES.find((s) => s.value === scope)?.label ?? "Scope";
+  const priorityLabel = priority
+    ? PRIORITY_LABELS[priority]
+    : "Priority";
+
   return (
     <div
       data-testid="schedules-header"
-      className={cn("flex flex-col gap-4 pb-4 border-b border-base-200", className)}
+      className={cn(
+        "flex items-center justify-between gap-2 px-4 sm:px-6 py-2.5 border-b border-base-200 shrink-0 flex-wrap",
+        className
+      )}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center size-9 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">
-            <HugeiconsIcon
-              icon={Calendar03Icon}
-              strokeWidth={2}
-              className="size-5"
-            />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
-              Schedules
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Track deadlines, scheduled deliveries, and cadence across all boards
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          <div
-            role="tablist"
-            aria-label="Task scope"
-            className="flex items-center p-1 rounded-lg bg-base-200/80 border border-base-300/60"
-          >
-            {SCOPES.map((s) => {
-              const active = scope === s.value;
-              return (
-                <button
-                  key={s.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  data-testid={s.testId}
-                  onClick={() => onScopeChange(s.value)}
-                  className={cn(
-                    "px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer select-none",
-                    active
-                      ? "bg-background text-foreground shadow-xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground hover:bg-base-200"
-                  )}
-                >
-                  {s.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="w-[140px] shrink-0">
-            <Select
-              value={priority ?? "ALL"}
-              onValueChange={(val) =>
-                onPriorityChange?.(
-                  val === "ALL" ? undefined : (val as TaskPriorityEnum)
-                )
-              }
+      <div className="flex items-center gap-2 flex-wrap">
+        <FilterPopover
+          label={scopeLabel}
+          icon={UserIcon}
+          active={scope !== "assigned_to_me"}
+        >
+          {SCOPES.map((s) => (
+            <SelectRow
+              key={s.value}
+              testId={s.testId}
+              checked={scope === s.value}
+              onClick={() => onScopeChange(s.value)}
             >
-              <SelectTrigger
-                className="h-8 text-xs cursor-pointer"
-                data-testid="priority-filter"
-              >
-                <div className="flex items-center gap-1.5 truncate">
-                  <HugeiconsIcon
-                    icon={Flag02Icon}
-                    strokeWidth={2}
-                    className="size-3 text-muted-foreground shrink-0"
-                  />
-                  <SelectValue placeholder="Priority" />
-                </div>
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectItem value="ALL">All Priorities</SelectItem>
-                <SelectItem value={TaskPriorityEnum.URGENT}>Urgent</SelectItem>
-                <SelectItem value={TaskPriorityEnum.HIGH}>High</SelectItem>
-                <SelectItem value={TaskPriorityEnum.MEDIUM}>Medium</SelectItem>
-                <SelectItem value={TaskPriorityEnum.LOW}>Low</SelectItem>
-                <SelectItem value={TaskPriorityEnum.NONE}>None</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+              <span className="truncate">{s.label}</span>
+            </SelectRow>
+          ))}
+        </FilterPopover>
+
+        <FilterPopover
+          label={priorityLabel}
+          icon={Flag02Icon}
+          active={!!priority}
+          testId="priority-filter"
+        >
+          <SelectRow
+            checked={!priority}
+            onClick={() => onPriorityChange?.(undefined)}
+          >
+            <span className="truncate">All Priorities</span>
+          </SelectRow>
+          {Object.values(TaskPriorityEnum).map((p) => (
+            <SelectRow
+              key={p}
+              checked={priority === p}
+              onClick={() => onPriorityChange?.(priority === p ? undefined : p)}
+            >
+              <span
+                className={cn("size-2.5 rounded-full shrink-0", PRIORITY_DOT[p])}
+              />
+              <span className="truncate">{PRIORITY_LABELS[p]}</span>
+            </SelectRow>
+          ))}
+        </FilterPopover>
+
+        {(!!priority || scope !== "assigned_to_me") && (
+          <button
+            type="button"
+            onClick={() => {
+              onScopeChange("assigned_to_me");
+              onPriorityChange?.(undefined);
+            }}
+            className={cn(CONTROL, "text-muted-foreground")}
+          >
+            <HugeiconsIcon
+              icon={Cancel01Icon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
+            <span>Clear filters</span>
+          </button>
+        )}
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
         <div
           data-testid="metric-overdue"
           className={cn(
@@ -193,7 +201,7 @@ export function SchedulesHeader({
           )}
         >
           <HugeiconsIcon
-            icon={Calendar03Icon}
+            icon={Calendar04Icon}
             strokeWidth={2}
             className="size-3.5"
           />
@@ -201,5 +209,78 @@ export function SchedulesHeader({
         </div>
       </div>
     </div>
+  );
+}
+
+function FilterPopover({
+  label,
+  icon,
+  active,
+  testId,
+  children,
+}: {
+  label: string;
+  icon: HugeiconsIconProps["icon"];
+  active?: boolean;
+  testId?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          data-testid={testId}
+          className={cn(
+            CONTROL,
+            active &&
+              "border-primary text-primary bg-primary/10 hover:bg-primary/15"
+          )}
+        >
+          <HugeiconsIcon icon={icon} strokeWidth={2} className="size-3.5" />
+          <span>{label}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-48 p-1.5" align="start">
+        <div className="flex flex-col max-h-64 overflow-y-auto">{children}</div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function SelectRow({
+  checked,
+  onClick,
+  testId,
+  children,
+}: {
+  checked: boolean;
+  onClick: () => void;
+  testId?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      onClick={onClick}
+      className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-base-200 cursor-pointer w-full text-left"
+    >
+      <span
+        className={cn(
+          "flex items-center justify-center size-4 rounded-full border-[1.5px] shrink-0 transition-colors",
+          checked ? "border-primary bg-primary" : "border-base-300"
+        )}
+      >
+        {checked && (
+          <HugeiconsIcon
+            icon={Tick02Icon}
+            strokeWidth={3}
+            className="size-2.5 text-primary-foreground"
+          />
+        )}
+      </span>
+      <div className="flex items-center gap-2 min-w-0 truncate">{children}</div>
+    </button>
   );
 }

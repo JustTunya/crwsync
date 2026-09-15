@@ -479,7 +479,7 @@ git commit -m "feat(dash): add schedule service and TanStack query hook"
 - Test: `apps/frontend/dash/lib/__tests__/sidebar.utils.test.ts`
 
 **Interfaces:**
-- Produces: Schedules entry in global modules list with `Calendar03Icon`, route `/${slug}/schedules`, and `Ctrl+3` shortcut.
+- Produces: Schedules entry in global modules list with `Calendar04Icon`, route `/${slug}/schedules`, and `Ctrl+3` shortcut.
 
 - [ ] **Step 1: Write test for `getModules` with Schedules**
 
@@ -503,7 +503,7 @@ describe("getModules", () => {
 - [ ] **Step 2: Update `getModules` in `sidebar.utils.ts`**
 
 ```typescript
-import { Home03Icon, Activity01Icon, Calendar03Icon } from "@hugeicons/core-free-icons";
+import { Home03Icon, Activity01Icon, Calendar04Icon } from "@hugeicons/core-free-icons";
 
 export function getModules(slug: string) {
   return [
@@ -521,7 +521,7 @@ export function getModules(slug: string) {
     },
     {
       name: "Schedules",
-      icon: Calendar03Icon,
+      icon: Calendar04Icon,
       href: `/${slug}/schedules`,
       shortcut: ["ctrl", "3"],
     },
@@ -571,7 +571,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Calendar03Icon, Clock01Icon } from "@hugeicons/core-free-icons";
+import { Calendar04Icon, Clock01Icon } from "@hugeicons/core-free-icons";
 import { addDays, nextMonday, startOfDay } from "date-fns";
 
 interface QuickRescheduleMenuProps {
@@ -598,7 +598,7 @@ export function QuickRescheduleMenu({ currentDueDate, onReschedule }: QuickResch
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground">
-          <HugeiconsIcon icon={Calendar03Icon} className="size-3.5 mr-1" />
+          <HugeiconsIcon icon={Calendar04Icon} className="size-3.5 mr-1" />
           <span>{currentDueDate ? new Date(currentDueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "Set Date"}</span>
         </Button>
       </PopoverTrigger>
@@ -859,7 +859,7 @@ import { ScheduleScope, ScheduleCounts, TaskPriorityEnum } from "@crwsync/types"
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Calendar03Icon, AlertCircleIcon, CheckmarkCircle01Icon } from "@hugeicons/core-free-icons";
+import { Calendar04Icon, AlertCircleIcon, CheckmarkCircle01Icon } from "@hugeicons/core-free-icons";
 
 interface SchedulesHeaderProps {
   scope: ScheduleScope;
@@ -880,7 +880,7 @@ export function SchedulesHeader({
     <div className="flex flex-col gap-4 border-b border-border/40 pb-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <HugeiconsIcon icon={Calendar03Icon} className="size-6 text-primary" />
+          <HugeiconsIcon icon={Calendar04Icon} className="size-6 text-primary" />
           <h1 className="text-xl font-bold tracking-tight">Schedules</h1>
         </div>
 

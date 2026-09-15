@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Home03Icon, Activity01Icon, Calendar03Icon, KanbanIcon, Chat01Icon, Database01Icon } from "@hugeicons/core-free-icons";
+import { Home03Icon, Activity01Icon, Calendar04Icon, KanbanIcon, Chat01Icon, Database01Icon } from "@hugeicons/core-free-icons";
 import {
   getModules,
   getModuleIcon,
@@ -31,7 +31,7 @@ describe("sidebar.utils", () => {
         },
         {
           name: "Schedules",
-          icon: Calendar03Icon,
+          icon: Calendar04Icon,
           href: "/test-workspace/schedules",
           shortcut: ["ctrl", "3"],
         },
