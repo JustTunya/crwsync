@@ -3,7 +3,7 @@
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
-import { Calendar04Icon, Flag02Icon, Comment01Icon, CheckmarkSquare02Icon } from "@hugeicons/core-free-icons";
+import { Calendar04Icon, Flag02Icon, Comment01Icon, CheckmarkSquare02Icon, Tag01Icon } from "@hugeicons/core-free-icons";
 import type { Task } from "@crwsync/types";
 import { UserAvatar } from "@/components/user-avatar";
 import { ReadOnlyDescription } from "@/components/kanban/RichTextEditor";
@@ -57,9 +57,10 @@ export function KanbanTask({ task, onClick, workspaceId }: { task: Task; onClick
           {task.due_date && (
             <Chip icon={Calendar04Icon} label={formatChipDate(task.due_date)} className={DEADLINE_STYLES(task.due_date)} />
           )}
-          {task.labels && task.labels.length > 0 && (
-            <span className="text-xs text-muted-foreground">
-              {task.labels.length} label{task.labels.length > 1 ? "s" : ""}
+          {!!task.labels?.length && (
+            <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+              <HugeiconsIcon icon={Tag01Icon} strokeWidth={2} className="size-3" />
+              {task.labels.length}
             </span>
           )}
           {!!task.checklistItems?.length && (

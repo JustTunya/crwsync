@@ -270,7 +270,7 @@ export default function BoardPage() {
           />
         </div>
       ) : (
-      <div className="flex-1 min-h-0 overflow-x-auto p-6">
+      <div className="flex-1 min-h-0 overflow-x-auto">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -278,7 +278,7 @@ export default function BoardPage() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={allSortableIds}>
-            <div className="flex gap-4 h-full">
+            <div className="flex gap-4 h-full p-6 w-max min-w-full">
               {(!board.columns || board.columns.length === 0) && !addingColumn && (
                 <div className="flex flex-col items-center justify-center w-full h-full text-muted-foreground">
                   <p className="text-sm">No columns yet. Create one to begin.</p>
@@ -305,7 +305,7 @@ export default function BoardPage() {
               ))}
 
               {addingColumn && (
-                <div className="flex flex-col shrink-0 w-72 bg-base-200/50 rounded-xl p-3 border-[1.5px] border-primary ring-3 ring-primary/50">
+                <div className="flex flex-col shrink-0 w-xs sm:w-sm bg-base-200/50 rounded-xl p-3 border-[1.5px] border-primary ring-3 ring-primary/50">
                   <input
                     ref={(input) => {
                       if (input && addingColumn) input.focus();

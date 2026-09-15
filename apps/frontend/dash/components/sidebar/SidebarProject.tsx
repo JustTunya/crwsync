@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Folder02Icon, Settings02Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import { Folder01Icon, Folder03Icon, Settings02Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { WorkspaceProject, WorkspaceRoleEnum } from "@crwsync/types";
 import { useUpdateProject, useDeleteProject } from "@/hooks/use-workspace-projects";
@@ -151,8 +151,21 @@ export function SidebarProject({
           }
         }}
       >
-        <div className="flex items-center justify-center shrink-0">
-          <HugeiconsIcon icon={Folder02Icon} className="size-5 text-foreground" />
+        <div className="relative inline-grid place-items-center size-5 shrink-0">
+          <HugeiconsIcon
+            icon={Folder01Icon}
+            className={cn(
+              "col-start-1 row-start-1 size-5 text-foreground transition-all duration-200 ease-out",
+              collapsed ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-75 -rotate-6 pointer-events-none"
+            )}
+          />
+          <HugeiconsIcon
+            icon={Folder03Icon}
+            className={cn(
+              "col-start-1 row-start-1 size-5 text-foreground transition-all duration-200 ease-out",
+              collapsed ? "opacity-0 scale-75 rotate-6 pointer-events-none" : "opacity-100 scale-100 rotate-0"
+            )}
+          />
         </div>
 
         {extended && (

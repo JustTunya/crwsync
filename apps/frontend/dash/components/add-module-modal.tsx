@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { HugeiconsIcon, HugeiconsIconProps } from "@hugeicons/react";
-import { Cancel01Icon, Chat01Icon, DashboardSquare01Icon, Folder01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Chat01Icon, KanbanIcon, Database01Icon } from "@hugeicons/core-free-icons";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useCreateBoard } from "@/hooks/use-boards";
 import { useCreateChatRoom } from "@/hooks/use-chat";
@@ -28,7 +28,7 @@ const MODULE_OPTIONS: ModuleOption[] = [
     type: ModuleType.BOARD,
     label: "Task Board",
     description: "Track tasks and progress",
-    icon: DashboardSquare01Icon,
+    icon: KanbanIcon,
   },
   {
     type: ModuleType.CHAT,
@@ -40,7 +40,7 @@ const MODULE_OPTIONS: ModuleOption[] = [
     type: ModuleType.FILES,
     label: "Team Drive",
     description: "Store and share files",
-    icon: Folder01Icon,
+    icon: Database01Icon,
   },
 ];
 

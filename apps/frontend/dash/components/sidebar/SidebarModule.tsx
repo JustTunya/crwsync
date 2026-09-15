@@ -136,7 +136,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
       <div className={cn("flex-1 flex flex-row items-center gap-2 min-w-0", !extended && "w-full justify-center")}>
         <HugeiconsIcon
           icon={icon}
-          strokeWidth={1.75}
+          strokeWidth={1.5}
           className="size-4.5 z-10"
         />
 
@@ -263,7 +263,7 @@ export function SidebarGlobalModule({ icon, name, href, shortcut, active, extend
       <div className={cn("flex flex-row items-center gap-2 w-full", !extended && "justify-center")}>
         <HugeiconsIcon
           icon={icon}
-          strokeWidth={1.75}
+          strokeWidth={1.5}
           className="size-4.5 z-10"
         />
         <AnimatePresence>

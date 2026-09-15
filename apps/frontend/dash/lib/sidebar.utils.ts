@@ -1,5 +1,5 @@
 import { HugeiconsIconProps } from "@hugeicons/react";
-import { Home03Icon, Analytics01Icon, DashboardSquare01Icon, Chat01Icon, Folder01Icon } from "@hugeicons/core-free-icons";
+import { Home03Icon, Activity01Icon, KanbanIcon, Chat01Icon, Database01Icon } from "@hugeicons/core-free-icons";
 import { WorkspaceModule } from "@crwsync/types";
 
 export type UserStatus = "online" | "offline" | "busy" | "away";
@@ -27,7 +27,7 @@ export function getModules(slug: string) {
     },
     {
       name: "Statistics",
-      icon: Analytics01Icon,
+      icon: Activity01Icon,
       href: `/${slug}/statistics`,
       shortcut: ["ctrl", "2"],
     }
@@ -37,13 +37,13 @@ export function getModules(slug: string) {
 export function getModuleIcon(type: ModuleTypeEnum | string): HugeiconsIconProps["icon"] {
   switch (type) {
     case ModuleTypeEnum.BOARD:
-      return DashboardSquare01Icon;
+      return KanbanIcon;
     case ModuleTypeEnum.CHAT:
       return Chat01Icon;
     case ModuleTypeEnum.FILES:
-      return Folder01Icon;
+      return Database01Icon;
     default:
-      return DashboardSquare01Icon;
+      return KanbanIcon;
   }
 }
 

@@ -88,7 +88,7 @@ export function KanbanCol({ column, taskIds, workspaceId, boardId, onAddTask, ad
       ref={setNodeRef}
       data-testid="kanban-column"
       data-column-name={column.name}
-      className="flex flex-col gap-3 w-xs h-full p-3 bg-base-100 rounded-xl shrink-0"
+      className="flex flex-col gap-3 w-xs sm:w-sm h-full p-3 bg-base-100 rounded-xl shrink-0"
     >
       <div className="flex flex-row items-center justify-between p-1 rounded-lg shrink-0">
         <div className="flex items-center gap-2">
