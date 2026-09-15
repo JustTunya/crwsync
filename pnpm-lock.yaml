@@ -370,9 +370,6 @@ importers:
       framer-motion:
         specifier: ^12.23.6
         version: 12.38.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      import-in-the-middle:
-        specifier: ^3.5.1
-        version: 3.5.1
       lucide-react:
         specifier: ^0.554.0
         version: 0.554.0(react@19.2.1)
@@ -397,9 +394,6 @@ importers:
       recharts:
         specifier: ^3.8.1
         version: 3.8.1(@types/react@19.2.14)(react-dom@19.2.1(react@19.2.1))(react-is@18.3.1)(react@19.2.1)(redux@5.0.1)
-      require-in-the-middle:
-        specifier: ^8.0.1
-        version: 8.0.1
       socket.io-client:
         specifier: ^4.8.3
         version: 4.8.3
@@ -497,9 +491,6 @@ importers:
       framer-motion:
         specifier: ^12.23.6
         version: 12.38.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      import-in-the-middle:
-        specifier: ^3.5.1
-        version: 3.5.1
       lucide-react:
         specifier: ^0.554.0
         version: 0.554.0(react@19.2.1)
@@ -521,9 +512,6 @@ importers:
       react-dom:
         specifier: ^19.2.1
         version: 19.2.1(react@19.2.1)
-      require-in-the-middle:
-        specifier: ^8.0.1
-        version: 8.0.1
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.5.0
