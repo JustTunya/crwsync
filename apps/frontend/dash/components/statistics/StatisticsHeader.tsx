@@ -43,6 +43,9 @@ export interface StatisticsHeaderProps {
 const CONTROL =
   "flex items-center h-8 gap-1.5 px-3 rounded-lg border-[1.5px] border-base-300 bg-foreground/10 shadow-md/5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/15 outline-none focus-visible:ring-3 focus-visible:ring-primary/50 focus-visible:border-primary cursor-pointer shrink-0";
 
+const SEGMENT_CONTAINER =
+  "inline-flex items-center gap-0.5 rounded-lg border-[1.5px] border-base-300 bg-foreground/10 shadow-md/5 p-0.5";
+
 const TABS: {
   value: StatisticsTab;
   label: string;
@@ -104,7 +107,7 @@ export function StatisticsHeader({
       {/* Left Section: View Tabs + Scope Filter */}
       <div className="flex items-center gap-2.5 flex-wrap">
         {/* Segmented View Switcher */}
-        <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5">
+        <div className={SEGMENT_CONTAINER}>
           {TABS.map((tab) => {
             const isActive = activeTab === tab.value;
             return (
@@ -116,14 +119,17 @@ export function StatisticsHeader({
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer select-none",
                   isActive
-                    ? "bg-background text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
                 )}
               >
                 <HugeiconsIcon
                   icon={tab.icon}
-                  strokeWidth={2}
-                  className={cn("size-3.5", isActive ? "text-primary" : "text-muted-foreground")}
+                  strokeWidth={2.25}
+                  className={cn(
+                    "size-3.5",
+                    isActive ? "text-primary-foreground" : "text-muted-foreground"
+                  )}
                 />
                 <span>{tab.label}</span>
               </button>
@@ -229,7 +235,7 @@ export function StatisticsHeader({
       {/* Right Section: Interval Selector + Refresh + Metric Chips */}
       <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0">
         {/* Interval Selector */}
-        <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5">
+        <div className={SEGMENT_CONTAINER}>
           {INTERVALS.map((opt) => {
             const isSelected = interval === opt.value;
             return (
@@ -241,8 +247,8 @@ export function StatisticsHeader({
                 className={cn(
                   "px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer select-none",
                   isSelected
-                    ? "bg-background text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
                 )}
               >
                 {opt.label}
