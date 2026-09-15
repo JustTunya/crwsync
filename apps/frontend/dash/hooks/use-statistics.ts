@@ -1,19 +1,24 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { getWorkspaceStatistics } from "@/services/statistics.service";
+import type { StatisticsQueryParams } from "@crwsync/types";
 
 export const statisticsKeys = {
   all: ["statistics"] as const,
-  detail: (workspaceId: string, interval: string) =>
-    [...statisticsKeys.all, workspaceId, interval] as const,
+  detail: (workspaceId: string, params?: StatisticsQueryParams) =>
+    [...statisticsKeys.all, workspaceId, params ?? {}] as const,
 };
 
-export function useStatistics(workspaceId?: string, interval: string = "1m") {
+export function useStatistics(
+  workspaceId?: string,
+  params?: StatisticsQueryParams
+) {
   return useQuery({
-    queryKey: statisticsKeys.detail(workspaceId || "unknown", interval),
-    queryFn: () => getWorkspaceStatistics(workspaceId!, interval),
+    queryKey: statisticsKeys.detail(workspaceId || "unknown", params),
+    queryFn: () => getWorkspaceStatistics(workspaceId!, params),
     enabled: !!workspaceId,
     staleTime: 1000 * 60 * 5,
+    placeholderData: keepPreviousData,
   });
 }

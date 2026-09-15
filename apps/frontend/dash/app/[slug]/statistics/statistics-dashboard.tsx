@@ -1,385 +1,215 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useCallback } from "react";
+import { useRouter, usePathname, useSearchParams, useParams } from "next/navigation";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
+import type { StatisticsInterval, StatisticsTab } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useStatistics } from "@/hooks/use-statistics";
-import { cn } from "@/lib/utils";
-import { motion, Variants } from "framer-motion";
 import { LSidebarToggle } from "@/components/l-sidebar";
 import { RSidebarToggle } from "@/components/r-sidebar";
+import { StatisticsHeader } from "@/components/statistics/StatisticsHeader";
+import { StatisticsOverviewTab } from "@/components/statistics/StatisticsOverviewTab";
+import { StatisticsPersonalTab } from "@/components/statistics/StatisticsPersonalTab";
+import { StatisticsProjectsTab } from "@/components/statistics/StatisticsProjectsTab";
 
-/* ------------------------------------------------------------------ */
-/*  Animations                                                         */
-/* ------------------------------------------------------------------ */
+const DEFAULT_INTERVAL: StatisticsInterval = "30d";
+const DEFAULT_TAB: StatisticsTab = "overview";
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-    },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 15, filter: "blur(4px)" },
-  visible: {
+const tabContentVariants: Variants = {
+  initial: { opacity: 0, y: 8 },
+  animate: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: {
-      type: "spring",
-      stiffness: 350,
-      damping: 30,
+      duration: 0.2,
+      ease: "easeInOut",
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -8,
+    transition: {
+      duration: 0.15,
+      ease: "easeInOut",
     },
   },
 };
-
-/* ------------------------------------------------------------------ */
-/*  Constants                                                          */
-/* ------------------------------------------------------------------ */
-
-const INTERVALS = [
-  { value: "1w", label: "1W" },
-  { value: "2w", label: "2W" },
-  { value: "1m", label: "1M" },
-  { value: "3m", label: "3M" },
-  { value: "6m", label: "6M" },
-  { value: "1y", label: "1Y" },
-] as const;
-
-const DEFAULT_INTERVAL = "1m";
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
-function formatCycleTime(seconds: number | null): string {
-  if (seconds === null) return "—";
-  
-  const totalSeconds = Math.round(seconds);
-  if (totalSeconds < 60) return `${totalSeconds}s`;
-  
-  if (totalSeconds < 3600) {
-    const m = Math.floor(totalSeconds / 60);
-    return `${m}m`;
-  }
-  
-  if (totalSeconds < 86400) {
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    return m > 0 ? `${h}h ${m}m` : `${h}h`;
-  }
-  
-  const d = Math.floor(totalSeconds / 86400);
-  const h = Math.floor((totalSeconds % 86400) / 3600);
-  return h > 0 ? `${d}d ${h}h` : `${d}d`;
-}
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-/* ------------------------------------------------------------------ */
-/*  Custom Tooltip                                                     */
-/* ------------------------------------------------------------------ */
-
-function ChartTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: { value?: number }[];
-  label?: string;
-}) {
-  if (!active || !payload?.length) return null;
-
-  return (
-    <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-lg">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-sm font-semibold tabular-nums text-popover-foreground">
-        {payload[0].value} {payload[0].value === 1 ? "task" : "tasks"}
-      </p>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Stat Card                                                          */
-/* ------------------------------------------------------------------ */
-
-function StatCard({
-  label,
-  value,
-  unit,
-  loading,
-  testId,
-}: {
-  label: string;
-  value: string | number;
-  unit?: string;
-  loading?: boolean;
-  testId: string;
-}) {
-  if (loading) {
-    return (
-      <Card data-testid={testId} className="animate-pulse">
-        <CardHeader className="pb-2">
-          <div className="h-4 w-24 rounded bg-muted" />
-        </CardHeader>
-        <CardContent>
-          <div className="h-8 w-16 rounded bg-muted" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card data-testid={testId}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-baseline gap-1.5">
-          <p className="text-3xl font-semibold tabular-nums tracking-tight text-card-foreground">
-            {value}
-          </p>
-          {unit && (
-            <span className="text-sm text-muted-foreground">{unit}</span>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Main Component                                                     */
-/* ------------------------------------------------------------------ */
 
 export function StatisticsDashboard({
   initialInterval,
+  initialTab,
 }: {
   initialInterval?: string;
+  initialTab?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const params = useParams();
 
-  const interval = searchParams.get("interval") ?? initialInterval ?? DEFAULT_INTERVAL;
-
+  const slug = (params?.slug as string) || "";
   const { activeId: workspaceId } = useWorkspace();
 
-  const { data, isLoading } = useStatistics(workspaceId, interval);
+  const tabParam = searchParams.get("tab") as StatisticsTab | null;
+  const activeTab: StatisticsTab =
+    tabParam === "personal" || tabParam === "projects" || tabParam === "overview"
+      ? tabParam
+      : (initialTab as StatisticsTab) || DEFAULT_TAB;
 
+  const intervalParam = searchParams.get("interval") as StatisticsInterval | null;
+  const interval: StatisticsInterval = intervalParam || (initialInterval as StatisticsInterval) || DEFAULT_INTERVAL;
 
-  /* Sync interval to URL */
-  const setInterval = useCallback(
-    (next: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (next === DEFAULT_INTERVAL) {
-        params.delete("interval");
-      } else {
-        params.set("interval", next);
-      }
-      const qs = params.toString();
+  const projectId = searchParams.get("projectId") || undefined;
+  const boardId = searchParams.get("boardId") || undefined;
+
+  const { data, isLoading, isFetching, refetch, error } = useStatistics(
+    workspaceId,
+    {
+      interval,
+      projectId,
+      boardId,
+    }
+  );
+
+  const updateQueryParams = useCallback(
+    (updates: Record<string, string | undefined>) => {
+      const nextParams = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, val]) => {
+        if (!val || (key === "tab" && val === DEFAULT_TAB) || (key === "interval" && val === DEFAULT_INTERVAL)) {
+          nextParams.delete(key);
+        } else {
+          nextParams.set(key, val);
+        }
+      });
+      const qs = nextParams.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
     [router, pathname, searchParams]
   );
 
-  /* Format chart data */
-  const chartData = useMemo(
-    () =>
-      (data?.velocityTimeline ?? []).map((d) => ({
-        ...d,
-        label: formatDate(d.date),
-      })),
-    [data?.velocityTimeline]
+  const handleTabChange = useCallback(
+    (nextTab: StatisticsTab) => {
+      updateQueryParams({ tab: nextTab });
+    },
+    [updateQueryParams]
   );
 
-  const hasChartData = chartData.length > 0;
+  const handleIntervalChange = useCallback(
+    (nextInterval: StatisticsInterval) => {
+      updateQueryParams({ interval: nextInterval });
+    },
+    [updateQueryParams]
+  );
+
+  const handleScopeChange = useCallback(
+    (nextProjId?: string, nextBoardId?: string) => {
+      updateQueryParams({ projectId: nextProjId, boardId: nextBoardId });
+    },
+    [updateQueryParams]
+  );
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <header className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200">
+    <div className="flex flex-col h-full overflow-hidden bg-background">
+      {/* Primary Header */}
+      <header className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <LSidebarToggle />
           <div>
             <h1 className="text-lg font-semibold text-foreground">Statistics</h1>
             <p className="text-sm text-muted-foreground leading-4 font-mono">
-              Personal metrics
+              Workspace analytics
             </p>
           </div>
         </div>
         <RSidebarToggle />
       </header>
 
-      {/* Content */}
-      <motion.div 
-        className="flex-1 overflow-y-auto p-6 space-y-6"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div variants={itemVariants} className="flex justify-end">
-          {/* Interval toggle */}
-          <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5 w-fit">
-            {INTERVALS.map((opt) => (
+      {/* Secondary Filter Header */}
+      <StatisticsHeader
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        interval={interval}
+        onIntervalChange={handleIntervalChange}
+        projectId={projectId}
+        boardId={boardId}
+        onScopeChange={handleScopeChange}
+        isFetching={isFetching}
+        onRefresh={() => refetch()}
+        projects={data?.projects}
+        velocityCount={data?.summary?.velocity?.current}
+        overdueCount={data?.summary?.overdueTasks?.current}
+        throughputRatio={data?.summary?.throughputRatio?.current}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {error && (
+            <div
+              data-testid="statistics-error-banner"
+              className="p-4 rounded-xl border border-error/30 bg-error/10 text-error text-xs font-medium flex items-center justify-between gap-3"
+            >
+              <span>{error.message || "Failed to load workspace statistics"}</span>
               <button
-                key={opt.value}
-                data-testid={`interval-${opt.value}`}
-                onClick={() => setInterval(opt.value)}
-                className={cn(
-                  "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
-                  interval === opt.value
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+                type="button"
+                onClick={() => refetch()}
+                className="underline font-semibold hover:opacity-80 cursor-pointer"
               >
-                {opt.label}
+                Retry
               </button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Metric Cards */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            testId="stat-workload"
-            label="Active Workload"
-            value={data?.personalWorkload ?? 0}
-            unit="tasks"
-            loading={isLoading}
-          />
-          <StatCard
-            testId="stat-velocity"
-            label="Velocity"
-            value={data?.personalVelocity ?? 0}
-            unit="completed"
-            loading={isLoading}
-          />
-          <StatCard
-            testId="stat-cycle-time"
-            label="Avg. Cycle Time"
-            value={formatCycleTime(data?.personalCycleTime ?? null)}
-            loading={isLoading}
-          />
-        </motion.div>
-
-        {/* Chart */}
-        <motion.div data-testid="velocity-chart" variants={itemVariants} className="rounded-xl border border-border bg-card p-6">
-          <p className="text-sm font-medium text-card-foreground mb-4">
-            Workspace Velocity
-          </p>
-
-          {isLoading ? (
-            <div className="h-64 w-full animate-pulse rounded-lg bg-muted" />
-          ) : hasChartData ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart
-                data={chartData}
-                margin={{ top: 4, right: 4, bottom: 0, left: -20 }}
-              >
-                <defs>
-                  <linearGradient
-                    id="velocityGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor="oklch(0.703 0.188 36.91)"
-                      stopOpacity={0.3}
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor="oklch(0.703 0.188 36.91)"
-                      stopOpacity={0.0}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="currentColor"
-                  className="text-border"
-                  opacity={0.4}
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="label"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11 }}
-                  className="text-muted-foreground"
-                  dy={8}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11 }}
-                  className="text-muted-foreground"
-                  allowDecimals={false}
-                  dx={-4}
-                />
-                <RechartsTooltip
-                  content={<ChartTooltip />}
-                  cursor={{
-                    stroke: "oklch(0.703 0.188 36.91)",
-                    strokeWidth: 1,
-                    strokeDasharray: "4 4",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="count"
-                  stroke="oklch(0.703 0.188 36.91)"
-                  strokeWidth={2}
-                  fill="url(#velocityGradient)"
-                  dot={false}
-                  activeDot={{
-                    r: 4,
-                    fill: "oklch(0.703 0.188 36.91)",
-                    stroke: "var(--card)",
-                    strokeWidth: 2,
-                  }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            /* Empty state */
-            <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed border-border">
-              <p className="text-sm text-muted-foreground">
-                No activity in this period
-              </p>
             </div>
           )}
-        </motion.div>
-      </motion.div>
+
+          <AnimatePresence mode="wait">
+            {activeTab === "overview" && (
+              <motion.div
+                key="tab-overview"
+                variants={tabContentVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <StatisticsOverviewTab
+                  data={data}
+                  isLoading={isLoading}
+                />
+              </motion.div>
+            )}
+
+            {activeTab === "personal" && (
+              <motion.div
+                key="tab-personal"
+                variants={tabContentVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <StatisticsPersonalTab
+                  data={data}
+                  isLoading={isLoading}
+                />
+              </motion.div>
+            )}
+
+            {activeTab === "projects" && (
+              <motion.div
+                key="tab-projects"
+                variants={tabContentVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <StatisticsProjectsTab
+                  projects={data?.projects}
+                  slug={slug}
+                  isLoading={isLoading}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }
