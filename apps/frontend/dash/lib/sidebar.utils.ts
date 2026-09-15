@@ -1,5 +1,5 @@
 import { HugeiconsIconProps } from "@hugeicons/react";
-import { Home03Icon, Activity01Icon, KanbanIcon, Chat01Icon, Database01Icon } from "@hugeicons/core-free-icons";
+import { Home03Icon, Activity01Icon, Calendar03Icon, KanbanIcon, Chat01Icon, Database01Icon } from "@hugeicons/core-free-icons";
 import { WorkspaceModule } from "@crwsync/types";
 
 export type UserStatus = "online" | "offline" | "busy" | "away";
@@ -30,7 +30,13 @@ export function getModules(slug: string) {
       icon: Activity01Icon,
       href: `/${slug}/statistics`,
       shortcut: ["ctrl", "2"],
-    }
+    },
+    {
+      name: "Schedules",
+      icon: Calendar03Icon,
+      href: `/${slug}/schedules`,
+      shortcut: ["ctrl", "3"],
+    },
   ];
 }
 

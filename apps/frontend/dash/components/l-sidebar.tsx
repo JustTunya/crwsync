@@ -162,6 +162,9 @@ export function LSidebar() {
 
   useHotkey(["ctrl", "1"], () => router.push(`/${slug}`));
   useHotkey(["ctrl", "2"], () => router.push(`/${slug}/statistics`));
+  useHotkey(["ctrl", "3"], () => {
+    if (slug) router.push(`/${slug}/schedules`);
+  });
 
   useHotkey(["ctrl", "k"], (e) => {
     e.preventDefault();
