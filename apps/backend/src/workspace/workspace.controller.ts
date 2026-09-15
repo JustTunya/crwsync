@@ -195,17 +195,6 @@ export class WorkspaceController {
     return this.workspaceService.transferOwnership(workspaceId, user.userId, newOwnerId);
   }
 
-  @Get(":workspaceId/statistics")
-  @SkipThrottle()
-  @UseGuards(IsMemberGuard, WorkspaceRolesGuard)
-  getStatistics(
-    @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
-    @Query("interval") interval: string,
-    @ActiveUserParam() user: ActiveUser,
-  ) {
-    return this.workspaceService.getStatistics(workspaceId, user.userId, interval);
-  }
-
   @Delete(":workspaceId/tasks/:taskId")
   @UseGuards(IsMemberGuard)
   deleteTask(

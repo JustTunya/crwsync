@@ -23,6 +23,7 @@ import { FilesModule } from "src/files/files.module";
 import { NotificationModule } from "src/notification/notification.module";
 import { UserModule } from "src/user/user.module";
 import { AuthModule } from "src/auth/auth.module";
+import { StatisticsModule } from "src/statistics/statistics.module";
 // CONTROLLERS & SERVICES
 import { AppController } from "src/app.controller";
 import { AppService } from "src/app.service";
@@ -75,6 +76,7 @@ import { ContactModule } from "src/contact/contact.module";
     FilesModule,
     ContactModule,
     NotificationModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
   providers: [
