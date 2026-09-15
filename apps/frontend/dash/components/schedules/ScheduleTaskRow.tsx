@@ -52,7 +52,7 @@ export function ScheduleTaskRow({
       className={cn(
         "group flex items-center gap-3 px-3.5 py-2.5 rounded-lg border border-base-200 hover:border-base-300 hover:bg-base-200/50 transition-all cursor-pointer select-none",
         isCompleted && "opacity-60 bg-base-100/40",
-        isOverdue && "border-l-4 border-l-error bg-error/[0.03]",
+        isOverdue && "border-error/30 bg-error/[0.03] hover:border-error/50",
         !isCompleted && !isOverdue && "bg-background",
         className
       )}
