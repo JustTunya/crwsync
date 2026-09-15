@@ -1,7 +1,5 @@
 # Schedules Global Module (`/${slug}/schedules`) — Design Specification
 
-**Roadmap item**: Milestone 5 / Workspace Productivity — Global Schedules & Deadlines Module.
-
 ## 1. Overview & Purpose
 
 The **Schedules** module is a workspace-level global view (`/${slug}/schedules`) designed as a personal and team cockpit for tracking deadlines, due dates, and delivery cadence across all boards within a workspace.
