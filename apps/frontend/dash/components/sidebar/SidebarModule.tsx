@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { m, AnimatePresence, LazyMotion, domAnimation } from "framer-motion";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -9,6 +9,7 @@ import { WorkspaceRoleEnum } from "@crwsync/types";
 import { useUpdateModule, useDeleteModule, useTogglePinModule } from "@/hooks/use-workspace-modules";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { Shortcut } from "@/components/ui/shortcut";
+import { COLUMN_COLORS } from "@/lib/kanban.utils";
 import { cn } from "@/lib/utils";
 
 interface SidebarModuleProps {
@@ -17,6 +18,7 @@ interface SidebarModuleProps {
   icon: HugeiconsIconProps["icon"];
   name: string;
   href: string;
+  color?: string | null;
   active?: boolean;
   extended?: boolean;
   isOverlay?: boolean;
@@ -24,7 +26,7 @@ interface SidebarModuleProps {
   isPinned?: boolean;
 }
 
-export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active, extended, isOverlay, unreadCount, isPinned }: SidebarModuleProps) {
+export function SidebarModule({ id, activeWorkspaceId, icon, name, href, color, active, extended, isOverlay, unreadCount, isPinned }: SidebarModuleProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: isOverlay });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -38,16 +40,36 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [moduleName, setModuleName] = useState<string>("");
   const [rename, setRename] = useState<boolean>(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showSettings) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setShowSettings(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showSettings]);
 
   const handleMouseEvent = (state: boolean) => {
     setShowSettingsBtn(state);
-    setShowSettings(false);
+    if (!state) setShowSettings(false);
   };
 
   const handleSettingsClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setShowSettings(!showSettings);
+  };
+
+  const handleColorChange = async (newColor: string | null) => {
+    await updateModule.mutateAsync({
+      moduleId: id,
+      data: { color: newColor },
+    });
+    setShowSettings(false);
   };
 
   const handleRenameClick = (e: React.MouseEvent) => {
@@ -119,7 +141,7 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
       onMouseEnter={() => handleMouseEvent(true)}
       onMouseLeave={() => handleMouseEvent(false)}
       onDoubleClick={(e) => {
-        if (!canManage) return;
+        if (!extended || !canManage) return;
         e.preventDefault();
         e.stopPropagation();
         setShowSettings(false);
@@ -136,8 +158,9 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
       <div className={cn("flex-1 flex flex-row items-center gap-2 min-w-0", !extended && "w-full justify-center")}>
         <HugeiconsIcon
           icon={icon}
-          strokeWidth={1.75}
-          className="size-4.5 z-10"
+          strokeWidth={1.5}
+          className={cn("size-4.5 z-10 shrink-0", !color && "text-foreground")}
+          style={color ? { color } : undefined}
         />
 
         {!extended && unreadCount !== undefined && unreadCount > 0 && (
@@ -156,7 +179,8 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
                 animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.15, ease: "easeInOut" }}
-                className="text-foreground text-xs font-medium truncate z-10 max-w-38"
+                className={cn("text-xs font-medium truncate z-10 max-w-38", !color && "text-foreground")}
+                style={color ? { color } : undefined}
               >
                 {name}
               </m.p>
@@ -208,14 +232,70 @@ export function SidebarModule({ id, activeWorkspaceId, icon, name, href, active,
               initial={{ backgroundPosition: "0% 75%" }}
               animate={{ backgroundPosition: active ? "75% 0%" : "0% 75%" }}
               transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              className="absolute inset-0 rounded-lg bg-linear-240 from-primary/80 dark:from-primary/40 via-base-200 to-base-200 bg-size-[200%_100%]"
+              className={cn(
+                "absolute inset-0 rounded-lg bg-size-[200%_100%]",
+                !color && "bg-linear-240 from-primary/80 dark:from-primary/40 via-base-200 to-base-200"
+              )}
+              style={
+                color
+                  ? {
+                      backgroundImage: `linear-gradient(240deg, color-mix(in srgb, ${color} 75%, transparent) 0%, var(--base-200) 50%, var(--base-200) 100%)`,
+                    }
+                  : undefined
+              }
             />
           )}
         </AnimatePresence>
       </LazyMotion>
 
       {extended && showSettings && (
-        <div className="absolute right-0 top-6 flex flex-col gap-1 z-30 p-1 bg-base-100 border border-base-200 rounded-lg shadow-lg">
+        <div
+          ref={settingsRef}
+          className="absolute right-0 top-6 flex flex-col gap-1 z-30 min-w-36 p-1.5 bg-base-100 border border-base-200 rounded-lg shadow-lg"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          {canManage && (
+            <div className="px-1.5 py-1 border-b border-base-200 mb-1">
+              <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Color</p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {COLUMN_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    aria-label={`Set module color to ${c}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleColorChange(`var(--label-${c})`);
+                    }}
+                    style={{ backgroundColor: `var(--label-${c})` }}
+                    className={cn(
+                      "size-4.5 mx-auto rounded-full hover:scale-110 transition-transform cursor-pointer",
+                      color === `var(--label-${c})` && "ring-2 ring-primary ring-offset-1 ring-offset-base-100"
+                    )}
+                  />
+                ))}
+                <button
+                  type="button"
+                  aria-label="Clear module color"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleColorChange(null);
+                  }}
+                  className={cn(
+                    "flex items-center justify-center size-4.5 mx-auto rounded-full border border-base-300 hover:scale-110 transition-transform cursor-pointer text-[10px] text-muted-foreground",
+                    !color && "ring-2 ring-primary ring-offset-1 ring-offset-base-100"
+                  )}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
           <button
             onClick={handleTogglePin}
             className="w-full px-2 py-1 text-xs text-left hover:bg-base-200 rounded-md transition-colors cursor-pointer"
@@ -263,7 +343,7 @@ export function SidebarGlobalModule({ icon, name, href, shortcut, active, extend
       <div className={cn("flex flex-row items-center gap-2 w-full", !extended && "justify-center")}>
         <HugeiconsIcon
           icon={icon}
-          strokeWidth={1.75}
+          strokeWidth={1.5}
           className="size-4.5 z-10"
         />
         <AnimatePresence>

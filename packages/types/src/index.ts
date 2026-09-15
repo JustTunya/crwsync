@@ -10,3 +10,4 @@ export * from "./chat";
 export * from "./files";
 export * from "./storage";
 export * from "./notification";
+export * from "./schedule";

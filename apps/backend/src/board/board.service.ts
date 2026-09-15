@@ -15,7 +15,10 @@ import {
   ReorderColumnsDto,
   ReorderModulesDto,
   UpdateModuleDto,
+  CreateProjectDto,
+  UpdateProjectDto,
 } from "src/board/dto/board.dto";
+import { GetSchedulesQueryDto } from "src/board/dto/schedule.dto";
 
 const POSITION_GAP = 1000;
 const ACTIVITY_ACTOR_SELECT = { id: true, firstname: true, lastname: true, avatar_key: true };
@@ -717,16 +720,20 @@ export class BoardService {
   ) {
     const existing = await this.prisma.workspaceModule.findFirst({
       where: { id: moduleId, workspace_id: workspaceId },
-      select: { id: true },
+      select: { id: true, name: true, type: true, reference_id: true, color: true },
     });
     if (!existing) throw new NotFoundException("Module not found");
 
+    const updateData: { name?: string; color?: string | null } = {};
+    if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.color !== undefined) updateData.color = dto.color;
+
     const wsModule = await this.prisma.workspaceModule.update({
       where: { id: moduleId },
-      data: { name: dto.name },
+      data: updateData,
     });
 
-    if (wsModule.type === ModuleTypeEnum.BOARD && wsModule.reference_id) {
+    if (dto.name && wsModule.type === ModuleTypeEnum.BOARD && wsModule.reference_id) {
       await this.prisma.board.update({
         where: { id: wsModule.reference_id },
         data: { name: dto.name },
@@ -737,14 +744,14 @@ export class BoardService {
         .emit("board:updated", { boardId: wsModule.reference_id, data: { name: dto.name } });
     }
 
-    if (wsModule.type === ModuleTypeEnum.CHAT && wsModule.reference_id) {
+    if (dto.name && wsModule.type === ModuleTypeEnum.CHAT && wsModule.reference_id) {
       await this.prisma.chatRoom.update({
         where: { id: wsModule.reference_id },
         data: { name: dto.name },
       });
     }
 
-    if (wsModule.type === ModuleTypeEnum.FILES && wsModule.reference_id) {
+    if (dto.name && wsModule.type === ModuleTypeEnum.FILES && wsModule.reference_id) {
       await this.prisma.fileRoom.update({
         where: { id: wsModule.reference_id },
         data: { name: dto.name },
@@ -753,7 +760,7 @@ export class BoardService {
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
-      .emit("module:updated", { moduleId, data: dto });
+      .emit("module:updated", { moduleId, data: { name: wsModule.name, color: wsModule.color } });
 
     return { success: true, data: wsModule };
   }
@@ -841,7 +848,7 @@ export class BoardService {
     return { success: true };
   }
 
-  async createProject(workspaceId: string, dto: { name: string }) {
+  async createProject(workspaceId: string, dto: CreateProjectDto) {
     const lastProject = await this.prisma.workspaceProject.findFirst({
       where: { workspace_id: workspaceId },
       orderBy: { position: "desc" },
@@ -855,6 +862,7 @@ export class BoardService {
         workspace_id: workspaceId,
         name: dto.name,
         position: nextPosition,
+        color: dto.color ?? null,
       },
     });
 
@@ -877,22 +885,46 @@ export class BoardService {
   async updateProject(
     workspaceId: string,
     projectId: string,
-    dto: { name?: string; position?: number },
+    dto: UpdateProjectDto,
   ) {
     const existing = await this.prisma.workspaceProject.findFirst({
       where: { id: projectId, workspace_id: workspaceId },
-      select: { id: true },
+      select: { id: true, color: true },
     });
     if (!existing) throw new NotFoundException("Project not found");
 
+    const updateData: { name?: string; position?: number; color?: string | null } = {};
+    if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.position !== undefined) updateData.position = dto.position;
+    if (dto.color !== undefined) updateData.color = dto.color;
+
     const project = await this.prisma.workspaceProject.update({
       where: { id: projectId },
-      data: dto,
+      data: updateData,
     });
+
+    if (dto.apply_to_modules) {
+      const targetColor = dto.color !== undefined ? dto.color : existing.color;
+      await this.prisma.workspaceModule.updateMany({
+        where: { project_id: projectId, workspace_id: workspaceId },
+        data: { color: targetColor },
+      });
+
+      const updatedModules = await this.prisma.workspaceModule.findMany({
+        where: { project_id: projectId, workspace_id: workspaceId },
+        select: { id: true, color: true },
+      });
+
+      for (const mod of updatedModules) {
+        this.statusGateway.server
+          .to(`workspace_${workspaceId}`)
+          .emit("module:updated", { moduleId: mod.id, data: { color: mod.color } });
+      }
+    }
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
-      .emit("project:updated", { projectId, data: dto });
+      .emit("project:updated", { projectId, data: updateData });
 
     return { success: true, data: project };
   }
@@ -920,5 +952,152 @@ export class BoardService {
       .emit("project:deleted", { projectId });
 
     return { success: true };
+  }
+
+  async getSchedules(workspaceId: string, userId: string, query: GetSchedulesQueryDto = {}) {
+    const where: Prisma.TaskWhereInput = {
+      workspace_id: workspaceId,
+      is_deleted: false,
+      is_archived: false,
+    };
+
+    if (query.scope === "created_by_me") {
+      where.created_by = userId;
+    } else if (query.scope === "all") {
+    } else {
+      where.assignee_id = userId;
+    }
+
+    if (query.boardId) {
+      where.column = {
+        ...(where.column as Prisma.BoardColumnWhereInput || {}),
+        board_id: query.boardId,
+      };
+    }
+
+    if (query.priority) {
+      where.priority = query.priority;
+    }
+
+    if (!query.includeCompleted) {
+      where.column = {
+        ...(where.column as Prisma.BoardColumnWhereInput || {}),
+        type: { not: "COMPLETE" },
+      };
+    }
+
+    if (query.from || query.to) {
+      const dueDateFilter: Prisma.DateTimeNullableFilter = {};
+      if (query.from) dueDateFilter.gte = new Date(query.from);
+      if (query.to) dueDateFilter.lte = new Date(query.to);
+      where.due_date = dueDateFilter;
+    }
+
+    const tasks = await this.prisma.task.findMany({
+      where,
+      select: {
+        id: true,
+        shortId: true,
+        column_id: true,
+        title: true,
+        description: true,
+        priority: true,
+        labels: true,
+        tags: true,
+        assignee_id: true,
+        due_date: true,
+        position: true,
+        is_deleted: true,
+        is_archived: true,
+        in_progress_at: true,
+        completed_at: true,
+        created_by: true,
+        created_at: true,
+        updated_at: true,
+        column: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            color: true,
+            board_id: true,
+            board: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        assignee: {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstname: true,
+            lastname: true,
+            avatar_key: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+            checklistItems: true,
+          },
+        },
+      },
+      orderBy: [
+        { due_date: "asc" },
+        { priority: "desc" },
+      ],
+    });
+
+    const formattedTasks = tasks.map((t) => ({ ...t, board: t.column.board }));
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 7);
+
+    let overdue = 0;
+    let today = 0;
+    let thisWeek = 0;
+    let completedThisWeek = 0;
+
+    for (const task of formattedTasks) {
+      if (task.column?.type === "COMPLETE" || task.completed_at) {
+        if (task.completed_at && new Date(task.completed_at) >= startOfWeek && new Date(task.completed_at) < endOfWeek) {
+          completedThisWeek++;
+        }
+        continue;
+      }
+
+      if (task.due_date) {
+        const d = new Date(task.due_date);
+        if (d < startOfToday) {
+          overdue++;
+        } else if (d.toDateString() === startOfToday.toDateString()) {
+          today++;
+        } else if (d < endOfWeek) {
+          thisWeek++;
+        }
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        tasks: formattedTasks,
+        counts: {
+          overdue,
+          today,
+          thisWeek,
+          completedThisWeek,
+          total: formattedTasks.length,
+        },
+      },
+    };
   }
 }

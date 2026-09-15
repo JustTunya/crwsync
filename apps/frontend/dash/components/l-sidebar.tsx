@@ -162,6 +162,9 @@ export function LSidebar() {
 
   useHotkey(["ctrl", "1"], () => router.push(`/${slug}`));
   useHotkey(["ctrl", "2"], () => router.push(`/${slug}/statistics`));
+  useHotkey(["ctrl", "3"], () => {
+    if (slug) router.push(`/${slug}/schedules`);
+  });
 
   useHotkey(["ctrl", "k"], (e) => {
     e.preventDefault();
@@ -334,6 +337,7 @@ export function LSidebar() {
                             icon={getModuleIcon(mod.type)}
                             name={mod.name}
                             href={getModuleHref(slug, mod)}
+                            color={mod.color}
                             active={isModuleActive(pathname, slug, mod)}
                             extended={open}
                             unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
@@ -359,16 +363,18 @@ export function LSidebar() {
                   onAdd={handleCreateProject} 
                 />
                 {projects?.map((project: WorkspaceProject) => {
+                  const projectAllModules = localModules?.filter((m) => m.project_id === project.id) || [];
                   const projectModules = filteredLocalModules?.filter(m => m.project_id === project.id) || [];
                   if (searchQuery && projectModules.length === 0) return null;
                   const isActiveContext = projectModules.some(m => isModuleActive(pathname, slug, m));
-                  
+
                   return (
-                    <SidebarProject 
-                      key={project.id} 
-                      project={project} 
+                    <SidebarProject
+                      key={project.id}
+                      project={project}
                       activeWorkspaceId={activeWorkspaceId || ""}
-                      extended={open} 
+                      extended={open}
+                      childModules={projectAllModules}
                       isActiveContext={isActiveContext}
                       isNewlyCreated={editingProjectId === project.id}
                       onEditComplete={() => {
@@ -392,6 +398,7 @@ export function LSidebar() {
                               icon={getModuleIcon(mod.type)}
                               name={mod.name}
                               href={getModuleHref(slug, mod)}
+                              color={mod.color}
                               active={isModuleActive(pathname, slug, mod)}
                               extended={open}
                               unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}
@@ -419,6 +426,7 @@ export function LSidebar() {
                         icon={getModuleIcon(mod.type)}
                         name={mod.name}
                         href={getModuleHref(slug, mod)}
+                        color={mod.color}
                         active={isModuleActive(pathname, slug, mod)}
                         extended={open}
                         unreadCount={isModuleActive(pathname, slug, mod) ? undefined : mod.unreadCount}

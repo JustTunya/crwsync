@@ -1,7 +1,7 @@
 "use client";
 
 import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react";
-import { UserIcon, Flag02Icon, Tag01Icon, Calendar04Icon, Cancel01Icon, KanbanIcon, ListViewIcon, Add01Icon, Tick02Icon, FilterIcon } from "@hugeicons/core-free-icons";
+import { UserIcon, Flag02Icon, Tag01Icon, Calendar04Icon, Cancel01Icon, LayoutThreeColumnIcon, LayoutThreeRowIcon, Add01Icon, Tick02Icon, FilterIcon } from "@hugeicons/core-free-icons";
 import { TaskPriorityEnum } from "@crwsync/types";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -116,10 +116,10 @@ export function BoardToolbar({
       className="rounded-lg border-[1.5px] border-base-300 bg-foreground/10 shadow-md/5"
     >
       <ToggleGroupItem value="kanban" aria-label="Kanban view" className="h-7 rounded-md data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-        <HugeiconsIcon icon={KanbanIcon} strokeWidth={2} className="size-4" />
+        <HugeiconsIcon icon={LayoutThreeColumnIcon} strokeWidth={2} className="size-4" />
       </ToggleGroupItem>
       <ToggleGroupItem value="list" aria-label="List view" className="h-7 rounded-md data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-        <HugeiconsIcon icon={ListViewIcon} strokeWidth={2} className="size-4" />
+        <HugeiconsIcon icon={LayoutThreeRowIcon} strokeWidth={2} className="size-4" />
       </ToggleGroupItem>
     </ToggleGroup>
   );

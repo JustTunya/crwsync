@@ -162,6 +162,7 @@ export interface WorkspaceProject {
   workspace_id: string;
   name: string;
   position: number;
+  color: string | null;
   created_at: string;
   updated_at: string;
   modules?: WorkspaceModule[];
@@ -175,6 +176,7 @@ export interface WorkspaceModule {
   reference_id: string;
   name: string;
   position: number;
+  color: string | null;
   created_at: string;
   unreadCount?: number;
   isPinned?: boolean;
@@ -238,11 +240,19 @@ export interface ReorderColumnsPayload {
 
 export interface CreateProjectPayload {
   name: string;
+  color?: string | null;
 }
 
 export interface UpdateProjectPayload {
   name?: string;
   position?: number;
+  color?: string | null;
+  apply_to_modules?: boolean;
+}
+
+export interface UpdateModulePayload {
+  name?: string;
+  color?: string | null;
 }
 
 export interface ReorderModulesPayload {

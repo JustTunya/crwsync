@@ -19,6 +19,25 @@ export interface UserType {
   updated_at: string;
 }
 
+export interface UserPublic {
+  id: string;
+  email: string;
+  username: string;
+  firstname: string;
+  lastname: string;
+  birthdate: string;
+  avatar_key: string | null;
+  role: RoleEnum;
+  role_version: number;
+  last_password_change?: string;
+  last_role_change?: string;
+  email_verified_at?: string;
+  last_login?: string;
+  created_at: string;
+  updated_at: string;
+  status_preference?: string;
+}
+
 export interface SessionUserType {
   id: string;
   email: string;

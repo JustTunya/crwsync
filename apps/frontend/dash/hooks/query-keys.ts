@@ -25,3 +25,9 @@ export const searchKeys = {
   all: ["search"] as const,
   query: (workspaceId: string, q: string) => [...searchKeys.all, workspaceId, q] as const,
 };
+
+export const scheduleKeys = {
+  all: ["schedules"] as const,
+  list: (workspaceId: string, filters?: Record<string, unknown>) =>
+    [...scheduleKeys.all, "list", workspaceId, filters || {}] as const,
+};

@@ -1,5 +1,6 @@
 import { BoardService } from "./board.service";
 import { NotFoundException, ForbiddenException, ConflictException } from "@nestjs/common";
+import { TaskPriorityEnum } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CacheService } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
@@ -16,6 +17,11 @@ import {
   UpdateModuleDto,
   ReorderModulesDto,
 } from "src/board/dto/board.dto";
+import { GetSchedulesQueryDto } from "src/board/dto/schedule.dto";
+
+type BoardServiceWithSchedules = BoardService & {
+  getSchedules: (workspaceId: string, userId: string, query?: GetSchedulesQueryDto) => Promise<unknown>;
+};
 
 function makeService() {
   const prisma = {
@@ -65,7 +71,7 @@ function makeService() {
       cache as unknown as CacheService,
       statusGateway as unknown as StatusGateway,
       notificationService as unknown as NotificationService,
-    ),
+    ) as BoardServiceWithSchedules,
     prisma,
     cache,
     statusGateway,
@@ -1024,20 +1030,57 @@ describe("BoardService deleteModule", () => {
 });
 
 describe("BoardService project management", () => {
-  it("creates a project positioned after the last one", async () => {
+  it("updates module color and emits module:updated with color", async () => {
     const { service, prisma, statusGateway } = makeService();
-    prisma.workspaceProject.findFirst.mockResolvedValue({ position: 1000 });
-    prisma.workspaceProject.create.mockResolvedValue({ id: "project-1", position: 2000 });
+    prisma.workspaceModule.findFirst.mockResolvedValue({ id: "mod-1", name: "Board", type: "BOARD", reference_id: "board-1", color: null });
+    prisma.workspaceModule.update.mockResolvedValue({ id: "mod-1", name: "Board", type: "BOARD", reference_id: "board-1", color: "var(--label-blue)" });
     const emit = jest.fn();
     statusGateway.server.to.mockReturnValue({ emit });
 
-    const result = await service.createProject("ws-1", { name: "Q1" });
+    const result = await service.updateModule("ws-1", "mod-1", { color: "var(--label-blue)" } as UpdateModuleDto);
 
-    expect(result).toEqual({ success: true, data: { id: "project-1", position: 2000 } });
+    expect(result).toEqual({ success: true, data: expect.objectContaining({ color: "var(--label-blue)" }) });
+    expect(prisma.workspaceModule.update).toHaveBeenCalledWith({ where: { id: "mod-1" }, data: { color: "var(--label-blue)" } });
+    expect(emit).toHaveBeenCalledWith("module:updated", { moduleId: "mod-1", data: { name: "Board", color: "var(--label-blue)" } });
+  });
+
+  it("creates a project with color", async () => {
+    const { service, prisma, statusGateway } = makeService();
+    prisma.workspaceProject.findFirst.mockResolvedValue({ position: 1000 });
+    prisma.workspaceProject.create.mockResolvedValue({ id: "project-1", position: 2000, name: "Q1", color: "var(--label-red)" });
+    const emit = jest.fn();
+    statusGateway.server.to.mockReturnValue({ emit });
+
+    const result = await service.createProject("ws-1", { name: "Q1", color: "var(--label-red)" });
+
+    expect(result).toEqual({ success: true, data: { id: "project-1", position: 2000, name: "Q1", color: "var(--label-red)" } });
     expect(prisma.workspaceProject.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ position: 2000, name: "Q1" }) }),
+      expect.objectContaining({ data: expect.objectContaining({ position: 2000, name: "Q1", color: "var(--label-red)" }) }),
     );
-    expect(emit).toHaveBeenCalledWith("project:created", { id: "project-1", position: 2000 });
+    expect(emit).toHaveBeenCalledWith("project:created", { id: "project-1", position: 2000, name: "Q1", color: "var(--label-red)" });
+  });
+
+  it("updates a project and propagates color to child modules when apply_to_modules is true", async () => {
+    const { service, prisma, statusGateway } = makeService();
+    prisma.workspaceProject.findFirst.mockResolvedValue({ id: "project-1" });
+    prisma.workspaceProject.update.mockResolvedValue({ id: "project-1", color: "var(--label-green)" });
+    prisma.workspaceModule.findMany.mockResolvedValue([
+      { id: "mod-1", color: "var(--label-green)" },
+      { id: "mod-2", color: "var(--label-green)" },
+    ]);
+    const emit = jest.fn();
+    statusGateway.server.to.mockReturnValue({ emit });
+
+    const result = await service.updateProject("ws-1", "project-1", { color: "var(--label-green)", apply_to_modules: true });
+
+    expect(result).toEqual({ success: true, data: { id: "project-1", color: "var(--label-green)" } });
+    expect(prisma.workspaceModule.updateMany).toHaveBeenCalledWith({
+      where: { project_id: "project-1", workspace_id: "ws-1" },
+      data: { color: "var(--label-green)" },
+    });
+    expect(emit).toHaveBeenCalledWith("project:updated", { projectId: "project-1", data: { color: "var(--label-green)" } });
+    expect(emit).toHaveBeenCalledWith("module:updated", { moduleId: "mod-1", data: { color: "var(--label-green)" } });
+    expect(emit).toHaveBeenCalledWith("module:updated", { moduleId: "mod-2", data: { color: "var(--label-green)" } });
   });
 
   it("returns workspace projects ordered by position", async () => {
@@ -1089,6 +1132,174 @@ describe("BoardService project management", () => {
     expect(prisma.workspaceModule.delete).toHaveBeenCalledWith({ where: { id: "mod-1" } });
     expect(prisma.workspaceProject.delete).toHaveBeenCalledWith({ where: { id: "project-1" } });
     expect(emit).toHaveBeenCalledWith("project:deleted", { projectId: "project-1" });
+  });
+});
+
+describe("BoardService getSchedules", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("returns schedules with tasks and computed counts", async () => {
+    const { service, prisma } = makeService();
+    const mockTasks = [
+      {
+        id: "task-1",
+        title: "Overdue task",
+        due_date: new Date("2026-09-10T10:00:00.000Z"),
+        column: { id: "col-1", name: "In Progress", type: "ONGOING", color: null, board_id: "board-1", board: { id: "board-1", name: "Main Board" } },
+        assignee: { id: "user-1", email: "user1@test.com", username: "user1", firstname: "User", lastname: "One", avatar_key: null },
+        _count: { comments: 2, checklistItems: 3 },
+      },
+      {
+        id: "task-2",
+        title: "Today task",
+        due_date: new Date("2026-09-15T15:00:00.000Z"),
+        column: { id: "col-1", name: "In Progress", type: "ONGOING", color: null, board_id: "board-1", board: { id: "board-1", name: "Main Board" } },
+        assignee: { id: "user-1", email: "user1@test.com", username: "user1", firstname: "User", lastname: "One", avatar_key: null },
+        _count: { comments: 0, checklistItems: 1 },
+      },
+      {
+        id: "task-3",
+        title: "This week task",
+        due_date: new Date("2026-09-18T10:00:00.000Z"),
+        column: { id: "col-2", name: "Todo", type: "UPCOMING", color: null, board_id: "board-1", board: { id: "board-1", name: "Main Board" } },
+        assignee: { id: "user-1", email: "user1@test.com", username: "user1", firstname: "User", lastname: "One", avatar_key: null },
+        _count: { comments: 1, checklistItems: 0 },
+      },
+      {
+        id: "task-4",
+        title: "Completed this week task",
+        due_date: new Date("2026-09-14T10:00:00.000Z"),
+        completed_at: new Date("2026-09-14T12:00:00.000Z"),
+        column: { id: "col-3", name: "Done", type: "COMPLETE", color: null, board_id: "board-1", board: { id: "board-1", name: "Main Board" } },
+        assignee: { id: "user-1", email: "user1@test.com", username: "user1", firstname: "User", lastname: "One", avatar_key: null },
+        _count: { comments: 0, checklistItems: 0 },
+      },
+    ];
+
+    prisma.task.findMany.mockResolvedValue(mockTasks);
+
+    const query: GetSchedulesQueryDto = {
+      scope: "assigned_to_me",
+      includeCompleted: true,
+    };
+
+    const result = await service.getSchedules("ws-1", "user-1", query);
+
+    expect(result).toEqual({
+      success: true,
+      data: {
+        tasks: mockTasks.map((t) => ({ ...t, board: t.column.board })),
+        counts: {
+          overdue: 1,
+          today: 1,
+          thisWeek: 1,
+          completedThisWeek: 1,
+          total: 4,
+        },
+      },
+    });
+  });
+
+  it("scopes tasks to assigned user by default", async () => {
+    const { service, prisma } = makeService();
+    prisma.task.findMany.mockResolvedValue([]);
+
+    const query: GetSchedulesQueryDto = {};
+
+    await service.getSchedules("ws-1", "user-1", query);
+
+    expect(prisma.task.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          workspace_id: "ws-1",
+          assignee_id: "user-1",
+          is_deleted: false,
+          is_archived: false,
+        }),
+      }),
+    );
+  });
+
+  it("scopes tasks to created_by when scope is created_by_me", async () => {
+    const { service, prisma } = makeService();
+    prisma.task.findMany.mockResolvedValue([]);
+
+    const query: GetSchedulesQueryDto = { scope: "created_by_me" };
+
+    await service.getSchedules("ws-1", "user-1", query);
+
+    expect(prisma.task.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          workspace_id: "ws-1",
+          created_by: "user-1",
+          is_deleted: false,
+          is_archived: false,
+        }),
+      }),
+    );
+  });
+
+  it("does not scope by user when scope is all", async () => {
+    const { service, prisma } = makeService();
+    prisma.task.findMany.mockResolvedValue([]);
+
+    const query: GetSchedulesQueryDto = { scope: "all" };
+
+    await service.getSchedules("ws-1", "user-1", query);
+
+    expect(prisma.task.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          workspace_id: "ws-1",
+          is_deleted: false,
+          is_archived: false,
+        }),
+      }),
+    );
+    const callArgs = prisma.task.findMany.mock.calls[0][0];
+    expect(callArgs.where.assignee_id).toBeUndefined();
+    expect(callArgs.where.created_by).toBeUndefined();
+  });
+
+  it("filters by boardId, priority, includeCompleted, and date range", async () => {
+    const { service, prisma } = makeService();
+    prisma.task.findMany.mockResolvedValue([]);
+
+    const query: GetSchedulesQueryDto = {
+      scope: "all",
+      boardId: "board-1",
+      priority: TaskPriorityEnum.URGENT,
+      includeCompleted: false,
+      from: "2026-09-01T00:00:00.000Z",
+      to: "2026-09-30T23:59:59.999Z",
+    };
+
+    await service.getSchedules("ws-1", "user-1", query);
+
+    expect(prisma.task.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          workspace_id: "ws-1",
+          priority: "URGENT",
+          column: expect.objectContaining({
+            board_id: "board-1",
+            type: { not: "COMPLETE" },
+          }),
+          due_date: {
+            gte: new Date("2026-09-01T00:00:00.000Z"),
+            lte: new Date("2026-09-30T23:59:59.999Z"),
+          },
+        }),
+      }),
+    );
   });
 });
 
