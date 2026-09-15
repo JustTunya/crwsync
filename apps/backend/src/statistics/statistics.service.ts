@@ -123,28 +123,26 @@ export class StatisticsService {
     let filteredBoardIds: string[] | null = null;
     if (boardId) {
       filteredBoardIds = [boardId];
+    } else if (projectId === "unassigned") {
+      const standaloneModules = await this.prisma.workspaceModule.findMany({
+        where: {
+          workspace_id: workspaceId,
+          project_id: null,
+          type: ModuleTypeEnum.BOARD,
+        },
+        select: { reference_id: true },
+      });
+      filteredBoardIds = standaloneModules.map((m) => m.reference_id);
     } else if (projectId) {
-      if (projectId === "unassigned") {
-        const standaloneBoardModules = await this.prisma.workspaceModule.findMany({
-          where: {
-            workspace_id: workspaceId,
-            project_id: null,
-            type: ModuleTypeEnum.BOARD,
-          },
-          select: { reference_id: true },
-        });
-        filteredBoardIds = standaloneBoardModules.map((m) => m.reference_id);
-      } else {
-        const projectModules = await this.prisma.workspaceModule.findMany({
-          where: {
-            workspace_id: workspaceId,
-            project_id: projectId,
-            type: ModuleTypeEnum.BOARD,
-          },
-          select: { reference_id: true },
-        });
-        filteredBoardIds = projectModules.map((m) => m.reference_id);
-      }
+      const projectModules = await this.prisma.workspaceModule.findMany({
+        where: {
+          workspace_id: workspaceId,
+          project_id: projectId,
+          type: ModuleTypeEnum.BOARD,
+        },
+        select: { reference_id: true },
+      });
+      filteredBoardIds = projectModules.map((m) => m.reference_id);
     }
 
     const [allTasks, members, projects, boardModules, boards] = await Promise.all([
