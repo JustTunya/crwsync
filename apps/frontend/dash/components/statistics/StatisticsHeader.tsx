@@ -5,9 +5,7 @@ import {
   Activity01Icon,
   UserIcon,
   Folder01Icon,
-  Calendar04Icon,
   Clock01Icon,
-  Tag01Icon,
   Tick02Icon,
   Cancel01Icon,
   ArrowReloadHorizontalIcon,
@@ -43,7 +41,7 @@ export interface StatisticsHeaderProps {
 }
 
 const CONTROL =
-  "flex items-center h-8 gap-1.5 px-3 rounded-lg border-[1.5px] border-base-300 bg-foreground/10 shadow-md/5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/15 outline-none focus-visible:ring-3 focus-visible:ring-primary/50 focus-visible:border-primary cursor-pointer";
+  "flex items-center h-8 gap-1.5 px-3 rounded-lg border-[1.5px] border-base-300 bg-foreground/10 shadow-md/5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/15 outline-none focus-visible:ring-3 focus-visible:ring-primary/50 focus-visible:border-primary cursor-pointer shrink-0";
 
 const TABS: {
   value: StatisticsTab;
@@ -58,15 +56,14 @@ const TABS: {
 const INTERVALS: {
   value: StatisticsInterval;
   label: string;
-  fullLabel: string;
 }[] = [
-  { value: "7d", label: "7 Days", fullLabel: "Last 7 days" },
-  { value: "14d", label: "14 Days", fullLabel: "Last 14 days" },
-  { value: "30d", label: "30 Days", fullLabel: "Last 30 days" },
-  { value: "90d", label: "90 Days", fullLabel: "Last 90 days" },
-  { value: "6m", label: "6 Months", fullLabel: "Last 6 months" },
-  { value: "1y", label: "1 Year", fullLabel: "Last 1 year" },
-  { value: "all", label: "All Time", fullLabel: "All time" },
+  { value: "7d", label: "7D" },
+  { value: "14d", label: "14D" },
+  { value: "30d", label: "30D" },
+  { value: "90d", label: "90D" },
+  { value: "6m", label: "6M" },
+  { value: "1y", label: "1Y" },
+  { value: "all", label: "All" },
 ];
 
 export function StatisticsHeader({
@@ -83,7 +80,6 @@ export function StatisticsHeader({
   projects = [],
   velocityCount,
   overdueCount = 0,
-  throughputRatio,
   className,
 }: StatisticsHeaderProps) {
   const selectedProject = projects.find((p) => p.projectId === projectId);
@@ -96,59 +92,46 @@ export function StatisticsHeader({
       : "All Projects";
 
   const isFiltered = Boolean(projectId || boardId);
-  const tabLabel = TABS.find((t) => t.value === activeTab)?.label ?? "Overview";
-  const TabIcon = TABS.find((t) => t.value === activeTab)?.icon ?? Activity01Icon;
-  const intervalLabel =
-    INTERVALS.find((i) => i.value === interval)?.label ?? "30 Days";
 
   return (
     <div
       data-testid="statistics-header"
       className={cn(
-        "flex items-center justify-between gap-2 px-4 sm:px-6 py-2.5 border-b border-base-200 shrink-0 flex-wrap",
+        "flex items-center justify-between gap-3 px-4 sm:px-6 py-2.5 border-b border-base-200 shrink-0 flex-wrap",
         className
       )}
     >
-      {/* Left side: Filter buttons */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* Tab / Perspective Filter */}
-        <FilterPopover
-          label={tabLabel}
-          icon={TabIcon}
-          active={activeTab !== "overview"}
-          testId="tab-filter"
-        >
-          {TABS.map((t) => (
-            <SelectRow
-              key={t.value}
-              testId={`tab-${t.value}`}
-              checked={activeTab === t.value}
-              onClick={() => onTabChange(t.value)}
-            >
-              <HugeiconsIcon icon={t.icon} strokeWidth={2} className="size-3.5" />
-              <span className="truncate">{t.label}</span>
-            </SelectRow>
-          ))}
-        </FilterPopover>
+      {/* Left Section: View Tabs + Scope Filter */}
+      <div className="flex items-center gap-2.5 flex-wrap">
+        {/* Segmented View Switcher */}
+        <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                data-testid={`tab-${tab.value}`}
+                onClick={() => onTabChange(tab.value)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer select-none",
+                  isActive
+                    ? "bg-background text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <HugeiconsIcon
+                  icon={tab.icon}
+                  strokeWidth={2}
+                  className={cn("size-3.5", isActive ? "text-primary" : "text-muted-foreground")}
+                />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-        {/* Time Range Filter */}
-        <FilterPopover
-          label={intervalLabel}
-          icon={Calendar04Icon}
-          active={interval !== "30d"}
-          testId="interval-filter"
-        >
-          {INTERVALS.map((opt) => (
-            <SelectRow
-              key={opt.value}
-              testId={`interval-${opt.value}`}
-              checked={interval === opt.value}
-              onClick={() => onIntervalChange(opt.value)}
-            >
-              <span className="truncate">{opt.fullLabel}</span>
-            </SelectRow>
-          ))}
-        </FilterPopover>
+        <div className="h-4 w-px bg-border/80 hidden sm:block" />
 
         {/* Project & Board Filter */}
         {projects.length > 0 && onProjectChange && (
@@ -223,52 +206,77 @@ export function StatisticsHeader({
         )}
 
         {/* Clear Filters button */}
-        {(isFiltered || interval !== "30d" || activeTab !== "overview") && (
+        {isFiltered && (
           <button
             type="button"
             onClick={() => {
-              onTabChange("overview");
-              onIntervalChange("30d");
               onProjectChange?.(undefined);
               onBoardChange?.(undefined);
             }}
             className={cn(CONTROL, "text-muted-foreground")}
+            title="Clear project filter"
           >
             <HugeiconsIcon
               icon={Cancel01Icon}
               strokeWidth={2}
               className="size-3.5"
             />
-            <span>Clear filters</span>
+            <span>Clear filter</span>
           </button>
         )}
+      </div>
 
-        {/* Refresh button */}
+      {/* Right Section: Interval Selector + Refresh + Metric Chips */}
+      <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0">
+        {/* Interval Selector */}
+        <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5">
+          {INTERVALS.map((opt) => {
+            const isSelected = interval === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                data-testid={`interval-${opt.value}`}
+                onClick={() => onIntervalChange(opt.value)}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer select-none",
+                  isSelected
+                    ? "bg-background text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Refresh Button */}
         {onRefresh && (
           <button
             type="button"
             data-testid="refresh-button"
             onClick={onRefresh}
             aria-label="Refresh statistics"
-            className={CONTROL}
+            className={cn(CONTROL, "px-2.5")}
+            title="Refresh statistics"
           >
             <HugeiconsIcon
               icon={ArrowReloadHorizontalIcon}
               strokeWidth={2}
               className={cn("size-3.5", isFetching && "animate-spin")}
             />
-            <span>Refresh</span>
           </button>
         )}
-      </div>
 
-      {/* Right side: Metric summary chips */}
-      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        <div className="h-4 w-px bg-border/80 hidden md:block" />
+
+        {/* Metric Summary Chips */}
         {typeof overdueCount === "number" && (
           <div
             data-testid="metric-overdue"
             className={cn(
-              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors",
               overdueCount > 0
                 ? "bg-error/10 text-error border-error/20"
                 : "bg-base-200/50 text-muted-foreground border-base-300/60"
@@ -287,7 +295,7 @@ export function StatisticsHeader({
           <div
             data-testid="metric-velocity"
             className={cn(
-              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors",
               velocityCount > 0
                 ? "bg-primary/10 text-primary border-primary/20"
                 : "bg-base-200/50 text-muted-foreground border-base-300/60"
@@ -296,23 +304,9 @@ export function StatisticsHeader({
             <HugeiconsIcon
               icon={Activity01Icon}
               strokeWidth={2}
-              className="size-3.5"
+              className="size-3.5 text-primary"
             />
             <span>{velocityCount} Completed</span>
-          </div>
-        )}
-
-        {typeof throughputRatio === "number" && (
-          <div
-            data-testid="metric-throughput"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-base-200/50 text-foreground border-base-300/60 transition-colors"
-          >
-            <HugeiconsIcon
-              icon={Tag01Icon}
-              strokeWidth={2}
-              className="size-3.5 text-info"
-            />
-            <span>{throughputRatio}x Throughput</span>
           </div>
         )}
       </div>
@@ -346,7 +340,7 @@ function FilterPopover({
           )}
         >
           <HugeiconsIcon icon={icon} strokeWidth={2} className="size-3.5" />
-          <span>{label}</span>
+          <span className="truncate max-w-44">{label}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-1.5" align="start">
