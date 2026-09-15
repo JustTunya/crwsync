@@ -1,21 +1,18 @@
 import { isAxiosError } from "axios";
 import { api } from "@/services/auth.service";
-
-export interface WorkspaceStatistics {
-  personalWorkload: number;
-  personalVelocity: number;
-  personalCycleTime: number | null;
-  velocityTimeline: { date: string; count: number }[];
-}
+import type {
+  WorkspaceStatisticsData,
+  StatisticsQueryParams,
+} from "@crwsync/types";
 
 export async function getWorkspaceStatistics(
   workspaceId: string,
-  interval: string
-): Promise<WorkspaceStatistics> {
+  params?: StatisticsQueryParams
+): Promise<WorkspaceStatisticsData> {
   try {
-    const response = await api.get<WorkspaceStatistics>(
+    const response = await api.get<WorkspaceStatisticsData>(
       `/workspaces/${workspaceId}/statistics`,
-      { params: { interval } }
+      { params }
     );
     return response.data;
   } catch (error) {
