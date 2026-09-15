@@ -52,14 +52,13 @@ describe("sidebar.utils", () => {
     const mockModule: WorkspaceModule = {
       id: "mod-1",
       name: "Test Module",
-      type: "BOARD",
+      type: ModuleTypeEnum.BOARD,
       reference_id: "ref-123",
       workspace_id: "ws-1",
       project_id: null,
-      order: 0,
+      position: 0,
       color: null,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
 
     it("generates correct href for board module", () => {
@@ -67,11 +66,11 @@ describe("sidebar.utils", () => {
     });
 
     it("generates correct href for chat module", () => {
-      expect(getModuleHref("test-slug", { ...mockModule, type: "CHAT" })).toBe("/test-slug/chat/ref-123");
+      expect(getModuleHref("test-slug", { ...mockModule, type: ModuleTypeEnum.CHAT })).toBe("/test-slug/chat/ref-123");
     });
 
     it("generates correct href for files module", () => {
-      expect(getModuleHref("test-slug", { ...mockModule, type: "FILES" })).toBe("/test-slug/files/ref-123");
+      expect(getModuleHref("test-slug", { ...mockModule, type: ModuleTypeEnum.FILES })).toBe("/test-slug/files/ref-123");
     });
 
     it("returns fallback href for unknown type", () => {
@@ -83,14 +82,13 @@ describe("sidebar.utils", () => {
     const mockModule: WorkspaceModule = {
       id: "mod-1",
       name: "Test Module",
-      type: "BOARD",
+      type: ModuleTypeEnum.BOARD,
       reference_id: "ref-123",
       workspace_id: "ws-1",
       project_id: null,
-      order: 0,
+      position: 0,
       color: null,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
 
     it("returns true when pathname matches module href", () => {
