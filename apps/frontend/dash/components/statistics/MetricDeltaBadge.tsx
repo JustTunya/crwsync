@@ -14,7 +14,7 @@ export interface MetricDeltaBadgeProps {
   className?: string;
 }
 
-const SENTIMENT_STYLES: Record<MetricDelta["sentiment"], string> = {
+const BADGE_STYLES = {
   positive: "bg-success/15 text-success border-success/30",
   negative: "bg-error/15 text-error border-error/30",
   neutral: "bg-muted text-muted-foreground border-border",
@@ -27,7 +27,7 @@ export function MetricDeltaBadge({ delta, className }: MetricDeltaBadgeProps) {
         data-testid="metric-delta-badge"
         className={cn(
           "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-xs font-semibold tabular-nums border",
-          SENTIMENT_STYLES.neutral,
+          BADGE_STYLES.neutral,
           className
         )}
       >
@@ -36,8 +36,17 @@ export function MetricDeltaBadge({ delta, className }: MetricDeltaBadgeProps) {
     );
   }
 
-  const { deltaPercent, trend, sentiment } = delta;
-  const sentimentStyle = SENTIMENT_STYLES[sentiment] ?? SENTIMENT_STYLES.neutral;
+  const { deltaPercent, trend } = delta;
+  const isPositive =
+    deltaPercent !== null ? deltaPercent > 0 : trend === "up";
+  const isNegative =
+    deltaPercent !== null ? deltaPercent < 0 : trend === "down";
+
+  const badgeStyle = isPositive
+    ? BADGE_STYLES.positive
+    : isNegative
+      ? BADGE_STYLES.negative
+      : BADGE_STYLES.neutral;
 
   const formattedPercent =
     deltaPercent === null
@@ -53,7 +62,7 @@ export function MetricDeltaBadge({ delta, className }: MetricDeltaBadgeProps) {
       data-testid="metric-delta-badge"
       className={cn(
         "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-xs font-semibold tabular-nums border",
-        sentimentStyle,
+        badgeStyle,
         className
       )}
     >
