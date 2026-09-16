@@ -35,7 +35,7 @@ export function HomeHeader({
     <div
       data-testid="home-header"
       className={cn(
-        "flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0 bg-card/40 backdrop-blur-md",
+        "flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0 bg-card/40 backdrop-blur-md @container",
         className
       )}
     >
