@@ -1,6 +1,15 @@
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { WorkspaceRoleEnum } from "@prisma/client";
-import { WorkspaceInviteStatusEnum, PresignedAvatarUpload } from "@crwsync/types";
+import {
+  WorkspaceInviteStatusEnum,
+  PresignedAvatarUpload,
+  WorkspaceHomeData,
+  HomeMemberPresence,
+  HomeTaskItem,
+  HomeProjectSummary,
+  HomePinnedModule,
+  HomeActivityItem,
+} from "@crwsync/types";
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteMemberDto } from "src/workspace/dto/workspace.dto";
 import { CreateTaskAttachmentDto } from "src/workspace/dto/task-attachment.dto";
 import { CreateTaskCommentDto, UpdateTaskCommentDto } from "src/workspace/dto/task-comment.dto";
@@ -576,6 +585,239 @@ export class WorkspaceService {
       personalCycleTime,
       velocityTimeline,
     };
+  }
+
+  async getHomeData(workspaceId: string, userId: string): Promise<WorkspaceHomeData> {
+    const cacheKey = CacheKeys.workspaceHome(workspaceId, userId);
+    const cached = await this.cache.get<WorkspaceHomeData>(cacheKey);
+    if (cached) return cached;
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000 - 1);
+    const velocityWindowStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const [members, focusTasks, workspaceTasks, projects, boardModules, pinnedModules, activities, completionVelocity] =
+      await Promise.all([
+        this.prisma.workspaceMember.findMany({
+          where: { workspace_id: workspaceId },
+          include: {
+            user: {
+              select: { id: true, firstname: true, lastname: true, avatar_key: true, status_preference: true },
+            },
+          },
+        }),
+        this.prisma.task.findMany({
+          where: { workspace_id: workspaceId, assignee_id: userId, is_deleted: false, is_archived: false },
+          include: {
+            column: {
+              select: { id: true, name: true, type: true, board_id: true, board: { select: { id: true, name: true } } },
+            },
+            checklistItems: { select: { is_completed: true } },
+            _count: { select: { comments: { where: { is_deleted: false } }, attachments: true } },
+          },
+        }),
+        this.prisma.task.findMany({
+          where: { workspace_id: workspaceId, is_deleted: false },
+          select: {
+            id: true,
+            column: { select: { type: true, board_id: true } },
+            assignee: { select: { id: true, firstname: true, lastname: true, avatar_key: true } },
+          },
+        }),
+        this.prisma.workspaceProject.findMany({
+          where: { workspace_id: workspaceId },
+          orderBy: { position: "asc" },
+        }),
+        this.prisma.workspaceModule.findMany({
+          where: { workspace_id: workspaceId, type: "BOARD" },
+          select: { id: true, project_id: true, reference_id: true },
+        }),
+        this.getPinnedModules(workspaceId, userId),
+        this.prisma.taskActivity.findMany({
+          where: { task: { workspace_id: workspaceId } },
+          orderBy: { created_at: "desc" },
+          take: 15,
+          include: {
+            actor: { select: { id: true, firstname: true, lastname: true, avatar_key: true } },
+            task: { select: { id: true, title: true, column: { select: { board_id: true } } } },
+          },
+        }),
+        this.prisma.task.count({
+          where: { workspace_id: workspaceId, assignee_id: userId, completed_at: { gte: velocityWindowStart } },
+        }),
+      ]);
+
+    const crew: HomeMemberPresence[] = members.map((member) => ({
+      id: member.user.id,
+      name: `${member.user.firstname} ${member.user.lastname}`,
+      role: member.role as unknown as HomeMemberPresence["role"],
+      avatarUrl: member.user.avatar_key,
+      isOnline: member.user.status_preference === "ONLINE",
+      activeStatus: member.user.status_preference,
+    }));
+
+    const projectById = new Map(projects.map((project) => [project.id, project]));
+    const boardProjectMap = new Map<string, { id: string; name: string }>();
+    for (const mod of boardModules) {
+      const project = mod.project_id ? projectById.get(mod.project_id) : undefined;
+      if (project) boardProjectMap.set(mod.reference_id, { id: project.id, name: project.name });
+    }
+
+    const toHomeTaskItem = (task: (typeof focusTasks)[number]): HomeTaskItem => {
+      const project = boardProjectMap.get(task.column.board_id);
+      return {
+        id: task.id,
+        title: task.title,
+        priority: task.priority as unknown as HomeTaskItem["priority"],
+        status: task.column.name,
+        columnId: task.column.id,
+        boardId: task.column.board_id,
+        boardTitle: task.column.board.name,
+        projectId: project?.id,
+        projectName: project?.name,
+        dueDate: task.due_date ? task.due_date.toISOString() : null,
+        commentsCount: task._count.comments,
+        attachmentsCount: task._count.attachments,
+        checklistTotal: task.checklistItems.length,
+        checklistCompleted: task.checklistItems.filter((item) => item.is_completed).length,
+      };
+    };
+
+    const overdueRaw: typeof focusTasks = [];
+    const dueTodayRaw: typeof focusTasks = [];
+    const inProgressRaw: typeof focusTasks = [];
+    for (const task of focusTasks) {
+      if (task.column.type === "COMPLETE") continue;
+      if (task.due_date && task.due_date < startOfToday) overdueRaw.push(task);
+      else if (task.due_date && task.due_date <= endOfToday) dueTodayRaw.push(task);
+      else inProgressRaw.push(task);
+    }
+
+    const myFocus = {
+      overdue: overdueRaw.map(toHomeTaskItem),
+      dueToday: dueTodayRaw.map(toHomeTaskItem),
+      inProgress: inProgressRaw.map(toHomeTaskItem),
+    };
+
+    const projectSummaries: HomeProjectSummary[] = projects.map((project) => {
+      const boardIds = boardModules
+        .filter((mod) => mod.project_id === project.id)
+        .map((mod) => mod.reference_id);
+      const projectTasks = workspaceTasks.filter((task) => boardIds.includes(task.column.board_id));
+      const totalTasks = projectTasks.length;
+      const completedTasks = projectTasks.filter((task) => task.column.type === "COMPLETE").length;
+
+      const memberMap = new Map<string, { id: string; name: string; avatarUrl: string | null }>();
+      for (const task of projectTasks) {
+        if (task.assignee && !memberMap.has(task.assignee.id)) {
+          memberMap.set(task.assignee.id, {
+            id: task.assignee.id,
+            name: `${task.assignee.firstname} ${task.assignee.lastname}`,
+            avatarUrl: task.assignee.avatar_key,
+          });
+        }
+      }
+
+      return {
+        id: project.id,
+        title: project.name,
+        color: project.color,
+        boardId: boardIds[0],
+        totalTasks,
+        completedTasks,
+        progressPercentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+        members: Array.from(memberMap.values()).slice(0, 6),
+      };
+    });
+
+    const describeActivity = (activityType: (typeof activities)[number]["type"], metadata: unknown): string => {
+      const meta = (metadata ?? {}) as Record<string, unknown>;
+      switch (activityType) {
+        case "COLUMN_MOVED":
+          return `moved the task to ${meta.toColumnName ?? "another column"}`;
+        case "PRIORITY_CHANGED":
+          return `changed the priority to ${meta.to ?? "a new value"}`;
+        case "ASSIGNEE_CHANGED":
+          return "reassigned the task";
+        case "DUE_DATE_CHANGED":
+          return "updated the due date";
+        default:
+          return "updated the task";
+      }
+    };
+
+    const recentActivity: HomeActivityItem[] = activities.map((activity) => ({
+      id: activity.id,
+      type: "task_moved",
+      message: describeActivity(activity.type, activity.metadata),
+      actor: {
+        id: activity.actor.id,
+        name: `${activity.actor.firstname} ${activity.actor.lastname}`,
+        avatarUrl: activity.actor.avatar_key,
+      },
+      target: {
+        id: activity.task.id,
+        title: activity.task.title,
+        href: `/board/${activity.task.column.board_id}`,
+      },
+      createdAt: activity.created_at.toISOString(),
+    }));
+
+    const result: WorkspaceHomeData = {
+      summary: {
+        greeting: this.getHomeGreeting(now),
+        todayFormatted: this.formatHomeDate(now),
+        urgentCount: myFocus.overdue.length + myFocus.dueToday.length,
+        activeTasksCount: myFocus.overdue.length + myFocus.dueToday.length + myFocus.inProgress.length,
+        completionVelocity,
+        workspaceMembersCount: crew.length,
+      },
+      myFocus,
+      projects: projectSummaries,
+      pinnedModules,
+      recentActivity,
+      crew,
+    };
+
+    await this.cache.set(cacheKey, result, CacheTTL.WORKSPACE_HOME);
+
+    return result;
+  }
+
+  private async getPinnedModules(workspaceId: string, userId: string): Promise<HomePinnedModule[]> {
+    const pinned = await this.prisma.workspaceModule.findMany({
+      where: { workspace_id: workspaceId, pinned_by_users: { some: { user_id: userId } } },
+      orderBy: { position: "asc" },
+    });
+
+    const isFallback = pinned.length === 0;
+    const modules = isFallback
+      ? await this.prisma.workspaceModule.findMany({
+          where: { workspace_id: workspaceId },
+          orderBy: { position: "asc" },
+          take: 5,
+        })
+      : pinned;
+
+    return modules.map((mod) => ({
+      id: mod.id,
+      name: mod.name,
+      type: mod.type as unknown as HomePinnedModule["type"],
+      isPinned: !isFallback,
+      color: mod.color,
+    }));
+  }
+
+  private getHomeGreeting(date: Date): string {
+    const hour = date.getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  }
+
+  private formatHomeDate(date: Date): string {
+    return date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   }
 
   async deleteTask(workspaceId: string, taskId: string) {
