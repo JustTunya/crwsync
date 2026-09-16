@@ -1,11 +1,5 @@
 "use client";
 
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Add01Icon,
-  Search01Icon,
-  RotateRight01Icon,
-} from "@hugeicons/core-free-icons";
 import { WorkspaceHomeSummary } from "@crwsync/types";
 import { LSidebarToggle } from "@/components/l-sidebar";
 import { RSidebarToggle } from "@/components/r-sidebar";
@@ -22,15 +16,8 @@ export interface HomeHeaderProps {
 
 export function HomeHeader({
   summary,
-  isRefetching,
-  onRefresh,
-  onNewTask,
-  onOpenSearch,
   className,
 }: HomeHeaderProps) {
-  const urgentCount = summary?.urgentCount ?? 0;
-  const isUrgent = urgentCount > 0;
-
   return (
     <div
       data-testid="home-header"
@@ -52,22 +39,6 @@ export function HomeHeader({
             </span>
           )}
         </div>
-
-        {summary && (
-          <span
-            data-testid="home-pulse-badge"
-            className={cn(
-              "hidden @md:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border shrink-0",
-              isUrgent
-                ? "bg-alert/15 text-alert border-alert/30"
-                : "bg-success/15 text-success border-success/30"
-            )}
-          >
-            {isUrgent
-              ? `${summary.urgentCount} due today · ${summary.completionVelocity} velocity`
-              : `All caught up · ${summary.completionVelocity} completed`}
-          </span>
-        )}
       </div>
 
       <div className="flex items-center gap-2 shrink-0">

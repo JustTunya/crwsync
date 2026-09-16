@@ -67,7 +67,7 @@ function HomeProjectCard({ project, slug }: { project: HomeProjectSummary; slug:
       className="block outline-none h-full"
       data-testid="home-project-card"
     >
-      <GlassBox className="w-full! h-full mx-0! p-4 flex flex-col justify-between gap-3.5 hover:bg-base-200/40 hover:border-base-300 transition-all cursor-pointer group">
+      <GlassBox className="w-full! h-full mx-0! p-4 flex flex-col justify-start gap-3.5 hover:bg-base-200/40 hover:border-base-300 transition-all cursor-pointer group">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ backgroundColor: project.color || "#f97316" }} />

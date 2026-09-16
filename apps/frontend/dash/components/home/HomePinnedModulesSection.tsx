@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Bookmark02Icon, Cancel01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { Bookmark02Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HomePinnedModule, WorkspaceModule } from "@crwsync/types";
 import { GlassBox } from "@/components/ui/glassbox";
 import { getModuleHref, getModuleIcon } from "@/lib/sidebar.utils";
@@ -18,7 +18,6 @@ export interface HomePinnedModulesSectionProps {
 export function HomePinnedModulesSection({
   modules,
   slug,
-  onUnpinModule,
   className,
 }: HomePinnedModulesSectionProps) {
   return (
