@@ -55,7 +55,7 @@ describe("WorkspaceService", () => {
     $transaction: jest.Mock;
     $queryRaw: jest.Mock;
   };
-  let cache: { get: jest.Mock; set: jest.Mock; del: jest.Mock };
+  let cache: { get: jest.Mock; set: jest.Mock; del: jest.Mock; invalidatePattern: jest.Mock };
   let statusGateway: { server: { to: jest.Mock }; emitInviteReceived: jest.Mock; emitInviteHandled: jest.Mock };
   let storageService: {
     deleteObject: jest.Mock;
@@ -113,7 +113,7 @@ describe("WorkspaceService", () => {
       $transaction: jest.fn(async (cb) => cb(prisma)),
       $queryRaw: jest.fn(),
     };
-    cache = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
+    cache = { get: jest.fn(), set: jest.fn(), del: jest.fn(), invalidatePattern: jest.fn() };
     statusGateway = {
       server: { to: jest.fn().mockReturnValue({ emit }) },
       emitInviteReceived: jest.fn(),

@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { format, parseISO, getDay } from "date-fns";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { FireIcon, Calendar04Icon } from "@hugeicons/core-free-icons";
+import { Fire02Icon, Calendar04Icon } from "@hugeicons/core-free-icons";
 import type { ActivityHeatmapDay } from "@crwsync/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -109,7 +109,7 @@ export function ActivityHeatmap({
             data-testid="heatmap-streak"
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-warning/30 bg-warning/10 text-warning text-xs font-semibold"
           >
-            <HugeiconsIcon icon={FireIcon} strokeWidth={2.5} className="size-3.5" />
+            <HugeiconsIcon icon={Fire02Icon} strokeWidth={2} className="size-3.5" />
             <span className="tabular-nums">{streakDays} Day Streak</span>
           </div>
 

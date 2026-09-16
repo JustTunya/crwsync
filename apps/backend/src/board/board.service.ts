@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, ForbiddenException } from "@nestjs/common";
 import { ModuleTypeEnum, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
-import { CacheService } from "src/redis";
+import { CacheService, CacheKeys } from "src/redis";
 import { StatusGateway } from "src/status/status.gateway";
 import { NotificationService } from "src/notification/notification.service";
 import {
@@ -64,6 +64,8 @@ export class BoardService {
 
       return [board, wsModule];
     });
+
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
@@ -131,6 +133,8 @@ export class BoardService {
       });
     }
 
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("board:updated", { boardId, data: dto });
@@ -151,6 +155,8 @@ export class BoardService {
         where: { workspace_id: workspaceId, reference_id: boardId },
       });
     });
+
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
@@ -192,6 +198,8 @@ export class BoardService {
       },
     });
 
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("board:column:created", { boardId, column });
@@ -216,6 +224,8 @@ export class BoardService {
       data: dto,
     });
 
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("board:column:updated", { boardId, columnId, data: dto });
@@ -231,6 +241,8 @@ export class BoardService {
     if (!existing) throw new NotFoundException("Column not found");
 
     await this.prisma.boardColumn.delete({ where: { id: columnId } });
+
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
@@ -326,6 +338,8 @@ export class BoardService {
         },
       });
 
+      await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+
       this.statusGateway.server
         .to(`workspace_${workspaceId}`)
         .emit("board:task:created", { boardId, task });
@@ -383,6 +397,8 @@ export class BoardService {
         }),
       ),
     ]);
+
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
@@ -545,6 +561,8 @@ export class BoardService {
         ),
       ]);
 
+      await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+
       this.statusGateway.server
         .to(`workspace_${workspaceId}`)
         .emit("board:task:moved", {
@@ -706,6 +724,8 @@ export class BoardService {
     );
 
 
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("module:reordered", { updates: dto.updates });
@@ -756,6 +776,10 @@ export class BoardService {
         where: { id: wsModule.reference_id },
         data: { name: dto.name },
       });
+    }
+
+    if (dto.name && wsModule.type === ModuleTypeEnum.BOARD) {
+      await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
     }
 
     this.statusGateway.server
@@ -866,6 +890,8 @@ export class BoardService {
       },
     });
 
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("project:created", project);
@@ -922,6 +948,8 @@ export class BoardService {
       }
     }
 
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("project:updated", { projectId, data: updateData });
@@ -946,6 +974,8 @@ export class BoardService {
     await this.prisma.workspaceProject.delete({
       where: { id: projectId },
     });
+
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)

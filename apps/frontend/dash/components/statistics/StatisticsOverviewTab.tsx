@@ -39,29 +39,27 @@ export function StatisticsOverviewTab({
   const summary = data?.summary;
 
   return (
-    <div data-testid="statistics-overview-tab" className="space-y-6">
+    <div data-testid="statistics-overview-tab" className="@container space-y-6">
       {/* 4 Top KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-4 gap-3">
         {/* Card 1: Completed Velocity */}
         <Card
           data-testid="kpi-velocity"
-          className="flex flex-col justify-between p-5 rounded-2xl border-border bg-card shadow-sm"
+          className="flex flex-col gap-1.5 p-3.5 rounded-lg border-border bg-card"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Completed Tasks
+            <span className="text-xs font-medium text-muted-foreground">
+              Completed tasks
             </span>
             <MetricDeltaBadge delta={summary?.velocity} />
           </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
-            <span className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">
               {isLoading ? "—" : summary?.velocity.current ?? 0}
             </span>
-            <span className="text-xs text-muted-foreground font-medium">
-              tasks
-            </span>
+            <span className="text-xs text-muted-foreground">tasks</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground">
             vs. {summary?.velocity.previous ?? 0} in previous period
           </p>
         </Card>
@@ -69,23 +67,21 @@ export function StatisticsOverviewTab({
         {/* Card 2: Created Tasks */}
         <Card
           data-testid="kpi-created"
-          className="flex flex-col justify-between p-5 rounded-2xl border-border bg-card shadow-sm"
+          className="flex flex-col gap-1.5 p-3.5 rounded-lg border-border bg-card"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Created Tasks
+            <span className="text-xs font-medium text-muted-foreground">
+              Created tasks
             </span>
             <MetricDeltaBadge delta={summary?.created} />
           </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
-            <span className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">
               {isLoading ? "—" : summary?.created.current ?? 0}
             </span>
-            <span className="text-xs text-muted-foreground font-medium">
-              tasks
-            </span>
+            <span className="text-xs text-muted-foreground">tasks</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground">
             Ratio: {summary?.throughputRatio.current ?? 0}x throughput
           </p>
         </Card>
@@ -93,22 +89,22 @@ export function StatisticsOverviewTab({
         {/* Card 3: Avg Cycle Time */}
         <Card
           data-testid="kpi-cycle-time"
-          className="flex flex-col justify-between p-5 rounded-2xl border-border bg-card shadow-sm"
+          className="flex flex-col gap-1.5 p-3.5 rounded-lg border-border bg-card"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Avg. Cycle Time
+            <span className="text-xs font-medium text-muted-foreground">
+              Avg. cycle time
             </span>
             <MetricDeltaBadge delta={summary?.cycleTimeSeconds} />
           </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
-            <span className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">
               {isLoading
                 ? "—"
                 : formatCycleTime(summary?.cycleTimeSeconds.current ?? null)}
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground">
             Start to completion duration
           </p>
         </Card>
@@ -116,18 +112,18 @@ export function StatisticsOverviewTab({
         {/* Card 4: Overdue & Delivery */}
         <Card
           data-testid="kpi-overdue"
-          className="flex flex-col justify-between p-5 rounded-2xl border-border bg-card shadow-sm"
+          className="flex flex-col gap-1.5 p-3.5 rounded-lg border-border bg-card"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Overdue Tasks
+            <span className="text-xs font-medium text-muted-foreground">
+              Overdue tasks
             </span>
             <MetricDeltaBadge delta={summary?.overdueTasks} />
           </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
+          <div className="flex items-baseline gap-1.5">
             <span
               className={cn(
-                "text-3xl font-bold tabular-nums tracking-tight",
+                "text-2xl font-semibold tabular-nums tracking-tight",
                 (summary?.overdueTasks.current ?? 0) > 0
                   ? "text-error"
                   : "text-foreground"
@@ -135,12 +131,10 @@ export function StatisticsOverviewTab({
             >
               {isLoading ? "—" : summary?.overdueTasks.current ?? 0}
             </span>
-            <span className="text-xs text-muted-foreground font-medium">
-              tasks
-            </span>
+            <span className="text-xs text-muted-foreground">tasks</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
-            Completion Rate: {summary?.completionRate.current ?? 0}%
+          <p className="text-xs text-muted-foreground">
+            Completion rate: {summary?.completionRate.current ?? 0}%
           </p>
         </Card>
       </div>
