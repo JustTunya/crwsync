@@ -64,10 +64,10 @@ function HomeProjectCard({ project, slug }: { project: HomeProjectSummary; slug:
   return (
     <Link
       href={project.boardId ? `/${slug}/board/${project.boardId}` : `/${slug}`}
-      className="block outline-none"
+      className="block outline-none h-full"
       data-testid="home-project-card"
     >
-      <GlassBox className="w-full! mx-0! p-4 flex flex-col justify-between gap-3 hover:bg-base-200/40 hover:border-base-300 transition-all cursor-pointer group">
+      <GlassBox className="w-full! h-full mx-0! p-4 flex flex-col justify-between gap-3.5 hover:bg-base-200/40 hover:border-base-300 transition-all cursor-pointer group">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ backgroundColor: project.color || "#f97316" }} />
@@ -86,7 +86,7 @@ function HomeProjectCard({ project, slug }: { project: HomeProjectSummary; slug:
               style={{ width: `${project.progressPercentage}%` }}
             />
           </div>
-          <div className="flex justify-between items-center text-xs text-muted-foreground font-medium">
+          <div className="flex justify-between items-center gap-2 text-xs text-muted-foreground font-medium">
             <span>
               {project.completedTasks} of {project.totalTasks} completed
             </span>
@@ -114,7 +114,7 @@ export function HomeActiveProjectsSection({ projects, slug, className }: HomeAct
       </div>
 
       {projects && projects.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-testid="home-projects-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch" data-testid="home-projects-grid">
           {projects.map((project) => (
             <HomeProjectCard key={project.id} project={project} slug={slug} />
           ))}

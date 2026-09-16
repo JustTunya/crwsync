@@ -14,7 +14,6 @@ import { HomeHeader } from "@/components/home/HomeHeader";
 import { HomeMyFocusSection } from "@/components/home/HomeMyFocusSection";
 import { HomeActiveProjectsSection } from "@/components/home/HomeActiveProjectsSection";
 import { HomePinnedModulesSection } from "@/components/home/HomePinnedModulesSection";
-import { HomeCrewPresenceSection } from "@/components/home/HomeCrewPresenceSection";
 import { HomeActivityStreamSection } from "@/components/home/HomeActivityStreamSection";
 import { HomeVelocityCard } from "@/components/home/HomeVelocityCard";
 import { HomeSkeleton } from "@/components/home/HomeSkeleton";
@@ -80,10 +79,6 @@ export function HomeDashboard({ slug }: { slug: string }) {
     [workspaceId, queryClient]
   );
 
-  const handleDirectMessage = useCallback(() => {
-    router.push(`/${slug}/chat`);
-  }, [router, slug]);
-
   const handleNewTask = useCallback(() => {
     const firstBoardId = data?.projects?.[0]?.boardId || data?.myFocus?.inProgress?.[0]?.boardId;
     if (firstBoardId) {
@@ -129,7 +124,6 @@ export function HomeDashboard({ slug }: { slug: string }) {
           </div>
 
           <div className="xl:col-span-4 flex flex-col gap-6 min-w-0">
-            <HomeCrewPresenceSection crew={data?.crew} slug={slug} onDirectMessage={handleDirectMessage} />
             <HomeActivityStreamSection activity={data?.recentActivity} slug={slug} />
             <HomeVelocityCard summary={data?.summary} />
           </div>

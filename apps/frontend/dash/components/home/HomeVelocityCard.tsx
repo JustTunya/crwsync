@@ -19,18 +19,18 @@ export function HomeVelocityCard({ summary, className }: HomeVelocityCardProps) 
         Personal Momentum
       </h2>
 
-      <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col items-center justify-center text-center gap-0.5 py-1">
         <span className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
           {summary?.completionVelocity ?? 0}
         </span>
         <span className="text-xs text-muted-foreground font-medium">completed in current cycle</span>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-base-200/60">
+      <div className="flex items-center justify-between gap-4 text-xs text-muted-foreground pt-2 border-t border-base-200/60">
         <span>Active Workload</span>
         <span className="font-semibold text-foreground">{summary?.activeTasksCount ?? 0} tasks</span>
       </div>
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
+      <div className="flex items-center justify-between gap-4 text-xs text-muted-foreground">
         <span>Urgent Deadlines</span>
         <span className={cn("font-semibold", (summary?.urgentCount ?? 0) > 0 ? "text-alert" : "text-foreground")}>
           {summary?.urgentCount ?? 0} due
