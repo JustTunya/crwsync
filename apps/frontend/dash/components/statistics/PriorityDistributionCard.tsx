@@ -71,19 +71,15 @@ export function PriorityDistributionCard({
 
           return (
             <div key={p.key} className="flex items-center gap-3">
-              <span
-                className="size-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: p.dot }}
-              />
+              <span className={cn("size-2.5 rounded-full shrink-0", p.dot)} />
               <span className="w-14 text-xs font-medium text-muted-foreground">
                 {p.label}
               </span>
               <div className="flex-1 h-2.5 rounded-full bg-muted/70 overflow-hidden">
                 <div
-                  className="h-full rounded-full transition-all duration-500"
+                  className={cn("h-full rounded-full transition-all duration-500", p.bar)}
                   style={{
                     width: `${count > 0 ? Math.max(6, (count / maxCount) * 100) : 0}%`,
-                    backgroundColor: p.bar,
                   }}
                 />
               </div>
