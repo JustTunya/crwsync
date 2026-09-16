@@ -1019,6 +1019,21 @@ async function seed() {
   }
 
   /* 9. Notifications Feed */
+  const actorSelect = { id: true, firstname: true, lastname: true, avatar_key: true };
+
+  const assignedTask = await prisma.task.findFirst({
+    where: { workspace_id: workspace.id, title: "Fix flaky socket reconnect on tab wake" },
+    select: { id: true, shortId: true, title: true, column: { select: { board_id: true, board: { select: { name: true } } } } },
+  });
+
+  const mentionComment = await prisma.taskComment.findFirst({
+    where: { task: { workspace_id: workspace.id, title: "Typing indicator debounce is too eager" }, author_id: designer.id },
+    include: {
+      author: { select: actorSelect },
+      task: { select: { id: true, shortId: true, title: true, column: { select: { board_id: true, board: { select: { name: true } } } } } },
+    },
+  });
+
   await prisma.notification.createMany({
     data: [
       {
@@ -1026,10 +1041,10 @@ async function seed() {
         workspace_id: workspace.id,
         type: "TASK_ASSIGNED",
         payload: {
-          taskId: sprintBoard.id,
-          taskTitle: "Fix flaky socket reconnect on tab wake",
-          shortId: "NL-7",
-          assignedBy: member.firstname + " " + member.lastname,
+          task: { id: assignedTask.id, shortId: assignedTask.shortId, title: assignedTask.title },
+          board: { id: assignedTask.column.board_id, name: assignedTask.column.board.name },
+          workspace: { slug: workspace.slug, name: workspace.name },
+          assignedBy: { id: member.id, firstname: member.firstname, lastname: member.lastname, avatar_key: member.avatar_key },
         },
         is_read: false,
         created_at: ago(0, 4),
@@ -1039,10 +1054,20 @@ async function seed() {
         workspace_id: workspace.id,
         type: "TASK_COMMENT_MENTION",
         payload: {
-          taskId: sprintBoard.id,
-          shortId: "NL-8",
-          authorName: designer.firstname + " " + designer.lastname,
-          commentPreview: "@mara Could we add a 150ms ease-out so the bubble doesn't abruptly vanish?",
+          comment: {
+            id: mentionComment.id,
+            task_id: mentionComment.task_id,
+            author_id: mentionComment.author_id,
+            content: mentionComment.content,
+            is_edited: mentionComment.is_edited,
+            is_deleted: mentionComment.is_deleted,
+            created_at: mentionComment.created_at,
+            updated_at: mentionComment.updated_at,
+            author: mentionComment.author,
+          },
+          task: { id: mentionComment.task.id, shortId: mentionComment.task.shortId, title: mentionComment.task.title },
+          board: { id: mentionComment.task.column.board_id, name: mentionComment.task.column.board.name },
+          workspace: { slug: workspace.slug, name: workspace.name },
         },
         is_read: false,
         created_at: ago(1, 2),
@@ -1052,15 +1077,27 @@ async function seed() {
         workspace_id: workspace.id,
         type: "CHAT_MENTION",
         payload: {
-          roomId: roomDesign.id,
-          roomName: "design-sync",
-          senderName: member.firstname + " " + member.lastname,
-          messagePreview: "Design pass on the invite modal is done.",
+          message: {
+            id: designMsgs[2].id,
+            workspace_id: designMsgs[2].workspace_id,
+            room_id: designMsgs[2].room_id,
+            sender_id: designMsgs[2].sender_id,
+            content: designMsgs[2].content,
+            created_at: designMsgs[2].created_at,
+            updated_at: designMsgs[2].updated_at,
+            is_deleted: designMsgs[2].is_deleted,
+            is_edited: designMsgs[2].is_edited,
+            is_pinned: designMsgs[2].is_pinned,
+            reply_to_id: designMsgs[2].reply_to_id,
+            sender: { id: member.id, firstname: member.firstname, lastname: member.lastname, avatar_key: member.avatar_key },
+          },
+          room: { id: roomDesign.id, name: roomDesign.name },
+          workspace: { slug: workspace.slug, name: workspace.name },
         },
         is_read: true,
         created_at: ago(1, 6),
       },
-    ],
+    ].map((n) => ({ ...n, payload: JSON.parse(JSON.stringify(n.payload)) })),
   });
 
   return {

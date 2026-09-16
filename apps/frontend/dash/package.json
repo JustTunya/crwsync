@@ -44,6 +44,7 @@
     "react-day-picker": "^9.13.2",
     "react-dom": "19.2.1",
     "recharts": "^3.8.1",
+    "require-in-the-middle": "^8.0.1",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.4.1",
     "use-debounce": "^10.0.5",
