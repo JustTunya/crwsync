@@ -31,3 +31,8 @@ export const scheduleKeys = {
   list: (workspaceId: string, filters?: Record<string, unknown>) =>
     [...scheduleKeys.all, "list", workspaceId, filters || {}] as const,
 };
+
+export const homeKeys = {
+  all: ["home"] as const,
+  detail: (workspaceId: string) => [...homeKeys.all, "detail", workspaceId] as const,
+};
