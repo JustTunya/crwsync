@@ -47,9 +47,9 @@ export function SchedulesCalendarSidebar({
   return (
     <aside
       data-testid="schedules-calendar-sidebar"
-      className={cn("flex flex-col gap-4 w-full lg:w-72 shrink-0", className)}
+      className={cn("flex flex-col gap-4 w-full @4xl:w-72 shrink-0", className)}
     >
-      <div className="flex flex-col gap-2.5 p-3 rounded-xl border border-base-200 bg-background shadow-xs">
+      <div className="flex flex-col gap-2.5 p-3 rounded-xl border border-border bg-card shadow-sm">
         <Calendar
           mode="single"
           selected={selectedDate}
@@ -61,7 +61,7 @@ export function SchedulesCalendarSidebar({
             hasDeadline:
               "font-bold underline decoration-primary decoration-2 underline-offset-4",
           }}
-          className="p-0 w-full flex justify-center"
+          className="p-0 w-full flex justify-center bg-transparent"
         />
 
         <div className="flex items-center gap-1.5 px-2 text-[11px] text-muted-foreground">
@@ -101,7 +101,7 @@ export function SchedulesCalendarSidebar({
         )}
       </div>
 
-      <div className="flex flex-col gap-3 p-3.5 rounded-xl border border-base-200 bg-background shadow-xs">
+      <div className="flex flex-col gap-3 p-3.5 rounded-xl border border-border bg-card shadow-sm">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <HugeiconsIcon
             icon={Clock01Icon}
@@ -132,7 +132,7 @@ export function SchedulesCalendarSidebar({
           </Button>
         )}
 
-        <div className="flex items-center justify-between gap-2 pt-3 border-t border-base-200">
+        <div className="flex items-center justify-between gap-2 pt-3 border-t border-border/60">
           <label
             htmlFor="toggle-completed-tasks"
             className="text-xs font-medium text-foreground/80 cursor-pointer select-none"

@@ -1,16 +1,11 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Flag02Icon,
-  Comment01Icon,
-  CheckmarkSquare02Icon,
-} from "@hugeicons/core-free-icons";
+import { Flag02Icon } from "@hugeicons/core-free-icons";
 import type { ScheduleTask } from "@crwsync/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { UserAvatar } from "@/components/user-avatar";
 import { QuickRescheduleMenu } from "@/components/schedules/QuickRescheduleMenu";
-import { PRIORITY_STYLES } from "@/lib/kanban.utils";
 import { cn } from "@/lib/utils";
 
 export interface ScheduleTaskRowProps {
@@ -20,6 +15,14 @@ export interface ScheduleTaskRowProps {
   onReschedule?: (task: ScheduleTask, newDueDate: string | null) => void;
   className?: string;
 }
+
+const PRIORITY_ICON_COLOR: Record<string, string> = {
+  NONE: "text-muted-foreground",
+  LOW: "text-info",
+  MEDIUM: "text-warning",
+  HIGH: "text-alert",
+  URGENT: "text-error",
+};
 
 export function ScheduleTaskRow({
   task,
@@ -50,10 +53,10 @@ export function ScheduleTaskRow({
         }
       }}
       className={cn(
-        "group flex items-center gap-3 px-3.5 py-2.5 rounded-lg border border-base-200 hover:border-base-300 hover:bg-base-200/50 transition-all cursor-pointer select-none",
-        isCompleted && "opacity-60 bg-base-100/40",
-        isOverdue && "border-error/30 bg-error/[0.03] hover:border-error/50",
-        !isCompleted && !isOverdue && "bg-background",
+        "group flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3.5 py-2.5 rounded-lg border border-border hover:border-border/80 hover:bg-muted/30 transition-all cursor-pointer select-none",
+        isCompleted && "opacity-60 bg-muted/20 border-border/60",
+        isOverdue && "border-error/30 bg-error/[0.04] hover:border-error/50",
+        !isCompleted && !isOverdue && "bg-card shadow-xs",
         className
       )}
     >
@@ -66,85 +69,58 @@ export function ScheduleTaskRow({
         />
       </div>
 
-      <span className="text-[11px] font-mono font-medium text-muted-foreground uppercase tracking-wider shrink-0">
-        {task.shortId}
-      </span>
+      <div className="flex items-center gap-1.5 flex-1 min-w-[140px]">
+        {task.priority && task.priority !== "NONE" && (
+          <span
+            title={`Priority: ${task.priority.charAt(0)}${task.priority.slice(1).toLowerCase()}`}
+            className={cn("shrink-0 flex items-center", PRIORITY_ICON_COLOR[task.priority])}
+          >
+            <HugeiconsIcon icon={Flag02Icon} strokeWidth={2} className="size-3.5" />
+          </span>
+        )}
 
-      {task.priority && task.priority !== "NONE" && (
-        <span
+        <span className="text-[11px] font-mono text-muted-foreground/70 shrink-0">
+          {task.shortId}
+        </span>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTaskClick?.(task);
+          }}
           className={cn(
-            "inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded-full border capitalize shrink-0",
-            PRIORITY_STYLES[task.priority]
+            "text-sm font-medium text-left truncate hover:text-primary transition-colors cursor-pointer min-w-0",
+            isCompleted && "line-through text-muted-foreground"
           )}
         >
-          <HugeiconsIcon icon={Flag02Icon} strokeWidth={2} className="size-3" />
-          <span>{task.priority.toLowerCase()}</span>
-        </span>
-      )}
-
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onTaskClick?.(task);
-        }}
-        className={cn(
-          "text-sm font-medium text-left truncate hover:text-primary transition-colors cursor-pointer flex-1 min-w-0",
-          isCompleted && "line-through text-muted-foreground"
-        )}
-      >
-        {task.title}
-      </button>
-
-      <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground bg-base-200/70 border border-base-300/50 px-2 py-0.5 rounded-md shrink-0 max-w-[200px] truncate">
-        <span className="font-medium text-foreground/80 truncate">
-          {task.board?.name || (task.column as { board?: { name?: string } })?.board?.name || "Board"}
-        </span>
-        <span className="text-muted-foreground/60">/</span>
-        {task.column?.color && (
-          <span
-            className="size-2 rounded-full shrink-0"
-            style={{ backgroundColor: task.column.color }}
-          />
-        )}
-        <span className="truncate">{task.column?.name}</span>
+          {task.title}
+        </button>
       </div>
 
-      {!!task._count?.comments && task._count.comments > 0 && (
-        <span
-          className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground shrink-0"
-          title={`${task._count.comments} comments`}
-        >
-          <HugeiconsIcon
-            icon={Comment01Icon}
-            strokeWidth={2}
-            className="size-3.5"
+      <div className="flex items-center gap-2 shrink-0">
+        <div className="hidden @sm:flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 border border-border px-2 py-0.5 rounded-md max-w-[160px]">
+          <span className="font-medium text-foreground/80 truncate">
+            {task.board?.name || (task.column as { board?: { name?: string } })?.board?.name || "Board"}
+          </span>
+          <span className="text-muted-foreground/60">/</span>
+          {task.column?.color && (
+            <span
+              className="size-2 rounded-full shrink-0"
+              style={{ backgroundColor: task.column.color }}
+            />
+          )}
+          <span className="truncate">{task.column?.name}</span>
+        </div>
+
+        {task.assignee && <UserAvatar user={task.assignee} size={5} />}
+
+        <div onClick={(e) => e.stopPropagation()}>
+          <QuickRescheduleMenu
+            dueDate={task.due_date}
+            onReschedule={(newDueDate) => onReschedule?.(task, newDueDate)}
           />
-          <span>{task._count.comments}</span>
-        </span>
-      )}
-
-      {!!task._count?.checklistItems && task._count.checklistItems > 0 && (
-        <span
-          className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground shrink-0"
-          title={`${task._count.checklistItems} checklist items`}
-        >
-          <HugeiconsIcon
-            icon={CheckmarkSquare02Icon}
-            strokeWidth={2}
-            className="size-3.5"
-          />
-          <span>{task._count.checklistItems}</span>
-        </span>
-      )}
-
-      {task.assignee && <UserAvatar user={task.assignee} size={5} />}
-
-      <div onClick={(e) => e.stopPropagation()}>
-        <QuickRescheduleMenu
-          dueDate={task.due_date}
-          onReschedule={(newDueDate) => onReschedule?.(task, newDueDate)}
-        />
+        </div>
       </div>
     </div>
   );

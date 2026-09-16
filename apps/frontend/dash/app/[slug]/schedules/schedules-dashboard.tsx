@@ -143,7 +143,7 @@ export function SchedulesDashboard() {
 
   if (isLoading || !workspaceId) {
     return (
-      <div className="size-full flex flex-col overflow-hidden">
+      <div className="flex flex-col h-full overflow-hidden bg-background">
         <header className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <LSidebarToggle />
@@ -169,7 +169,7 @@ export function SchedulesDashboard() {
   }
 
   return (
-    <div className="size-full flex flex-col overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden bg-background">
       <header className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <LSidebarToggle />
@@ -191,9 +191,9 @@ export function SchedulesDashboard() {
         counts={data?.counts}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <div className="flex-1 min-w-0 w-full">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 @container">
+        <div className="flex flex-col @4xl:flex-row gap-6 items-start">
+          <div className="flex-1 min-w-0 w-full @container">
             <SchedulesAgenda
               tasks={data?.tasks}
               selectedDate={selectedDate}
