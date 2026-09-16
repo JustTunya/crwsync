@@ -338,7 +338,10 @@ export class BoardService {
         },
       });
 
-      await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+      await Promise.all([
+        this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId)),
+        this.cache.invalidatePattern(CacheKeys.workspaceHomePattern(workspaceId)),
+      ]);
 
       this.statusGateway.server
         .to(`workspace_${workspaceId}`)
@@ -398,7 +401,10 @@ export class BoardService {
       ),
     ]);
 
-    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+    await Promise.all([
+      this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId)),
+      this.cache.invalidatePattern(CacheKeys.workspaceHomePattern(workspaceId)),
+    ]);
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
@@ -561,7 +567,10 @@ export class BoardService {
         ),
       ]);
 
-      await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+      await Promise.all([
+        this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId)),
+        this.cache.invalidatePattern(CacheKeys.workspaceHomePattern(workspaceId)),
+      ]);
 
       this.statusGateway.server
         .to(`workspace_${workspaceId}`)

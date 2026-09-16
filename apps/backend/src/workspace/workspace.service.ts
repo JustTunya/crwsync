@@ -43,7 +43,12 @@ export class WorkspaceService {
       this.cache.del(CacheKeys.userWorkspaces(userId)),
       this.cache.del(CacheKeys.workspace(workspaceId)),
       ...(workspace?.slug ? [this.cache.del(CacheKeys.workspaceSlug(workspace.slug))] : []),
+      this.invalidateWorkspaceHome(workspaceId),
     ]);
+  }
+
+  async invalidateWorkspaceHome(workspaceId: string) {
+    await this.cache.invalidatePattern(CacheKeys.workspaceHomePattern(workspaceId));
   }
 
   private generateWorkspaceKey(name: string): string {
@@ -832,7 +837,10 @@ export class WorkspaceService {
       data: { is_deleted: true },
     });
 
-    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+    await Promise.all([
+      this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId)),
+      this.invalidateWorkspaceHome(workspaceId),
+    ]);
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
@@ -857,7 +865,10 @@ export class WorkspaceService {
       data: { is_archived: true },
     });
 
-    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+    await Promise.all([
+      this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId)),
+      this.invalidateWorkspaceHome(workspaceId),
+    ]);
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
