@@ -81,7 +81,7 @@ export function QuickRescheduleMenu({
               "flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md border transition-colors cursor-pointer",
               dueDate
                 ? DEADLINE_STYLES(dueDate)
-                : "text-muted-foreground hover:text-foreground border-dashed border-base-300 hover:border-base-400 hover:bg-base-200/50",
+                : "text-muted-foreground hover:text-foreground border-dashed border-border hover:border-border/80 hover:bg-muted/30",
               className
             )}
           >
@@ -105,7 +105,7 @@ export function QuickRescheduleMenu({
             type="button"
             data-testid="preset-today"
             onClick={handleToday}
-            className="flex items-center justify-between px-2.5 py-1.5 text-xs font-medium rounded-md hover:bg-base-200 text-left transition-colors cursor-pointer"
+            className="flex items-center justify-between px-2.5 py-1.5 text-xs font-medium rounded-md hover:bg-muted/40 text-left transition-colors cursor-pointer"
           >
             <span className="flex items-center gap-2">
               <HugeiconsIcon
@@ -123,7 +123,7 @@ export function QuickRescheduleMenu({
             type="button"
             data-testid="preset-tomorrow"
             onClick={handleTomorrow}
-            className="flex items-center justify-between px-2.5 py-1.5 text-xs font-medium rounded-md hover:bg-base-200 text-left transition-colors cursor-pointer"
+            className="flex items-center justify-between px-2.5 py-1.5 text-xs font-medium rounded-md hover:bg-muted/40 text-left transition-colors cursor-pointer"
           >
             <span className="flex items-center gap-2">
               <HugeiconsIcon
@@ -141,7 +141,7 @@ export function QuickRescheduleMenu({
             type="button"
             data-testid="preset-next-week"
             onClick={handleNextWeek}
-            className="flex items-center justify-between px-2.5 py-1.5 text-xs font-medium rounded-md hover:bg-base-200 text-left transition-colors cursor-pointer"
+            className="flex items-center justify-between px-2.5 py-1.5 text-xs font-medium rounded-md hover:bg-muted/40 text-left transition-colors cursor-pointer"
           >
             <span className="flex items-center gap-2">
               <HugeiconsIcon
@@ -171,7 +171,7 @@ export function QuickRescheduleMenu({
             </button>
           )}
         </div>
-        <div className="h-px bg-base-300 my-1" />
+        <div className="h-px bg-border my-1" />
         <Calendar
           mode="single"
           selected={selectedDate}

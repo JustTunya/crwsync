@@ -123,7 +123,7 @@ export function SchedulesAgenda({
           data-testid="agenda-section-selected-date"
           className="flex flex-col gap-3"
         >
-          <div className="flex items-center justify-between pb-2 border-b border-base-200">
+          <div className="flex items-center justify-between pb-2 border-b border-border">
             <div className="flex items-center gap-2">
               <HugeiconsIcon
                 icon={Calendar04Icon}
@@ -142,7 +142,7 @@ export function SchedulesAgenda({
           {selectedDateTasks.length === 0 ? (
             <div
               data-testid="agenda-empty-state"
-              className="flex flex-col items-center justify-center p-8 rounded-xl border border-dashed border-base-300 text-center bg-base-100/40"
+              className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-border bg-muted/20 text-center"
             >
               <HugeiconsIcon
                 icon={Calendar04Icon}
@@ -190,9 +190,9 @@ export function SchedulesAgenda({
       >
         <div
           data-testid="agenda-empty-state"
-          className="flex flex-col items-center justify-center p-12 rounded-xl border border-dashed border-base-300 text-center bg-base-100/40"
+          className="flex flex-col items-center justify-center p-12 rounded-2xl border border-dashed border-border bg-muted/20 text-center"
         >
-          <div className="size-12 rounded-full bg-base-200 flex items-center justify-center mb-3">
+          <div className="size-12 rounded-full bg-muted/40 border border-border/50 flex items-center justify-center mb-3">
             <HugeiconsIcon
               icon={Calendar04Icon}
               strokeWidth={1.5}
@@ -287,7 +287,7 @@ export function SchedulesAgenda({
               className="size-3.5 text-muted-foreground"
             />
             <span>Tomorrow</span>
-            <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-full border bg-base-200 text-muted-foreground border-base-300">
+            <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-full border bg-muted/40 text-muted-foreground border-border">
               {dueTomorrow.length}
             </span>
           </div>
@@ -317,7 +317,7 @@ export function SchedulesAgenda({
               className="size-3.5 text-muted-foreground"
             />
             <span>This Week</span>
-            <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-full border bg-base-200 text-muted-foreground border-base-300">
+            <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-full border bg-muted/40 text-muted-foreground border-border">
               {thisWeek.length}
             </span>
           </div>
@@ -347,7 +347,7 @@ export function SchedulesAgenda({
               className="size-3.5 text-muted-foreground"
             />
             <span>Later</span>
-            <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-full border bg-base-200 text-muted-foreground border-base-300">
+            <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-full border bg-muted/40 text-muted-foreground border-border">
               {later.length}
             </span>
           </div>
@@ -368,7 +368,7 @@ export function SchedulesAgenda({
       {noDueDate.length > 0 && (
         <section
           data-testid="agenda-section-no-due-date"
-          className="flex flex-col gap-2.5 pt-2 border-t border-base-200/80"
+          className="flex flex-col gap-2.5 pt-2 border-t border-border/60"
         >
           <button
             type="button"
@@ -384,7 +384,7 @@ export function SchedulesAgenda({
                 className="size-3.5 text-muted-foreground group-hover:text-foreground transition-transform"
               />
               <span>No Due Date</span>
-              <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-full border bg-base-200 text-muted-foreground border-base-300">
+              <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-full border bg-muted/40 text-muted-foreground border-border">
                 {noDueDate.length}
               </span>
             </div>
