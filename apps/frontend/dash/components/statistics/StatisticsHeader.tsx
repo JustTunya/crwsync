@@ -9,7 +9,7 @@ import {
   Clock01Icon,
   Calendar04Icon,
   Tick02Icon,
-  ArrowReloadHorizontalIcon,
+  ReloadIcon,
   ArrowDown01Icon,
 } from "@hugeicons/core-free-icons";
 import type {
@@ -308,7 +308,7 @@ export function StatisticsHeader({
             title="Refresh statistics"
           >
             <HugeiconsIcon
-              icon={ArrowReloadHorizontalIcon}
+              icon={ReloadIcon}
               strokeWidth={2}
               className={cn("size-3 @md:size-3.5 shrink-0", isFetching && "animate-spin")}
             />

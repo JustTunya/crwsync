@@ -36,28 +36,28 @@ export function StatisticsPersonalTab({
   const personal = data?.personal;
 
   return (
-    <div data-testid="statistics-personal-tab" className="space-y-6">
+    <div data-testid="statistics-personal-tab" className="@container space-y-6">
       {/* 4 Personal KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-4 gap-3">
         {/* Card 1: Active Workload */}
         <Card
           data-testid="personal-kpi-workload"
-          className="flex flex-col justify-between p-5 rounded-2xl border-border bg-card shadow-sm"
+          className="flex flex-col gap-1.5 p-3.5 rounded-lg border-border bg-card"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Active Workload
+            <span className="text-xs font-medium text-muted-foreground">
+              Active workload
             </span>
           </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
-            <span className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">
               {isLoading ? "—" : personal?.activeWorkload ?? 0}
             </span>
-            <span className="text-xs text-muted-foreground font-medium">
+            <span className="text-xs text-muted-foreground">
               in-progress
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground">
             Tasks currently in progress
           </p>
         </Card>
@@ -65,23 +65,23 @@ export function StatisticsPersonalTab({
         {/* Card 2: Personal Velocity */}
         <Card
           data-testid="personal-kpi-velocity"
-          className="flex flex-col justify-between p-5 rounded-2xl border-border bg-card shadow-sm"
+          className="flex flex-col gap-1.5 p-3.5 rounded-lg border-border bg-card"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              My Velocity
+            <span className="text-xs font-medium text-muted-foreground">
+              My velocity
             </span>
             <MetricDeltaBadge delta={personal?.velocity} />
           </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
-            <span className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">
               {isLoading ? "—" : personal?.velocity.current ?? 0}
             </span>
-            <span className="text-xs text-muted-foreground font-medium">
+            <span className="text-xs text-muted-foreground">
               completed
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground">
             vs. {personal?.velocity.previous ?? 0} in previous period
           </p>
         </Card>
@@ -89,22 +89,22 @@ export function StatisticsPersonalTab({
         {/* Card 3: Personal Avg Cycle Time */}
         <Card
           data-testid="personal-kpi-cycle-time"
-          className="flex flex-col justify-between p-5 rounded-2xl border-border bg-card shadow-sm"
+          className="flex flex-col gap-1.5 p-3.5 rounded-lg border-border bg-card"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              My Avg. Cycle Time
+            <span className="text-xs font-medium text-muted-foreground">
+              My avg. cycle time
             </span>
             <MetricDeltaBadge delta={personal?.cycleTimeSeconds} />
           </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
-            <span className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">
               {isLoading
                 ? "—"
                 : formatCycleTime(personal?.cycleTimeSeconds.current ?? null)}
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground">
             Average time to complete assigned tasks
           </p>
         </Card>
@@ -112,18 +112,18 @@ export function StatisticsPersonalTab({
         {/* Card 4: On-Time Delivery Rate */}
         <Card
           data-testid="personal-kpi-on-time"
-          className="flex flex-col justify-between p-5 rounded-2xl border-border bg-card shadow-sm"
+          className="flex flex-col gap-1.5 p-3.5 rounded-lg border-border bg-card"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              On-Time Rate
+            <span className="text-xs font-medium text-muted-foreground">
+              On-time rate
             </span>
             <MetricDeltaBadge delta={personal?.onTimeRate} />
           </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
+          <div className="flex items-baseline gap-1.5">
             <span
               className={cn(
-                "text-3xl font-bold tabular-nums tracking-tight",
+                "text-2xl font-semibold tabular-nums tracking-tight",
                 (personal?.onTimeRate.current ?? 100) >= 90
                   ? "text-success"
                   : (personal?.onTimeRate.current ?? 100) >= 70
@@ -134,7 +134,7 @@ export function StatisticsPersonalTab({
               {isLoading ? "—" : `${personal?.onTimeRate.current ?? 100}%`}
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground">
             Delivered before scheduled due date
           </p>
         </Card>

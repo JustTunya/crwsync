@@ -59,8 +59,12 @@ banchmark.js
 
 # == Graphify ===
 graphify-out/
+
 # === Worktrees ===
 .worktrees/
 
 # === Superpowers SDD scratch ===
 .superpowers/
+
+# === Playwright ===
+.playwright-mcp/

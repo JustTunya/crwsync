@@ -9,6 +9,7 @@ export const CacheKeys = {
   verification: (email: string) => `verification:${email.toLowerCase()}`,
   workspaceSearch: (workspaceId: string, userId: string, q: string) =>
     `workspace:${workspaceId}:user:${userId}:search:${q.toLowerCase().trim()}`,
+  workspaceStatisticsPattern: (workspaceId: string) => `ws:${workspaceId}:statistics:*`,
 };
 
 export const CacheTTL = {

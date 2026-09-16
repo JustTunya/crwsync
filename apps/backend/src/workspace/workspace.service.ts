@@ -590,6 +590,8 @@ export class WorkspaceService {
       data: { is_deleted: true },
     });
 
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
+
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)
       .emit("board:task:deleted", { boardId: task.column.board_id, taskId });
@@ -612,6 +614,8 @@ export class WorkspaceService {
       where: { id: taskId },
       data: { is_archived: true },
     });
+
+    await this.cache.invalidatePattern(CacheKeys.workspaceStatisticsPattern(workspaceId));
 
     this.statusGateway.server
       .to(`workspace_${workspaceId}`)

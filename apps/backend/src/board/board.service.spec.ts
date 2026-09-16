@@ -62,7 +62,11 @@ function makeService() {
     Array.isArray(arg) ? Promise.all(arg) : (arg as (tx: unknown) => unknown)(prisma),
   );
 
-  const cache = { acquireLock: jest.fn().mockResolvedValue(true), releaseLock: jest.fn() };
+  const cache = {
+    acquireLock: jest.fn().mockResolvedValue(true),
+    releaseLock: jest.fn(),
+    invalidatePattern: jest.fn(),
+  };
   const statusGateway = { server: { to: jest.fn().mockReturnValue({ emit: jest.fn() }) } };
   const notificationService = { create: jest.fn() };
   return {
