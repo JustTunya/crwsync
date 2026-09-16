@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { HomeTaskItem, HomeMemberPresence, Task } from "@crwsync/types";
+import { HomeTaskItem, Task } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useSocket } from "@/providers/socket.provider";
 import { useWorkspaceHome, homeKeys } from "@/hooks/use-workspace-home";
@@ -80,12 +80,9 @@ export function HomeDashboard({ slug }: { slug: string }) {
     [workspaceId, queryClient]
   );
 
-  const handleDirectMessage = useCallback(
-    (member: HomeMemberPresence) => {
-      router.push(`/${slug}/chat`);
-    },
-    [router, slug]
-  );
+  const handleDirectMessage = useCallback(() => {
+    router.push(`/${slug}/chat`);
+  }, [router, slug]);
 
   const handleNewTask = useCallback(() => {
     const firstBoardId = data?.projects?.[0]?.boardId || data?.myFocus?.inProgress?.[0]?.boardId;
