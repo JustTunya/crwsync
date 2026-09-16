@@ -62,7 +62,7 @@ export function HomeMyFocusSection({
 
   return (
     <GlassBox className={cn("flex flex-col items-stretch gap-3 w-full! mx-0! p-5", className)}>
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
           <HugeiconsIcon icon={Task01Icon} className="size-4 text-primary" />
           My Focus
