@@ -13,7 +13,7 @@ export function useChatRoom(workspaceId?: string, roomId?: string) {
   return useQuery({
     queryKey: chatKeys.room(roomId!),
     queryFn: () => chatService.getChatRoom(workspaceId!, roomId!),
-    enabled: !!workspaceId && !!roomId,
+    enabled: !!workspaceId && !!roomId && roomId !== "undefined",
     select: (result) => result.data,
   });
 }
@@ -22,7 +22,7 @@ export function useChatMessages(workspaceId?: string, roomId?: string) {
   return useQuery({
     queryKey: chatKeys.messages(roomId!),
     queryFn: () => chatService.getChatMessages(workspaceId!, roomId!),
-    enabled: !!workspaceId && !!roomId,
+    enabled: !!workspaceId && !!roomId && roomId !== "undefined",
     select: (result) => result.data,
   });
 }

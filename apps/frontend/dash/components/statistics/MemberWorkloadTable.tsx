@@ -81,8 +81,6 @@ export function MemberWorkloadTable({
               </thead>
               <tbody className="divide-y divide-border/60">
                 {workloads.map((member) => {
-                  const [firstname = "", ...rest] = (member.name || "").split(" ");
-                  const lastname = rest.join(" ");
                   const activePercent = Math.min(
                     100,
                     Math.round((member.activeTasks / maxActiveTasks) * 100)
@@ -98,8 +96,7 @@ export function MemberWorkloadTable({
                           <UserAvatar
                             size={7}
                             user={{
-                              firstname,
-                              lastname,
+                              name: member.name,
                               avatar_key: member.avatarKey,
                             }}
                           />

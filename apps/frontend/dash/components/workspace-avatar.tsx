@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface WorkspaceAvatarProps {
@@ -18,9 +19,11 @@ export function WorkspaceAvatar({ avatar_key, name, className }: WorkspaceAvatar
     const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL}/avatars/${avatar_key}`;
 
     return (
-      <img
+      <Image
         src={avatarUrl}
         alt={`${name} workspace avatar`}
+        width={24}
+        height={24}
         className={cn("size-6 rounded-sm object-cover", className)}
         onError={() => setImageFailed(true)}
       />

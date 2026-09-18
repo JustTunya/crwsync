@@ -30,6 +30,7 @@ import {
   ReorderColumnsDto,
   ReorderModulesDto,
   UpdateModuleDto,
+  TogglePinModuleDto,
   CreateProjectDto,
   UpdateProjectDto,
 } from "src/board/dto/board.dto";
@@ -244,9 +245,9 @@ export class ModuleController {
     @Param("workspaceId", new ParseUUIDPipe({ version: "4" })) workspaceId: string,
     @Param("moduleId", new ParseUUIDPipe({ version: "4" })) moduleId: string,
     @ActiveUserParam() user: ActiveUser,
-    @Body("isPinned") isPinned: boolean,
+    @Body() dto: TogglePinModuleDto,
   ) {
-    return this.boardService.togglePinModule(workspaceId, moduleId, user.userId, isPinned);
+    return this.boardService.togglePinModule(workspaceId, moduleId, user.userId, dto.isPinned);
   }
 }
 

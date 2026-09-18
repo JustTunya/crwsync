@@ -42,7 +42,7 @@ export function SettingsShell({ children }: { children: React.ReactNode }) {
           <span className="sr-only">Back to dashboard</span>
         </Link>
         <div>
-          <h1 className="text-lg font-semibold text-foreground">Account Settings</h1>
+          <h1 className="text-base sm:text-lg font-semibold text-foreground">Account Settings</h1>
           <p className="text-sm text-muted-foreground leading-4">Manage your profile and security</p>
         </div>
       </header>

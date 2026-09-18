@@ -58,6 +58,16 @@ export class WorkspaceController {
     return this.workspaceService.findBySlug(slug);
   }
 
+  @Get(":workspaceId/home")
+  @SkipThrottle()
+  @UseGuards(IsMemberGuard)
+  getHomeData(
+    @Param("workspaceId", ParseUUIDPipe) workspaceId: string,
+    @ActiveUserParam() user: ActiveUser,
+  ) {
+    return this.workspaceService.getHomeData(workspaceId, user.userId);
+  }
+
   @Get(":workspaceId/members")
   @SkipThrottle()
   @UseGuards(IsMemberGuard)

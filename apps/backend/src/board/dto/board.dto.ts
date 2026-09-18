@@ -220,3 +220,8 @@ export class UpdateModuleDto {
   @IsOptional()
   color?: string | null;
 }
+
+export class TogglePinModuleDto {
+  @IsBoolean()
+  isPinned!: boolean;
+}

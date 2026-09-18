@@ -300,4 +300,20 @@ describe("AuthService (Cluster 1 signin verification)", () => {
       await expect(authService.me({ userId: "missing" })).rejects.toThrow(UnauthorizedException);
     });
   });
+
+  describe("JWT expiration formatting", () => {
+    it("correctly signs and verifies tokens with string timespan values like 15m", () => {
+      const realJwtService = new JwtService({
+        secret: "test-secret-key-32-chars-minimum-required",
+        signOptions: { expiresIn: "15m" },
+      });
+
+      const token = realJwtService.sign({ sub: "u-1", email: "test@example.com" });
+      const decoded = realJwtService.verify(token);
+
+      expect(decoded.sub).toBe("u-1");
+      expect(decoded.exp).toBeGreaterThan(decoded.iat);
+      expect(decoded.exp - decoded.iat).toBe(900);
+    });
+  });
 });

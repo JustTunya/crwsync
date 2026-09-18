@@ -13,7 +13,7 @@ export function useFileRoom(workspaceId?: string, roomId?: string) {
   return useQuery({
     queryKey: fileKeys.room(roomId!),
     queryFn: () => filesService.getFileRoom(workspaceId!, roomId!),
-    enabled: !!workspaceId && !!roomId,
+    enabled: !!workspaceId && !!roomId && roomId !== "undefined",
     select: (result) => result.data,
   });
 }
@@ -22,7 +22,7 @@ export function useFiles(workspaceId?: string, roomId?: string) {
   return useQuery({
     queryKey: fileKeys.list(roomId!),
     queryFn: () => filesService.getFiles(workspaceId!, roomId!),
-    enabled: !!workspaceId && !!roomId,
+    enabled: !!workspaceId && !!roomId && roomId !== "undefined",
     select: (result) => result.data ?? [],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

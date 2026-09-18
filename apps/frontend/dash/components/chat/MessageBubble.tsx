@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { Dialog as DialogPrimitive } from "radix-ui";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Edit03Icon,
@@ -12,6 +13,8 @@ import {
   FileZipIcon,
   Video01Icon,
   File01Icon,
+  Copy01Icon,
+  Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import type { ChatMessage, ChatAttachment } from "@crwsync/types";
 import { useChatStore } from "@/hooks/use-chat-store";
@@ -133,6 +136,7 @@ function renderMessageContent(text: string, onNavigateToBoard: (boardId: string)
           rel="noopener noreferrer"
           className="underline hover:opacity-80 transition-opacity"
           onClick={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
         >
           {part}
         </a>
@@ -161,6 +165,7 @@ function renderMessageContent(text: string, onNavigateToBoard: (boardId: string)
             e.stopPropagation();
             onNavigateToBoard(boardId);
           }}
+          onTouchStart={(e) => e.stopPropagation()}
           className="font-semibold cursor-pointer hover:underline text-inherit align-baseline"
         >
           #{label}
@@ -214,6 +219,97 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
   const [editContent, setEditContent] = useState(message.content);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [showFullPicker, setShowFullPicker] = useState(false);
+  const [showHeartBurst, setShowHeartBurst] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileShowFullPicker, setMobileShowFullPicker] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const lastTapRef = useRef<number>(0);
+  const singleTapTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const isLongPressRef = useRef<boolean>(false);
+
+  const userReaction = message.reactions?.find((r) => r.user_id === currentUserId)?.emoji;
+
+  const handleHeartReaction = () => {
+    if (message.is_deleted || isPending || isEditing) return;
+    onToggleReaction?.(message.id, "❤️");
+    setShowHeartBurst(true);
+    setTimeout(() => setShowHeartBurst(false), 700);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (message.is_deleted || isPending || isEditing) return;
+    touchStartPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    isLongPressRef.current = false;
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+      setIsMobileMenuOpen(true);
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        try {
+          navigator.vibrate(20);
+        } catch {}
+      }
+    }, 450);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPosRef.current) return;
+    const dx = e.touches[0].clientX - touchStartPosRef.current.x;
+    const dy = e.touches[0].clientY - touchStartPosRef.current.y;
+    if (Math.hypot(dx, dy) > 10) {
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      touchStartPosRef.current = null;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    if (isLongPressRef.current) return;
+    if (!touchStartPosRef.current) return;
+    if (message.is_deleted || isPending || isEditing) return;
+
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapRef.current;
+
+    if (timeSinceLastTap < 300) {
+      if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+      lastTapRef.current = 0;
+      handleHeartReaction();
+    } else {
+      lastTapRef.current = now;
+      if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+      singleTapTimerRef.current = setTimeout(() => {
+        setIsMobileMenuOpen(true);
+      }, 250);
+    }
+  };
+
+  const handleTouchCancel = () => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+    touchStartPosRef.current = null;
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (message.is_deleted || isPending || isEditing) return;
+    e.preventDefault();
+    setIsMobileMenuOpen(true);
+  };
+
+  const handleCopyText = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!message.content) return;
+    navigator.clipboard.writeText(message.content);
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+      setIsMobileMenuOpen(false);
+    }, 600);
+  };
 
   const handlePickerOpenChange = (open: boolean) => {
     setIsEmojiPickerOpen(open);
@@ -316,15 +412,31 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
           <div className="relative">
             {(message.content || message.is_deleted || isEditing) && (
             <div
+              onDoubleClick={(e) => {
+                e.preventDefault();
+                handleHeartReaction();
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchCancel}
+              onContextMenu={handleContextMenu}
               className={cn(
-                "message-highlight-target px-2.5 py-1.5 text-sm leading-relaxed whitespace-pre-wrap transition-colors duration-500",
+                "message-highlight-target relative px-2.5 py-1.5 text-sm leading-relaxed whitespace-pre-wrap transition-colors duration-500 select-text cursor-pointer sm:cursor-default",
                 isSelf
                   ? "bg-primary text-primary-foreground rounded-2xl rounded-br-xs"
                   : "bg-muted text-muted-foreground rounded-2xl rounded-bl-xs",
                 isPending && "opacity-60 animate-pulse",
-                message.is_deleted && "bg-base-100 border-[1.5px] border-base-300 text-muted-foreground italic rounded-2xl"
+                message.is_deleted && "bg-base-100 border-[1.5px] border-base-300 text-muted-foreground italic rounded-2xl cursor-default"
               )}
             >
+              {showHeartBurst && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30 overflow-visible">
+                  <span className="text-4xl animate-heart-burst drop-shadow-md select-none">
+                    ❤️
+                  </span>
+                </div>
+              )}
               {isEditing ? (
                 <div className="flex flex-col">
                   <div className="grid relative text-current">
@@ -341,17 +453,17 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
                   </div>
 
                   <div className="flex justify-end gap-3 mt-2 mb-0.5 text-xs">
-                    <button 
-                      onClick={() => { 
-                        setEditContent(message.content); 
-                        setIsEditing(false); 
-                      }} 
+                    <button
+                      onClick={() => {
+                        setEditContent(message.content);
+                        setIsEditing(false);
+                      }}
                       className="opacity-75 hover:opacity-100 transition-opacity cursor-pointer"
                     >
                       Cancel
                     </button>
-                    <button 
-                      onClick={handleEditSubmit} 
+                    <button
+                      onClick={handleEditSubmit}
                       className="font-semibold cursor-pointer"
                     >
                       Save
@@ -374,89 +486,235 @@ export function MessageBubble({ message, isSelf, isConsecutive, isLastInGroup, i
             )}
 
           {!message.is_deleted && !isPending && !isEditing && (
-            <div className={cn(
-              "absolute top-1/2 -translate-y-1/2 opacity-0 group-hover/bubble:opacity-100 flex items-center gap-1 transition-opacity",
-              isEmojiPickerOpen && "opacity-100",
-              isSelf ? "right-full mr-2" : "left-full ml-2",
-              !isSelf && "flex-row-reverse"
-            )}>
-              <Popover open={isEmojiPickerOpen} onOpenChange={handlePickerOpenChange}>
-                <PopoverTrigger asChild>
-                  <button
-                    data-testid="message-react"
-                    aria-label="Add reaction"
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer"
+            <>
+              <div className={cn(
+                "absolute top-1/2 -translate-y-1/2 opacity-0 group-hover/bubble:opacity-100 hidden md:flex items-center gap-1 transition-opacity",
+                isEmojiPickerOpen && "opacity-100",
+                isSelf ? "right-full mr-2" : "left-full ml-2",
+                !isSelf && "flex-row-reverse"
+              )}>
+                <Popover open={isEmojiPickerOpen} onOpenChange={handlePickerOpenChange}>
+                  <PopoverTrigger asChild>
+                    <button
+                      data-testid="message-react"
+                      aria-label="Add reaction"
+                      className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer"
+                    >
+                      <HugeiconsIcon icon={HappyIcon} strokeWidth={2} className="size-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="top"
+                    align={isSelf ? "end" : "start"}
+                    className={cn("w-full p-0 shadow-none border-none bg-transparent outline-none z-50", !showFullPicker && "w-auto")}
+                    sideOffset={10}
                   >
-                    <HugeiconsIcon icon={HappyIcon} strokeWidth={2} className="size-4" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  side="top"
-                  align={isSelf ? "end" : "start"}
-                  className={cn("w-full p-0 shadow-none border-none bg-transparent outline-none z-50", !showFullPicker && "w-auto")}
-                  sideOffset={10}
-                >
-                  {!showFullPicker ? (
-                    <div className="flex items-center py-0.5 pl-1 bg-base-100 border border-base-200 rounded-full shadow-md">
-                      {["👍", "❤️", "😂", "😮", "😢", "🔥"].map((quickEmoji) => (
+                    {!showFullPicker ? (
+                      <div className="flex items-center py-0.5 pl-1 bg-base-100 border border-base-200 rounded-full shadow-md">
+                        {["👍", "❤️", "😂", "😮", "😢", "🔥"].map((quickEmoji) => (
+                          <button
+                            key={quickEmoji}
+                            data-testid="quick-reaction"
+                            data-emoji={quickEmoji}
+                            aria-label={`React with ${quickEmoji}`}
+                            onClick={() => {
+                              onToggleReaction?.(message.id, quickEmoji);
+                              setIsEmojiPickerOpen(false);
+                            }}
+                            className={cn(
+                              "p-1.5 text-lg leading-none rounded-xl transition-all hover:scale-110",
+                              userReaction === quickEmoji ? "bg-primary/20 ring-1 ring-primary" : "hover:bg-base-200"
+                            )}
+                          >
+                            {quickEmoji}
+                          </button>
+                        ))}
+                        <div className="w-px h-6 bg-base-300 mx-1.5" />
                         <button
-                          key={quickEmoji}
-                          data-testid="quick-reaction"
-                          data-emoji={quickEmoji}
-                          aria-label={`React with ${quickEmoji}`}
-                          onClick={() => {
-                            onToggleReaction?.(message.id, quickEmoji);
-                            setIsEmojiPickerOpen(false);
-                          }}
-                          className="p-1.5 text-lg leading-none hover:bg-base-200 rounded-xl transition-all hover:scale-110"
+                          onClick={() => setShowFullPicker(true)}
+                          aria-label="More reactions"
+                          className="flex items-center justify-center py-1.5 px-2 mr-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-base-200 transition-colors"
                         >
-                          {quickEmoji}
+                          <HugeiconsIcon icon={HappyIcon} strokeWidth={2} className="size-5" />
                         </button>
-                      ))}
-                      <div className="w-px h-6 bg-base-300 mx-1.5" />
+                      </div>
+                    ) : (
+                      <EmojiPicker onEmojiSelect={(emoji) => {
+                        onToggleReaction?.(message.id, emoji.native);
+                        setIsEmojiPickerOpen(false);
+                      }} />
+                    )}
+                  </PopoverContent>
+                </Popover>
+
+                <button
+                  onClick={() => setReplyingTo(message)}
+                  aria-label="Reply to message"
+                  className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer"
+                >
+                  <HugeiconsIcon icon={ArrowTurnBackwardIcon} strokeWidth={2} className="size-4 -scale-y-100" />
+                </button>
+                {isSelf && (
+                  <>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      aria-label="Edit message"
+                      className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer"
+                    >
+                      <HugeiconsIcon icon={Edit03Icon} strokeWidth={2} className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => onDeleteMessage?.(message.id)}
+                      aria-label="Delete message"
+                      className="p-1 text-muted-foreground hover:text-error transition-colors rounded-md hover:bg-error/10 cursor-pointer"
+                    >
+                      <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <DialogPrimitive.Root
+                open={isMobileMenuOpen}
+                onOpenChange={(open) => {
+                  setIsMobileMenuOpen(open);
+                  if (!open) {
+                    setTimeout(() => setMobileShowFullPicker(false), 200);
+                  }
+                }}
+              >
+                <DialogPrimitive.Portal>
+                  <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+                  <DialogPrimitive.Content
+                    aria-describedby={undefined}
+                    data-testid="mobile-message-actions"
+                    className={cn(
+                      "fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto bg-base-100 border-t border-base-300 rounded-t-3xl shadow-2xl p-4 pb-8 flex flex-col gap-3 outline-none duration-200",
+                      "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom sm:max-w-md sm:mx-auto sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border sm:pb-4"
+                    )}
+                  >
+                    <DialogPrimitive.Title className="sr-only">Message options</DialogPrimitive.Title>
+
+                    <div className="w-10 h-1 bg-base-300 rounded-full mx-auto sm:hidden mb-1" />
+
+                    <div className="flex items-center gap-2 px-1 py-1 text-xs text-muted-foreground border-b border-base-200 pb-2.5">
+                      <span className="font-semibold text-foreground shrink-0">
+                        {message.sender ? `${message.sender.firstname} ${message.sender.lastname}` : "Message"}
+                      </span>
+                      <span className="truncate opacity-75">
+                        {message.content || (message.attachments?.length ? `${message.attachments.length} attachment(s)` : "")}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-1 bg-base-200/70 rounded-2xl border border-base-300">
+                      {["👍", "❤️", "😂", "😮", "😢", "🔥"].map((quickEmoji) => {
+                        const hasReacted = userReaction === quickEmoji;
+                        return (
+                          <button
+                            key={quickEmoji}
+                            type="button"
+                            data-testid="mobile-quick-reaction"
+                            data-emoji={quickEmoji}
+                            aria-label={`React with ${quickEmoji}`}
+                            onClick={() => {
+                              onToggleReaction?.(message.id, quickEmoji);
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className={cn(
+                              "flex items-center justify-center size-10 text-xl rounded-xl transition-all active:scale-125 cursor-pointer select-none",
+                              hasReacted ? "bg-primary/20 ring-1.5 ring-primary" : "hover:bg-base-300/60"
+                            )}
+                          >
+                            {quickEmoji}
+                          </button>
+                        );
+                      })}
+                      <div className="w-px h-6 bg-base-300 mx-0.5" />
                       <button
-                        onClick={() => setShowFullPicker(true)}
+                        type="button"
                         aria-label="More reactions"
-                        className="flex items-center justify-center py-1.5 px-2 mr-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-base-200 transition-colors"
+                        onClick={() => setMobileShowFullPicker(!mobileShowFullPicker)}
+                        className="flex items-center justify-center size-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-base-300/60 transition-colors cursor-pointer"
                       >
                         <HugeiconsIcon icon={HappyIcon} strokeWidth={2} className="size-5" />
                       </button>
                     </div>
-                  ) : (
-                    <EmojiPicker onEmojiSelect={(emoji) => {
-                      onToggleReaction?.(message.id, emoji.native);
-                      setIsEmojiPickerOpen(false);
-                    }} />
-                  )}
-                </PopoverContent>
-              </Popover>
 
-              <button
-                onClick={() => setReplyingTo(message)}
-                aria-label="Reply to message"
-                className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer"
-              >
-                <HugeiconsIcon icon={ArrowTurnBackwardIcon} strokeWidth={2} className="size-4 -scale-y-100" />
-              </button>
-              {isSelf && (
-                <>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    aria-label="Edit message"
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-base-200 cursor-pointer"
-                  >
-                    <HugeiconsIcon icon={Edit03Icon} strokeWidth={2} className="size-4" />
-                  </button>
-                  <button
-                    onClick={() => onDeleteMessage?.(message.id)}
-                    aria-label="Delete message"
-                    className="p-1 text-muted-foreground hover:text-error transition-colors rounded-md hover:bg-error/10 cursor-pointer"
-                  >
-                    <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
-                  </button>
-                </>
-              )}
-            </div>
+                    {mobileShowFullPicker && (
+                      <div className="flex justify-center my-1">
+                        <EmojiPicker
+                          onEmojiSelect={(emoji) => {
+                            onToggleReaction?.(message.id, emoji.native);
+                            setIsMobileMenuOpen(false);
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-1 mt-1">
+                      <button
+                        type="button"
+                        data-testid="mobile-message-reply"
+                        onClick={() => {
+                          setReplyingTo(message);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex items-center gap-3 w-full px-3.5 py-3 rounded-xl hover:bg-base-200 active:bg-base-300 text-sm font-medium transition-colors cursor-pointer text-foreground"
+                      >
+                        <HugeiconsIcon icon={ArrowTurnBackwardIcon} strokeWidth={2} className="size-5 text-muted-foreground -scale-y-100" />
+                        <span>Reply</span>
+                      </button>
+
+                      {message.content && (
+                        <button
+                          type="button"
+                          data-testid="mobile-message-copy"
+                          onClick={handleCopyText}
+                          className="flex items-center gap-3 w-full px-3.5 py-3 rounded-xl hover:bg-base-200 active:bg-base-300 text-sm font-medium transition-colors cursor-pointer text-foreground"
+                        >
+                          <HugeiconsIcon
+                            icon={copied ? Tick01Icon : Copy01Icon}
+                            strokeWidth={2}
+                            className={cn("size-5", copied ? "text-success" : "text-muted-foreground")}
+                          />
+                          <span>{copied ? "Copied!" : "Copy text"}</span>
+                        </button>
+                      )}
+
+                      {isSelf && (
+                        <>
+                          <button
+                            type="button"
+                            data-testid="mobile-message-edit"
+                            onClick={() => {
+                              setIsEditing(true);
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="flex items-center gap-3 w-full px-3.5 py-3 rounded-xl hover:bg-base-200 active:bg-base-300 text-sm font-medium transition-colors cursor-pointer text-foreground"
+                          >
+                            <HugeiconsIcon icon={Edit03Icon} strokeWidth={2} className="size-5 text-muted-foreground" />
+                            <span>Edit message</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            data-testid="mobile-message-delete"
+                            onClick={() => {
+                              onDeleteMessage?.(message.id);
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="flex items-center gap-3 w-full px-3.5 py-3 rounded-xl hover:bg-error/10 active:bg-error/20 text-sm font-medium transition-colors cursor-pointer text-error"
+                          >
+                            <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-5 text-error" />
+                            <span>Delete message</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </DialogPrimitive.Content>
+                </DialogPrimitive.Portal>
+              </DialogPrimitive.Root>
+            </>
           )}
           </div>
 

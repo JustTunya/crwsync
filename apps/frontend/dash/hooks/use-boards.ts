@@ -2,13 +2,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Board,
   CreateBoardPayload,
-  UpdateBoardPayload,
   CreateColumnPayload,
   UpdateColumnPayload,
   CreateTaskPayload,
   UpdateTaskPayload,
   MoveTaskPayload,
-  ReorderColumnsPayload,
   CreateTaskChecklistItemPayload,
   UpdateTaskChecklistItemPayload,
 } from "@crwsync/types";
@@ -16,15 +14,6 @@ import * as boardService from "@/services/board.service";
 import { uploadToPresignedUrl } from "@/lib/upload-to-storage";
 import { boardKeys, moduleKeys } from "@/hooks/query-keys";
 export { boardKeys } from "@/hooks/query-keys";
-
-export function useBoards(workspaceId?: string) {
-  return useQuery({
-    queryKey: boardKeys.list(workspaceId!),
-    queryFn: () => boardService.getBoards(workspaceId!),
-    enabled: !!workspaceId,
-    select: (result) => result.data,
-  });
-}
 
 export function useBoard(workspaceId?: string, boardId?: string) {
   return useQuery({
@@ -41,38 +30,6 @@ export function useCreateBoard(workspaceId: string) {
   return useMutation({
     mutationFn: (data: CreateBoardPayload) =>
       boardService.createBoard(workspaceId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: boardKeys.list(workspaceId) });
-      queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
-    },
-  });
-}
-
-export function useUpdateBoard(workspaceId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      boardId,
-      data,
-    }: {
-      boardId: string;
-      data: UpdateBoardPayload;
-    }) => boardService.updateBoard(workspaceId, boardId, data),
-    onSuccess: (_, { boardId }) => {
-      queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
-      queryClient.invalidateQueries({ queryKey: boardKeys.list(workspaceId) });
-      queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
-    },
-  });
-}
-
-export function useDeleteBoard(workspaceId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (boardId: string) =>
-      boardService.deleteBoard(workspaceId, boardId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: boardKeys.list(workspaceId) });
       queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
@@ -117,38 +74,6 @@ export function useDeleteColumn(workspaceId: string, boardId: string) {
       boardService.deleteColumn(workspaceId, boardId, columnId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
-    },
-  });
-}
-
-export function useReorderColumns(workspaceId: string, boardId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: ReorderColumnsPayload) =>
-      boardService.reorderColumns(workspaceId, boardId, data),
-    onMutate: async (data) => {
-      await queryClient.cancelQueries({ queryKey: boardKeys.detail(boardId) });
-      const previous = queryClient.getQueryData(boardKeys.detail(boardId));
-
-      queryClient.setQueryData(
-        boardKeys.detail(boardId),
-        (old: { data: Board } | undefined) => {
-          if (!old?.data?.columns) return old;
-          const columnMap = new Map(old.data.columns.map((c) => [c.id, c]));
-          const reordered = data.column_ids
-            .map((id) => columnMap.get(id))
-            .filter(Boolean);
-          return { ...old, data: { ...old.data, columns: reordered } };
-        },
-      );
-
-      return { previous };
-    },
-    onError: (_, __, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(boardKeys.detail(boardId), context.previous);
-      }
     },
   });
 }

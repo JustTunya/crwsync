@@ -1,7 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ReorderModulesPayload, WorkspaceModule, Board } from "@crwsync/types";
+import {
+  ReorderModulesPayload,
+  WorkspaceModule,
+  Board,
+  WorkspaceHomeData,
+  HomePinnedModule,
+  ModuleTypeEnum,
+} from "@crwsync/types";
 import * as boardService from "@/services/board.service";
-import { boardKeys, moduleKeys } from "@/hooks/query-keys";
+import { boardKeys, moduleKeys, homeKeys } from "@/hooks/query-keys";
 export { moduleKeys } from "@/hooks/query-keys";
 
 export function useWorkspaceModules(workspaceId?: string) {
@@ -184,7 +191,11 @@ export function useTogglePinModule(workspaceId: string) {
       await queryClient.cancelQueries({
         queryKey: moduleKeys.list(workspaceId),
       });
-      const previous = queryClient.getQueryData(moduleKeys.list(workspaceId));
+      await queryClient.cancelQueries({
+        queryKey: homeKeys.detail(workspaceId),
+      });
+      const previousModules = queryClient.getQueryData(moduleKeys.list(workspaceId));
+      const previousHome = queryClient.getQueryData(homeKeys.detail(workspaceId));
 
       queryClient.setQueryData(
         moduleKeys.list(workspaceId),
@@ -199,16 +210,54 @@ export function useTogglePinModule(workspaceId: string) {
         },
       );
 
-      return { previous };
+      queryClient.setQueryData(
+        homeKeys.detail(workspaceId),
+        (old: WorkspaceHomeData | undefined) => {
+          if (!old) return old;
+          if (!isPinned) {
+            return {
+              ...old,
+              pinnedModules: (old.pinnedModules || []).filter((m) => m.id !== moduleId),
+            };
+          }
+          const alreadyIn = (old.pinnedModules || []).some((m) => m.id === moduleId);
+          if (alreadyIn) return old;
+
+          const prevModulesData = previousModules as { data: WorkspaceModule[] } | undefined;
+          const targetMod = prevModulesData?.data?.find((m) => m.id === moduleId);
+
+          const newPinned: HomePinnedModule = {
+            id: moduleId,
+            name: targetMod?.name || "Module",
+            type: targetMod?.type || ModuleTypeEnum.BOARD,
+            isPinned: true,
+            color: targetMod?.color,
+            badgeCount: undefined,
+          };
+
+          return {
+            ...old,
+            pinnedModules: [...(old.pinnedModules || []), newPinned],
+          };
+        },
+      );
+
+      return { previousModules, previousHome };
     },
     onError: (_, __, context) => {
-      if (context?.previous && workspaceId) {
-        queryClient.setQueryData(moduleKeys.list(workspaceId), context.previous);
+      if (workspaceId) {
+        if (context?.previousModules) {
+          queryClient.setQueryData(moduleKeys.list(workspaceId), context.previousModules);
+        }
+        if (context?.previousHome) {
+          queryClient.setQueryData(homeKeys.detail(workspaceId), context.previousHome);
+        }
       }
     },
     onSettled: () => {
       if (!workspaceId) return;
       queryClient.invalidateQueries({ queryKey: moduleKeys.list(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: homeKeys.all });
     },
   });
 }

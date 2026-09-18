@@ -67,6 +67,10 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       socket.emit("join_room", { roomId, workspaceId });
     };
 
+    const handleConnectError = () => {
+      setConnected(false);
+    };
+
     const handleDisconnect = () => {
       setConnected(false);
     };
@@ -135,6 +139,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
     };
 
     socket.on("connect", handleConnect);
+    socket.on("connect_error", handleConnectError);
     socket.on("disconnect", handleDisconnect);
     socket.on("new_message", handleNewMessage);
     socket.on("message_updated", handleMessageUpdated);
@@ -157,6 +162,7 @@ export function useChatSocket({ workspaceId, roomId, currentUserId }: UseChatSoc
       // Removing listeners prevents stale closures for the previous room.
       socket.emit("leave_room", { roomId });
       socket.off("connect", handleConnect);
+      socket.off("connect_error", handleConnectError);
       socket.off("disconnect", handleDisconnect);
       socket.off("new_message", handleNewMessage);
       socket.off("message_updated", handleMessageUpdated);

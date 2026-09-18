@@ -7,6 +7,7 @@ import { AlertCircleIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useWorkspaces } from "@/hooks/use-workspaces";
+import { WorkspaceAvatar } from "@/components/workspace-avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
@@ -93,8 +94,6 @@ export function CreateWorkspaceForm() {
     });
   };
 
-  const initials = (name.trim() ? `${name.trim().charAt(0)}${name.trim().charAt(1) || ""}` : "WS").toUpperCase();
-
   return (
     <form onSubmit={onSubmit} className="w-full space-y-5">
       {errorMessage && (
@@ -122,13 +121,10 @@ export function CreateWorkspaceForm() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <div
-            className="size-9 shrink-0 rounded-md bg-primary/10 border border-primary/25 flex items-center justify-center text-primary font-semibold text-xs tracking-wider shadow-xs select-none"
-            title="Workspace avatar preview"
-            aria-hidden="true"
-          >
-            {initials}
-          </div>
+          <WorkspaceAvatar
+            name={name.trim() || "WS"}
+            className="size-9 rounded-md bg-primary/10 border border-primary/25 text-primary text-xs tracking-wider shadow-xs select-none shrink-0"
+          />
           <Input
             id="ws-name"
             value={name}
