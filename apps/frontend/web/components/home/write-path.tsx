@@ -129,6 +129,7 @@ const STEP_MS = 2_000;
 
 export function WritePath() {
   const ref = useRef<HTMLDivElement>(null);
+  const traceRef = useRef<HTMLOListElement>(null);
   const inView = useInView(ref, { amount: 0.3 });
   const reducedMotion = usePrefersReducedMotion();
   const [flowId, setFlowId] = useState(FLOWS[0].id);
@@ -143,6 +144,10 @@ export function WritePath() {
     const id = window.setInterval(() => setActive((i) => (i + 1) % stepCount), STEP_MS);
     return () => window.clearInterval(id);
   }, [reducedMotion, paused, inView, stepCount, flowId]);
+
+  useEffect(() => {
+    traceRef.current?.scrollTo({ top: traceRef.current.scrollHeight });
+  }, [active]);
 
   const selectFlow = (id: string) => {
     setFlowId(id);
@@ -214,7 +219,7 @@ export function WritePath() {
               <span className="font-semibold text-foreground">trace</span>
               <span>{f.label.toLowerCase()}</span>
             </div>
-            <ol className="min-h-[13.5rem] p-3 font-mono text-[11px] sm:text-xs leading-5">
+            <ol ref={traceRef} className="h-80 overflow-y-auto p-3 font-mono text-[11px] sm:text-xs leading-5 lg:h-64">
               {f.steps.slice(0, active + 1).map((step, i) => (
                 <m.li
                   key={step.title}

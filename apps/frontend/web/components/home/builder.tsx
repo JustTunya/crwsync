@@ -8,7 +8,7 @@ import { submitContactMessage } from "@/services/contact.service";
 import { cn } from "@/lib/utils";
 
 const inputClass =
-  "w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-placeholder transition-colors focus:border-ring focus:outline-none focus-visible:ring-3 focus-visible:ring-ring/40";
+  "w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-placeholder transition-[border-color,box-shadow] hover:border-foreground/30 focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20";
 
 export function Builder() {
   return (
@@ -102,23 +102,27 @@ function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-labelledby="contact-form-title">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-5 rounded-xl border border-border bg-card p-5 sm:p-6"
+      aria-labelledby="contact-form-title"
+    >
       <div>
         <h3 id="contact-form-title" className="text-xl font-semibold">Send a message</h3>
         <p className="mt-1 text-sm text-muted-foreground">Goes through the same API and queue the product uses.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="name" className="text-sm font-medium">Name</label>
+          <label htmlFor="name" className="text-sm font-medium text-foreground/90">Name</label>
           <input type="text" id="name" name="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium">Email</label>
+          <label htmlFor="email" className="text-sm font-medium text-foreground/90">Email</label>
           <input type="email" id="email" name="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
         </div>
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="message" className="text-sm font-medium">Message</label>
+        <label htmlFor="message" className="text-sm font-medium text-foreground/90">Message</label>
         <textarea
           id="message"
           name="message"

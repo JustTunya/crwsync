@@ -1,323 +1,283 @@
 "use client";
 
-import { m } from "framer-motion";
-import { useRef, useState, useEffect, useId } from "react";
+import { useEffect, useRef, useState } from "react";
+import { m, useInView } from "framer-motion";
 import { HugeiconsIcon, IconSvgElement } from "@hugeicons/react";
-import { ComputerPhoneSyncIcon, Globe02Icon, DashboardSquare01Icon, ServerStack03Icon, DatabaseIcon, Layers01Icon, Rocket01Icon, FavouriteIcon, Notification01Icon } from "@hugeicons/core-free-icons";
+import {
+  ComputerPhoneSyncIcon,
+  Globe02Icon,
+  DashboardSquare01Icon,
+  ServerStack03Icon,
+  DatabaseIcon,
+  Layers01Icon,
+  Folder01Icon,
+  Rocket01Icon,
+  FavouriteIcon,
+  Notification01Icon,
+  Task01Icon,
+} from "@hugeicons/core-free-icons";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { Section } from "@/components/home/section";
+import { cn } from "@/lib/utils";
 
-const clients = [
-  { id: "browser", label: "Browser", desc: "crwsync.xyz", icon: ComputerPhoneSyncIcon },
-  { id: "mobile", label: "Mobile", desc: "Future PWA / Native", icon: ComputerPhoneSyncIcon },
+interface Node {
+  id: string;
+  label: string;
+  detail: string;
+  icon: IconSvgElement | string;
+  fillIcon?: boolean;
+}
+
+interface Group {
+  label: string;
+  nodes: Node[];
+}
+
+interface Edge {
+  from: string;
+  to: string;
+  label?: string;
+  dashed?: boolean;
+  delay: number;
+  offset?: number;
+}
+
+const runtimeGroups: Group[] = [
+  {
+    label: "Clients",
+    nodes: [
+      { id: "browser", label: "Browser", detail: "crwsync.xyz", icon: ComputerPhoneSyncIcon },
+      { id: "mobile", label: "Mobile", detail: "Future PWA", icon: ComputerPhoneSyncIcon },
+    ],
+  },
+  {
+    label: "Edge",
+    nodes: [
+      { id: "cloudflare", label: "Cloudflare", detail: "DNS, TLS, CDN, DDoS", icon: "./cloudflare.svg" },
+      { id: "nginx", label: "Nginx", detail: "Routing per subdomain", icon: "./nginx.svg" },
+    ],
+  },
+  {
+    label: "Frontend",
+    nodes: [
+      { id: "web", label: "Public portal", detail: "Next.js 16", icon: Globe02Icon },
+      { id: "dash", label: "Dashboard", detail: "Next.js 16", icon: DashboardSquare01Icon },
+    ],
+  },
+  {
+    label: "Backend",
+    nodes: [
+      { id: "api", label: "API", detail: "NestJS, REST, Socket.IO", icon: ServerStack03Icon },
+      { id: "workers", label: "Workers", detail: "BullMQ: email, chat persistence", icon: Task01Icon },
+    ],
+  },
+  {
+    label: "Data & storage",
+    nodes: [
+      { id: "postgres", label: "Postgres", detail: "Prisma, source of truth", icon: DatabaseIcon },
+      { id: "redis", label: "Redis", detail: "Cache, locks, queues, pub/sub", icon: Layers01Icon },
+      { id: "storage", label: "Object storage", detail: "R2 in prod, MinIO locally", icon: Folder01Icon },
+    ],
+  },
 ];
 
-const infra = [
-  { id: "cloudflare", label: "Cloudflare", tech: "DNS • TLS • CDN • DDoS", icon: "./cloudflare.svg" },
-  { id: "nginx", label: "Nginx", tech: "Routing • SSL Termination", icon: "./nginx.svg" },
+const runtimeEdges: Edge[] = [
+  { from: "browser", to: "cloudflare", delay: 0 },
+  { from: "mobile", to: "cloudflare", delay: 0.1 },
+  { from: "cloudflare", to: "nginx", delay: 0.8 },
+  { from: "nginx", to: "web", delay: 1.6 },
+  { from: "nginx", to: "dash", delay: 1.7 },
+  { from: "web", to: "api", label: "REST", delay: 2.4 },
+  { from: "dash", to: "api", label: "REST", delay: 2.5, offset: -7 },
+  { from: "dash", to: "api", label: "WS", delay: 0, dashed: true, offset: 9 },
+  { from: "api", to: "postgres", label: "Prisma", delay: 3.2 },
+  { from: "api", to: "redis", label: "cache", delay: 3.3 },
+  { from: "api", to: "storage", label: "presign", delay: 3.4 },
+  { from: "api", to: "workers", label: "enqueue", delay: 0, dashed: true },
+  { from: "workers", to: "postgres", delay: 4.2 },
 ];
 
-const frontend = [
-  { id: "web", label: "Public Portal", tech: "Next.js", icon: Globe02Icon },
-  { id: "dash", label: "Dashboard", tech: "Next.js", icon: DashboardSquare01Icon },
+const pipelineGroups: Group[] = [
+  {
+    label: "CI",
+    nodes: [
+      { id: "git", label: "Push to main", detail: "Triggers the pipeline", icon: "./github.svg" },
+      { id: "lint", label: "Lint", detail: "Every package", icon: "./eslint.svg" },
+      { id: "test", label: "Unit tests", detail: "Every package", icon: "./jest.svg" },
+    ],
+  },
+  {
+    label: "CD",
+    nodes: [
+      { id: "build", label: "Docker build", detail: "One image per service", icon: "./docker.svg" },
+      { id: "ghcr", label: "Registry", detail: "Pushed to GHCR", icon: "./github.svg" },
+      { id: "deploy", label: "Deploy", detail: "Swarm rolling update", icon: Rocket01Icon, fillIcon: true },
+    ],
+  },
+  {
+    label: "Verify",
+    nodes: [
+      { id: "health", label: "Health check", detail: "Every service answers", icon: FavouriteIcon, fillIcon: true },
+      { id: "notify", label: "Notify", detail: "Deployment result", icon: Notification01Icon, fillIcon: true },
+    ],
+  },
 ];
 
-const data = [
-  { id: "db", label: "Persistence", tech: "PostgreSQL", icon: DatabaseIcon },
-  { id: "redis", label: "In-Memory", tech: "Redis Cache", icon: Layers01Icon },
+const pipelineEdges: Edge[] = [
+  { from: "git", to: "lint", delay: 0 },
+  { from: "lint", to: "test", label: "pass", delay: 0.8 },
+  { from: "test", to: "build", label: "pass", delay: 1.6 },
+  { from: "build", to: "ghcr", label: "push", delay: 2.4 },
+  { from: "ghcr", to: "deploy", label: "pull", delay: 3.2 },
+  { from: "deploy", to: "health", label: "verify", delay: 4 },
+  { from: "health", to: "notify", delay: 4.8 },
+  { from: "health", to: "build", label: "rollback", delay: 0, dashed: true, offset: 14 },
 ];
-
-const groupLabel = "absolute inset-x-0 -top-2.75 text-center text-sm text-muted-foreground tracking-wide leading-tighter";
-const groupBox = "relative p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10";
 
 export default function Architecture() {
-  const projectRef = useRef<HTMLDivElement>(null);
-  const infraRef = useRef<HTMLDivElement>(null);
-
   return (
     <Section
       id="architecture"
       title="Three services, one domain, no shared memory"
-      lead="Public traffic, authenticated traffic, and the API run as separate deployables behind Cloudflare and Nginx. The beam follows a request from a browser to Postgres. Dashed lines are the socket paths that carry state back."
+      lead="Public traffic, authenticated traffic, and the API run as separate deployables behind Cloudflare and Nginx. The beam follows a request from a browser to the data layer. Dashed lines are the asynchronous paths: sockets, queues, and rollbacks."
     >
-      <div ref={projectRef} className="relative flex flex-col lg:flex-row items-center justify-between gap-20 lg:gap-8 w-full py-8">
-        <Connector delayOrder={0} from="card-browser" to="card-cloudflare" containerRef={projectRef} curve={0} />
-        <Connector delayOrder={0.1} from="card-mobile" to="card-cloudflare" containerRef={projectRef} curve={0} />
-        <Connector delayOrder={0.8} from="card-cloudflare" to="card-nginx" containerRef={projectRef} curve={0} />
-        <Connector delayOrder={1.6} from="card-nginx" to="card-web" containerRef={projectRef} curve={0} />
-        <Connector delayOrder={1.7} from="card-nginx" to="card-dash" containerRef={projectRef} curve={0} />
-        <Connector delayOrder={1.8} from="card-nginx" to="card-backend" containerRef={projectRef} rightLoop curve={-0.06} />
-        <Connector delayOrder={2.4} from="card-web" to="card-backend" label="REST" containerRef={projectRef} curve={0} />
-        <Connector delayOrder={2.5} from="card-dash" to="card-backend" label="REST" containerRef={projectRef} curve={0} />
-        <Connector delayOrder={0} from="card-dash" to="card-backend" label="WS" containerRef={projectRef} curve={0} dashed offsetX={-16} offsetY={12} />
-        <Connector delayOrder={3.2} from="card-backend" to="card-db" label="Prisma ORM" containerRef={projectRef} curve={0} />
-        <Connector delayOrder={3.3} from="card-backend" to="card-redis" label="R/W" containerRef={projectRef} curve={0} />
-
-        <div className={`${groupBox} flex lg:flex-col gap-4`}>
-          <div className={groupLabel}>
-            <span className="px-1 bg-background">Clients</span>
-          </div>
-          {clients.map((node, i) => (
-            <Card key={node.id} id={`card-${node.id}`} i={i} icon={node.icon} label={node.label} desc={node.desc} />
-          ))}
-        </div>
-
-        <div className={`${groupBox} flex gap-4`}>
-          <div className={groupLabel}>
-            <span className="px-1 bg-background">Infrastructure</span>
-          </div>
-          {infra.map((node, i) => (
-            <Card key={node.id} id={`card-${node.id}`} i={i + 1} icon={node.icon} label={node.label} tech={node.tech} />
-          ))}
-        </div>
-
-        <div className={`${groupBox} flex lg:flex-col gap-16`}>
-          <div className={groupLabel}>
-            <span className="px-1 bg-background">Frontend</span>
-          </div>
-          {frontend.map((node, i) => (
-            <Card key={node.id} id={`card-${node.id}`} i={i + 2} icon={node.icon} label={node.label} tech={node.tech} />
-          ))}
-        </div>
-
-        <div className="p-4">
-          <Card key="backend" id="card-backend" i={3} icon={ServerStack03Icon} label="Backend" tech="NestJS • JWT Auth • REST • Socket.IO • Prisma ORM" />
-        </div>
-
-        <div className={`${groupBox} flex lg:flex-col gap-4`}>
-          <div className={groupLabel}>
-            <span className="px-1 bg-background">Data & Storage</span>
-          </div>
-          {data.map((node, i) => (
-            <Card key={node.id} id={`card-${node.id}`} i={i + 4} icon={node.icon} label={node.label} tech={node.tech} />
-          ))}
-        </div>
-      </div>
+      <Diagram groups={runtimeGroups} edges={runtimeEdges} />
 
       <div className="mt-20 grid gap-4 border-t border-border pt-12 lg:grid-cols-12 lg:gap-8">
         <h3 className="lg:col-span-5 text-2xl sm:text-3xl font-bold tracking-tight leading-[1.1] text-balance">From push to production</h3>
         <p className="lg:col-span-6 lg:col-start-7 max-w-[60ch] text-base text-muted-foreground text-pretty">
-          A merge to main lints and tests every package, builds container images, pushes them to the registry, and rolls them onto the Swarm. A failed health check rolls back to the previous image.
+          A merge to main lints and tests every package, builds one container image per service, pushes them to the registry, and rolls them onto the Swarm start-first. A failed health check rolls back to the previous image.
         </p>
       </div>
 
-      <div ref={infraRef} className="relative mx-auto flex max-w-4xl flex-col items-center justify-around gap-16 py-8 lg:flex-row lg:gap-8">
-        <Connector delayOrder={0} from="card-git" to="card-lint" containerRef={infraRef} curve={0.9} rightLoop offsetX={6} />
-        <Connector delayOrder={0.8} from="card-lint" to="card-test" label="Pass" containerRef={infraRef} curve={0.9} offsetX={120} />
-        <Connector delayOrder={1.6} from="card-test" to="card-build" label="Pass" containerRef={infraRef} curve={0.9} />
-        <Connector delayOrder={2.4} from="card-build" to="card-ghcr" label="Push" containerRef={infraRef} curve={0.9} rightLoop offsetX={6} />
-        <Connector delayOrder={3.2} from="card-ghcr" to="card-deploy" label="Pull" containerRef={infraRef} curve={0.9} offsetX={120} />
-        <Connector delayOrder={4} from="card-deploy" to="card-health" label="Verify" containerRef={infraRef} curve={0.9} />
-        <Connector delayOrder={4.8} from="card-health" to="card-notify" containerRef={infraRef} curve={0.9} rightLoop offsetX={6} />
-        <Connector delayOrder={0} from="card-health" to="card-build" label="Rollback" containerRef={infraRef} curve={0.3} rightLoop dashed />
-
-        <div className={`${groupBox} flex flex-col gap-4`}>
-          <div className={groupLabel}>
-            <span className="px-1 bg-background">CI Phase</span>
-          </div>
-
-          <Card key="git" id="card-git" i={0} icon="./github.svg" label="Git Push & Merge" desc="Pushing changes to the main branch triggers the pipeline." />
-          <Card key="lint" id="card-lint" i={1} icon="./eslint.svg" label="Lint" desc="Linting each package." />
-          <Card key="test" id="card-test" i={2} icon="./jest.svg" label="Unit Test" desc="Running unit tests for each package." />
-        </div>
-
-        <div className={`${groupBox} flex flex-col gap-4`}>
-          <div className={groupLabel}>
-            <span className="px-1 bg-background">CD Phase</span>
-          </div>
-
-          <Card key="build" id="card-build" i={1} icon="./docker.svg" label="Docker Build" desc="Container images are built." />
-          <Card key="ghcr" id="card-ghcr" i={2} icon="./github.svg" label="Container Registry" desc="Container images are pushed to the GHCR." />
-          <Card key="deploy" id="card-deploy" i={3} icon={Rocket01Icon} fillIcon label="Deploy" desc="Images are deployed to the server." />
-        </div>
-
-        <div className="relative flex flex-col gap-4 p-4">
-          <Card key="health" id="card-health" i={2} icon={FavouriteIcon} fillIcon label="Health Check" desc="Health check is performed to ensure the services are running." />
-          <Card key="notify" id="card-notify" i={3} icon={Notification01Icon} fillIcon label="Notify" desc="Notify users about the deployment." />
-        </div>
-      </div>
+      <Diagram groups={pipelineGroups} edges={pipelineEdges} className="mx-auto max-w-4xl" />
     </Section>
   );
 }
 
-function Card({
-  id,
-  i,
-  icon,
-  label,
-  tech,
-  desc,
-  fillIcon,
-  children
-}: {
-  id?: string;
-  i: number;
-  icon: IconSvgElement | string;
-  label: string;
-  tech?: string;
-  desc?: string;
-  fillIcon?: boolean;
-  children?: React.ReactNode;
-}) {
+interface EdgeGeometry {
+  edge: Edge;
+  d: string;
+  mid: { x: number; y: number };
+}
+
+function edgeGeometry(edge: Edge, a: DOMRect, b: DOMRect, parent: DOMRect): EdgeGeometry {
+  const offset = edge.offset ?? 0;
+  const hGap = Math.max(b.left - a.right, a.left - b.right);
+  const vGap = Math.max(b.top - a.bottom, a.top - b.bottom);
+  const horizontal = hGap >= vGap;
+
+  let x1: number, y1: number, x2: number, y2: number;
+  if (horizontal) {
+    const rightward = b.left >= a.right;
+    x1 = rightward ? a.right : a.left;
+    x2 = rightward ? b.left : b.right;
+    y1 = a.top + a.height / 2 + offset;
+    y2 = b.top + b.height / 2 + offset;
+  } else {
+    const downward = b.top >= a.bottom;
+    y1 = downward ? a.bottom : a.top;
+    y2 = downward ? b.top : b.bottom;
+    x1 = a.left + a.width / 2 + offset;
+    x2 = b.left + b.width / 2 + offset;
+  }
+
+  x1 = Math.round(x1 - parent.left);
+  x2 = Math.round(x2 - parent.left);
+  y1 = Math.round(y1 - parent.top);
+  y2 = Math.round(y2 - parent.top);
+
+  const span = horizontal ? x2 - x1 : y2 - y1;
+  const pull = Math.max(24, Math.abs(span) / 2) * Math.sign(span || 1);
+  const c1 = horizontal ? [x1 + pull, y1] : [x1, y1 + pull];
+  const c2 = horizontal ? [x2 - pull, y2] : [x2, y2 - pull];
+
+  return {
+    edge,
+    d: `M ${x1} ${y1} C ${c1[0]} ${c1[1]}, ${c2[0]} ${c2[1]}, ${x2} ${y2}`,
+    mid: {
+      x: 0.125 * x1 + 0.375 * c1[0] + 0.375 * c2[0] + 0.125 * x2,
+      y: 0.125 * y1 + 0.375 * c1[1] + 0.375 * c2[1] + 0.125 * y2,
+    },
+  };
+}
+
+function Diagram({ groups, edges, className }: { groups: Group[]; edges: Edge[]; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.1 });
   const reducedMotion = usePrefersReducedMotion();
+  const [geometry, setGeometry] = useState<EdgeGeometry[]>([]);
+
+  useEffect(() => {
+    if (!inView) return;
+    let frame = 0;
+    let last = "";
+    const tick = () => {
+      const root = ref.current;
+      if (root) {
+        const parent = root.getBoundingClientRect();
+        const next = edges.flatMap((edge) => {
+          const a = root.querySelector<HTMLElement>(`[data-node="${edge.from}"]`);
+          const b = root.querySelector<HTMLElement>(`[data-node="${edge.to}"]`);
+          return a && b ? [edgeGeometry(edge, a.getBoundingClientRect(), b.getBoundingClientRect(), parent)] : [];
+        });
+        const key = next.map((g) => g.d).join("|");
+        if (key !== last) {
+          last = key;
+          setGeometry(next);
+        }
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [inView, edges]);
 
   return (
-    <m.div
-      id={id}
-      initial={reducedMotion ? false : { opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: reducedMotion ? 0 : 0.5, delay: reducedMotion ? 0 : i * 0.15 }}
-      className="flex flex-col items-center justify-center min-h-24 lg:min-h-26 h-full w-30 lg:w-36 p-2 text-center rounded-xl border border-border bg-card shadow-sm"
-    >
-      <div className="p-2 mb-2 bg-foreground/10 text-foreground rounded-full">
-        {typeof icon === "string" ? (
-          <div
-            className="size-6 bg-current"
-            style={{
-              WebkitMaskImage: `url(${icon})`,
-              maskImage: `url(${icon})`,
-              WebkitMaskSize: 'contain',
-              maskSize: 'contain',
-              WebkitMaskRepeat: 'no-repeat',
-              maskRepeat: 'no-repeat',
-              WebkitMaskPosition: 'center',
-              maskPosition: 'center'
-            }}
-          />
-        ) : (
-          <HugeiconsIcon icon={icon} strokeWidth={1.5} fill={fillIcon ? "currentColor" : "none"} className="text-xs" />
-        )}
-      </div>
-      <span className="text-xs font-semibold text-foreground leading-relaxed line-clamp-1">
-        {label}
-      </span>
-      {tech && (
-        <span className="text-[10px] text-muted-foreground text-balance tracking-tight leading-tight line-clamp-2">
-          {tech}
-        </span>
-      )}
-      {desc && (
-        <span className="text-[10px] text-muted-foreground text-balance tracking-tight leading-tight line-clamp-2">
-          {desc}
-        </span>
-      )}
-      {children}
-    </m.div>
+    <div ref={ref} className={cn("relative flex flex-col gap-10 py-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6", className)}>
+      <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden>
+        {geometry.map((g) => (
+          <Beam key={`${g.edge.from}-${g.edge.to}-${g.edge.label ?? ""}`} geometry={g} animate={!reducedMotion} />
+        ))}
+      </svg>
+
+      {groups.map((group, gi) => (
+        <div key={group.label} className="relative rounded-xl border border-border p-4 pt-6">
+          <span className="absolute -top-2.5 left-3 rounded-full border border-border bg-background px-2 py-px text-[11px] font-semibold text-muted-foreground">
+            {group.label}
+          </span>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:flex lg:flex-col">
+            {group.nodes.map((node, ni) => (
+              <Card key={node.id} node={node} order={gi * 2 + ni} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
-function Connector({
-  from,
-  to,
-  dashed = false,
-  curve = 0.5,
-  containerRef,
-  offsetX = 0,
-  offsetY = 0,
-  delayOrder = 0,
-  rightLoop = false,
-  label
-}: {
-  from: string;
-  to: string;
-  dashed?: boolean;
-  curve?: number;
-  containerRef: React.RefObject<HTMLElement | null>;
-  offsetX?: number;
-  offsetY?: number;
-  delayOrder?: number;
-  rightLoop?: boolean;
-  label?: string;
-}) {
-  const [coords, setCoords] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
-  const rawId = useId();
-  const pathId = "path-" + rawId.replace(/:/g, "");
-  const reducedMotion = usePrefersReducedMotion();
+const BEAM_SECONDS = 2;
 
-  useEffect(() => {
-    let animationFrameId: number;
-    let lastState = "";
-
-    const update = () => {
-      if (!containerRef.current) {
-        animationFrameId = requestAnimationFrame(update);
-        return;
-      }
-      const parent = containerRef.current.getBoundingClientRect();
-      const el1 = document.getElementById(from);
-      const el2 = document.getElementById(to);
-      if (!el1 || !el2) {
-        animationFrameId = requestAnimationFrame(update);
-        return;
-      }
-
-      const r1 = el1.getBoundingClientRect();
-      const r2 = el2.getBoundingClientRect();
-
-      const x1 = r1.left + r1.width / 2 - parent.left;
-      const y1 = r1.top + r1.height / 2 - parent.top;
-      const x2 = r2.left + r2.width / 2 - parent.left;
-      const y2 = r2.top + r2.height / 2 - parent.top;
-
-      const state = `${x1},${y1},${x2},${y2}`;
-      if (state !== lastState) {
-        lastState = state;
-        setCoords({ x1: x1, y1: y1 + offsetY, x2: x2, y2: y2 + offsetY });
-      }
-
-      animationFrameId = requestAnimationFrame(update);
-    };
-
-    update();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [from, to, containerRef, offsetX, offsetY]);
-
-  if (!coords) return null;
-
-  const { x1, y1, x2, y2 } = coords;
-  const deltaX = Math.abs(x2 - x1);
-  const deltaY = Math.abs(y2 - y1);
-  const h = rightLoop ? deltaY * curve : deltaX * curve;
-  const data = rightLoop
-    ? `M ${x1} ${y1} C ${x1 + h + offsetX} ${y1}, ${x2 + h + offsetX} ${y2}, ${x2} ${y2}`
-    : `M ${x1} ${y1} C ${x1 + h - offsetX} ${y1}, ${x2 - h - offsetX} ${y2}, ${x2} ${y2}`;
-  const dyValue = rightLoop ? 12 : -4;
-  const isReversed = x1 > x2;
-  const finalDy = isReversed ? -dyValue : dyValue;
-
-  const textData = isReversed
-    ? (rightLoop
-        ? `M ${x2} ${y2} C ${x2 + h + offsetX} ${y2}, ${x1 + h + offsetX} ${y1}, ${x1} ${y1}`
-        : `M ${x2} ${y2} C ${x2 - h - offsetX} ${y2}, ${x1 + h - offsetX} ${y1}, ${x1} ${y1}`)
-    : data;
-
-  const beamDuration = 2;
-  const initialDelay = (delayOrder || 0) * beamDuration;
-  const repeatDelay = beamDuration;
-
+function Beam({ geometry, animate }: { geometry: EdgeGeometry; animate: boolean }) {
+  const { edge } = geometry;
+  const delay = edge.delay * BEAM_SECONDS;
   return (
-    <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
-      {label && <path id={pathId} d={textData} fill="none" stroke="none" />}
+    <g>
       <m.path
-        d={data}
+        d={geometry.d}
         fill="none"
-        stroke="var(--muted-foreground)"
+        stroke="var(--border)"
         strokeWidth="1.5"
         strokeLinecap="round"
-        strokeDasharray={dashed ? "5 5" : undefined}
-        initial={dashed && !reducedMotion ? { strokeDashoffset: 0 } : undefined}
-        animate={dashed && !reducedMotion ? { strokeDashoffset: -10 } : {}}
-        transition={dashed && !reducedMotion ? { repeat: Infinity, duration: 0.4, ease: "linear" } : {}}
+        strokeDasharray={edge.dashed ? "4 5" : undefined}
+        animate={edge.dashed && animate ? { strokeDashoffset: [0, -9] } : undefined}
+        transition={edge.dashed && animate ? { repeat: Infinity, duration: 0.6, ease: "linear" } : undefined}
       />
-
-      {!dashed && !reducedMotion && (
+      {!edge.dashed && animate && (
         <>
           <m.path
-            d={data}
+            d={geometry.d}
             fill="none"
             stroke="var(--primary)"
             strokeWidth="4"
@@ -325,32 +285,73 @@ function Connector({
             strokeOpacity={0.2}
             initial={{ pathLength: 0.2, pathOffset: -0.2 }}
             animate={{ pathOffset: 1 }}
-            transition={{ repeat: Infinity, duration: beamDuration, delay: initialDelay, repeatDelay, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: BEAM_SECONDS, delay, repeatDelay: BEAM_SECONDS, ease: "linear" }}
           />
           <m.path
-            d={data}
+            d={geometry.d}
             fill="none"
             stroke="var(--primary)"
             strokeWidth="2"
             strokeLinecap="round"
-            style={{ filter: "drop-shadow(0 0 8px var(--primary))" }}
+            style={{ filter: "drop-shadow(0 0 6px var(--primary))" }}
             initial={{ pathLength: 0.1, pathOffset: -0.15 }}
             animate={{ pathOffset: 1.05 }}
-            transition={{ repeat: Infinity, duration: beamDuration, delay: initialDelay, repeatDelay, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: BEAM_SECONDS, delay, repeatDelay: BEAM_SECONDS, ease: "linear" }}
           />
         </>
       )}
-
-      {label && (
+      {edge.label && (
         <text
-          className="text-[10px] font-medium fill-muted-foreground"
-          dy={finalDy}
+          x={geometry.mid.x}
+          y={geometry.mid.y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          paintOrder="stroke"
+          stroke="var(--background)"
+          strokeWidth={4}
+          strokeLinejoin="round"
+          className="fill-muted-foreground text-[10px] font-semibold"
         >
-          <textPath href={`#${pathId}`} startOffset="50%" textAnchor="middle">
-            {label}
-          </textPath>
+          {edge.label}
         </text>
       )}
-    </svg>
+    </g>
+  );
+}
+
+function Card({ node, order }: { node: Node; order: number }) {
+  const reducedMotion = usePrefersReducedMotion();
+
+  return (
+    <m.div
+      data-node={node.id}
+      initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: reducedMotion ? 0 : 0.45, delay: reducedMotion ? 0 : order * 0.08 }}
+      className="relative z-10 flex min-h-24 w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card p-2.5 text-center shadow-sm lg:w-36"
+    >
+      <span className="flex size-8 items-center justify-center rounded-full bg-foreground/8 text-foreground">
+        {typeof node.icon === "string" ? (
+          <span
+            className="size-4 bg-current"
+            style={{
+              WebkitMaskImage: `url(${node.icon})`,
+              maskImage: `url(${node.icon})`,
+              WebkitMaskSize: "contain",
+              maskSize: "contain",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              WebkitMaskPosition: "center",
+              maskPosition: "center",
+            }}
+          />
+        ) : (
+          <HugeiconsIcon icon={node.icon} strokeWidth={1.75} fill={node.fillIcon ? "currentColor" : "none"} className="size-4" />
+        )}
+      </span>
+      <span className="text-xs font-semibold leading-tight text-foreground">{node.label}</span>
+      <span className="text-[10px] leading-tight text-muted-foreground text-balance">{node.detail}</span>
+    </m.div>
   );
 }

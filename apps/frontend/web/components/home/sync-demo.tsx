@@ -175,7 +175,7 @@ function BoardTab({ owner, layout, dragging, flash, actor }: BoardTabProps) {
       </div>
       <div className="grid grid-cols-3 gap-1.5 p-1.5 sm:gap-2 sm:p-2">
         {COLUMNS.map((column) => (
-          <div key={column.id} className="min-w-0 rounded-lg border border-border/70 bg-background p-1.5 min-h-[14.5rem]">
+          <div key={column.id} className="min-w-0 h-80 overflow-hidden rounded-lg border border-border/70 bg-background p-1.5">
             <div className="flex items-center justify-between px-1 pb-1.5 text-[11px] font-semibold">
               <span>{column.name}</span>
               <span className="text-muted-foreground">{layout[column.id].length}</span>
