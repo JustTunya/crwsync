@@ -244,21 +244,28 @@ function FilesMock() {
 }
 
 const days = [
-  { day: "Mon", date: 14, items: [{ id: "ATL-29", title: "Presigned uploads to R2", tone: "late" }] },
-  { day: "Tue", date: 15, items: [] },
-  { day: "Wed", date: 16, items: [{ id: "ATL-41", title: "Rotate refresh tokens", tone: "due" }] },
-  { day: "Thu", date: 17, items: [{ id: "ATL-38", title: "Board filters", tone: "due" }], today: true },
-  { day: "Fri", date: 18, items: [{ id: "ATL-35", title: "Redis adapter", tone: "done" }] },
-  { day: "Sat", date: 19, items: [] },
-  { day: "Sun", date: 20, items: [] },
+  { day: "Mon", date: 14, items: [{ id: "ATL-29", title: "Presigned uploads to R2", tone: "late" }], mobile: true },
+  { day: "Tue", date: 15, items: [], mobile: false },
+  { day: "Wed", date: 16, items: [{ id: "ATL-41", title: "Rotate refresh tokens", tone: "due" }], mobile: true },
+  { day: "Thu", date: 17, items: [{ id: "ATL-38", title: "Board filters", tone: "due" }], today: true, mobile: true },
+  { day: "Fri", date: 18, items: [{ id: "ATL-35", title: "Redis adapter", tone: "done" }], mobile: true },
+  { day: "Sat", date: 19, items: [], mobile: false },
+  { day: "Sun", date: 20, items: [], mobile: false },
 ];
 
 function SchedulesMock() {
   return (
     <div className="p-4">
-      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+      <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7 sm:gap-2">
         {days.map((d) => (
-          <div key={d.day} className={cn("min-h-[16rem] rounded-lg border p-1.5", d.today ? "border-primary/50 bg-primary/5" : "border-border bg-background")}>
+          <div
+            key={d.day}
+            className={cn(
+              "min-h-[16rem] rounded-lg border p-1.5",
+              !d.mobile && "hidden sm:block",
+              d.today ? "border-primary/50 bg-primary/5" : "border-border bg-background"
+            )}
+          >
             <div className="flex flex-col items-center leading-tight">
               <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{d.day}</span>
               <span className={cn("text-sm font-semibold", d.today && "text-primary")}>{d.date}</span>
