@@ -121,8 +121,8 @@ export function StatisticsDashboard({
         <div className="flex items-center gap-3 min-w-0">
           <LSidebarToggle />
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Statistics</h1>
-            <p className="text-sm text-muted-foreground leading-4 font-mono">
+            <h1 className="text-base sm:text-lg font-semibold text-foreground">Statistics</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-4 font-mono">
               Workspace analytics
             </p>
           </div>

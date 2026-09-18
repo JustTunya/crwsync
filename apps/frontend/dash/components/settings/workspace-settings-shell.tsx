@@ -66,7 +66,7 @@ export function WorkspaceSettingsShell({ children }: { children: React.ReactNode
           <WorkspaceAvatar avatar_key={workspace.logo_key || ""} name={workspace.name} className="size-8 text-xs" />
 
           <div>
-            <h1 className="text-lg font-semibold text-foreground">{workspace.name}</h1>
+            <h1 className="text-base sm:text-lg font-semibold text-foreground">{workspace.name}</h1>
             <p className="text-sm text-muted-foreground leading-4">Workspace settings</p>
           </div>
         </div>

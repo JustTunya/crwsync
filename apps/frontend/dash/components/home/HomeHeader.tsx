@@ -30,13 +30,13 @@ export function HomeHeader({
         <LSidebarToggle />
 
         <div className="flex flex-col min-w-0">
-          <h1 className="text-sm font-semibold text-foreground truncate">
+          <h1 className="text-base sm:text-lg font-semibold text-foreground">
             {summary?.greeting || "Home"}
           </h1>
           {summary?.todayFormatted && (
-            <span className="text-xs text-muted-foreground truncate">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-4 font-mono">
               {summary.todayFormatted}
-            </span>
+            </p>
           )}
         </div>
       </div>
