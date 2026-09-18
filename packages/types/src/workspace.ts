@@ -1,4 +1,4 @@
-import { ModuleTypeEnum, TaskPriorityEnum } from "./board";
+import { ModuleTypeEnum, TaskPriorityEnum, ColumnType } from "./board";
 
 export enum WorkspaceRoleEnum {
   OWNER = "OWNER",
@@ -116,6 +116,7 @@ export interface WorkspaceHomeSummary {
 
 export interface HomeTaskItem {
   id: string;
+  shortId: string;
   title: string;
   priority: TaskPriorityEnum;
   status: string;
@@ -129,6 +130,9 @@ export interface HomeTaskItem {
   attachmentsCount: number;
   checklistTotal: number;
   checklistCompleted: number;
+  columnColor?: string | null;
+  columnType?: ColumnType;
+  completedAt?: string | null;
 }
 
 export interface HomeProjectSummary {

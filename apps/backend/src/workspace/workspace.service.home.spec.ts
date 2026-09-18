@@ -64,6 +64,7 @@ describe("WorkspaceService.getHomeData", () => {
 
     const focusTask = {
       id: "task-1",
+      shortId: "TSK-1",
       title: "Ship it",
       priority: "HIGH",
       due_date: null,
@@ -99,6 +100,7 @@ describe("WorkspaceService.getHomeData", () => {
     expect(result.myFocus.inProgress).toHaveLength(1);
     expect(result.myFocus.inProgress[0]).toMatchObject({
       id: "task-1",
+      shortId: "TSK-1",
       projectId: "proj-1",
       projectName: "Launch",
       checklistTotal: 2,
@@ -134,6 +136,7 @@ describe("WorkspaceService.getHomeData", () => {
   it("correctly partitions tasks into overdue, dueToday, and inProgress", async () => {
     const makeTask = (id: string, dueDate: Date | null, columnType: string) => ({
       id,
+      shortId: `TSK-${id}`,
       title: id,
       priority: "MEDIUM",
       due_date: dueDate,

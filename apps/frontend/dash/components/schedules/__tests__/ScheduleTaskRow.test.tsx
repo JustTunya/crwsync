@@ -52,6 +52,7 @@ const baseScheduleTask: ScheduleTask = {
 
 const baseHomeTask: HomeTaskItem = {
   id: "home-task-1",
+  shortId: "NL-11",
   title: "Review pull requests",
   priority: TaskPriorityEnum.URGENT,
   status: "In Review",
@@ -76,11 +77,29 @@ describe("ScheduleTaskRow", () => {
     expect(html).toContain("In Progress");
   });
 
-  it("renders a HomeTaskItem with project and board title", () => {
-    const html = renderToStaticMarkup(<ScheduleTaskRow task={baseHomeTask} />);
+  it("renders a HomeTaskItem with shortId, project, and board title", () => {
+    const html = renderToStaticMarkup(<ScheduleTaskRow task={{ ...baseHomeTask, columnColor: "#10b981" }} />);
     expect(html).toContain("Review pull requests");
+    expect(html).toContain("NL-11");
     expect(html).toContain("Infrastructure / Platform Core");
     expect(html).toContain("In Review");
+    expect(html).toContain("#10b981");
+    expect(html).toContain("2/4");
+    expect(html).toContain("3");
+    expect(html).toContain("1");
+  });
+
+  it("renders ScheduleTask checklist count from _count if available", () => {
+    const taskWithCount: ScheduleTask = {
+      ...baseScheduleTask,
+      _count: {
+        comments: 5,
+        checklistItems: 3,
+      },
+    };
+    const html = renderToStaticMarkup(<ScheduleTaskRow task={taskWithCount} />);
+    expect(html).toContain("3");
+    expect(html).toContain("5");
   });
 
   it("invokes onTaskClick when row or title is clicked", () => {

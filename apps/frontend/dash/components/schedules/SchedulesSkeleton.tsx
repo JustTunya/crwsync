@@ -40,13 +40,24 @@ function SchedulesHeaderSkeleton() {
 
 function ScheduleTaskRowSkeleton() {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card shadow-sm">
-      <SkeletonBox className="size-4 rounded shrink-0" />
-      <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-        <SkeletonBox className="h-3.5 w-2/3" />
-        <SkeletonBox className="h-3 w-1/3" />
+    <div className="flex items-center gap-2.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-border bg-card shadow-xs">
+      <div className="shrink-0 flex items-center justify-center p-0.5">
+        <SkeletonBox className="size-4 rounded" />
       </div>
-      <SkeletonBox className="h-3 w-14 shrink-0" />
+      <div className="flex-1 min-w-0 flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <SkeletonBox className="h-3.5 w-12" />
+          <SkeletonBox className="h-3.5 w-1/2" />
+        </div>
+        <div className="flex items-center gap-2">
+          <SkeletonBox className="h-3 w-28" />
+          <SkeletonBox className="h-3 w-16" />
+        </div>
+      </div>
+      <div className="shrink-0 flex items-center gap-2 sm:gap-2.5">
+        <SkeletonBox className="size-5 rounded-full hidden sm:block" />
+        <SkeletonBox className="h-6 w-24 rounded-md" />
+      </div>
     </div>
   );
 }

@@ -44,6 +44,7 @@ function collectByType(
 function makeTask(overrides: Partial<HomeTaskItem>): HomeTaskItem {
   return {
     id: "task-1",
+    shortId: "TSK-001",
     title: "Ship the release notes",
     priority: TaskPriorityEnum.HIGH,
     status: "IN_PROGRESS",

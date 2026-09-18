@@ -616,7 +616,7 @@ export class WorkspaceService {
           where: { workspace_id: workspaceId, assignee_id: userId, is_deleted: false, is_archived: false },
           include: {
             column: {
-              select: { id: true, name: true, type: true, board_id: true, board: { select: { id: true, name: true } } },
+              select: { id: true, name: true, type: true, color: true, board_id: true, board: { select: { id: true, name: true } } },
             },
             checklistItems: { select: { is_completed: true } },
             _count: { select: { comments: { where: { is_deleted: false } }, attachments: true } },
@@ -673,6 +673,7 @@ export class WorkspaceService {
       const project = boardProjectMap.get(task.column.board_id);
       return {
         id: task.id,
+        shortId: task.shortId,
         title: task.title,
         priority: task.priority as unknown as HomeTaskItem["priority"],
         status: task.column.name,
@@ -686,6 +687,9 @@ export class WorkspaceService {
         attachmentsCount: task._count.attachments,
         checklistTotal: task.checklistItems.length,
         checklistCompleted: task.checklistItems.filter((item) => item.is_completed).length,
+        columnColor: task.column.color,
+        columnType: task.column.type as unknown as HomeTaskItem["columnType"],
+        completedAt: task.completed_at ? task.completed_at.toISOString() : null,
       };
     };
 
@@ -693,7 +697,7 @@ export class WorkspaceService {
     const dueTodayRaw: typeof focusTasks = [];
     const inProgressRaw: typeof focusTasks = [];
     for (const task of focusTasks) {
-      if (task.column.type === "COMPLETE") continue;
+      if (task.column.type === "COMPLETE" || task.completed_at) continue;
       if (task.due_date && task.due_date < startOfToday) overdueRaw.push(task);
       else if (task.due_date && task.due_date <= endOfToday) dueTodayRaw.push(task);
       else inProgressRaw.push(task);
