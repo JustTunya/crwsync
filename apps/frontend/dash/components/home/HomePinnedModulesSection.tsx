@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Bookmark02Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HomePinnedModule, WorkspaceModule } from "@crwsync/types";
-import { GlassBox } from "@/components/ui/glassbox";
+import { Card } from "@/components/ui/card";
 import { getModuleHref, getModuleIcon } from "@/lib/sidebar.utils";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +26,7 @@ export function HomePinnedModulesSection({
           <HugeiconsIcon icon={Bookmark02Icon} className="size-4 text-primary" />
           Pinned Modules
         </h2>
-        <span className="text-xs text-muted-foreground font-medium bg-base-200 px-2 py-0.5 rounded-full">
+        <span className="text-xs text-muted-foreground font-medium bg-muted/60 border border-border/40 px-2 py-0.5 rounded-full">
           {modules?.length ?? 0}
         </span>
       </div>
@@ -37,9 +37,9 @@ export function HomePinnedModulesSection({
           data-testid="home-pinned-modules-grid"
         >
           {modules.map((mod) => (
-            <GlassBox
+            <Card
               key={mod.id}
-              className="w-full! h-full mx-0! p-3.5 flex flex-col items-stretch justify-between gap-3 relative group hover:bg-base-200/50 hover:border-base-300 transition-all cursor-pointer"
+              className="h-full p-3.5 rounded-2xl border-border bg-card shadow-sm flex flex-col items-stretch justify-between gap-3 relative group hover:bg-muted/40 hover:border-border transition-all cursor-pointer"
             >
               <Link
                 href={getModuleHref(slug, mod as unknown as WorkspaceModule)}
@@ -61,7 +61,7 @@ export function HomePinnedModulesSection({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-center pt-2 border-t border-base-200/60 text-[11px] font-medium text-muted-foreground/75 group-hover:text-primary transition-colors">
+                <div className="flex items-center justify-center pt-2 border-t border-border/60 text-[11px] font-medium text-muted-foreground/75 group-hover:text-primary transition-colors">
                   <span>Open module</span>
                   <HugeiconsIcon
                     icon={ArrowRight01Icon}
@@ -69,13 +69,13 @@ export function HomePinnedModulesSection({
                   />
                 </div>
               </Link>
-            </GlassBox>
+            </Card>
           ))}
         </div>
       ) : (
         <div
           data-testid="home-pinned-modules-empty-state"
-          className="flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed border-base-200/80 bg-base-100/40"
+          className="flex flex-col items-center justify-center p-8 text-center rounded-2xl border border-dashed border-border bg-muted/20"
         >
           <p className="text-sm text-muted-foreground">
             No pinned modules yet. Pin a module from the sidebar for quick access.

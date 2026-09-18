@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Folder01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HomeProjectSummary } from "@crwsync/types";
-import { GlassBox } from "@/components/ui/glassbox";
+import { Card } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ function HomeProjectMemberStack({ members }: { members: HomeProjectSummary["memb
       {overflow > 0 && (
         <div
           data-testid="home-project-member-overflow"
-          className="size-6 rounded-full border-2 border-card bg-base-300 text-[10px] font-semibold flex items-center justify-center text-foreground"
+          className="size-6 rounded-full border-2 border-card bg-muted text-[10px] font-semibold flex items-center justify-center text-foreground"
         >
           +{overflow}
         </div>
@@ -47,7 +47,7 @@ function HomeProjectCard({ project, slug }: { project: HomeProjectSummary; slug:
       className="block outline-none h-full"
       data-testid="home-project-card"
     >
-      <GlassBox className="w-full! h-full mx-0! p-4 flex flex-col justify-start gap-3.5 hover:bg-base-200/40 hover:border-base-300 transition-all cursor-pointer group">
+      <Card className="h-full p-4 rounded-2xl border-border bg-card shadow-sm flex flex-col items-center justify-start gap-3.5 hover:bg-muted/40 hover:border-border transition-all cursor-pointer group">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ backgroundColor: project.color || "#f97316" }} />
@@ -59,8 +59,8 @@ function HomeProjectCard({ project, slug }: { project: HomeProjectSummary; slug:
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <div className="h-1.5 w-full rounded-full bg-base-200 overflow-hidden">
+        <div className="flex flex-col gap-1.5 w-full">
+          <div className="h-1.5 w-full rounded-full bg-muted/70 overflow-hidden">
             <div
               className="h-full bg-primary rounded-full transition-all duration-300"
               style={{ width: `${project.progressPercentage}%` }}
@@ -75,7 +75,7 @@ function HomeProjectCard({ project, slug }: { project: HomeProjectSummary; slug:
         </div>
 
         <HomeProjectMemberStack members={project.members} />
-      </GlassBox>
+      </Card>
     </Link>
   );
 }
@@ -88,7 +88,7 @@ export function HomeActiveProjectsSection({ projects, slug, className }: HomeAct
           <HugeiconsIcon icon={Folder01Icon} className="size-4 text-primary" />
           Active Projects
         </h2>
-        <span className="text-xs text-muted-foreground font-medium bg-base-200 px-2 py-0.5 rounded-full">
+        <span className="text-xs text-muted-foreground font-medium bg-muted/60 border border-border/40 px-2 py-0.5 rounded-full">
           {projects?.length ?? 0}
         </span>
       </div>
@@ -102,7 +102,7 @@ export function HomeActiveProjectsSection({ projects, slug, className }: HomeAct
       ) : (
         <div
           data-testid="home-projects-empty-state"
-          className="flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed border-base-200/80 bg-base-100/40"
+          className="flex flex-col items-center justify-center p-8 text-center rounded-2xl border border-dashed border-border bg-muted/20"
         >
           <p className="text-sm text-muted-foreground">
             No active projects or boards found in this workspace.

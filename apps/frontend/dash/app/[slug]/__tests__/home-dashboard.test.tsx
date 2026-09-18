@@ -266,12 +266,14 @@ describe("HomeDashboard", () => {
     expect(pinnedProps.modules).toBe(data.pinnedModules);
     expect(pinnedProps.slug).toBe("acme");
 
-    const [activityStream] = collectByType(tree, HomeActivityStreamSection);
-    const activityProps = activityStream.props as unknown as HomeActivityStreamSectionProps;
+    const activityStreams = collectByType(tree, HomeActivityStreamSection);
+    expect(activityStreams.length).toBeGreaterThan(0);
+    const activityProps = activityStreams[0].props as unknown as HomeActivityStreamSectionProps;
     expect(activityProps.activity).toBe(data.recentActivity);
 
-    const [velocity] = collectByType(tree, HomeVelocityCard);
-    const velocityProps = velocity.props as unknown as HomeVelocityCardProps;
+    const velocities = collectByType(tree, HomeVelocityCard);
+    expect(velocities.length).toBeGreaterThan(0);
+    const velocityProps = velocities[0].props as unknown as HomeVelocityCardProps;
     expect(velocityProps.summary).toBe(data.summary);
   });
 
@@ -297,8 +299,8 @@ describe("HomeDashboard", () => {
     expect((projects.props as unknown as HomeActiveProjectsSectionProps).projects).toEqual([]);
     const [pinned] = collectByType(tree, HomePinnedModulesSection);
     expect((pinned.props as unknown as HomePinnedModulesSectionProps).modules).toEqual([]);
-    const [activity] = collectByType(tree, HomeActivityStreamSection);
-    expect((activity.props as unknown as HomeActivityStreamSectionProps).activity).toEqual([]);
+    const activityStreams = collectByType(tree, HomeActivityStreamSection);
+    expect((activityStreams[0].props as unknown as HomeActivityStreamSectionProps).activity).toEqual([]);
   });
 
   it("attaches realtime listeners for every board and status event on mount", () => {
@@ -373,56 +375,5 @@ describe("HomeDashboard", () => {
       due_date: "2026-10-01",
     });
     expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: homeKeys.all });
-  });
-
-  it("navigates to the first project's board when creating a new task", () => {
-    const data = makeHomeData();
-    vi.mocked(useWorkspaceHome).mockReturnValue({
-      data,
-      isLoading: false,
-      isFetching: false,
-      refetch: refetchSpy,
-    } as unknown as ReturnType<typeof useWorkspaceHome>);
-
-    const tree = renderDashboard("acme");
-    const [focus] = collectByType(tree, HomeMyFocusSection);
-    (focus.props as unknown as HomeMyFocusSectionProps).onNewTask?.();
-
-    expect(pushSpy).toHaveBeenCalledWith(`/acme/board/${data.projects[0].boardId}`);
-  });
-
-  it("falls back to the first in-progress focus task's board when there are no projects", () => {
-    const data = makeHomeData({
-      projects: [],
-      myFocus: { overdue: [], dueToday: [], inProgress: [makeTask({ id: "ip-9", boardId: "board-77" })] },
-    });
-    vi.mocked(useWorkspaceHome).mockReturnValue({
-      data,
-      isLoading: false,
-      isFetching: false,
-      refetch: refetchSpy,
-    } as unknown as ReturnType<typeof useWorkspaceHome>);
-
-    const tree = renderDashboard("acme");
-    const [focus] = collectByType(tree, HomeMyFocusSection);
-    (focus.props as unknown as HomeMyFocusSectionProps).onNewTask?.();
-
-    expect(pushSpy).toHaveBeenCalledWith("/acme/board/board-77");
-  });
-
-  it("does nothing when creating a new task with no board to navigate to", () => {
-    const data = makeHomeData({ projects: [], myFocus: { overdue: [], dueToday: [], inProgress: [] } });
-    vi.mocked(useWorkspaceHome).mockReturnValue({
-      data,
-      isLoading: false,
-      isFetching: false,
-      refetch: refetchSpy,
-    } as unknown as ReturnType<typeof useWorkspaceHome>);
-
-    const tree = renderDashboard("acme");
-    const [focus] = collectByType(tree, HomeMyFocusSection);
-    (focus.props as unknown as HomeMyFocusSectionProps).onNewTask?.();
-
-    expect(pushSpy).not.toHaveBeenCalled();
   });
 });

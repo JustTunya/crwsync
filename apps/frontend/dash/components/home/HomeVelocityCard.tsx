@@ -3,7 +3,7 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Analytics01Icon } from "@hugeicons/core-free-icons";
 import { WorkspaceHomeSummary } from "@crwsync/types";
-import { GlassBox } from "@/components/ui/glassbox";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export interface HomeVelocityCardProps {
@@ -13,7 +13,7 @@ export interface HomeVelocityCardProps {
 
 export function HomeVelocityCard({ summary, className }: HomeVelocityCardProps) {
   return (
-    <GlassBox className={cn("w-full! mx-0! p-4 flex flex-col gap-3", className)}>
+    <Card className={cn("p-4 rounded-2xl border-border bg-card shadow-sm flex flex-col gap-3", className)}>
       <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <HugeiconsIcon icon={Analytics01Icon} className="size-4 text-primary" />
         Personal Momentum
@@ -26,7 +26,7 @@ export function HomeVelocityCard({ summary, className }: HomeVelocityCardProps) 
         <span className="text-xs text-muted-foreground font-medium">completed in current cycle</span>
       </div>
 
-      <div className="flex items-center justify-between gap-4 text-xs text-muted-foreground pt-2 border-t border-base-200/60">
+      <div className="flex items-center justify-between gap-4 text-xs text-muted-foreground pt-2 border-t border-border/60">
         <span>Active Workload</span>
         <span className="font-semibold text-foreground">{summary?.activeTasksCount ?? 0} tasks</span>
       </div>
@@ -36,6 +36,6 @@ export function HomeVelocityCard({ summary, className }: HomeVelocityCardProps) 
           {summary?.urgentCount ?? 0} due
         </span>
       </div>
-    </GlassBox>
+    </Card>
   );
 }

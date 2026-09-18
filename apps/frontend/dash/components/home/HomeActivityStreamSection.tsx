@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Clock01Icon } from "@hugeicons/core-free-icons";
 import { HomeActivityItem } from "@crwsync/types";
-import { GlassBox } from "@/components/ui/glassbox";
+import { Card } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { useTimeAgo } from "@/hooks/use-time-ago";
 import { cn } from "@/lib/utils";
@@ -28,10 +28,10 @@ export function HomeActivityStreamSection({ activity, slug, className }: HomeAct
           <HugeiconsIcon icon={Clock01Icon} className="size-4 text-primary" />
           Workspace Pulse
         </h2>
-        <span className="text-xs text-muted-foreground font-medium bg-base-200 px-2 py-0.5 rounded-full">Live</span>
+        <span className="text-xs text-muted-foreground font-medium bg-muted/60 border border-border/40 px-2 py-0.5 rounded-full">Live</span>
       </div>
 
-      <GlassBox className="w-full! mx-0! p-4 flex flex-col gap-3">
+      <Card className="p-4 rounded-2xl border-border bg-card shadow-sm flex flex-col gap-3">
         {activity && activity.length > 0 ? (
           <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1" data-testid="home-activity-list">
             {activity.map((item) => (
@@ -61,7 +61,7 @@ export function HomeActivityStreamSection({ activity, slug, className }: HomeAct
             No recent workspace activity.
           </p>
         )}
-      </GlassBox>
+      </Card>
     </div>
   );
 }

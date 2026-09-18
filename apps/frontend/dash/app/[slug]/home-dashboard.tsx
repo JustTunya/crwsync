@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { HomeTaskItem, Task } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
@@ -23,7 +22,6 @@ const TaskDetailModal = dynamic(
 );
 
 export function HomeDashboard({ slug }: { slug: string }) {
-  const router = useRouter();
   const { activeId } = useWorkspace();
   const workspaceId = activeId || "";
   const queryClient = useQueryClient();
@@ -56,10 +54,10 @@ export function HomeDashboard({ slug }: { slug: string }) {
   }, [socket, workspaceId, queryClient]);
 
   const handleToggleComplete = useCallback(
-    async (task: HomeTaskItem) => {
+    async (task: HomeTaskItem, completed?: boolean) => {
       if (!workspaceId || !task.boardId) return;
       await boardService.updateTask(workspaceId, task.boardId, task.id, {
-        completed_at: new Date().toISOString(),
+        completed_at: completed === false ? null : new Date().toISOString(),
       });
       await queryClient.invalidateQueries({ queryKey: homeKeys.all });
     },
@@ -77,13 +75,6 @@ export function HomeDashboard({ slug }: { slug: string }) {
     [workspaceId, queryClient]
   );
 
-  const handleNewTask = useCallback(() => {
-    const firstBoardId = data?.projects?.[0]?.boardId || data?.myFocus?.inProgress?.[0]?.boardId;
-    if (firstBoardId) {
-      router.push(`/${slug}/board/${firstBoardId}`);
-    }
-  }, [router, slug, data]);
-
   if (isLoading || !workspaceId) {
     return <HomeSkeleton />;
   }
@@ -93,16 +84,19 @@ export function HomeDashboard({ slug }: { slug: string }) {
       <HomeHeader summary={data?.summary} />
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 @container">
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 max-w-[1600px] mx-auto items-start">
-          <div className="xl:col-span-8 flex flex-col gap-6 min-w-0">
+        <div className="grid grid-cols-1 @5xl:grid-cols-12 gap-6 max-w-[1600px] mx-auto items-start">
+          <div className="@5xl:col-span-8 flex flex-col gap-6 min-w-0">
             <HomeMyFocusSection
               focus={data?.myFocus}
               slug={slug}
               onSelectTask={setActiveTask}
               onToggleComplete={handleToggleComplete}
               onReschedule={handleReschedule}
-              onNewTask={handleNewTask}
             />
+            <div className="flex flex-col gap-6 @5xl:hidden">
+              <HomeActivityStreamSection activity={data?.recentActivity} slug={slug} />
+              <HomeVelocityCard summary={data?.summary} />
+            </div>
             <HomeActiveProjectsSection projects={data?.projects} slug={slug} />
             <HomePinnedModulesSection
               modules={data?.pinnedModules}
@@ -110,7 +104,7 @@ export function HomeDashboard({ slug }: { slug: string }) {
             />
           </div>
 
-          <div className="xl:col-span-4 flex flex-col gap-6 min-w-0">
+          <div className="hidden @5xl:flex @5xl:col-span-4 flex-col gap-6 min-w-0">
             <HomeActivityStreamSection activity={data?.recentActivity} slug={slug} />
             <HomeVelocityCard summary={data?.summary} />
           </div>

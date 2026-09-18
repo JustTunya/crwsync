@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useState } from "react";
 import { HomeMyFocusSection } from "../HomeMyFocusSection";
-import { HomeTaskRow } from "../HomeTaskRow";
+import { ScheduleTaskRow } from "@/components/schedules/ScheduleTaskRow";
 import { TaskPriorityEnum } from "@crwsync/types";
 import type { HomeTaskItem } from "@crwsync/types";
 
@@ -106,7 +106,7 @@ describe("HomeMyFocusSection", () => {
     expect(html).toContain("In progress task");
   });
 
-  it("renders tasks for the selected tab and passes callbacks through to HomeTaskRow", () => {
+  it("renders tasks for the selected tab and passes callbacks through to ScheduleTaskRow", () => {
     vi.mocked(useState).mockReturnValueOnce(["dueToday", vi.fn()]);
     const onSelectTask = vi.fn();
     const onToggleComplete = vi.fn();
@@ -123,13 +123,12 @@ describe("HomeMyFocusSection", () => {
       onToggleComplete,
       onReschedule,
     });
-    const rows = collectByType(tree, HomeTaskRow);
+    const rows = collectByType(tree, ScheduleTaskRow);
     expect(rows.map((row) => (row.props.task as HomeTaskItem).id)).toEqual(["dt-1", "dt-2"]);
     for (const row of rows) {
-      expect(row.props.onSelectTask).toBe(onSelectTask);
+      expect(row.props.onTaskClick).toBe(onSelectTask);
       expect(row.props.onToggleComplete).toBe(onToggleComplete);
       expect(row.props.onReschedule).toBe(onReschedule);
-      expect(row.props.slug).toBe("my-workspace");
     }
   });
 
@@ -166,17 +165,5 @@ describe("HomeMyFocusSection", () => {
 
     (findByTestId(tree, "home-focus-tab-inProgress")?.props.onClick as () => void)();
     expect(setActiveTab).toHaveBeenCalledWith("inProgress");
-  });
-
-  it("calls onNewTask when the quick-add button is clicked", () => {
-    vi.mocked(useState).mockReturnValueOnce(["inProgress", vi.fn()]);
-    const onNewTask = vi.fn();
-    const tree = HomeMyFocusSection({
-      focus: { overdue: [], dueToday: [], inProgress: [] },
-      slug: "my-workspace",
-      onNewTask,
-    });
-    (findByTestId(tree, "home-focus-new-task-button")?.props.onClick as () => void)();
-    expect(onNewTask).toHaveBeenCalledTimes(1);
   });
 });
