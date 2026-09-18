@@ -18,9 +18,33 @@ const figtree = Figtree({
   adjustFontFallback: true
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_WEB_URL ?? "https://crwsync.xyz";
+const title = "crwsync: real-time crew collaboration, engineered end to end";
+const description =
+  "A production-shaped team workspace: boards, chat, files, and schedules kept in sync over WebSockets, behind a NestJS API with Redis fan-out, BullMQ queues, and Postgres. Built solo, with a live demo.";
+
 export const metadata: Metadata = {
-  title: "crwsync",
-  description: "crwsync is real-time task management platform for teams and individuals.",
+  metadataBase: new URL(siteUrl),
+  title: { default: title, template: "%s | crwsync" },
+  description,
+  applicationName: "crwsync",
+  authors: [{ name: "Tunya Lénárd-Sándor", url: "https://www.linkedin.com/in/lenard-tunya/" }],
+  keywords: ["real-time collaboration", "kanban", "team chat", "NestJS", "Next.js", "Socket.IO", "BullMQ", "Prisma", "portfolio"],
+  openGraph: {
+    type: "website",
+    siteName: "crwsync",
+    url: siteUrl,
+    title,
+    description,
+    images: [{ url: "/demo/poster.png", alt: "The crwsync dashboard with a board, chat, and files open" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: ["/demo/poster.png"],
+  },
+  robots: { index: true, follow: true },
   appleWebApp: {
     title: "crwsync",
     statusBarStyle: "default"

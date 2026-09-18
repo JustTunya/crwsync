@@ -1,50 +1,35 @@
-import Image from "next/image";
-import { Ripple } from "@/components/ui/ripple";
+import Link from "next/link";
 import { TryDemoButton } from "@/components/home/try-demo-button";
+import { SyncDemo } from "@/components/home/sync-demo";
 
 export default function Hero() {
   return (
-    <section className="flex flex-col gap-12 px-6 sm:px-12 py-24 items-center justify-center min-h-screen relative">
-      <Ripple />
-      <div className="max-w-4xl space-y-4 flex flex-col items-center">
-        <h1 className="text-balanced text-center text-5xl md:text-6xl text-foreground font-bold tracking-tight leading-tighter">
-          Production-grade, built solo.<br/><span className="text-primary">See how.</span>
-        </h1>
-
-        <p className="text-balance text-center text-sm sm:text-base lg:text-[1.1rem] text-muted-foreground font-medium tracking-tight leading-tight sm:leading-normal">
-          crwsync is a fictional real-time collaboration platform, engineered end to end — public portal, authenticated dashboard, and a horizontally scalable backend — to prove out full-stack and infrastructure ability.
-        </p>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 mt-4">
-          <TryDemoButton />
-        </div>
-      </div>
-
-      <div
-        className="group relative w-full max-w-4xl rounded-2xl overflow-hidden border-[1.5px] border-foreground/10 bg-linear-to-br from-foreground/10 via-foreground/6 to-foreground/5 backdrop-blur-md backdrop-saturate-100 shadow-xl/5"
-        aria-hidden
-      >
-        <div className="flex items-center gap-1.5 px-4 h-9 border-b-[1.5px] border-foreground/10">
-          <span className="size-2 rounded-full bg-foreground/15" />
-          <span className="size-2 rounded-full bg-foreground/15" />
-          <span className="size-2 rounded-full bg-foreground/15" />
+    <section aria-labelledby="hero-title" className="border-b border-border">
+      <div className="mx-auto max-w-6xl px-4 sm:px-8 pt-32 sm:pt-40 pb-16 sm:pb-24 lg:border-x lg:border-border">
+        <div className="max-w-3xl">
+          <h1 id="hero-title" className="text-[2.5rem] sm:text-5xl lg:text-[3.75rem] font-bold tracking-[-0.02em] leading-[1.02] text-balance">
+            Real-time crew collaboration, engineered end to end.
+          </h1>
+          <p className="mt-6 max-w-[58ch] text-base sm:text-lg text-muted-foreground leading-normal text-pretty">
+            crwsync is a complete team workspace: boards, chat, files, and schedules kept in sync across every open tab. Behind it sit a NestJS API, Redis fan-out, BullMQ queues, and Postgres as the source of truth. Built solo as a portfolio system, and every claim on this page runs in the live demo.
+          </p>
+          <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+            <TryDemoButton size="lg" />
+            <Link
+              href="https://github.com/justtunya/crwsync"
+              className="inline-flex h-11 items-center rounded-lg border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:border-foreground/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              Read the source
+            </Link>
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground">Shared demo account. Nothing to install, nothing to sign up for.</p>
         </div>
 
-        <div className="relative w-full aspect-video">
-          <Image
-            src="/demo/poster.png"
-            alt="crwsync product walkthrough — coming soon"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-radial from-black/40 via-transparent to-transparent" />
-          <span className="absolute inset-0 flex items-center justify-center">
-            <span className="flex items-center justify-center size-16 bg-background/80 border-[1.5px] border-foreground/10 backdrop-blur-sm rounded-full shadow-lg shadow-black/30 group-hover:scale-105 transition-transform">
-              <svg viewBox="0 0 24 24" className="size-6 fill-primary translate-x-0.5">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </span>
-          </span>
+        <div className="mt-14 sm:mt-20">
+          <SyncDemo />
+          <p className="mt-3 text-xs text-muted-foreground">
+            Simulated replay of the live board. Routes, event names, and cache behavior are the real ones.
+          </p>
         </div>
       </div>
     </section>

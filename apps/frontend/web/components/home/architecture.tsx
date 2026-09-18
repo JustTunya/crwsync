@@ -1,10 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useRef, useState, useEffect, useId } from "react";
 import { HugeiconsIcon, IconSvgElement } from "@hugeicons/react";
 import { ComputerPhoneSyncIcon, Globe02Icon, DashboardSquare01Icon, ServerStack03Icon, DatabaseIcon, Layers01Icon, Rocket01Icon, FavouriteIcon, Notification01Icon } from "@hugeicons/core-free-icons";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
+import { Section } from "@/components/home/section";
 
 const clients = [
   { id: "browser", label: "Browser", desc: "crwsync.xyz", icon: ComputerPhoneSyncIcon },
@@ -26,24 +27,20 @@ const data = [
   { id: "redis", label: "In-Memory", tech: "Redis Cache", icon: Layers01Icon },
 ];
 
+const groupLabel = "absolute inset-x-0 -top-2.75 text-center text-sm text-muted-foreground tracking-wide leading-tighter";
+const groupBox = "relative p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10";
+
 export default function Architecture() {
   const projectRef = useRef<HTMLDivElement>(null);
   const infraRef = useRef<HTMLDivElement>(null);
 
   return (
-    <section id="architecture" className="flex flex-col items-center gap-8 px-6 sm:px-12 pt-6 pb-12">
-      <div className="flex items-center justify-center px-3 py-1.5 bg-background/15 dark:bg-linear-to-br from-foreground/20 via-foreground/12 to-foreground/10 border-[1.5px] border-foreground/20 backdrop-saturate-100 shadow-md shadow-black/5 rounded-full">
-        <span className="text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
-          Architecture
-        </span>
-      </div>
-
-      <div className="flex flex-col items-center justify-center gap-2 w-full px-4">
-        <h2 className="text-4xl font-bold text-center">Runtime Architecture</h2>
-        <p className="text-sm sm:text-base text-muted-foreground text-center text-balance leading-tight max-w-3xl">This diagram illustrates the flow of user requests and data between key system components during typical runtime scenarios for crwsync.</p>
-      </div>
-
-      <div ref={projectRef} className="relative flex flex-col lg:flex-row items-center justify-between gap-20 lg:gap-8 max-w-7xl w-full py-8">
+    <Section
+      id="architecture"
+      title="Three services, one domain, no shared memory"
+      lead="Public traffic, authenticated traffic, and the API run as separate deployables behind Cloudflare and Nginx. The beam follows a request from a browser to Postgres. Dashed lines are the socket paths that carry state back."
+    >
+      <div ref={projectRef} className="relative flex flex-col lg:flex-row items-center justify-between gap-20 lg:gap-8 w-full py-8">
         <Connector delayOrder={0} from="card-browser" to="card-cloudflare" containerRef={projectRef} curve={0} />
         <Connector delayOrder={0.1} from="card-mobile" to="card-cloudflare" containerRef={projectRef} curve={0} />
         <Connector delayOrder={0.8} from="card-cloudflare" to="card-nginx" containerRef={projectRef} curve={0} />
@@ -56,8 +53,8 @@ export default function Architecture() {
         <Connector delayOrder={3.2} from="card-backend" to="card-db" label="Prisma ORM" containerRef={projectRef} curve={0} />
         <Connector delayOrder={3.3} from="card-backend" to="card-redis" label="R/W" containerRef={projectRef} curve={0} />
 
-        <div className="relative flex lg:flex-col gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
-          <div className="absolute inset-x-0 -top-2.75 text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
+        <div className={`${groupBox} flex lg:flex-col gap-4`}>
+          <div className={groupLabel}>
             <span className="px-1 bg-background">Clients</span>
           </div>
           {clients.map((node, i) => (
@@ -65,8 +62,8 @@ export default function Architecture() {
           ))}
         </div>
 
-        <div className="relative flex gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
-          <div className="absolute inset-x-0 -top-2.75 text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
+        <div className={`${groupBox} flex gap-4`}>
+          <div className={groupLabel}>
             <span className="px-1 bg-background">Infrastructure</span>
           </div>
           {infra.map((node, i) => (
@@ -74,8 +71,8 @@ export default function Architecture() {
           ))}
         </div>
 
-        <div className="relative flex lg:flex-col gap-16 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
-          <div className="absolute inset-x-0 -top-2.75 text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
+        <div className={`${groupBox} flex lg:flex-col gap-16`}>
+          <div className={groupLabel}>
             <span className="px-1 bg-background">Frontend</span>
           </div>
           {frontend.map((node, i) => (
@@ -87,8 +84,8 @@ export default function Architecture() {
           <Card key="backend" id="card-backend" i={3} icon={ServerStack03Icon} label="Backend" tech="NestJS • JWT Auth • REST • Socket.IO • Prisma ORM" />
         </div>
 
-        <div className="relative flex lg:flex-col gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
-          <div className="absolute inset-x-0 -top-2.75 text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
+        <div className={`${groupBox} flex lg:flex-col gap-4`}>
+          <div className={groupLabel}>
             <span className="px-1 bg-background">Data & Storage</span>
           </div>
           {data.map((node, i) => (
@@ -97,12 +94,14 @@ export default function Architecture() {
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center gap-2 w-full px-4 mt-16">
-        <h2 className="text-4xl font-bold text-center">CI/CD Pipeline</h2>
-        <p className="text-sm sm:text-base text-muted-foreground text-center text-balance leading-tight max-w-3xl">Automated testing and deployment pipeline of the project.</p>
+      <div className="mt-20 grid gap-4 border-t border-border pt-12 lg:grid-cols-12 lg:gap-8">
+        <h3 className="lg:col-span-5 text-2xl sm:text-3xl font-bold tracking-tight leading-[1.1] text-balance">From push to production</h3>
+        <p className="lg:col-span-6 lg:col-start-7 max-w-[60ch] text-base text-muted-foreground text-pretty">
+          A merge to main lints and tests every package, builds container images, pushes them to the registry, and rolls them onto the Swarm. A failed health check rolls back to the previous image.
+        </p>
       </div>
 
-      <div ref={infraRef} className="relative flex flex-col lg:flex-row items-center justify-around gap-16 lg:gap-8 max-w-4xl w-full py-8">
+      <div ref={infraRef} className="relative mx-auto flex max-w-4xl flex-col items-center justify-around gap-16 py-8 lg:flex-row lg:gap-8">
         <Connector delayOrder={0} from="card-git" to="card-lint" containerRef={infraRef} curve={0.9} rightLoop offsetX={6} />
         <Connector delayOrder={0.8} from="card-lint" to="card-test" label="Pass" containerRef={infraRef} curve={0.9} offsetX={120} />
         <Connector delayOrder={1.6} from="card-test" to="card-build" label="Pass" containerRef={infraRef} curve={0.9} />
@@ -111,9 +110,9 @@ export default function Architecture() {
         <Connector delayOrder={4} from="card-deploy" to="card-health" label="Verify" containerRef={infraRef} curve={0.9} />
         <Connector delayOrder={4.8} from="card-health" to="card-notify" containerRef={infraRef} curve={0.9} rightLoop offsetX={6} />
         <Connector delayOrder={0} from="card-health" to="card-build" label="Rollback" containerRef={infraRef} curve={0.3} rightLoop dashed />
-        
-        <div className="relative flex flex-col gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
-          <div className="absolute inset-x-0 -top-2.75 text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
+
+        <div className={`${groupBox} flex flex-col gap-4`}>
+          <div className={groupLabel}>
             <span className="px-1 bg-background">CI Phase</span>
           </div>
 
@@ -122,8 +121,8 @@ export default function Architecture() {
           <Card key="test" id="card-test" i={2} icon="./jest.svg" label="Unit Test" desc="Running unit tests for each package." />
         </div>
 
-        <div className="relative flex flex-col gap-4 p-4 border-[1.5px] border-dashed border-muted-foreground/30 rounded-4xl z-10">
-          <div className="absolute inset-x-0 -top-2.75 text-balanced text-center text-sm text-muted-foreground tracking-wide leading-tighter">
+        <div className={`${groupBox} flex flex-col gap-4`}>
+          <div className={groupLabel}>
             <span className="px-1 bg-background">CD Phase</span>
           </div>
 
@@ -137,7 +136,7 @@ export default function Architecture() {
           <Card key="notify" id="card-notify" i={3} icon={Notification01Icon} fillIcon label="Notify" desc="Notify users about the deployment." />
         </div>
       </div>
-    </section>
+    </Section>
   );
 }
 
@@ -163,13 +162,13 @@ function Card({
   const reducedMotion = usePrefersReducedMotion();
 
   return (
-    <motion.div
+    <m.div
       id={id}
       initial={reducedMotion ? false : { opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: reducedMotion ? 0 : 0.5, delay: reducedMotion ? 0 : i * 0.15 }}
-      className="flex flex-col items-center justify-center min-h-24 lg:min-h-26 h-full w-30 lg:w-36 p-2 text-center rounded-2xl shadow-xl border-[1.5px] border-foreground/10 bg-linear-to-br from-foreground/10 via-foreground/6 to-foreground/5 backdrop-blur-md"
+      className="flex flex-col items-center justify-center min-h-24 lg:min-h-26 h-full w-30 lg:w-36 p-2 text-center rounded-xl border border-border bg-card shadow-sm"
     >
       <div className="p-2 mb-2 bg-foreground/10 text-foreground rounded-full">
         {typeof icon === "string" ? (
@@ -204,7 +203,7 @@ function Card({
         </span>
       )}
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -303,8 +302,7 @@ function Connector({
   return (
     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
       {label && <path id={pathId} d={textData} fill="none" stroke="none" />}
-      {/* Background static line */}
-      <motion.path
+      <m.path
         d={data}
         fill="none"
         stroke="var(--muted-foreground)"
@@ -316,11 +314,9 @@ function Connector({
         transition={dashed && !reducedMotion ? { repeat: Infinity, duration: 0.4, ease: "linear" } : {}}
       />
 
-      {/* Animated Light Beam for non-dashed lines */}
       {!dashed && !reducedMotion && (
         <>
-          {/* Faded edges tail */}
-          <motion.path
+          <m.path
             d={data}
             fill="none"
             stroke="var(--primary)"
@@ -331,8 +327,7 @@ function Connector({
             animate={{ pathOffset: 1 }}
             transition={{ repeat: Infinity, duration: beamDuration, delay: initialDelay, repeatDelay, ease: "linear" }}
           />
-          {/* Core bright beam with glow */}
-          <motion.path
+          <m.path
             d={data}
             fill="none"
             stroke="var(--primary)"

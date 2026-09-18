@@ -1,58 +1,64 @@
 import Image from "next/image";
 import Link from "next/link";
 
+const columns = [
+  {
+    title: "Product",
+    links: [
+      { href: "/auth/signin", label: "Sign in" },
+      { href: "/auth/signup", label: "Create account" },
+      { href: "/#product", label: "Surfaces" },
+      { href: "/#architecture", label: "Architecture" },
+    ],
+  },
+  {
+    title: "Builder",
+    links: [
+      { href: "https://github.com/justtunya/crwsync", label: "Source on GitHub" },
+      { href: "https://www.linkedin.com/in/lenard-tunya/", label: "LinkedIn" },
+      { href: "/#contact", label: "Contact" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { href: "/legal/terms", label: "Terms of Service" },
+      { href: "/legal/privacy", label: "Privacy Policy" },
+    ],
+  },
+];
+
 export default function Footer() {
   return (
-    <footer role="contentinfo" className="grid grid-cols-1 md:grid-cols-2 items-center sm:justify-between gap-x-32 gap-y-16 bg-foreground dark:bg-background border-t border-base-300 px-8 sm:px-24 lg:px-32 py-16">
-      <div className="flex flex-col items-center gap-2">
-        <Link href="/">
-          <Image src="/logo@white.svg" alt="crwsync" width={3250} height={512} className="h-7 xl:h-8 md:w-auto" priority />
-        </Link>
-
-        <p className="text-xs text-foreground font-light">© 2026 Tunya Lénárd-Sándor. All rights reserved.</p>
-
-        <div className="flex items-center gap-4">
-          <Link href="/legal/terms" className="text-xs text-foreground/70 hover:text-foreground underline underline-offset-2 transition-colors">
-            Terms of Service
+    <footer role="contentinfo" className="border-t border-border">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-8 md:grid-cols-12 lg:border-x lg:border-border">
+        <div className="flex flex-col gap-3 md:col-span-6">
+          <Link href="/" className="inline-flex w-fit">
+            <Image src="/logo@orange.svg" alt="crwsync" width={162} height={24} className="h-6 w-auto dark:hidden" />
+            <Image src="/logo@white.svg" alt="crwsync" width={162} height={24} className="hidden h-6 w-auto dark:block" />
           </Link>
-          <Link href="/legal/privacy" className="text-xs text-foreground/70 hover:text-foreground underline underline-offset-2 transition-colors">
-            Privacy Policy
-          </Link>
+          <p className="max-w-[40ch] text-sm text-muted-foreground">
+            A production-shaped collaboration platform, built solo as a portfolio system. Demo data only.
+          </p>
+          <p className="text-xs text-muted-foreground">© 2026 Tunya Lénárd-Sándor. All rights reserved.</p>
         </div>
-      </div>
-
-      <div className="flex items-center justify-center gap-4">
-        <Link href="https://github.com/justtunya/crwsync" aria-label="GitHub">
-          <div
-            className="size-6 bg-current" 
-            style={{ 
-              WebkitMaskImage: "url(/github.svg)", 
-              maskImage: "url(/github.svg)", 
-              WebkitMaskSize: 'contain', 
-              maskSize: 'contain',
-              WebkitMaskRepeat: 'no-repeat',
-              maskRepeat: 'no-repeat',
-              WebkitMaskPosition: 'center',
-              maskPosition: 'center'
-            }} 
-          />
-        </Link>
-
-        <Link href="https://www.linkedin.com/in/lenard-tunya/" aria-label="LinkedIn">
-          <div
-            className="size-8 bg-current" 
-            style={{ 
-              WebkitMaskImage: "url(/linkedin.svg)", 
-              maskImage: "url(/linkedin.svg)", 
-              WebkitMaskSize: 'contain', 
-              maskSize: 'contain',
-              WebkitMaskRepeat: 'no-repeat',
-              maskRepeat: 'no-repeat',
-              WebkitMaskPosition: 'center',
-              maskPosition: 'center'
-            }} 
-          />
-        </Link>
+        {columns.map((column) => (
+          <div key={column.title} className="md:col-span-2">
+            <h2 className="text-sm font-semibold">{column.title}</h2>
+            <ul className="mt-3 flex flex-col gap-2">
+              {column.links.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring rounded-sm"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
     </footer>
   );

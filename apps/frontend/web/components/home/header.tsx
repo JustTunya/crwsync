@@ -16,6 +16,13 @@ import {
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils";
 
+const menuItems = [
+  { href: "/#sync", title: "How it syncs" },
+  { href: "/#product", title: "Product" },
+  { href: "/#architecture", title: "Architecture" },
+  { href: "/#reliability", title: "Reliability" },
+  { href: "/#contact", title: "Contact" },
+];
 
 export default function Header() {
   const isMobile = useMobile();
@@ -32,14 +39,14 @@ export default function Header() {
       <header
         role="banner"
         className={cn(
-          "fixed inset-x-0 z-40 flex flex-col items-start gap-12 w-[calc(100vw-2rem)] h-auto m-4 px-3 py-2 bg-background/15 dark:bg-foreground/10 border border-foreground/15 backdrop-saturate-100 shadow-lg shadow-black/5 rounded-xl",
-          open ? "backdrop-blur-xl" : "backdrop-blur-sm",
+          "fixed inset-x-0 z-40 flex flex-col items-start gap-12 w-[calc(100vw-2rem)] h-auto m-4 px-3 py-2 bg-background/70 dark:bg-background/60 border border-border backdrop-saturate-100 shadow-lg shadow-black/5 rounded-xl",
+          open ? "backdrop-blur-xl" : "backdrop-blur-md",
           "transition-[height, backdrop-filter] duration-500 ease-in-out"
         )}
       >
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center justify-center gap-4 ml-1">
-            <Link href="/" className="inline-block z-10">
+            <Link href="/" className="inline-block z-10 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
               {isMobile ? (
                 <Image
                   src="/icon@orange.svg"
@@ -71,8 +78,8 @@ export default function Header() {
               href="/auth/signin"
               className="
                 p-1 px-2 sm:px-3 sm:py-1 rounded-md
-                text-xs sm:text-sm text-muted-foreground font-medium foregroundspace-nowrap
-                hover:text-foreground transition-colors"
+                text-xs sm:text-sm text-muted-foreground font-medium whitespace-nowrap
+                hover:text-foreground transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               Sign In
             </Link>
@@ -80,10 +87,10 @@ export default function Header() {
               href="/auth/signup"
               className="
                 group relative bg-primary p-1 px-2 sm:px-3 rounded-md
-                text-xs sm:text-sm text-primary-foreground font-semibold foregroundspace-nowrap"
+                text-xs sm:text-sm text-primary-foreground font-semibold whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
-              <div className="absolute inset-0 size-auto bg-linear-to-t from-foreground/15 group-hover:from-foreground/30 to-transparent rounded-lg transition-colors" />
-              Get Started
+              <div className="absolute inset-0 size-auto bg-linear-to-t from-foreground/15 group-hover:from-foreground/30 to-transparent rounded-md transition-colors" />
+              <span className="relative">Get Started</span>
             </Link>
             {isMobile && (
               <button
@@ -93,7 +100,7 @@ export default function Header() {
                 onClick={() => {
                   setOpen(!open);
                 }}
-                className="ml-2"
+                className="ml-2 rounded-md p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 <HugeiconsIcon
                   icon={open ? Cancel01Icon : Menu01Icon}
@@ -124,27 +131,14 @@ export function NavMenu() {
 
   return (
     <NavigationMenu aria-label="Main navigation">
-      <NavigationMenuList className="flex items-center justify-center lg:gap-6">
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link href="#features">Features</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link href="#architecture">Architecture</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "hidden lg:inline-flex")}>
-            <Link href="#about">About</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "hidden lg:inline-flex")}>
-            <Link href="#contact">Contact</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
+      <NavigationMenuList className="flex items-center justify-center lg:gap-4">
+        {menuItems.map((item, index) => (
+          <NavigationMenuItem key={item.href}>
+            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), index >= 3 && "hidden lg:inline-flex")}>
+              <Link href={item.href}>{item.title}</Link>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+        ))}
       </NavigationMenuList>
     </NavigationMenu>
   )
@@ -152,26 +146,7 @@ export function NavMenu() {
 
 // MOBILE VERSION
 
-const MAX_INDEX = 4;
-
-const menuItems = [
-  {
-    href: "#features",
-    title: "Features",
-  },
-  {
-    href: "#architecture",
-    title: "Architecture",
-  },
-  {
-    href: "#about",
-    title: "About",
-  },
-  {
-    href: "#contact",
-    title: "Contact",
-  },
-];
+const MAX_INDEX = menuItems.length - 1;
 
 const container: Variants = {
   hidden: { opacity: 0 },
@@ -200,7 +175,7 @@ const item: Variants = {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { 
+    transition: {
       duration: 0.3,
       ease: "easeOut",
       delay: 0.03 + i * 0.05
