@@ -23,13 +23,16 @@ import { JwtStrategy } from "src/auth/jwt.strategy";
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => {
         const secret = config.get<string>("JWT_ACCESS_TOKEN_SECRET");
-        const expiresInString = config.get<string>("JWT_ACCESS_TOKEN_EXPIRATION");
-
-        const expiresIn = expiresInString ? Number(expiresInString) : undefined;
+        const rawExpiresIn = config.get<string>("JWT_ACCESS_TOKEN_EXPIRATION");
+        const expiresIn: string | number = rawExpiresIn
+          ? isNaN(Number(rawExpiresIn))
+            ? rawExpiresIn
+            : Number(rawExpiresIn)
+          : "15m";
 
         return {
           secret: secret,
-          signOptions: { expiresIn },
+          signOptions: { expiresIn: expiresIn as number },
         };
       },
     }),
