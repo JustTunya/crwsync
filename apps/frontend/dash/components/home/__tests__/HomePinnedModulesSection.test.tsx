@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { HomePinnedModulesSection } from "../HomePinnedModulesSection";
 import { ModuleTypeEnum } from "@crwsync/types";
@@ -69,21 +69,6 @@ describe("HomePinnedModulesSection", () => {
       />
     );
     expect(html).toContain('href="/acme/chat/chat-7"');
-  });
-
-  it("invokes onUnpinModule(mod.id) when the unpin button is clicked", () => {
-    const onUnpinModule = vi.fn();
-    const tree = HomePinnedModulesSection({
-      modules: [makeModule({ id: "mod-42" })],
-      slug: "acme",
-      onUnpinModule,
-    });
-    const unpinButton = findByTestId(tree, "home-pinned-module-unpin");
-    expect(unpinButton).not.toBeNull();
-    (
-      unpinButton?.props.onClick as (e: { preventDefault: () => void; stopPropagation: () => void }) => void
-    )({ preventDefault: vi.fn(), stopPropagation: vi.fn() });
-    expect(onUnpinModule).toHaveBeenCalledWith("mod-42");
   });
 
   it("renders the empty state when modules array is empty", () => {

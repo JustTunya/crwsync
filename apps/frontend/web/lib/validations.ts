@@ -8,11 +8,6 @@ export function isUsernameValid(username: string): boolean {
   return usernameRegex.test(username);
 }
 
-export function isPhoneNumberValid(phone: string): boolean {
-  const phoneRegex = /^\+?[1-9]\d{3,14}$/; // E.164 format
-  return phoneRegex.test(phone);
-}
-
 export function isNameValid(name: string): boolean {
   const nameRegex = /^[\p{L}\s"-]{2,50}$/u; // Allows letters, spaces, apostrophes, and hyphens
   return nameRegex.test(name);
@@ -52,8 +47,4 @@ export function isPasswordStrong(password: string): { legit: boolean, level: "we
     return { legit: true, level: "medium" };
   }
   return { legit: true, level: "weak" };
-}
-
-export function doPasswordsMatch(password: string, confirmPassword: string): boolean {
-  return password === confirmPassword;
 }

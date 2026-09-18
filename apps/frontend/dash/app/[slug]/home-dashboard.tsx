@@ -8,7 +8,6 @@ import { HomeTaskItem, Task } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useSocket } from "@/providers/socket.provider";
 import { useWorkspaceHome, homeKeys } from "@/hooks/use-workspace-home";
-import { useTogglePinModule } from "@/hooks/use-workspace-modules";
 import * as boardService from "@/services/board.service";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { HomeMyFocusSection } from "@/components/home/HomeMyFocusSection";
@@ -29,11 +28,10 @@ export function HomeDashboard({ slug }: { slug: string }) {
   const workspaceId = activeId || "";
   const queryClient = useQueryClient();
   const { socket } = useSocket();
-  const togglePinModule = useTogglePinModule(workspaceId);
 
   const [activeTask, setActiveTask] = useState<HomeTaskItem | null>(null);
 
-  const { data, isLoading, isFetching, refetch } = useWorkspaceHome(workspaceId);
+  const { data, isLoading } = useWorkspaceHome(workspaceId);
 
   useEffect(() => {
     if (!socket || !workspaceId) return;
@@ -86,23 +84,13 @@ export function HomeDashboard({ slug }: { slug: string }) {
     }
   }, [router, slug, data]);
 
-  const handleOpenSearch = useCallback(() => {
-    window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
-  }, []);
-
   if (isLoading || !workspaceId) {
     return <HomeSkeleton />;
   }
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background">
-      <HomeHeader
-        summary={data?.summary}
-        isRefetching={isFetching}
-        onRefresh={() => refetch()}
-        onNewTask={handleNewTask}
-        onOpenSearch={handleOpenSearch}
-      />
+      <HomeHeader summary={data?.summary} />
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 @container">
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 max-w-[1600px] mx-auto items-start">
@@ -119,7 +107,6 @@ export function HomeDashboard({ slug }: { slug: string }) {
             <HomePinnedModulesSection
               modules={data?.pinnedModules}
               slug={slug}
-              onUnpinModule={(modId) => togglePinModule.mutate({ moduleId: modId, isPinned: false })}
             />
           </div>
 

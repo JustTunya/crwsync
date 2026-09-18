@@ -18,7 +18,7 @@ import { StatusGateway } from "src/status/status.gateway";
 import { SessionService } from "src/session/session.service";
 import { NotificationService } from "src/notification/notification.service";
 import { CacheService } from "src/redis";
-import { SendMessageDto, EditMessageDto, DeleteMessageDto, MarkAsReadDto } from "src/chat/dto/chat.dto";
+import { SendMessageDto, EditMessageDto, DeleteMessageDto, MarkAsReadDto, ToggleReactionDto } from "src/chat/dto/chat.dto";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
 import { createSocketCorsOrigin } from "src/common/utils/socket-cors.util";
@@ -379,7 +379,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage("toggle_reaction")
   async handleToggleReaction(
     @ConnectedSocket() client: Socket,
-    @MessageBody() dto: { message_id: string; emoji: string },
+    @MessageBody() dto: ToggleReactionDto,
   ) {
     const userId = client.data.userId;
     const roomId = client.data.currentRoom;

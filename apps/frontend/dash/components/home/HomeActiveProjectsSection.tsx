@@ -1,26 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Folder01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HomeProjectSummary } from "@crwsync/types";
 import { GlassBox } from "@/components/ui/glassbox";
+import { UserAvatar } from "@/components/user-avatar";
 import { cn } from "@/lib/utils";
 
 export interface HomeActiveProjectsSectionProps {
   projects?: HomeProjectSummary[];
   slug: string;
   className?: string;
-}
-
-function getInitials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 }
 
 function HomeProjectMemberStack({ members }: { members: HomeProjectSummary["members"] }) {
@@ -30,23 +21,12 @@ function HomeProjectMemberStack({ members }: { members: HomeProjectSummary["memb
   return (
     <div className="flex items-center -space-x-1.5">
       {visible.map((member) => (
-        <div
+        <UserAvatar
           key={member.id}
-          className="size-6 rounded-full border-2 border-card bg-base-300 text-[10px] font-semibold flex items-center justify-center text-foreground overflow-hidden"
-        >
-          {member.avatarUrl ? (
-            <Image
-              src={member.avatarUrl}
-              alt={member.name}
-              title={member.name}
-              width={24}
-              height={24}
-              className="size-full object-cover"
-            />
-          ) : (
-            <span title={member.name}>{getInitials(member.name)}</span>
-          )}
-        </div>
+          user={{ name: member.name, avatarUrl: member.avatarUrl }}
+          size={6}
+          className="border-2 border-card"
+        />
       ))}
       {overflow > 0 && (
         <div

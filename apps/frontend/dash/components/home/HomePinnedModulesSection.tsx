@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 export interface HomePinnedModulesSectionProps {
   modules?: HomePinnedModule[];
   slug: string;
-  onUnpinModule?: (moduleId: string) => void;
   className?: string;
 }
 
@@ -42,24 +41,6 @@ export function HomePinnedModulesSection({
               key={mod.id}
               className="w-full! h-full mx-0! p-3.5 flex flex-col items-stretch justify-between gap-3 relative group hover:bg-base-200/50 hover:border-base-300 transition-all cursor-pointer"
             >
-              {/* <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    title="Unpin module"
-                    data-testid="home-pinned-module-unpin"
-                    className="size-6 rounded-md hover:bg-base-300 text-muted-foreground/60 hover:text-foreground flex items-center justify-center transition-all cursor-pointer shrink-0"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onUnpinModule?.(mod.id);
-                    }}
-                  >
-                    <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
-                  </button>
-                </div>
-              </div> */}
-
               <Link
                 href={getModuleHref(slug, mod as unknown as WorkspaceModule)}
                 className="flex flex-col gap-2 outline-none flex-1 justify-between min-w-0"

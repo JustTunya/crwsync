@@ -13,10 +13,6 @@ import {
   type HomePinnedModulesSectionProps,
 } from "@/components/home/HomePinnedModulesSection";
 import {
-  HomeCrewPresenceSection,
-  type HomeCrewPresenceSectionProps,
-} from "@/components/home/HomeCrewPresenceSection";
-import {
   HomeActivityStreamSection,
   type HomeActivityStreamSectionProps,
 } from "@/components/home/HomeActivityStreamSection";
@@ -24,12 +20,11 @@ import { HomeVelocityCard, type HomeVelocityCardProps } from "@/components/home/
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useSocket } from "@/providers/socket.provider";
 import { useWorkspaceHome, homeKeys } from "@/hooks/use-workspace-home";
-import { useTogglePinModule } from "@/hooks/use-workspace-modules";
 import * as boardService from "@/services/board.service";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { TaskPriorityEnum, WorkspaceRoleEnum, ModuleTypeEnum } from "@crwsync/types";
-import type { WorkspaceHomeData, WorkspaceHomeSummary, HomeTaskItem, HomeMemberPresence } from "@crwsync/types";
+import type { WorkspaceHomeData, WorkspaceHomeSummary, HomeTaskItem } from "@crwsync/types";
 
 vi.mock("react", async () => {
   const actual = await vi.importActual<typeof import("react")>("react");
@@ -63,10 +58,6 @@ vi.mock("@/hooks/use-workspace-home", () => ({
     all: ["home"],
     detail: (workspaceId: string) => ["home", "detail", workspaceId],
   },
-}));
-
-vi.mock("@/hooks/use-workspace-modules", () => ({
-  useTogglePinModule: vi.fn(),
 }));
 
 vi.mock("@/services/board.service", () => ({
@@ -168,7 +159,6 @@ const SOCKET_EVENTS = [
 let setActiveTaskSpy: ReturnType<typeof vi.fn>;
 let pushSpy: ReturnType<typeof vi.fn>;
 let invalidateQueriesSpy: ReturnType<typeof vi.fn>;
-let toggleMutateSpy: ReturnType<typeof vi.fn>;
 let refetchSpy: ReturnType<typeof vi.fn>;
 let socketOn: ReturnType<typeof vi.fn>;
 let socketOff: ReturnType<typeof vi.fn>;
@@ -182,7 +172,6 @@ beforeEach(() => {
   setActiveTaskSpy = vi.fn();
   pushSpy = vi.fn();
   invalidateQueriesSpy = vi.fn();
-  toggleMutateSpy = vi.fn();
   refetchSpy = vi.fn();
   socketOn = vi.fn();
   socketOff = vi.fn();
@@ -207,9 +196,6 @@ beforeEach(() => {
     socket: { on: socketOn, off: socketOff },
     isConnected: true,
   } as unknown as ReturnType<typeof useSocket>);
-  vi.mocked(useTogglePinModule).mockReturnValue({
-    mutate: toggleMutateSpy,
-  } as unknown as ReturnType<typeof useTogglePinModule>);
   vi.mocked(useWorkspaceHome).mockReturnValue({
     data: makeHomeData(),
     isLoading: false,
@@ -263,7 +249,6 @@ describe("HomeDashboard", () => {
     const [header] = collectByType(tree, HomeHeader);
     const headerProps = header.props as unknown as HomeHeaderProps;
     expect(headerProps.summary).toBe(data.summary);
-    expect(headerProps.isRefetching).toBe(true);
 
     const [focus] = collectByType(tree, HomeMyFocusSection);
     const focusProps = focus.props as unknown as HomeMyFocusSectionProps;
@@ -279,10 +264,7 @@ describe("HomeDashboard", () => {
     const [pinned] = collectByType(tree, HomePinnedModulesSection);
     const pinnedProps = pinned.props as unknown as HomePinnedModulesSectionProps;
     expect(pinnedProps.modules).toBe(data.pinnedModules);
-
-    const [crew] = collectByType(tree, HomeCrewPresenceSection);
-    const crewProps = crew.props as unknown as HomeCrewPresenceSectionProps;
-    expect(crewProps.crew).toBe(data.crew);
+    expect(pinnedProps.slug).toBe("acme");
 
     const [activityStream] = collectByType(tree, HomeActivityStreamSection);
     const activityProps = activityStream.props as unknown as HomeActivityStreamSectionProps;
@@ -300,7 +282,6 @@ describe("HomeDashboard", () => {
       projects: [],
       pinnedModules: [],
       recentActivity: [],
-      crew: [],
     });
     vi.mocked(useWorkspaceHome).mockReturnValue({
       data,
@@ -316,17 +297,8 @@ describe("HomeDashboard", () => {
     expect((projects.props as unknown as HomeActiveProjectsSectionProps).projects).toEqual([]);
     const [pinned] = collectByType(tree, HomePinnedModulesSection);
     expect((pinned.props as unknown as HomePinnedModulesSectionProps).modules).toEqual([]);
-    const [crew] = collectByType(tree, HomeCrewPresenceSection);
-    expect((crew.props as unknown as HomeCrewPresenceSectionProps).crew).toEqual([]);
     const [activity] = collectByType(tree, HomeActivityStreamSection);
     expect((activity.props as unknown as HomeActivityStreamSectionProps).activity).toEqual([]);
-  });
-
-  it("triggers a refetch when the header refresh action fires", () => {
-    const tree = renderDashboard();
-    const [header] = collectByType(tree, HomeHeader);
-    (header.props as unknown as HomeHeaderProps).onRefresh?.();
-    expect(refetchSpy).toHaveBeenCalledTimes(1);
   });
 
   it("attaches realtime listeners for every board and status event on mount", () => {
@@ -403,27 +375,6 @@ describe("HomeDashboard", () => {
     expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: homeKeys.all });
   });
 
-  it("navigates to the workspace chat when a crew member's message action fires", () => {
-    const tree = renderDashboard("acme");
-    const [crew] = collectByType(tree, HomeCrewPresenceSection);
-    const { onDirectMessage } = crew.props as unknown as HomeCrewPresenceSectionProps;
-    const member: HomeMemberPresence = { id: "u-2", name: "Sam", role: WorkspaceRoleEnum.MEMBER, isOnline: true };
-
-    onDirectMessage?.(member);
-
-    expect(pushSpy).toHaveBeenCalledWith("/acme/chat");
-  });
-
-  it("unpins a pinned module through the toggle mutation", () => {
-    const tree = renderDashboard();
-    const [pinned] = collectByType(tree, HomePinnedModulesSection);
-    const { onUnpinModule } = pinned.props as unknown as HomePinnedModulesSectionProps;
-
-    onUnpinModule?.("mod-1");
-
-    expect(toggleMutateSpy).toHaveBeenCalledWith({ moduleId: "mod-1", isPinned: false });
-  });
-
   it("navigates to the first project's board when creating a new task", () => {
     const data = makeHomeData();
     vi.mocked(useWorkspaceHome).mockReturnValue({
@@ -434,8 +385,8 @@ describe("HomeDashboard", () => {
     } as unknown as ReturnType<typeof useWorkspaceHome>);
 
     const tree = renderDashboard("acme");
-    const [header] = collectByType(tree, HomeHeader);
-    (header.props as unknown as HomeHeaderProps).onNewTask?.();
+    const [focus] = collectByType(tree, HomeMyFocusSection);
+    (focus.props as unknown as HomeMyFocusSectionProps).onNewTask?.();
 
     expect(pushSpy).toHaveBeenCalledWith(`/acme/board/${data.projects[0].boardId}`);
   });
@@ -453,8 +404,8 @@ describe("HomeDashboard", () => {
     } as unknown as ReturnType<typeof useWorkspaceHome>);
 
     const tree = renderDashboard("acme");
-    const [header] = collectByType(tree, HomeHeader);
-    (header.props as unknown as HomeHeaderProps).onNewTask?.();
+    const [focus] = collectByType(tree, HomeMyFocusSection);
+    (focus.props as unknown as HomeMyFocusSectionProps).onNewTask?.();
 
     expect(pushSpy).toHaveBeenCalledWith("/acme/board/board-77");
   });
@@ -469,35 +420,9 @@ describe("HomeDashboard", () => {
     } as unknown as ReturnType<typeof useWorkspaceHome>);
 
     const tree = renderDashboard("acme");
-    const [header] = collectByType(tree, HomeHeader);
-    (header.props as unknown as HomeHeaderProps).onNewTask?.();
+    const [focus] = collectByType(tree, HomeMyFocusSection);
+    (focus.props as unknown as HomeMyFocusSectionProps).onNewTask?.();
 
     expect(pushSpy).not.toHaveBeenCalled();
-  });
-
-  it("dispatches a cmd+k keydown event when opening search", () => {
-    const dispatchSpy = vi.fn();
-    class FakeKeyboardEvent {
-      type: string;
-      key?: string;
-      metaKey?: boolean;
-      bubbles?: boolean;
-      constructor(type: string, init?: { key?: string; metaKey?: boolean; bubbles?: boolean }) {
-        this.type = type;
-        Object.assign(this, init);
-      }
-    }
-    vi.stubGlobal("window", { dispatchEvent: dispatchSpy });
-    vi.stubGlobal("KeyboardEvent", FakeKeyboardEvent);
-
-    const tree = renderDashboard();
-    const [header] = collectByType(tree, HomeHeader);
-    (header.props as unknown as HomeHeaderProps).onOpenSearch?.();
-
-    expect(dispatchSpy).toHaveBeenCalledTimes(1);
-    const event = dispatchSpy.mock.calls[0][0] as InstanceType<typeof FakeKeyboardEvent>;
-    expect(event.type).toBe("keydown");
-    expect(event.key).toBe("k");
-    expect(event.metaKey).toBe(true);
   });
 });

@@ -20,20 +20,6 @@ const baseSummary: WorkspaceHomeSummary = {
   workspaceMembersCount: 5,
 };
 
-function findByTestId(node: unknown, testId: string): { props: Record<string, unknown> } | null {
-  if (node === null || node === undefined || typeof node !== "object") return null;
-  if (Array.isArray(node)) {
-    for (const child of node) {
-      const found = findByTestId(child, testId);
-      if (found) return found;
-    }
-    return null;
-  }
-  const element = node as { props?: Record<string, unknown> };
-  if (element.props?.["data-testid"] === testId) return element as { props: Record<string, unknown> };
-  return findByTestId(element.props?.children, testId);
-}
-
 describe("HomeHeader", () => {
   it("renders greeting and formatted date without the removed header actions", () => {
     const html = renderToStaticMarkup(<HomeHeader summary={baseSummary} />);

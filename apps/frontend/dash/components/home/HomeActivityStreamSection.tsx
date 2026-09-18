@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Clock01Icon } from "@hugeicons/core-free-icons";
 import { HomeActivityItem } from "@crwsync/types";
 import { GlassBox } from "@/components/ui/glassbox";
+import { UserAvatar } from "@/components/user-avatar";
 import { useTimeAgo } from "@/hooks/use-time-ago";
 import { cn } from "@/lib/utils";
 
@@ -12,15 +13,6 @@ export interface HomeActivityStreamSectionProps {
   activity?: HomeActivityItem[];
   slug: string;
   className?: string;
-}
-
-function getInitials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 }
 
 function HomeActivityTimeBadge({ createdAt }: { createdAt: string }) {
@@ -44,9 +36,11 @@ export function HomeActivityStreamSection({ activity, slug, className }: HomeAct
           <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1" data-testid="home-activity-list">
             {activity.map((item) => (
               <div key={item.id} className="flex items-start gap-2.5 text-xs group" data-testid="home-activity-row">
-                <div className="size-6 rounded-full bg-base-300 text-[10px] font-semibold flex items-center justify-center shrink-0 mt-0.5 text-foreground">
-                  {getInitials(item.actor.name)}
-                </div>
+                <UserAvatar
+                  user={{ name: item.actor.name, avatarUrl: item.actor.avatarUrl }}
+                  size={6}
+                  className="mt-0.5"
+                />
                 <div className="flex-1 min-w-0 leading-relaxed text-muted-foreground">
                   <span className="font-semibold text-foreground">{item.actor.name}</span> {item.message}{" "}
                   {item.target?.title && (
