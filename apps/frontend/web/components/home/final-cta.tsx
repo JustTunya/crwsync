@@ -14,7 +14,7 @@ export function FinalCta() {
               The demo signs you into a shared workspace with seeded boards, rooms, and files. Open it twice to see the sync for yourself.
             </p>
           </div>
-          <div className="lg:col-span-5 flex flex-col items-start gap-3 sm:flex-row sm:items-center lg:justify-end">
+          <div className="lg:col-span-5 flex flex-row items-center gap-3 justify-center">
             <TryDemoButton size="lg" />
             <Link
               href="/auth/signup"

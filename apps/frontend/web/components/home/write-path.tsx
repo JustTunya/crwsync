@@ -162,12 +162,12 @@ export function WritePath() {
 
   return (
     <Tabs.Root ref={ref} value={flowId} onValueChange={selectFlow}>
-      <Tabs.List aria-label="Write paths" className="flex gap-1 overflow-x-auto border-b border-border">
+      <Tabs.List aria-label="Write paths" className="flex justify-around sm:justify-start gap-1 overflow-x-auto border-b border-border">
         {FLOWS.map((f) => (
           <Tabs.Trigger
             key={f.id}
             value={f.id}
-            className="relative shrink-0 px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground data-[state=active]:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring rounded-t-md"
+            className="relative shrink-0 px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground data-[state=active]:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring rounded-t-md"
           >
             {f.label}
             {f.id === flowId && <m.span layoutId="write-path-underline" className="absolute inset-x-0 -bottom-px h-0.5 bg-primary" />}
@@ -229,7 +229,7 @@ export function WritePath() {
                   className={cn("grid grid-cols-[3.5rem_1fr] gap-2 py-0.5", i < active && "opacity-60")}
                 >
                   <span className={cn("font-semibold", KIND_CLASS[step.trace.kind])}>{step.trace.kind}</span>
-                  <span className="text-foreground/85 break-words">{step.trace.text}</span>
+                  <span className="text-foreground/85 wrap-break-word">{step.trace.text}</span>
                 </m.li>
               ))}
             </ol>

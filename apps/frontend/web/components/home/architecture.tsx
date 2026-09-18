@@ -285,7 +285,7 @@ function Beam({ geometry, animate }: { geometry: EdgeGeometry; animate: boolean 
             strokeOpacity={0.2}
             initial={{ pathLength: 0.2, pathOffset: -0.2 }}
             animate={{ pathOffset: 1 }}
-            transition={{ repeat: Infinity, duration: BEAM_SECONDS, delay, repeatDelay: BEAM_SECONDS, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: BEAM_SECONDS, delay, ease: "linear" }}
           />
           <m.path
             d={geometry.d}
@@ -296,7 +296,7 @@ function Beam({ geometry, animate }: { geometry: EdgeGeometry; animate: boolean 
             style={{ filter: "drop-shadow(0 0 6px var(--primary))" }}
             initial={{ pathLength: 0.1, pathOffset: -0.15 }}
             animate={{ pathOffset: 1.05 }}
-            transition={{ repeat: Infinity, duration: BEAM_SECONDS, delay, repeatDelay: BEAM_SECONDS, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: BEAM_SECONDS, delay, ease: "linear" }}
           />
         </>
       )}
