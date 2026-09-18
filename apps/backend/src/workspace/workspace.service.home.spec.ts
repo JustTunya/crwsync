@@ -80,7 +80,6 @@ describe("WorkspaceService.getHomeData", () => {
     prisma.workspaceProject.findMany.mockResolvedValue([{ id: "proj-1", name: "Launch", color: "#fff", position: 0 }]);
     prisma.workspaceModule.findMany
       .mockResolvedValueOnce([{ id: "mod-1", project_id: "proj-1", reference_id: "board-1" }])
-      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: "mod-2", name: "Main board", type: "BOARD", color: null, position: 0 }]);
 
     prisma.taskActivity.findMany.mockResolvedValue([
@@ -115,7 +114,7 @@ describe("WorkspaceService.getHomeData", () => {
       progressPercentage: 0,
     });
     expect(result.pinnedModules).toEqual([
-      { id: "mod-2", name: "Main board", type: "BOARD", isPinned: false, color: null },
+      { id: "mod-2", name: "Main board", type: "BOARD", isPinned: true, color: null },
     ]);
     expect(result.recentActivity).toHaveLength(1);
     expect(result.recentActivity[0]).toMatchObject({

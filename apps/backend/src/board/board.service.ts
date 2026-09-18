@@ -690,6 +690,8 @@ export class BoardService {
       });
     }
 
+    await this.cache.del(CacheKeys.workspaceHome(workspaceId, userId));
+
     return { success: true };
   }
 
@@ -877,6 +879,8 @@ export class BoardService {
         .to(`workspace_${workspaceId}`)
         .emit("module:deleted", { moduleId });
     }
+
+    await this.cache.invalidatePattern(CacheKeys.workspaceHomePattern(workspaceId));
 
     return { success: true };
   }

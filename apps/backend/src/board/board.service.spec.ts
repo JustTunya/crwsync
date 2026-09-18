@@ -66,6 +66,7 @@ function makeService() {
     acquireLock: jest.fn().mockResolvedValue(true),
     releaseLock: jest.fn(),
     invalidatePattern: jest.fn(),
+    del: jest.fn(),
   };
   const statusGateway = { server: { to: jest.fn().mockReturnValue({ emit: jest.fn() }) } };
   const notificationService = { create: jest.fn() };
@@ -857,7 +858,7 @@ describe("BoardService togglePinModule", () => {
   });
 
   it("upserts a pin when isPinned is true", async () => {
-    const { service, prisma } = makeService();
+    const { service, prisma, cache } = makeService();
     prisma.workspaceModule.findFirst.mockResolvedValue({ id: "mod-1" });
 
     const result = await service.togglePinModule("ws-1", "mod-1", "user-1", true);
@@ -866,10 +867,11 @@ describe("BoardService togglePinModule", () => {
     expect(prisma.userPinnedModule.upsert).toHaveBeenCalledWith(
       expect.objectContaining({ where: { user_id_module_id: { user_id: "user-1", module_id: "mod-1" } } }),
     );
+    expect(cache.del).toHaveBeenCalledWith("ws:ws-1:home:user-1");
   });
 
   it("removes the pin when isPinned is false", async () => {
-    const { service, prisma } = makeService();
+    const { service, prisma, cache } = makeService();
     prisma.workspaceModule.findFirst.mockResolvedValue({ id: "mod-1" });
 
     const result = await service.togglePinModule("ws-1", "mod-1", "user-1", false);
@@ -878,6 +880,7 @@ describe("BoardService togglePinModule", () => {
     expect(prisma.userPinnedModule.deleteMany).toHaveBeenCalledWith({
       where: { user_id: "user-1", module_id: "mod-1" },
     });
+    expect(cache.del).toHaveBeenCalledWith("ws:ws-1:home:user-1");
   });
 });
 

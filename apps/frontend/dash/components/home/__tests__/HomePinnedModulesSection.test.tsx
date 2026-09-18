@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { HomePinnedModulesSection } from "../HomePinnedModulesSection";
 import { ModuleTypeEnum } from "@crwsync/types";
@@ -32,13 +32,34 @@ function makeModule(overrides: Partial<HomePinnedModule> & { reference_id?: stri
 }
 
 describe("HomePinnedModulesSection", () => {
-  it("renders module names, subtitles, and icons", () => {
+  it("renders module names, subtitles, icons, and cancel button", () => {
     const html = renderToStaticMarkup(
       <HomePinnedModulesSection modules={[makeModule()]} slug="acme" />
     );
     expect(html).toContain("Sprint Board");
     expect(html).toContain("3 items");
     expect(html).toContain("<svg");
+    expect(html).toContain('data-testid="home-pinned-module-unpin-btn"');
+    expect(html).toContain('aria-label="Unpin Sprint Board"');
+  });
+
+  it("invokes onUnpin with the module when unpin button is clicked", () => {
+    const onUnpin = vi.fn();
+    const mod = makeModule();
+    const tree = HomePinnedModulesSection({ modules: [mod], slug: "acme", onUnpin });
+    const btn = findByTestId(tree, "home-pinned-module-unpin-btn");
+    expect(btn).not.toBeNull();
+
+    const preventDefault = vi.fn();
+    const stopPropagation = vi.fn();
+    (btn?.props.onClick as (e: { preventDefault: () => void; stopPropagation: () => void }) => void)({
+      preventDefault,
+      stopPropagation,
+    });
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(stopPropagation).toHaveBeenCalled();
+    expect(onUnpin).toHaveBeenCalledWith(mod);
   });
 
   it("falls back to the lowercase module type when there is no badge count", () => {

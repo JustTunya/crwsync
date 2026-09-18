@@ -3,10 +3,11 @@
 import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
-import { HomeTaskItem, Task } from "@crwsync/types";
+import { HomePinnedModule, HomeTaskItem, Task } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useSocket } from "@/providers/socket.provider";
 import { useWorkspaceHome, homeKeys } from "@/hooks/use-workspace-home";
+import { useTogglePinModule } from "@/hooks/use-workspace-modules";
 import * as boardService from "@/services/board.service";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { HomeMyFocusSection } from "@/components/home/HomeMyFocusSection";
@@ -52,6 +53,16 @@ export function HomeDashboard({ slug }: { slug: string }) {
       socket.off("status:update", onWorkspaceUpdate);
     };
   }, [socket, workspaceId, queryClient]);
+
+  const togglePinModule = useTogglePinModule(workspaceId);
+
+  const handleUnpinModule = useCallback(
+    (mod: HomePinnedModule) => {
+      if (!workspaceId) return;
+      togglePinModule.mutate({ moduleId: mod.id, isPinned: false });
+    },
+    [workspaceId, togglePinModule]
+  );
 
   const handleToggleComplete = useCallback(
     async (task: HomeTaskItem, completed?: boolean) => {
@@ -101,6 +112,7 @@ export function HomeDashboard({ slug }: { slug: string }) {
             <HomePinnedModulesSection
               modules={data?.pinnedModules}
               slug={slug}
+              onUnpin={handleUnpinModule}
             />
           </div>
 

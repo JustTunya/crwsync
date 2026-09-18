@@ -20,6 +20,7 @@ import { HomeVelocityCard, type HomeVelocityCardProps } from "@/components/home/
 import { useWorkspace } from "@/providers/workspace.provider";
 import { useSocket } from "@/providers/socket.provider";
 import { useWorkspaceHome, homeKeys } from "@/hooks/use-workspace-home";
+import { useTogglePinModule } from "@/hooks/use-workspace-modules";
 import * as boardService from "@/services/board.service";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -62,6 +63,10 @@ vi.mock("@/hooks/use-workspace-home", () => ({
 
 vi.mock("@/services/board.service", () => ({
   updateTask: vi.fn(),
+}));
+
+vi.mock("@/hooks/use-workspace-modules", () => ({
+  useTogglePinModule: vi.fn(),
 }));
 
 function collectByType(
@@ -163,6 +168,7 @@ let invalidateQueriesSpy: ReturnType<typeof vi.fn>;
 let refetchSpy: ReturnType<typeof vi.fn>;
 let socketOn: ReturnType<typeof vi.fn>;
 let socketOff: ReturnType<typeof vi.fn>;
+let togglePinMutateSpy: ReturnType<typeof vi.fn>;
 let effectCleanups: Array<() => void>;
 
 function renderDashboard(slug = "acme") {
@@ -176,7 +182,13 @@ beforeEach(() => {
   refetchSpy = vi.fn();
   socketOn = vi.fn();
   socketOff = vi.fn();
+  togglePinMutateSpy = vi.fn();
   effectCleanups = [];
+
+  vi.mocked(useTogglePinModule).mockReturnValue({
+    mutate: togglePinMutateSpy,
+    mutateAsync: vi.fn(),
+  } as unknown as ReturnType<typeof useTogglePinModule>);
 
   vi.mocked(useState).mockImplementation(((initial?: unknown) => [
     typeof initial === "function" ? (initial as () => unknown)() : initial,
@@ -376,5 +388,16 @@ describe("HomeDashboard", () => {
       due_date: "2026-10-01",
     });
     expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: homeKeys.all });
+  });
+
+  it("unpins a module when onUnpin is called", () => {
+    const tree = renderDashboard();
+    const [pinned] = collectByType(tree, HomePinnedModulesSection);
+    const { onUnpin } = pinned.props as unknown as HomePinnedModulesSectionProps;
+
+    const mod = { id: "mod-1", name: "Launch Board", type: ModuleTypeEnum.BOARD, isPinned: true };
+    onUnpin?.(mod);
+
+    expect(togglePinMutateSpy).toHaveBeenCalledWith({ moduleId: "mod-1", isPinned: false });
   });
 });

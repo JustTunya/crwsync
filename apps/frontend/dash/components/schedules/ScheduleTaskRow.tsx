@@ -159,7 +159,7 @@ export function ScheduleTaskRow<T extends ScheduleTask | HomeTaskItem = Schedule
               onTaskClick?.(task);
             }}
             className={cn(
-              "text-sm font-medium text-left truncate hover:text-primary transition-colors cursor-pointer min-w-0",
+              "text-sm font-medium text-left truncate group-hover:text-primary transition-colors cursor-pointer min-w-0",
               isCompleted && "line-through text-muted-foreground"
             )}
           >

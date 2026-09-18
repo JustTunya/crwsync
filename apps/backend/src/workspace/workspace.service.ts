@@ -800,20 +800,11 @@ export class WorkspaceService {
       orderBy: { position: "asc" },
     });
 
-    const isFallback = pinned.length === 0;
-    const modules = isFallback
-      ? await this.prisma.workspaceModule.findMany({
-          where: { workspace_id: workspaceId },
-          orderBy: { position: "asc" },
-          take: 5,
-        })
-      : pinned;
-
-    return modules.map((mod) => ({
+    return pinned.map((mod) => ({
       id: mod.id,
       name: mod.name,
       type: mod.type as unknown as HomePinnedModule["type"],
-      isPinned: !isFallback,
+      isPinned: true,
       color: mod.color,
     }));
   }
