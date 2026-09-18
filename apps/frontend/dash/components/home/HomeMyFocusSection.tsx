@@ -72,7 +72,7 @@ export function HomeMyFocusSection({
               data-testid={`home-focus-tab-${tab}`}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer",
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-medium transition-colors cursor-pointer",
                 tab === "overdue" && hasOverdue
                   ? "text-alert bg-alert/15 border border-alert/30 font-semibold"
                   : activeTab === tab

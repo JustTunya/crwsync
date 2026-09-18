@@ -12,6 +12,7 @@ import { StatisticsHeader } from "@/components/statistics/StatisticsHeader";
 import { StatisticsOverviewTab } from "@/components/statistics/StatisticsOverviewTab";
 import { StatisticsPersonalTab } from "@/components/statistics/StatisticsPersonalTab";
 import { StatisticsProjectsTab } from "@/components/statistics/StatisticsProjectsTab";
+import { StatisticsSkeleton } from "@/components/statistics/StatisticsSkeleton";
 
 const DEFAULT_INTERVAL: StatisticsInterval = "30d";
 const DEFAULT_TAB: StatisticsTab = "overview";
@@ -108,6 +109,10 @@ export function StatisticsDashboard({
     },
     [updateQueryParams]
   );
+
+  if (isLoading || !workspaceId) {
+    return <StatisticsSkeleton />;
+  }
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background">
