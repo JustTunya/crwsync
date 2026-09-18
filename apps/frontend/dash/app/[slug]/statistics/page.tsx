@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { StatisticsDashboard } from "./statistics-dashboard";
+import { StatisticsSkeleton } from "@/components/statistics/StatisticsSkeleton";
 
 export const metadata = {
   title: "Statistics | crwsync",
@@ -15,7 +16,7 @@ export default async function StatisticsPage({
   const resolvedSearchParams = await searchParams;
 
   return (
-    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground animate-pulse">Loading statistics...</div>}>
+    <Suspense fallback={<StatisticsSkeleton />}>
       <StatisticsDashboard
         initialInterval={resolvedSearchParams.interval}
         initialTab={resolvedSearchParams.tab}

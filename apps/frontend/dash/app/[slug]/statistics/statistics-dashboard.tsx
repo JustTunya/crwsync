@@ -12,6 +12,7 @@ import { StatisticsHeader } from "@/components/statistics/StatisticsHeader";
 import { StatisticsOverviewTab } from "@/components/statistics/StatisticsOverviewTab";
 import { StatisticsPersonalTab } from "@/components/statistics/StatisticsPersonalTab";
 import { StatisticsProjectsTab } from "@/components/statistics/StatisticsProjectsTab";
+import { StatisticsSkeleton } from "@/components/statistics/StatisticsSkeleton";
 
 const DEFAULT_INTERVAL: StatisticsInterval = "30d";
 const DEFAULT_TAB: StatisticsTab = "overview";
@@ -109,6 +110,10 @@ export function StatisticsDashboard({
     [updateQueryParams]
   );
 
+  if (isLoading || !workspaceId) {
+    return <StatisticsSkeleton />;
+  }
+
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background">
       {/* Primary Header */}
@@ -116,8 +121,8 @@ export function StatisticsDashboard({
         <div className="flex items-center gap-3 min-w-0">
           <LSidebarToggle />
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Statistics</h1>
-            <p className="text-sm text-muted-foreground leading-4 font-mono">
+            <h1 className="text-base sm:text-lg font-semibold text-foreground">Statistics</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-4 font-mono">
               Workspace analytics
             </p>
           </div>

@@ -10,6 +10,8 @@ export const CacheKeys = {
   workspaceSearch: (workspaceId: string, userId: string, q: string) =>
     `workspace:${workspaceId}:user:${userId}:search:${q.toLowerCase().trim()}`,
   workspaceStatisticsPattern: (workspaceId: string) => `ws:${workspaceId}:statistics:*`,
+  workspaceHome: (workspaceId: string, userId: string) => `ws:${workspaceId}:home:${userId}`,
+  workspaceHomePattern: (workspaceId: string) => `ws:${workspaceId}:home:*`,
 };
 
 export const CacheTTL = {
@@ -20,4 +22,5 @@ export const CacheTTL = {
   USER_WORKSPACES: 600, // 10 minutes
   VERIFICATION: 300, // 5 minutes
   SEARCH: 30, // 30 seconds
+  WORKSPACE_HOME: 120, // 2 minutes
 };

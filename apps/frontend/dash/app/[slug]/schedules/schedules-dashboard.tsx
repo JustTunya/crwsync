@@ -17,6 +17,7 @@ import * as boardService from "@/services/board.service";
 import { SchedulesHeader } from "@/components/schedules/SchedulesHeader";
 import { SchedulesAgenda } from "@/components/schedules/SchedulesAgenda";
 import { SchedulesCalendarSidebar } from "@/components/schedules/SchedulesCalendarSidebar";
+import { SchedulesSkeleton } from "@/components/schedules/SchedulesSkeleton";
 import { LSidebarToggle } from "@/components/l-sidebar";
 import { RSidebarToggle } from "@/components/r-sidebar";
 
@@ -142,30 +143,7 @@ export function SchedulesDashboard() {
   }, [socket, workspaceId, queryClient]);
 
   if (isLoading || !workspaceId) {
-    return (
-      <div className="flex flex-col h-full overflow-hidden bg-background">
-        <header className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <LSidebarToggle />
-            <div>
-              <h1 className="text-lg font-semibold text-foreground">Schedules</h1>
-              <p className="text-sm text-muted-foreground leading-4 font-mono">
-                Upcoming deadlines
-              </p>
-            </div>
-          </div>
-          <RSidebarToggle />
-        </header>
-        <div
-          className="flex-1 flex items-center justify-center"
-          role="status"
-          aria-label="Loading schedules"
-        >
-          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="sr-only">Loading schedules...</span>
-        </div>
-      </div>
-    );
+    return <SchedulesSkeleton />;
   }
 
   return (
@@ -174,8 +152,8 @@ export function SchedulesDashboard() {
         <div className="flex items-center gap-3 min-w-0">
           <LSidebarToggle />
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Schedules</h1>
-            <p className="text-sm text-muted-foreground leading-4 font-mono">
+            <h1 className="text-base sm:text-lg font-semibold text-foreground">Schedules</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-4 font-mono">
               Upcoming deadlines
             </p>
           </div>

@@ -1,16 +1,17 @@
 import { Suspense } from "react";
 import { HomeDashboard } from "./home-dashboard";
+import { HomeSkeleton } from "@/components/home/HomeSkeleton";
 
 export const metadata = {
   title: "Home | crwsync",
-  description: "Your workspace dashboard — personal metrics, shared modules, and boards at a glance.",
+  description: "Your workspace command center — personal focus, active projects, and live workspace pulse.",
 };
 
 export default async function HomePage({ params }: { params: { slug: string } }) {
   const { slug } = await params;
-  
+
   return (
-    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground animate-pulse">Loading dashboard...</div>}>
+    <Suspense fallback={<HomeSkeleton />}>
       <HomeDashboard slug={slug} />
     </Suspense>
   );

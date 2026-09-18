@@ -1,3 +1,5 @@
+import { ModuleTypeEnum, TaskPriorityEnum, ColumnType } from "./board";
+
 export enum WorkspaceRoleEnum {
   OWNER = "OWNER",
   ADMIN = "ADMIN",
@@ -101,4 +103,98 @@ export interface WorkspaceOperationState<T = undefined> {
   message?: string;
   errors?: Record<string, string[]>;
   data?: T;
+}
+
+export interface WorkspaceHomeSummary {
+  greeting: string;
+  todayFormatted: string;
+  urgentCount: number;
+  activeTasksCount: number;
+  completionVelocity: number;
+  workspaceMembersCount: number;
+}
+
+export interface HomeTaskItem {
+  id: string;
+  shortId: string;
+  title: string;
+  priority: TaskPriorityEnum;
+  status: string;
+  columnId: string;
+  boardId: string;
+  boardTitle: string;
+  projectId?: string;
+  projectName?: string;
+  dueDate: string | null;
+  commentsCount: number;
+  attachmentsCount: number;
+  checklistTotal: number;
+  checklistCompleted: number;
+  columnColor?: string | null;
+  columnType?: ColumnType;
+  completedAt?: string | null;
+}
+
+export interface HomeProjectSummary {
+  id: string;
+  title: string;
+  color?: string | null;
+  boardId?: string;
+  totalTasks: number;
+  completedTasks: number;
+  progressPercentage: number;
+  members: Array<{
+    id: string;
+    name: string;
+    avatarUrl?: string | null;
+  }>;
+}
+
+export interface HomePinnedModule {
+  id: string;
+  name: string;
+  type: ModuleTypeEnum;
+  isPinned: boolean;
+  color?: string | null;
+  badgeCount?: number;
+  lastActive?: string;
+}
+
+export interface HomeActivityItem {
+  id: string;
+  type: "task_created" | "task_moved" | "task_completed" | "comment_added" | "file_uploaded";
+  message: string;
+  actor: {
+    id: string;
+    name: string;
+    avatarUrl?: string | null;
+  };
+  target: {
+    id: string;
+    title: string;
+    href: string;
+  };
+  createdAt: string;
+}
+
+export interface HomeMemberPresence {
+  id: string;
+  name: string;
+  role: WorkspaceRoleEnum;
+  avatarUrl?: string | null;
+  isOnline: boolean;
+  activeStatus?: string;
+}
+
+export interface WorkspaceHomeData {
+  summary: WorkspaceHomeSummary;
+  myFocus: {
+    overdue: HomeTaskItem[];
+    dueToday: HomeTaskItem[];
+    inProgress: HomeTaskItem[];
+  };
+  projects: HomeProjectSummary[];
+  pinnedModules: HomePinnedModule[];
+  recentActivity: HomeActivityItem[];
+  crew: HomeMemberPresence[];
 }

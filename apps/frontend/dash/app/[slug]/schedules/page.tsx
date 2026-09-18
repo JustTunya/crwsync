@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { SchedulesDashboard } from "./schedules-dashboard";
+import { SchedulesSkeleton } from "@/components/schedules/SchedulesSkeleton";
 
 export const metadata = {
   title: "Schedules | crwsync",
@@ -9,13 +10,7 @@ export const metadata = {
 
 export default function SchedulesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-6 text-sm text-muted-foreground animate-pulse">
-          Loading schedules...
-        </div>
-      }
-    >
+    <Suspense fallback={<SchedulesSkeleton />}>
       <SchedulesDashboard />
     </Suspense>
   );
