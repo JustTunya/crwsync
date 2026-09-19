@@ -1,11 +1,5 @@
-import { ChangePasswordForm } from "@/components/settings/change-password-form";
-import { SessionsList } from "@/components/settings/sessions-list";
+import { redirect } from "next/navigation";
 
 export default function SecuritySettingsPage() {
-  return (
-    <>
-      <ChangePasswordForm />
-      <SessionsList />
-    </>
-  );
+  redirect("/settings#security");
 }

@@ -24,7 +24,18 @@ function tone(ctx: AudioContext, frequency: number, startTime: number, duration:
   oscillator.stop(startTime + duration);
 }
 
+export function isNotificationSoundEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  return localStorage.getItem("crwsync-sound-enabled") !== "false";
+}
+
+export function setNotificationSoundEnabled(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("crwsync-sound-enabled", enabled ? "true" : "false");
+}
+
 export function playNotificationSound() {
+  if (!isNotificationSoundEnabled()) return;
   const ctx = getAudioContext();
   if (!ctx) return;
   if (ctx.state === "suspended") ctx.resume();

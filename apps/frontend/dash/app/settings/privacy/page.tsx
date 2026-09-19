@@ -1,11 +1,5 @@
-import { ExportDataCard } from "@/components/settings/export-data-card";
-import { CloseAccountDangerZone } from "@/components/settings/close-account-danger-zone";
+import { redirect } from "next/navigation";
 
 export default function PrivacySettingsPage() {
-  return (
-    <>
-      <ExportDataCard />
-      <CloseAccountDangerZone />
-    </>
-  );
+  redirect("/settings#privacy");
 }

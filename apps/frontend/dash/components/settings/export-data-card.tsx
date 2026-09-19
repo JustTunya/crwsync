@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Download01Icon } from "@hugeicons/core-free-icons";
+import { Download01Icon, CheckmarkCircle02Icon, File01Icon } from "@hugeicons/core-free-icons";
 import { useUser } from "@/providers/user.provider";
 import { useExportUserData } from "@/hooks/use-user";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -41,35 +41,45 @@ export function ExportDataCard() {
     <motion.div variants={settingsItemVariants}>
       <Card>
         <CardHeader>
-          <CardTitle>Export your data</CardTitle>
+          <CardTitle>Export Account Data</CardTitle>
           <CardDescription>
-            Download a machine-readable JSON copy of your profile, workspace memberships, tasks, comments, and chat
-            messages.
+            Download a machine-readable JSON copy of your profile, workspace memberships, tasks, comments, and chat messages.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="mt-4 space-y-3">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-xs text-muted-foreground">
-              Includes all activity and content attributable to your account across every workspace.
-            </p>
+        <CardContent className="mt-2 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-base-100 border border-border">
+            <div className="flex items-start gap-3">
+              <div className="size-9 rounded-lg bg-base-200 flex items-center justify-center text-muted-foreground shrink-0 mt-0.5">
+                <HugeiconsIcon icon={File01Icon} className="size-4.5" strokeWidth={1.8} />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium text-foreground">Complete Archive (.json)</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Includes all activity, tasks, messages, and comments attributable to your account.
+                </p>
+              </div>
+            </div>
 
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="w-auto shrink-0"
+              className="w-auto shrink-0 text-xs"
               disabled={isPending}
               onClick={onExport}
             >
-              <HugeiconsIcon icon={Download01Icon} className="size-4 mr-1.5" strokeWidth={2} />
-              {isPending ? "Generating..." : "Export data"}
+              <HugeiconsIcon icon={Download01Icon} className="size-3.5 mr-1.5" strokeWidth={2} />
+              {isPending ? "Generating archive..." : "Download Export"}
             </Button>
           </div>
 
-          {error && <p className="text-sm text-destructive">{error.message}</p>}
+          {error && <p className="text-xs text-destructive">{error.message}</p>}
           {success && !isPending && (
-            <p className="text-sm text-success">Export generated. Your download has started.</p>
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-success/10 text-success text-xs font-medium border border-success/20">
+              <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4 shrink-0" strokeWidth={2} />
+              <span>Export generated successfully. Your download has started.</span>
+            </div>
           )}
         </CardContent>
       </Card>
