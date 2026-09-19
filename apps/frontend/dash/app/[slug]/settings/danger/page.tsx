@@ -1,5 +1,10 @@
-import { WorkspaceDangerZone } from "@/components/settings/workspace-danger-zone";
+import { redirect } from "next/navigation";
 
-export default function WorkspaceDangerZoneSettingsPage() {
-  return <WorkspaceDangerZone />;
+export default async function WorkspaceDangerZoneSettingsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }> | { slug: string };
+}) {
+  const { slug } = await params;
+  redirect(`/${slug}/settings#danger-zone`);
 }

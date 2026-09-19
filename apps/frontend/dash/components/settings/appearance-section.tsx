@@ -25,6 +25,183 @@ import {
 } from "@/lib/notification-sound";
 import { cn } from "@/lib/utils";
 
+const LIGHT_TOKENS = {
+  background: "oklch(1.00 0.007 64.35)",
+  foreground: "oklch(0.16 0.020 64.35)",
+  card: "oklch(0.98 0.008 64.35)",
+  border: "oklch(0.87 0.015 64.35)",
+  base100: "oklch(0.940 0.0035 64.35)",
+  base200: "oklch(0.880 0.0035 64.35)",
+  base300: "oklch(0.820 0.0035 64.35)",
+  primary: "oklch(0.703 0.188 36.91)",
+};
+
+const DARK_TOKENS = {
+  background: "oklch(0.15 0.015 64.35)",
+  foreground: "oklch(0.98 0.008 64.35)",
+  card: "oklch(0.18 0.015 64.35)",
+  border: "oklch(0.24 0.015 64.35)",
+  base100: "oklch(0.21 0.015 64.35)",
+  base200: "oklch(0.27 0.015 64.35)",
+  base300: "oklch(0.33 0.015 64.35)",
+  primary: "oklch(0.703 0.188 36.91)",
+};
+
+function LightThemePreview() {
+  return (
+    <div
+      className="h-20 w-full rounded-lg p-2 mb-3 flex flex-col justify-between overflow-hidden shadow-xs border"
+      style={{
+        backgroundColor: LIGHT_TOKENS.background,
+        borderColor: LIGHT_TOKENS.border,
+      }}
+    >
+      <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: LIGHT_TOKENS.border }}>
+        <div className="flex items-center gap-1">
+          <div className="size-2 rounded-full" style={{ backgroundColor: LIGHT_TOKENS.primary }} />
+          <div className="h-1.5 w-10 rounded-full" style={{ backgroundColor: LIGHT_TOKENS.base300 }} />
+        </div>
+        <div className="h-1.5 w-4 rounded-full" style={{ backgroundColor: LIGHT_TOKENS.base200 }} />
+      </div>
+      <div className="flex gap-1.5 flex-1 pt-1.5">
+        <div className="w-5 rounded flex flex-col gap-1 p-0.5" style={{ backgroundColor: LIGHT_TOKENS.base100 }}>
+          <div className="h-1 rounded" style={{ backgroundColor: LIGHT_TOKENS.primary }} />
+          <div className="h-1 rounded" style={{ backgroundColor: LIGHT_TOKENS.base300 }} />
+          <div className="h-1 rounded" style={{ backgroundColor: LIGHT_TOKENS.base300 }} />
+        </div>
+        <div className="flex-1 grid grid-cols-2 gap-1">
+          <div
+            className="rounded p-1 flex flex-col justify-between border"
+            style={{ backgroundColor: LIGHT_TOKENS.card, borderColor: LIGHT_TOKENS.border }}
+          >
+            <div className="h-1 w-6 rounded" style={{ backgroundColor: LIGHT_TOKENS.foreground, opacity: 0.8 }} />
+            <div className="h-2 rounded" style={{ backgroundColor: LIGHT_TOKENS.primary, opacity: 0.2 }} />
+          </div>
+          <div
+            className="rounded p-1 flex flex-col justify-between border"
+            style={{ backgroundColor: LIGHT_TOKENS.card, borderColor: LIGHT_TOKENS.border }}
+          >
+            <div className="h-1 w-5 rounded" style={{ backgroundColor: LIGHT_TOKENS.foreground, opacity: 0.8 }} />
+            <div className="h-2 rounded" style={{ backgroundColor: LIGHT_TOKENS.base200 }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DarkThemePreview() {
+  return (
+    <div
+      className="h-20 w-full rounded-lg p-2 mb-3 flex flex-col justify-between overflow-hidden shadow-xs border"
+      style={{
+        backgroundColor: DARK_TOKENS.background,
+        borderColor: DARK_TOKENS.border,
+      }}
+    >
+      <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: DARK_TOKENS.border }}>
+        <div className="flex items-center gap-1">
+          <div className="size-2 rounded-full" style={{ backgroundColor: DARK_TOKENS.primary }} />
+          <div className="h-1.5 w-10 rounded-full" style={{ backgroundColor: DARK_TOKENS.base300 }} />
+        </div>
+        <div className="h-1.5 w-4 rounded-full" style={{ backgroundColor: DARK_TOKENS.base200 }} />
+      </div>
+      <div className="flex gap-1.5 flex-1 pt-1.5">
+        <div className="w-5 rounded flex flex-col gap-1 p-0.5" style={{ backgroundColor: DARK_TOKENS.base100 }}>
+          <div className="h-1 rounded" style={{ backgroundColor: DARK_TOKENS.primary }} />
+          <div className="h-1 rounded" style={{ backgroundColor: DARK_TOKENS.base300 }} />
+          <div className="h-1 rounded" style={{ backgroundColor: DARK_TOKENS.base300 }} />
+        </div>
+        <div className="flex-1 grid grid-cols-2 gap-1">
+          <div
+            className="rounded p-1 flex flex-col justify-between border"
+            style={{ backgroundColor: DARK_TOKENS.card, borderColor: DARK_TOKENS.border }}
+          >
+            <div className="h-1 w-6 rounded" style={{ backgroundColor: DARK_TOKENS.foreground, opacity: 0.8 }} />
+            <div className="h-2 rounded" style={{ backgroundColor: DARK_TOKENS.primary, opacity: 0.25 }} />
+          </div>
+          <div
+            className="rounded p-1 flex flex-col justify-between border"
+            style={{ backgroundColor: DARK_TOKENS.card, borderColor: DARK_TOKENS.border }}
+          >
+            <div className="h-1 w-5 rounded" style={{ backgroundColor: DARK_TOKENS.foreground, opacity: 0.8 }} />
+            <div className="h-2 rounded" style={{ backgroundColor: DARK_TOKENS.base200 }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SystemThemePreview() {
+  return (
+    <div className="h-20 w-full rounded-lg mb-3 flex overflow-hidden shadow-xs border border-border">
+      <div
+        className="w-1/2 h-full p-2 flex flex-col justify-between border-r"
+        style={{
+          backgroundColor: LIGHT_TOKENS.background,
+          borderColor: LIGHT_TOKENS.border,
+        }}
+      >
+        <div className="flex items-center gap-1 pb-1">
+          <div className="size-2 rounded-full" style={{ backgroundColor: LIGHT_TOKENS.primary }} />
+          <div className="h-1.5 w-6 rounded-full" style={{ backgroundColor: LIGHT_TOKENS.base300 }} />
+        </div>
+        <div
+          className="rounded p-1 border flex-1 flex flex-col justify-between"
+          style={{ backgroundColor: LIGHT_TOKENS.card, borderColor: LIGHT_TOKENS.border }}
+        >
+          <div className="h-1 w-4 rounded" style={{ backgroundColor: LIGHT_TOKENS.foreground, opacity: 0.8 }} />
+          <div className="h-2 rounded" style={{ backgroundColor: LIGHT_TOKENS.primary, opacity: 0.2 }} />
+        </div>
+      </div>
+
+      <div
+        className="w-1/2 h-full p-2 flex flex-col justify-between"
+        style={{
+          backgroundColor: DARK_TOKENS.background,
+        }}
+      >
+        <div className="flex items-center gap-1 pb-1 justify-end">
+          <div className="h-1.5 w-6 rounded-full" style={{ backgroundColor: DARK_TOKENS.base300 }} />
+          <div className="size-2 rounded-full" style={{ backgroundColor: DARK_TOKENS.primary }} />
+        </div>
+        <div
+          className="rounded p-1 border flex-1 flex flex-col justify-between"
+          style={{ backgroundColor: DARK_TOKENS.card, borderColor: DARK_TOKENS.border }}
+        >
+          <div className="h-1 w-4 rounded" style={{ backgroundColor: DARK_TOKENS.foreground, opacity: 0.8 }} />
+          <div className="h-2 rounded" style={{ backgroundColor: DARK_TOKENS.base200 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const THEME_OPTIONS = [
+  {
+    id: "light",
+    label: "Light",
+    description: "Warm paper canvas with crisp ember accents",
+    icon: Sun01Icon,
+    renderPreview: () => <LightThemePreview />,
+  },
+  {
+    id: "dark",
+    label: "Dark",
+    description: "Warm control room with deep charcoal panels",
+    icon: Moon02Icon,
+    renderPreview: () => <DarkThemePreview />,
+  },
+  {
+    id: "system",
+    label: "System",
+    description: "Automatically matches your device preference",
+    icon: LaptopIcon,
+    renderPreview: () => <SystemThemePreview />,
+  },
+] as const;
+
 const emptySubscribe = (callback: () => void) => {
   if (typeof window !== "undefined") {
     window.addEventListener("storage", callback);
@@ -39,29 +216,9 @@ const getServerSnapshot = () => false;
 const getSoundSnapshot = () => isNotificationSoundEnabled();
 const getSoundServerSnapshot = () => true;
 
-const getMotionSnapshot = () => (typeof window !== "undefined" ? localStorage.getItem("crwsync-reduced-motion") === "true" : false);
+const getMotionSnapshot = () =>
+  typeof window !== "undefined" ? localStorage.getItem("crwsync-reduced-motion") === "true" : false;
 const getMotionServerSnapshot = () => false;
-
-const THEME_OPTIONS = [
-  {
-    id: "light",
-    label: "Light",
-    description: "Warm paper canvas with crisp ember accents",
-    icon: Sun01Icon,
-  },
-  {
-    id: "dark",
-    label: "Dark",
-    description: "Warm control room with deep charcoal panels",
-    icon: Moon02Icon,
-  },
-  {
-    id: "system",
-    label: "System",
-    description: "Automatically matches your device preference",
-    icon: LaptopIcon,
-  },
-] as const;
 
 export function AppearanceSection() {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -136,18 +293,7 @@ export function AppearanceSection() {
                       )}
                     </div>
 
-                    <div className="h-16 w-full rounded-lg border border-border/80 p-2 mb-3 flex flex-col justify-between overflow-hidden bg-base-100">
-                      <div className="flex items-center gap-1">
-                        <div className="size-2 rounded-full bg-primary" />
-                        <div className="h-1.5 w-8 rounded-full bg-foreground/15" />
-                        <div className="h-1.5 w-4 rounded-full bg-foreground/10" />
-                      </div>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        <div className="h-5 rounded bg-foreground/10 border border-foreground/5" />
-                        <div className="h-5 rounded bg-primary/20 border border-primary/30" />
-                        <div className="h-5 rounded bg-foreground/10 border border-foreground/5" />
-                      </div>
-                    </div>
+                    {opt.renderPreview()}
 
                     <p className={cn("text-sm font-semibold", isSelected ? "text-foreground" : "text-card-foreground")}>
                       {opt.label}
@@ -244,7 +390,7 @@ export function AppearanceSection() {
                 aria-label="Toggle reduced motion"
                 onClick={() => handleMotionToggle(!reducedMotion)}
                 className={cn(
-                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 shrink-0",
+                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                   reducedMotion ? "bg-primary" : "bg-base-300"
                 )}
               >
