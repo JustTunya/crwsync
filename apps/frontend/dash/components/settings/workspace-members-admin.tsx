@@ -133,25 +133,27 @@ export function WorkspaceMembersAdmin() {
                   <div
                     key={member.id}
                     id={`member-${member.user_id}`}
-                    className="flex items-center gap-3.5 py-3.5 transition-colors"
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 py-3.5 transition-colors"
                   >
-                    <UserAvatar user={member.user} size={9} />
+                    <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                      <UserAvatar user={member.user} size={9} />
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {member.user?.firstname} {member.user?.lastname}
-                        </p>
-                        {isSelf && (
-                          <span className="text-[10px] font-medium text-muted-foreground bg-base-200 px-1.5 py-0.2 rounded">
-                            You
-                          </span>
-                        )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {member.user?.firstname} {member.user?.lastname}
+                          </p>
+                          {isSelf && (
+                            <span className="text-[10px] font-medium text-muted-foreground bg-base-200 px-1.5 py-0.2 rounded">
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">@{member.user?.username}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">@{member.user?.username}</p>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
                       {isMemberOwner ? (
                         <span className="flex items-center gap-1 text-xs font-semibold text-primary px-2.5 py-1 rounded-md bg-primary/10 border border-primary/20">
                           <HugeiconsIcon icon={CrownIcon} className="size-3.5" strokeWidth={2} />

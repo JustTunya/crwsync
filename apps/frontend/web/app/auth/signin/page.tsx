@@ -1,5 +1,4 @@
 import { SigninForm } from "@/components/signin-form";
-import { Ripple } from "@/components/ui/ripple";
 
 export default async function SigninPage({
   searchParams,
@@ -14,10 +13,5 @@ export default async function SigninPage({
       ? "Your email has been verified! You can now sign in."
       : null;
 
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Ripple />
-      <SigninForm next={next} banner={banner} />
-    </div>
-  );
+  return <SigninForm next={next} banner={banner} />;
 }

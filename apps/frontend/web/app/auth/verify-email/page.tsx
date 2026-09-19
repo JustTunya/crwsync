@@ -8,9 +8,5 @@ export default async function VerifyEmailPage({
   const params = await searchParams;
   const token = params.token ?? null;
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen space-y-6">
-      <EmailVerification token={token} />
-    </div>
-  );
+  return <EmailVerification token={token} />;
 }

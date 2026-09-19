@@ -9,9 +9,7 @@ import { useWorkspaces } from "@/hooks/use-workspaces";
 import { useUser } from "@/providers/user.provider";
 import { signout } from "@/services/auth.service";
 import { GlassBox } from "@/components/ui/glassbox";
-import { Ripple } from "@/components/ui/ripple";
 import { UserAvatar } from "@/components/user-avatar";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { CreateWorkspaceForm } from "@/components/create-ws-form";
 
 export default function CreateWorkspacePage() {
@@ -35,9 +33,6 @@ export default function CreateWorkspacePage() {
 
   return (
     <div className="relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
-      {/* Background Ripple Effect */}
-      <Ripple />
-
       {/* Floating Top Navigation */}
       <header className="relative z-50 w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 flex items-center justify-between gap-3">
         {/* Left: Escape Navigation */}
@@ -76,10 +71,8 @@ export default function CreateWorkspacePage() {
           )}
         </div>
 
-        {/* Right: Theme Toggle & User Session */}
+        {/* Right: User Session */}
         <div className="flex items-center gap-2 sm:gap-2.5">
-          <ThemeToggle />
-
           {user && (
             <div className="flex items-center gap-2 pl-2 sm:pl-2.5 pr-1.5 sm:pr-2 py-1 bg-background/40 dark:bg-foreground/5 border border-foreground/10 backdrop-blur-md rounded-full shadow-xs">
               <UserAvatar user={user} size={6} />
@@ -102,7 +95,7 @@ export default function CreateWorkspacePage() {
       </header>
 
       {/* Main Creation Card */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
+      <main className="relative z-10 flex-1 flex items-center justify-center mx-auto w-full max-w-6xl px-4 py-8 sm:py-12 lg:border-x lg:border-border">
         <GlassBox className="w-full max-w-lg p-6 sm:p-8">
           <div className="text-center space-y-1.5 mb-6 sm:mb-8">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
@@ -122,8 +115,10 @@ export default function CreateWorkspacePage() {
       </main>
 
       {/* Subtle Footer */}
-      <footer className="relative z-10 py-4 text-center text-xs text-muted-foreground/60 select-none">
-        crwsync &copy; {new Date().getFullYear()}
+      <footer role="contentinfo" className="relative z-10 border-t border-border">
+        <div className="mx-auto max-w-6xl px-4 py-4 text-center text-xs text-muted-foreground/60 select-none lg:border-x lg:border-border">
+          crwsync &copy; {new Date().getFullYear()}
+        </div>
       </footer>
     </div>
   );

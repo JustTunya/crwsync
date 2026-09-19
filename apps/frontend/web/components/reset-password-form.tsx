@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useActionState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useValidator } from "@/hooks/use-validator";
@@ -140,36 +141,57 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
   } else {
     return (
       <GlassBox>
-        <h1 className="text-xl sm:text-2xl font-medium mb-4">Reset Password</h1>
-        {status === "pending" && (
-          <p className="text-sm text-foreground/50">Verifying your token...</p>
-        )}
-        {status === "expired" && (
-          <>
-            <p className="text-sm text-center text-error">
-              It seems like this password reset link has expired. 
-              Please request a new one by pressing the button below.
-            </p>
+        <motion.div
+          key={status}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.3 }}
+          className="w-full space-y-4"
+        >
+          {status === "pending" && (
+            <>
+              <Lead title="Verifying your link" description="This will only take a moment." />
+              <div className="mx-auto size-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </>
+          )}
 
-            <Button className="mt-4" variant="outline" onClick={() => router.push("/auth/forgot-password")}>
-              Request New Email
-            </Button>
-          </>
-        )}
-        {status === "error" && (
-          <>
-            <p className="text-sm text-center text-error mb-4">
-              The password reset token is invalid or it is not linked to any account. 
-              Please check if you entered the link correctly.
+          {status === "expired" && (
+            <>
+              <Lead title="Link expired" description="This password reset link is no longer valid." />
+              <Button variant="outline" className="w-full" onClick={() => router.push("/auth/forgot-password")}>
+                Request new link
+              </Button>
+            </>
+          )}
+
+          {status === "error" && (
+            <>
+              <Lead
+                title="Invalid link"
+                description="This link is invalid or not linked to any account. Check that you copied it correctly."
+              />
+              <p className="text-xs sm:text-sm text-center text-muted-foreground">
+                Still stuck? Contact{" "}
+                <a className="text-primary underline underline-offset-2" href="mailto:support@crwsync.xyz">
+                  support@crwsync.xyz
+                </a>
+              </p>
+            </>
+          )}
+
+          {status !== "pending" && (
+            <p className="text-center text-xs sm:text-sm text-muted-foreground">
+              <Link
+                href="/auth/signin"
+                className="text-primary underline underline-offset-2 rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50 focus-visible:outline-none"
+              >
+                Back to Sign In
+              </Link>
             </p>
-            <p className="text-sm text-center text-primary/75">
-              If you believe this is an error, please contact support at{" "}
-              <a className="underline underline-offset-2 text-info" href="mailto:support@crwsync.xyz">
-                support@crwsync.xyz
-              </a>
-            </p>
-          </>
-        )}
+          )}
+        </motion.div>
       </GlassBox>
     );
   }

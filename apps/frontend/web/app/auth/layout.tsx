@@ -1,6 +1,4 @@
-import Link from "next/link";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { AuthHeader } from "@/components/auth-header";
 
 export default function AuthLayout({
   children,
@@ -8,21 +6,20 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen w-full">
-      <Link
-        href="/"
-        className="fixed top-4 left-4 sm:top-6 sm:left-6 z-50 inline-flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground bg-background/40 dark:bg-foreground/5 hover:bg-background/60 dark:hover:bg-foreground/10 border border-foreground/10 hover:border-foreground/20 backdrop-blur-md shadow-sm shadow-black/5 rounded-full transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
-        aria-label="Back to home"
-      >
-        <HugeiconsIcon
-          icon={ArrowLeft01Icon}
-          size={16}
-          strokeWidth={2}
-          className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5"
-        />
-        <span>Back to home</span>
-      </Link>
-      {children}
+    <div className="relative min-h-screen w-full flex flex-col overflow-x-hidden">
+      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 h-[420px] w-[420px] rounded-full bg-primary/20 blur-[140px]" />
+
+      <AuthHeader />
+
+      <main className="relative z-10 flex-1 flex items-center justify-center mx-auto w-full max-w-6xl px-4 pt-28 pb-12 sm:pt-32 lg:border-x lg:border-border">
+        {children}
+      </main>
+
+      <footer role="contentinfo" className="relative z-10 border-t border-border">
+        <div className="mx-auto max-w-6xl px-4 py-4 text-center text-xs text-muted-foreground/60 select-none lg:border-x lg:border-border">
+          crwsync &copy; {new Date().getFullYear()}
+        </div>
+      </footer>
     </div>
   );
 }
