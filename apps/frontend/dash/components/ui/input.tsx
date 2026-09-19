@@ -33,7 +33,6 @@ function Input({ className, type, visible, setVisible, validation, error, prefix
           className={cn(
             "flex h-9 w-full px-3 text-xs sm:text-sm rounded-md",
             "placeholder:text-placeholder selection:bg-primary/25 outline-none",
-            "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none",
             "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
             "file:text-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
             "aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
