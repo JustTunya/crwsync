@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { m, Transition, LazyMotion, domAnimation } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon, Door01Icon, Message01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { AddTeamIcon, UserMultiple02Icon, InboxIcon, Notification01Icon, Door01Icon, Message01Icon, Cancel01Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Workspace, WorkspaceMember, WorkspaceRoleEnum, WorkspaceUser, NotificationTypeEnum } from "@crwsync/types";
 import { useSocket } from "@/providers/socket.provider";
@@ -391,46 +391,75 @@ interface SidebarMembersProps {
 }
 
 export function SidebarMembers({ groups, statuses, isLoading, workspace, open, setOpen, unreadDmUserIds }: SidebarMembersProps) {
+  const totalMembers = useMemo(() => {
+    return groups.reduce((acc, g) => acc + g.members.length, 0);
+  }, [groups]);
+
   return (
     <>
       {isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <span className="text-sm text-gray-500">Loading members...</span>
+        <div className="flex-1 flex items-center justify-center py-12">
+          <span className="text-xs text-muted-foreground">Loading members...</span>
         </div>
       ) : (
-        <div className="flex flex-col h-full">
-          {groups.map((group) => {
-            if (group.members.length === 0) return null;
-            
-            return(
-              <div key={group.role} className="mb-6">
-                <p className="mb-2 text-xs text-muted-foreground uppercase">
-                  {group.role} ({group.members.length})
-                </p>
-                <ul>
-                  {group.members.map((member) => (
-                    <li key={member.id}>
-                      <SidebarProfile
-                        user={member.user}
-                        status={statuses[member.user_id] || "OFFLINE"}
-                        hasUnreadDm={unreadDmUserIds.has(member.user_id)}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+        <div className="flex flex-col min-h-full justify-between">
+          <div className="flex-1">
+            <div className="flex items-center justify-between pb-2 mb-3 border-b border-base-200/60">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider font-figtree">
+                Crew ({totalMembers})
+              </span>
+            </div>
 
-          <button
-            data-testid="invite-members"
-            aria-label="Invite Members"
-            onClick={() => setOpen(true)}
-            className="flex flex-row items-center gap-2 justify-center p-2 mt-auto bg-base-200 rounded-lg hover:bg-base-300/75 transition-colors cursor-pointer"
-          >
-            <HugeiconsIcon icon={AddTeamIcon} className="size-5 text-foreground" />
-            <span className="text-base text-foreground font-thin">Invite Members</span>
-          </button>
+            {groups.map((group) => {
+              if (group.members.length === 0) return null;
+
+              return(
+                <div key={group.role} className="mb-5">
+                  <p className="mb-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    {group.role} ({group.members.length})
+                  </p>
+                  <ul className="space-y-0.5">
+                    {group.members.map((member) => (
+                      <li key={member.id}>
+                        <SidebarProfile
+                          user={member.user}
+                          status={statuses[member.user_id] || "OFFLINE"}
+                          hasUnreadDm={unreadDmUserIds.has(member.user_id)}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pt-3 mt-auto sticky bottom-0 bg-base-100/90 backdrop-blur-xs pb-1">
+            <button
+              type="button"
+              data-testid="invite-members"
+              aria-label="Invite Members to Workspace"
+              onClick={() => setOpen(true)}
+              className="group relative flex items-center justify-between w-full p-2.5 px-3 rounded-xl bg-base-200/80 hover:bg-base-200 dark:bg-base-200/50 dark:hover:bg-base-200/80 border border-base-300/60 dark:border-white/5 transition-all duration-200 shadow-xs hover:shadow-sm cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="size-7 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105 transition-all">
+                  <HugeiconsIcon icon={AddTeamIcon} className="size-4" strokeWidth={2} />
+                </div>
+                <div className="flex flex-col items-start min-w-0">
+                  <span className="text-xs font-semibold text-foreground tracking-tight leading-tight truncate font-figtree">
+                    Invite Members
+                  </span>
+                  <span className="text-[10px] text-muted-foreground leading-none truncate">
+                    Add to crew
+                  </span>
+                </div>
+              </div>
+              <div className="size-5 rounded-md bg-base-300/50 flex items-center justify-center text-muted-foreground group-hover:text-foreground group-hover:bg-base-300 transition-colors shrink-0">
+                <HugeiconsIcon icon={PlusSignIcon} className="size-3" strokeWidth={2.5} />
+              </div>
+            </button>
+          </div>
         </div>
       )}
 
