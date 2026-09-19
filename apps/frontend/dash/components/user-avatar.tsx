@@ -33,7 +33,13 @@ export function UserAvatar({ size = 7, user, status, variant = "default", classN
   }
 
   const displayName = user?.name || `${user?.firstname ?? ""} ${user?.lastname ?? ""}`.trim() || "User";
-  const avatarUrl = user?.avatarUrl || user?.avatar_url || (user?.avatar_key ? `${process.env.NEXT_PUBLIC_API_URL}/avatars/${user.avatar_key}` : null);
+  const rawUrl = user?.avatarUrl || user?.avatar_url || user?.avatar_key;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+  const avatarUrl = rawUrl
+    ? rawUrl.startsWith("http://") || rawUrl.startsWith("https://") || rawUrl.startsWith("/")
+      ? rawUrl
+      : `${apiUrl}/avatars/${rawUrl}`
+    : null;
   const pixels = size * 4;
 
   const STATUS_RING: Record<string, string> = {

@@ -16,7 +16,10 @@ export function WorkspaceAvatar({ avatar_key, name, className }: WorkspaceAvatar
   const [imageFailed, setImageFailed] = useState(false);
 
   if (avatar_key && !imageFailed) {
-    const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL}/avatars/${avatar_key}`;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+    const avatarUrl = avatar_key.startsWith("http://") || avatar_key.startsWith("https://") || avatar_key.startsWith("/")
+      ? avatar_key
+      : `${apiUrl}/avatars/${avatar_key}`;
 
     return (
       <Image

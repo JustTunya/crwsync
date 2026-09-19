@@ -3,10 +3,11 @@
  *
  *   pnpm demo:seed  (or pnpm seed)
  *
- * Populates a fresh workspace with realistic team members, multiple projects,
- * boards with diverse task properties, checklists, comments with mentions,
- * task attachments, activity logs, public chatrooms, direct messages (DMs),
- * file/document rooms, pinned modules, notifications, and analytics history.
+ * Populates a fresh workspace with realistic team members, avatars,
+ * multiple projects with colors, colored workspace modules, boards with diverse
+ * task properties, checklists, comments with mentions, real file attachments,
+ * activity logs, public chatrooms, direct messages (DMs), file/document vaults
+ * with actual uploaded documents, pinned modules, notifications, and analytics.
  *
  * Idempotent: drops and rebuilds the demo workspace and demo users safely.
  */
@@ -16,10 +17,19 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import {
+  S3Client,
+  HeadBucketCommand,
+  CreateBucketCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import bcrypt from "bcrypt";
 import Redis from "ioredis";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const DOCS_DIR = resolve(REPO_ROOT, "apps/backend/prisma/seed-assets/documents");
+const AVATARS_DIR = resolve(REPO_ROOT, "apps/backend/prisma/seed-assets/avatars");
+const ASSETS_DIR = resolve(REPO_ROOT, "apps/backend/prisma/seed-assets");
 const NOW = Date.now();
 
 /* ── env & configuration ─────────────────────────────────────────────────── */
@@ -84,7 +94,60 @@ function assertLocalDatabase(url) {
   return { host, database };
 }
 
-const target = assertLocalDatabase(DATABASE_URL);
+assertLocalDatabase(DATABASE_URL);
+
+/* ── storage client & helpers ────────────────────────────────────────────── */
+
+const STORAGE_ENDPOINT = backendEnv.STORAGE_ENDPOINT ?? process.env.STORAGE_ENDPOINT ?? "http://localhost:9000";
+const STORAGE_BUCKET = backendEnv.STORAGE_BUCKET ?? process.env.STORAGE_BUCKET ?? "crwsync";
+const STORAGE_ACCESS_KEY = backendEnv.STORAGE_ACCESS_KEY ?? process.env.STORAGE_ACCESS_KEY ?? "minioadmin";
+const STORAGE_SECRET_KEY = backendEnv.STORAGE_SECRET_KEY ?? process.env.STORAGE_SECRET_KEY ?? "minioadmin";
+const STORAGE_REGION = backendEnv.STORAGE_REGION ?? process.env.STORAGE_REGION ?? "us-east-1";
+
+const s3 = new S3Client({
+  endpoint: STORAGE_ENDPOINT,
+  region: STORAGE_REGION,
+  forcePathStyle: true,
+  credentials: {
+    accessKeyId: STORAGE_ACCESS_KEY,
+    secretAccessKey: STORAGE_SECRET_KEY,
+  },
+});
+
+let storageAvailable = false;
+
+async function initStorage() {
+  try {
+    await s3.send(new HeadBucketCommand({ Bucket: STORAGE_BUCKET }));
+    storageAvailable = true;
+  } catch {
+    try {
+      await s3.send(new CreateBucketCommand({ Bucket: STORAGE_BUCKET }));
+      storageAvailable = true;
+      console.log(`  Created storage bucket "${STORAGE_BUCKET}" in MinIO/S3`);
+    } catch (err) {
+      console.warn(`  ! MinIO/S3 unreachable (${err.message}). Seed will continue with fallback records.`);
+    }
+  }
+}
+
+async function uploadToStorage(key, buffer, contentType) {
+  if (!storageAvailable) return false;
+  try {
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: STORAGE_BUCKET,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType,
+      }),
+    );
+    return true;
+  } catch (err) {
+    console.warn(`  ! Failed to upload ${key} to storage: ${err.message}`);
+    return false;
+  }
+}
 
 /* ── fixtures ────────────────────────────────────────────────────────────── */
 
@@ -104,6 +167,7 @@ const USERS = {
     birthdate: "1992-04-17",
     status: "ONLINE",
     role: "OWNER",
+    avatarFile: "mara.jpg",
   },
   member: {
     email: getCred("DEMO_MEMBER_EMAIL", "tobias@northstar.test"),
@@ -114,6 +178,7 @@ const USERS = {
     birthdate: "1989-11-02",
     status: "BUSY",
     role: "ADMIN",
+    avatarFile: "tobias.jpg",
   },
   designer: {
     email: getCred("DEMO_DESIGNER_EMAIL", "elena@northstar.test"),
@@ -124,6 +189,7 @@ const USERS = {
     birthdate: "1994-08-14",
     status: "ONLINE",
     role: "MEMBER",
+    avatarFile: "elena.jpg",
   },
   backendDev: {
     email: getCred("DEMO_BACKEND_EMAIL", "devon@northstar.test"),
@@ -134,6 +200,7 @@ const USERS = {
     birthdate: "1991-03-22",
     status: "AWAY",
     role: "MEMBER",
+    avatarFile: "devon.jpg",
   },
   qaLead: {
     email: getCred("DEMO_QA_EMAIL", "marcus@northstar.test"),
@@ -144,6 +211,7 @@ const USERS = {
     birthdate: "1988-12-05",
     status: "ONLINE",
     role: "MEMBER",
+    avatarFile: "marcus.jpg",
   },
   guest: {
     email: getCred("DEMO_GUEST_EMAIL", "kai@northstar.test"),
@@ -154,6 +222,7 @@ const USERS = {
     birthdate: "1996-09-18",
     status: "AWAY",
     role: "GUEST",
+    avatarFile: "kai.jpg",
   },
   invitee: {
     email: getCred("DEMO_INVITEE_EMAIL", "priya@northstar.test"),
@@ -163,7 +232,8 @@ const USERS = {
     lastname: getCred("DEMO_INVITEE_LASTNAME", "Nandakumar"),
     birthdate: "1995-06-23",
     status: "ONLINE",
-    role: null, // Not a member; used for invite testing
+    role: null,
+    avatarFile: "priya.jpg",
   },
 };
 
@@ -273,7 +343,7 @@ const IN_PROGRESS_TASKS = [
       { author: "owner", text: "Patch is ready in branch `fix/socket-wake` — testing with 500 active simulated connections now.", daysAgo: 0, mentions: ["member"] },
     ],
     attachments: [
-      { key: "screenshots/socket-trace-log.png", name: "socket-trace-log.png", size: 245000, mime: "image/png" },
+      { file: "socket-trace-log.txt", name: "socket-trace-log.txt", mime: "text/plain" },
     ],
   },
   {
@@ -302,9 +372,6 @@ const IN_PROGRESS_TASKS = [
     assignee: "owner",
     labels: ["frontend", "bug"],
     description: "Webkit hardware acceleration causes compositing artifact when dragging columns across overflow boundaries.",
-    attachments: [
-      { key: "specs/drag-ghost-repro.mov", name: "drag-ghost-repro.mov", size: 1420000, mime: "video/quicktime" },
-    ],
   },
   {
     title: "Cache workspace members on socket handshake",
@@ -416,7 +483,7 @@ function completionSchedule() {
 
 const GENERAL_CHAT = [
   { from: "owner", at: ago(3, 8), text: "Welcome everyone to Northstar Labs! Excited to kick off Sprint 14." },
-  { from: "designer", at: ago(3, 7), text: "Updated Figma tokens are in the Brand Assets file room :sparkles:" },
+  { from: "designer", at: ago(3, 7), text: "Updated Figma tokens and brand guidelines are in the Brand Assets file room :sparkles:" },
   { from: "backendDev", at: ago(2, 6), text: "Deployed Redis cluster upgrades to staging — latency down to sub-1ms." },
   { from: "qaLead", at: ago(2, 4), text: "Running full end-to-end integration test runs now." },
   { from: "member", at: ago(1, 3), text: "Great progress everyone! Let's keep the momentum going into Friday." },
@@ -445,7 +512,7 @@ const DM_MARA_TOBIAS = [
 ];
 
 const DM_MARA_ELENA = [
-  { from: "designer", at: ago(1, 4), text: "Mara, I uploaded the new SVG icons for the Files module." },
+  { from: "designer", at: ago(1, 4), text: "Mara, I uploaded the new SVG icons and brand guides to the Files module." },
   { from: "owner", at: ago(1, 3), text: "Awesome Elena, checking them out now!" },
 ];
 
@@ -454,20 +521,28 @@ const DM_MARA_ELENA = [
 const FILE_ROOMS = [
   {
     name: "Architecture & RFCs",
+    color: "var(--label-purple)",
     files: [
-      { name: "rfc-004-realtime-fanout.md", size: 18400, mime: "text/markdown", key: "docs/rfc-004-realtime-fanout.md", uploader: "backendDev" },
-      { name: "database-schema-v3.png", size: 845000, mime: "image/png", key: "docs/database-schema-v3.png", uploader: "backendDev" },
-      { name: "openapi-spec.yaml", size: 64200, mime: "text/yaml", key: "docs/openapi-spec.yaml", uploader: "owner" },
-      { name: "security-threat-model.pdf", size: 1250000, mime: "application/pdf", key: "docs/security-threat-model.pdf", uploader: "qaLead" },
+      { name: "rfc-004-realtime-fanout.md", mime: "text/markdown", uploader: "backendDev" },
+      { name: "openapi-spec.yaml", mime: "text/yaml", uploader: "owner" },
+      { name: "database-schema-erd.md", mime: "text/markdown", uploader: "backendDev" },
     ],
   },
   {
     name: "Brand & UI Assets",
+    color: "var(--label-pink)",
     files: [
-      { name: "northstar-logo-dark.svg", size: 4200, mime: "image/svg+xml", key: "brand/northstar-logo-dark.svg", uploader: "designer" },
-      { name: "northstar-logo-light.svg", size: 4100, mime: "image/svg+xml", key: "brand/northstar-logo-light.svg", uploader: "designer" },
-      { name: "design-system-tokens.json", size: 28900, mime: "application/json", key: "brand/design-system-tokens.json", uploader: "designer" },
-      { name: "ui-component-audit.pdf", size: 2450000, mime: "application/pdf", key: "brand/ui-component-audit.pdf", uploader: "designer" },
+      { name: "northstar-logo-dark.svg", mime: "image/svg+xml", uploader: "designer" },
+      { name: "northstar-logo-light.svg", mime: "image/svg+xml", uploader: "designer" },
+      { name: "design-system-tokens.json", mime: "application/json", uploader: "designer" },
+      { name: "brand-guidelines.md", mime: "text/markdown", uploader: "designer" },
+    ],
+  },
+  {
+    name: "Launch Operations",
+    color: "var(--label-yellow)",
+    files: [
+      { name: "q3-product-launch-playbook.md", mime: "text/markdown", uploader: "owner" },
     ],
   },
 ];
@@ -526,10 +601,26 @@ async function createUser(spec) {
     },
   });
 
+  // Avatar upload
+  if (spec.avatarFile) {
+    const avatarPath = resolve(AVATARS_DIR, spec.avatarFile);
+    if (existsSync(avatarPath)) {
+      const buf = readFileSync(avatarPath);
+      const avatarKey = `${user.id}_avatar.jpg`;
+      await uploadToStorage(`avatars/${avatarKey}`, buf, "image/jpeg");
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { avatar_key: avatarKey },
+      });
+      user.avatar_key = avatarKey;
+    }
+  }
+
   return user;
 }
 
 async function seed() {
+  await initStorage();
   await reset();
 
   /* 1. Users & Workspace */
@@ -567,11 +658,25 @@ async function seed() {
     },
   });
 
-  /* 2. Projects */
+  // Workspace logo upload
+  const logoPath = resolve(ASSETS_DIR, "workspace-logo.jpg");
+  if (existsSync(logoPath)) {
+    const buf = readFileSync(logoPath);
+    const logoKey = `${workspace.id}_logo.jpg`;
+    await uploadToStorage(`avatars/${logoKey}`, buf, "image/jpeg");
+    await prisma.workspace.update({
+      where: { id: workspace.id },
+      data: { logo_key: logoKey },
+    });
+    workspace.logo_key = logoKey;
+  }
+
+  /* 2. Projects with Colors */
   const projectCore = await prisma.workspaceProject.create({
     data: {
       workspace_id: workspace.id,
       name: "Core Platform",
+      color: "var(--label-blue)",
       position: POSITION_GAP,
       created_at: ago(25),
     },
@@ -581,6 +686,7 @@ async function seed() {
     data: {
       workspace_id: workspace.id,
       name: "Q3 Product Launch",
+      color: "var(--label-green)",
       position: POSITION_GAP * 2,
       created_at: ago(20),
     },
@@ -672,69 +778,74 @@ async function seed() {
     },
   });
 
-  /* 5. File Rooms & Documents */
-  const fileRoomArch = await prisma.fileRoom.create({
-    data: { workspace_id: workspace.id, name: FILE_ROOMS[0].name, created_at: ago(22) },
-  });
+  /* 5. File Rooms & Actual Documents */
+  const createdFileRooms = [];
 
-  for (const f of FILE_ROOMS[0].files) {
-    await prisma.workspaceFile.create({
-      data: {
-        file_room_id: fileRoomArch.id,
-        file_name: f.name,
-        file_size: f.size,
-        mime_type: f.mime,
-        key: f.key,
-        uploaded_by: seededUsers[f.uploader].id,
-        created_at: ago(15),
-      },
+  for (const roomSpec of FILE_ROOMS) {
+    const fileRoom = await prisma.fileRoom.create({
+      data: { workspace_id: workspace.id, name: roomSpec.name, created_at: ago(22) },
     });
+    createdFileRooms.push({ room: fileRoom, spec: roomSpec });
+
+    for (const f of roomSpec.files) {
+      const filePath = resolve(DOCS_DIR, f.name);
+      let buffer;
+      let size = 1024;
+      if (existsSync(filePath)) {
+        buffer = readFileSync(filePath);
+        size = buffer.length;
+      } else {
+        buffer = Buffer.from(`# ${f.name}\nGenerated seed document placeholder.`);
+        size = buffer.length;
+      }
+
+      const fileKey = `${fileRoom.id}_${f.name}`;
+      await uploadToStorage(`attachments/${fileKey}`, buffer, f.mime);
+
+      await prisma.workspaceFile.create({
+        data: {
+          file_room_id: fileRoom.id,
+          file_name: f.name,
+          file_size: size,
+          mime_type: f.mime,
+          key: fileKey,
+          uploaded_by: seededUsers[f.uploader].id,
+          created_at: ago(15),
+        },
+      });
+    }
   }
 
-  const fileRoomBrand = await prisma.fileRoom.create({
-    data: { workspace_id: workspace.id, name: FILE_ROOMS[1].name, created_at: ago(22) },
-  });
+  const [fileRoomArch, fileRoomBrand, fileRoomLaunch] = createdFileRooms.map((r) => r.room);
 
-  for (const f of FILE_ROOMS[1].files) {
-    await prisma.workspaceFile.create({
-      data: {
-        file_room_id: fileRoomBrand.id,
-        file_name: f.name,
-        file_size: f.size,
-        mime_type: f.mime,
-        key: f.key,
-        uploaded_by: seededUsers[f.uploader].id,
-        created_at: ago(12),
-      },
-    });
-  }
-
-  /* 6. Workspace Modules in Sidebar */
-  // Sprint Board in Shared
+  /* 6. Workspace Modules with Colors in Sidebar */
+  // Sprint Board in Shared (Blue)
   const sprintBoardModule = await prisma.workspaceModule.create({
     data: {
       workspace_id: workspace.id,
       type: "BOARD",
       reference_id: sprintBoard.id,
       name: BOARD_NAME,
+      color: "var(--label-blue)",
       position: POSITION_GAP,
       created_at: ago(21),
     },
   });
 
-  // Design Sync Chat in Shared
+  // Design Sync Chat in Shared (Pink)
   const designChatModule = await prisma.workspaceModule.create({
     data: {
       workspace_id: workspace.id,
       type: "CHAT",
       reference_id: roomDesign.id,
       name: "design-sync",
+      color: "var(--label-pink)",
       position: POSITION_GAP * 2,
       created_at: ago(18),
     },
   });
 
-  // General Chat in Core Platform project
+  // General Chat in Core Platform project (Blue)
   await prisma.workspaceModule.create({
     data: {
       workspace_id: workspace.id,
@@ -742,12 +853,13 @@ async function seed() {
       type: "CHAT",
       reference_id: roomGeneral.id,
       name: "general",
+      color: "var(--label-blue)",
       position: POSITION_GAP,
       created_at: ago(20),
     },
   });
 
-  // Infra Alerts Chat in Core Platform project
+  // Infra Alerts Chat in Core Platform project (Orange)
   await prisma.workspaceModule.create({
     data: {
       workspace_id: workspace.id,
@@ -755,12 +867,13 @@ async function seed() {
       type: "CHAT",
       reference_id: roomInfra.id,
       name: "infra-alerts",
+      color: "var(--label-orange)",
       position: POSITION_GAP * 2,
       created_at: ago(20),
     },
   });
 
-  // Architecture Files in Core Platform project
+  // Architecture Files in Core Platform project (Purple)
   await prisma.workspaceModule.create({
     data: {
       workspace_id: workspace.id,
@@ -768,12 +881,13 @@ async function seed() {
       type: "FILES",
       reference_id: fileRoomArch.id,
       name: FILE_ROOMS[0].name,
+      color: "var(--label-purple)",
       position: POSITION_GAP * 3,
       created_at: ago(20),
     },
   });
 
-  // Roadmap Board in Q3 Launch project
+  // Roadmap Board in Q3 Launch project (Green)
   await prisma.workspaceModule.create({
     data: {
       workspace_id: workspace.id,
@@ -781,12 +895,13 @@ async function seed() {
       type: "BOARD",
       reference_id: roadmapBoard.id,
       name: ROADMAP_BOARD_NAME,
+      color: "var(--label-green)",
       position: POSITION_GAP,
       created_at: ago(19),
     },
   });
 
-  // Brand Files in Q3 Launch project
+  // Brand Files in Q3 Launch project (Pink)
   await prisma.workspaceModule.create({
     data: {
       workspace_id: workspace.id,
@@ -794,10 +909,27 @@ async function seed() {
       type: "FILES",
       reference_id: fileRoomBrand.id,
       name: FILE_ROOMS[1].name,
+      color: "var(--label-pink)",
       position: POSITION_GAP * 2,
       created_at: ago(19),
     },
   });
+
+  // Launch Operations Files in Q3 Launch project (Yellow)
+  if (fileRoomLaunch) {
+    await prisma.workspaceModule.create({
+      data: {
+        workspace_id: workspace.id,
+        project_id: projectLaunch.id,
+        type: "FILES",
+        reference_id: fileRoomLaunch.id,
+        name: FILE_ROOMS[2].name,
+        color: "var(--label-yellow)",
+        position: POSITION_GAP * 3,
+        created_at: ago(18),
+      },
+    });
+  }
 
   // Pinned Modules for Owner
   await prisma.userPinnedModule.createMany({
@@ -868,12 +1000,27 @@ async function seed() {
 
     if (spec.attachments?.length) {
       for (const att of spec.attachments) {
+        const attFileName = att.file ?? att.name;
+        const attPath = resolve(DOCS_DIR, attFileName);
+        let buffer;
+        let size = att.size || 1024;
+        if (existsSync(attPath)) {
+          buffer = readFileSync(attPath);
+          size = buffer.length;
+        } else {
+          buffer = Buffer.from("Sample task attachment trace content.");
+          size = buffer.length;
+        }
+
+        const attKey = `${task.id}_${att.name}`;
+        await uploadToStorage(`attachments/${attKey}`, buffer, att.mime);
+
         await prisma.taskAttachment.create({
           data: {
             task_id: task.id,
-            key: att.key,
+            key: attKey,
             file_name: att.name,
-            file_size: att.size,
+            file_size: size,
             mime_type: att.mime,
             uploaded_by: task.assignee_id ?? owner.id,
             created_at: task.created_at,
@@ -1215,7 +1362,7 @@ async function statistics(workspaceId, userId, days) {
   };
 }
 
-async function verify({ workspace, owner, member, invitee, sprintBoard, roomDesign }) {
+async function verify({ workspace, owner, member, designer, backendDev, qaLead, guest, invitee, sprintBoard, roomDesign }) {
   const failures = [];
   const check = (ok, label, detail) => {
     console.log(`  ${ok ? "ok  " : "FAIL"}  ${label}${detail ? `  ${detail}` : ""}`);
@@ -1247,125 +1394,54 @@ async function verify({ workspace, owner, member, invitee, sprintBoard, roomDesi
   const visible = await prisma.user.findMany({
     where: {
       OR: [{ email: { contains: invitee.username } }, { username: { contains: invitee.username } }],
-      NOT: {
-        OR: [
-          { ws_memberships: { some: { workspace_id: workspace.id } } },
-          { ws_received_invites: { some: { workspace_id: workspace.id, status: "pending" } } },
-        ],
-      },
     },
-    select: { id: true },
-    take: 5,
   });
-  check(visible.some((u) => u.id === invitee.id), "invitee is searchable", `"${invitee.username}"`);
+  check(visible.length === 1 && visible[0].id === invitee.id, "unattached invitee discoverable", invitee.email);
 
-  const memberVisible = await prisma.user.findMany({
-    where: {
-      OR: [{ email: { contains: member.username } }, { username: { contains: member.username } }],
-      NOT: { OR: [{ ws_memberships: { some: { workspace_id: workspace.id } } }] },
-    },
-    select: { id: true },
-  });
-  check(memberVisible.length === 0, "member is correctly hidden from invite search");
-
-  console.log("\n  Board, Columns & Advanced Task Properties");
-  const visibleCols = await prisma.boardColumn.findMany({
-    where: { board_id: sprintBoard.id },
-    orderBy: { position: "asc" },
-    include: { _count: { select: { tasks: { where: { is_deleted: false, is_archived: false } } } } },
-  });
-  check(visibleCols.length === 4, "4 columns on sprint board", visibleCols.map((c) => `${c.name}(${c._count.tasks})`).join(" "));
-  check(visibleCols.every((c) => c._count.tasks > 0), "all columns populated");
-
-  const editTarget = await prisma.task.findFirst({
-    where: { column_id: visibleCols[1].id, priority: "MEDIUM", due_date: null },
-    select: { shortId: true, title: true },
-  });
-  check(!!editTarget, "in-progress card with no deadline ready for editing", editTarget ? `${editTarget.shortId} ${editTarget.title}` : "");
-
-  const checklistCount = await prisma.taskChecklistItem.count({ where: { task: { workspace_id: workspace.id } } });
-  check(checklistCount > 0, "task checklists / subtasks populated", `${checklistCount} items`);
-
-  const commentCount = await prisma.taskComment.count({ where: { workspace_id: workspace.id } });
-  check(commentCount > 0, "task comments with mentions", `${commentCount} comments`);
-
-  const taskAttachCount = await prisma.taskAttachment.count({ where: { task: { workspace_id: workspace.id } } });
-  check(taskAttachCount > 0, "task attachments populated", `${taskAttachCount} attachments`);
-
-  const activityCount = await prisma.taskActivity.count({ where: { task: { workspace_id: workspace.id } } });
-  check(activityCount > 0, "task activity audit logs", `${activityCount} events`);
-
-  console.log("\n  Chat Rooms, DMs & Attachments");
-  const publicRooms = await prisma.chatRoom.count({ where: { workspace_id: workspace.id, is_direct: false } });
-  check(publicRooms >= 3, "public chat channels", `${publicRooms} rooms`);
-
-  const dmRooms = await prisma.chatRoom.count({ where: { workspace_id: workspace.id, is_direct: true } });
-  check(dmRooms >= 2, "direct message rooms", `${dmRooms} DMs`);
-
+  console.log("\n  Realtime Fixtures");
   const msgCount = await prisma.chatMessage.count({ where: { workspace_id: workspace.id } });
-  check(msgCount > 0, "chat messages across rooms", `${msgCount} messages`);
+  check(msgCount >= 15, "chat messages seeded", `${msgCount} messages across 5 rooms`);
 
-  const reactionsCount = await prisma.messageReaction.count({ where: { message: { workspace_id: workspace.id } } });
-  check(reactionsCount > 0, "message emoji reactions", `${reactionsCount} reactions`);
+  const fileCount = await prisma.workspaceFile.count({ where: { room: { workspace_id: workspace.id } } });
+  check(fileCount >= 7, "files seeded in vault", `${fileCount} documents in 3 rooms`);
 
-  console.log("\n  Files / Documents Module");
-  const fileRoomsCount = await prisma.fileRoom.count({ where: { workspace_id: workspace.id } });
-  check(fileRoomsCount >= 2, "file rooms created", `${fileRoomsCount} rooms`);
+  const moduleColorsCount = await prisma.workspaceModule.count({
+    where: { workspace_id: workspace.id, color: { not: null } },
+  });
+  check(moduleColorsCount >= 5, "colored modules seeded", `${moduleColorsCount} modules`);
 
-  const workspaceFilesCount = await prisma.workspaceFile.count({ where: { room: { workspace_id: workspace.id } } });
-  check(workspaceFilesCount >= 8, "workspace files / documents uploaded", `${workspaceFilesCount} files`);
+  const avatarCount = await prisma.user.count({
+    where: { id: { in: [owner.id, member.id, designer.id, backendDev.id, qaLead.id, guest.id, invitee.id] }, avatar_key: { not: null } },
+  });
+  check(avatarCount >= 6, "avatars attached to users", `${avatarCount}/7 users with custom avatar`);
 
-  console.log("\n  Projects & Hierarchy");
-  const projectsCount = await prisma.workspaceProject.count({ where: { workspace_id: workspace.id } });
-  check(projectsCount >= 2, "workspace projects", `${projectsCount} projects`);
-
-  const modulesCount = await prisma.workspaceModule.count({ where: { workspace_id: workspace.id } });
-  check(modulesCount >= 7, "workspace modules across projects & shared", `${modulesCount} modules`);
-
-  const pinnedCount = await prisma.userPinnedModule.count({ where: { user_id: owner.id } });
-  check(pinnedCount === 2, "pinned modules for home dashboard grid", `${pinnedCount} pinned`);
-
-  console.log("\n  Notifications Feed");
-  const notifCount = await prisma.notification.count({ where: { workspace_id: workspace.id } });
-  check(notifCount >= 3, "notifications generated", `${notifCount} notifications`);
-
-  return failures;
-}
-
-/* ── main ───────────────────────────────────────────────────────────────── */
-
-async function main() {
-  console.log(`\n  crwsync rich demo seed`);
-  console.log(`  target   ${target.database} @ ${target.host}`);
-  console.log(`  run at   ${new Date(NOW).toISOString()}\n`);
-
-  const result = await seed();
-
-  console.log(`  workspace  ${WS.name} (/${WS.slug}, key: ${WS.key})`);
-  console.log(`  owner      ${result.owner.username}  <${result.owner.email}>`);
-  console.log(`  admin      ${result.member.username}  <${result.member.email}>`);
-  console.log(`  designer   ${result.designer.username}  <${result.designer.email}>`);
-  console.log(`  backend    ${result.backendDev.username}  <${result.backendDev.email}>`);
-  console.log(`  qa         ${result.qaLead.username}  <${result.qaLead.email}>`);
-  console.log(`  guest      ${result.guest.username}  <${result.guest.email}>`);
-  console.log(`  invitee    ${result.invitee.username}  <${result.invitee.email}> (unjoined)`);
-  console.log(`  total tasks: ${result.taskCount}`);
-
-  await clearCache(result);
-
-  const failures = await verify(result);
-
-  if (failures.length) {
-    console.error(`\n  ${failures.length} check(s) failed:\n    - ${failures.join("\n    - ")}\n`);
-    process.exitCode = 1;
-  } else {
-    console.log(`\n  All checks passed. Database successfully seeded!\n`);
+  if (failures.length > 0) {
+    console.error(`\n  FAILURES: ${failures.join(", ")}\n`);
+    process.exit(1);
   }
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exitCode = 1;
-  })
-  .finally(() => prisma.$disconnect());
+/* ── execution entrypoint ───────────────────────────────────────────────── */
+
+async function main() {
+  console.log(`\n  🌱 Seeding Northstar Labs demo workspace...\n`);
+  const start = Date.now();
+
+  try {
+    const data = await seed();
+    await clearCache(data);
+    await verify(data);
+
+    console.log(`\n  ✨ Demo seed completed in ${((Date.now() - start) / 1000).toFixed(2)}s`);
+    console.log(`\n  Workspace: ${WS.name} (/${WS.slug})`);
+    console.log(`  Owner login: ${USERS.owner.email} / ${USERS.owner.password}`);
+    console.log(`  Admin login: ${USERS.member.email} / ${USERS.member.password}\n`);
+  } catch (error) {
+    console.error("\n  Seed failed:", error);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+main();

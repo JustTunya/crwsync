@@ -1,0 +1,172 @@
+openapi: 3.0.3
+info:
+  title: Northstar Labs Core API
+  version: 1.4.0
+  description: RESTful API for Northstar Labs workspace synchronization, Kanban boards, realtime chat, and file vaults.
+  contact:
+    name: Platform Engineering Team
+    email: engineering@northstar.test
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local Development Server
+  - url: https://api.northstar.test/v1
+    description: Production Cluster
+
+paths:
+  /workspaces:
+    get:
+      summary: List user workspaces
+      operationId: listWorkspaces
+      tags: [Workspaces]
+      responses:
+        '200':
+          description: List of workspaces where current user is a member
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Workspace'
+
+  /workspaces/{workspaceId}/boards/{boardId}/tasks:
+    get:
+      summary: Get board tasks by column
+      operationId: getBoardTasks
+      tags: [Boards]
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ordered list of tasks grouped by Kanban column
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+
+  /workspaces/{workspaceId}/file-rooms/{roomId}/files:
+    get:
+      summary: List files in a file vault room
+      operationId: listFileRoomFiles
+      tags: [Files]
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of uploaded files with metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkspaceFile'
+
+components:
+  schemas:
+    Workspace:
+      type: object
+      required: [id, name, slug, workspaceKey]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Northstar Labs
+        slug:
+          type: string
+          example: northstar
+        workspaceKey:
+          type: string
+          example: NL
+        logo_key:
+          type: string
+          nullable: true
+
+    Task:
+      type: object
+      required: [id, shortId, title, priority, position]
+      properties:
+        id:
+          type: string
+          format: uuid
+        shortId:
+          type: string
+          example: NL-42
+        title:
+          type: string
+          example: Split workspace bundle by route
+        description:
+          type: string
+          nullable: true
+        priority:
+          type: string
+          enum: [NONE, LOW, MEDIUM, HIGH, URGENT]
+        labels:
+          type: array
+          items:
+            type: string
+        assignee_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    WorkspaceFile:
+      type: object
+      required: [id, file_name, file_size, mime_type, key, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        file_name:
+          type: string
+          example: rfc-004-realtime-fanout.md
+        file_size:
+          type: integer
+          example: 18400
+        mime_type:
+          type: string
+          example: text/markdown
+        key:
+          type: string
+        created_at:
+          type: string
+          format: date-time

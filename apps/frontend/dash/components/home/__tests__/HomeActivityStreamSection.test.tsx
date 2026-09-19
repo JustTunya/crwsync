@@ -26,6 +26,24 @@ describe("HomeActivityStreamSection", () => {
     expect(html).toContain('href="/board/board-1"');
   });
 
+  it("handles raw avatar key in actor without crashing next/image", () => {
+    const html = renderToStaticMarkup(
+      <HomeActivityStreamSection
+        activity={[
+          makeActivityItem({
+            actor: {
+              id: "user-2",
+              name: "Mara Ellis",
+              avatarUrl: "a3c4c5de-e31d-4e80-bbca-9e6cba8aea22_avatar.jpg",
+            },
+          }),
+        ]}
+        slug="northstar"
+      />
+    );
+    expect(html).toContain("Mara Ellis");
+  });
+
   it("renders empty state when activity is empty or undefined", () => {
     const html = renderToStaticMarkup(<HomeActivityStreamSection activity={[]} slug="acme" />);
     expect(html).toContain("No recent workspace activity.");

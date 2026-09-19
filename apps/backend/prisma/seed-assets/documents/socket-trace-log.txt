@@ -1,0 +1,9 @@
+[2026-09-18T10:14:22.102Z] [TRACE] [SocketGateway] Connection attempt from client IP 192.168.1.45 (Chrome/128.0)
+[2026-09-18T10:14:22.115Z] [DEBUG] [AuthService] Validated session cookie for user: mara@northstar.test (id: 4a2d81f0-...)
+[2026-09-18T10:14:22.128Z] [INFO]  [SocketGateway] Client socket id=wS9xK_1a joined room: workspace_northstar
+[2026-09-18T10:14:22.130Z] [INFO]  [SocketGateway] Client socket id=wS9xK_1a joined room: user_4a2d81f0-...
+[2026-09-18T10:29:45.890Z] [WARN]  [HeartbeatManager] Client id=wS9xK_1a missed ping timeout (15000ms threshold) - system sleep detected
+[2026-09-18T10:29:46.012Z] [DEBUG] [Transport] Transport websocket closed by ping timeout
+[2026-09-18T10:29:46.015Z] [INFO]  [PresenceService] User mara status transitioning ONLINE -> AWAY (debounced 30s)
+[2026-09-18T10:30:12.440Z] [DEBUG] [SocketGateway] Reconnection attempt with handshake token
+[2026-09-18T10:30:12.455Z] [INFO]  [SocketGateway] Reconnection established successfully. Restored 4 room subscriptions.
