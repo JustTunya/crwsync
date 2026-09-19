@@ -65,39 +65,82 @@ infrastructure a production SaaS product would run.
 - **Cross-subdomain auth handoff** — sign-in state carries seamlessly from
   the portal to the dashboard subdomain via shared, scoped HTTP-only
   cookies, with zero friction for the end user.
+- **Contact intake pipeline** — the public contact form persists to Postgres
+  and dispatches transactional email through a queued job, not an inline
+  request-blocking send.
 
 ### Dashboard (`dash.crwsync.xyz`)
 
-- **Real-time sync at scale** — task, file, and workspace state pushed live
-  over Socket.IO, backed by a Redis adapter so WebSocket delivery scales
-  horizontally across multiple instances rather than being pinned to one.
-- **Modular, reorganizable workspaces** — projects and shared modules with
-  fluid drag-and-drop organization, letting teams restructure work without
-  friction.
+- **Command-center home** — a live Bento-grid overview (focus tasks, pinned
+  modules, active projects, crew presence, activity stream, velocity) built
+  from real-time socket state, not a static summary screen.
+- **Kanban board** — `@dnd-kit`-powered drag-and-drop task board with
+  optimistic reordering that reconciles against the API and patches other
+  clients' caches over the socket the moment a card moves.
+- **Real-time chat** — room and direct-message channels with live typing
+  indicators, read receipts, emoji reactions, edit/delete, attachments, and
+  per-room rate limiting, all delivered over a single shared Socket.IO
+  gateway.
+- **File rooms** — per-workspace file rooms with presigned direct-to-bucket
+  uploads, so payloads never transit the API process.
+- **Workspace-wide search** — a single query fans out across tasks, chat
+  messages, files, and members in one cached round trip.
+- **Schedules & statistics** — a calendar view for deadlines/events and a
+  workspace analytics dashboard (velocity, completion, activity) computed
+  server-side and cached, not recomputed on every render.
+- **Live notifications** — task/mention/invite events are persisted and
+  pushed instantly to the recipient's private socket room, with read/
+  read-all state synced across every open tab.
+- **Granular settings** — profile, appearance, notifications, privacy, and
+  security live as dedicated settings surfaces; workspace-level settings
+  cover members/roles, invites, modules, and a guarded danger zone.
+- **Member invites & roles** — email invites with pending-invite tracking
+  and role assignment, enforced end to end by the same guard/decorator
+  stack the API uses for every other authorization check.
+- **Localization-ready UI** — dashboard strings are routed through a shared
+  `@crwsync/i18n` package (English/Spanish shipped) instead of being
+  hardcoded per component.
 - **Optimistic UI** — TanStack Query and Zustand make every interaction
   feel instant, updating the interface ahead of the network round trip
   while writes settle against the API in the background.
-- **Design-system UI** — Tailwind CSS and Radix UI primitives deliver an
-  accessible, consistent, and polished interface throughout.
+- **Design-system UI** — Tailwind CSS, Radix UI primitives, and Framer
+  Motion deliver an accessible, consistent, and animated interface
+  throughout, with light/dark themes built in.
 
 ### Platform / infrastructure
 
 - **Backend API (`@crwsync/backend`)** — a strict, modular NestJS service
   on Node, exposing REST endpoints and a Socket.IO gateway behind one
-  well-structured process.
+  well-structured process, organized into focused modules (auth, workspace,
+  board, chat, files, search, statistics, notification, storage, contact).
+- **Real-time sync at scale** — task, chat, file, and presence state pushed
+  live over Socket.IO, backed by a Redis adapter so WebSocket delivery
+  scales horizontally across multiple instances rather than being pinned to
+  one.
 - **Resilient, distributed queues** — BullMQ handles asynchronous
-  background jobs (email delivery, session cleanup) reliably and without
-  ever blocking request paths.
+  background jobs (chat fan-out, email delivery, session cleanup) reliably
+  and without ever blocking request paths.
 - **Defense-in-depth auth** — short-lived JWTs paired with HTTP-only,
   secure cookies, bcrypt-hashed passwords, and a scheduled purge of expired
   sessions, minimizing the attack surface for session hijacking.
 - **Postgres via Prisma** — schema and migrations own the actual business
   logic as a single source of truth, not scattered across the application
   layer.
-- **Docker-first, production-ready ops** — a dev Compose stack for local
-  Postgres/Redis, and a hardened production `stack.yml` for Docker Swarm
-  with rolling updates and per-service resource limits built in from day
-  one.
+- **Cache-first reads, targeted invalidation** — a Redis-backed cache
+  service with a centralized key factory sits in front of hot read paths
+  (auth/session/membership checks); mutations invalidate only the specific
+  keys they affect, never a blanket flush.
+- **Object storage, S3-compatible** — avatars and file-room uploads go
+  straight to a bucket (MinIO locally, Cloudflare R2 in production) via
+  presigned URLs.
+- **Error monitoring** — Sentry is wired into both the backend and the
+  dashboard for real-time exception tracking and release visibility.
+- **Automated CI/CD** — GitHub Actions run a security audit on every change
+  and drive deployment, with Dependabot keeping dependencies current.
+- **Docker-first, production-ready ops** — per-service Dockerfiles, a dev
+  Compose stack for local Postgres/Redis/MinIO, and a hardened production
+  `stack.yml` for Docker Swarm with rolling updates and per-service
+  resource limits built in from day one.
 
 ## Stack
 
@@ -106,13 +149,19 @@ infrastructure a production SaaS product would run.
 | Frontend | [Next.js 16](https://nextjs.org) (App Router), [React 19](https://react.dev) |
 | Backend | [NestJS 11](https://nestjs.com) on Node.js |
 | Language | [TypeScript](https://www.typescriptlang.org) |
-| Styling | [Tailwind CSS v4](https://tailwindcss.com), [Radix UI](https://www.radix-ui.com) primitives |
+| Styling / motion | [Tailwind CSS v4](https://tailwindcss.com), [Radix UI](https://www.radix-ui.com), [Framer Motion](https://www.framer.com/motion/) |
 | State / Data | [Zustand](https://zustand-demo.pmnd.rs), [TanStack Query](https://tanstack.com/query) |
 | Data / ORM | [PostgreSQL 16](https://www.postgresql.org), [Prisma 7](https://www.prisma.io) |
 | Realtime | [Socket.IO](https://socket.io) + Redis adapter |
 | Queues | [BullMQ](https://docs.bullmq.io) |
 | Auth | Passport.js (JWT/Local), bcrypt, HTTP-only cookies |
+| Object storage | S3-compatible (MinIO dev / Cloudflare R2 prod), presigned uploads |
+| Rich editing / DnD | [Tiptap](https://tiptap.dev), [dnd-kit](https://dndkit.com) |
+| Observability | [Sentry](https://sentry.io) (backend + dashboard) |
+| i18n | `@crwsync/i18n` (English, Spanish) |
+| Testing | [Vitest](https://vitest.dev) (frontend), [Jest](https://jestjs.io) (backend) |
 | Monorepo | [Turborepo](https://turbo.build), [pnpm](https://pnpm.io) |
+| CI/CD | GitHub Actions, Dependabot |
 | Deployment | Docker, Docker Swarm (`stack.yml`) |
 
 ## Running locally
@@ -141,13 +190,21 @@ Create a `.env` in each of `apps/frontend/web`, `apps/frontend/dash`, and
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS` | an SMTP provider (e.g. Zoho Mail), for transactional email |
 | `CORS_ORIGIN`, `APP_URL`, `ACCESS_COOKIE_DOMAIN`, `REFRESH_COOKIE_DOMAIN` | `localhost` for local dev |
 | `STORAGE_ENDPOINT`, `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_REGION` | `docker-compose.dev.yml` MinIO credentials locally; an S3-compatible bucket (e.g. Cloudflare R2) in production |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE` | optional — leave blank to run without error monitoring locally |
 
 ## Layout of the codebase
 
 - `apps/frontend/web` — the public marketing portal
-- `apps/frontend/dash` — the authenticated dashboard (Next.js App Router)
-- `apps/backend` — NestJS API, Socket.IO gateway, BullMQ workers
-- `packages/*` — shared modules used across the monorepo
+- `apps/frontend/dash` — the authenticated dashboard: home, board, chat,
+  files, schedules, statistics, search, and settings (Next.js App Router)
+- `apps/backend` — NestJS API, Socket.IO gateway, BullMQ workers, modularized
+  by domain (`auth`, `workspace`, `board`, `chat`, `files`, `search`,
+  `statistics`, `notification`, `storage`, `contact`, …)
+- `packages/types` — shared domain types and operation-result shapes used by
+  both frontends and the backend
+- `packages/styles` — shared Tailwind design tokens/config
+- `packages/templates` — transactional email templates
+- `packages/i18n` — shared localization strings/hooks (English, Spanish)
 - `stack.yml` — production Docker Swarm deployment definition
 
 ## What's simulated
