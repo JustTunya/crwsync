@@ -20,8 +20,8 @@ export interface ThroughputChartProps {
   className?: string;
 }
 
-const COLOR_COMPLETED = "oklch(0.703 0.188 36.91)";
-const COLOR_CREATED = "oklch(0.72 0.18 245)";
+const COLOR_COMPLETED = "var(--color-primary, oklch(0.703 0.188 36.91))";
+const COLOR_CREATED = "var(--color-info, oklch(0.50 0.18 245))";
 
 interface CustomTooltipProps {
   active?: boolean;

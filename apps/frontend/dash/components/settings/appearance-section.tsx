@@ -29,10 +29,10 @@ const LIGHT_TOKENS = {
   background: "oklch(1.00 0.007 64.35)",
   foreground: "oklch(0.16 0.020 64.35)",
   card: "oklch(0.98 0.008 64.35)",
-  border: "oklch(0.87 0.015 64.35)",
-  base100: "oklch(0.940 0.0035 64.35)",
-  base200: "oklch(0.880 0.0035 64.35)",
-  base300: "oklch(0.820 0.0035 64.35)",
+  border: "oklch(0.86 0.015 64.35)",
+  base100: "oklch(0.940 0.008 64.35)",
+  base200: "oklch(0.880 0.012 64.35)",
+  base300: "oklch(0.820 0.015 64.35)",
   primary: "oklch(0.703 0.188 36.91)",
 };
 

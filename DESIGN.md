@@ -5,26 +5,26 @@ colors:
   background: "oklch(1.00 0.007 64.35)"
   foreground: "oklch(0.16 0.020 64.35)"
   card: "oklch(0.98 0.008 64.35)"
-  border: "oklch(0.87 0.015 64.35)"
-  input: "oklch(0.97 0.010 64.35)"
-  placeholder: "oklch(0.64 0.020 64.35)"
-  ring: "oklch(0.78 0.190 36.91)"
+  border: "oklch(0.86 0.015 64.35)"
+  input: "oklch(0.96 0.010 64.35)"
+  placeholder: "oklch(0.48 0.020 64.35)"
+  ring: "oklch(0.703 0.188 36.91)"
   primary: "oklch(0.703 0.188 36.91)"
   primary-hover: "oklch(0.763 0.188 36.91)"
   primary-foreground: "oklch(1.000 0.000 0.000)"
-  secondary: "oklch(0.966 0.003 49.76)"
-  secondary-foreground: "oklch(0.210 0.006 49.76)"
-  muted: "oklch(0.966 0.003 49.76)"
-  muted-foreground: "oklch(0.492 0.016 49.76)"
-  base-100: "oklch(0.940 0.0035 64.35)"
-  base-200: "oklch(0.880 0.0035 64.35)"
-  base-300: "oklch(0.820 0.0035 64.35)"
-  destructive: "oklch(0.70 0.190 25.00)"
-  info: "oklch(0.72 0.18 245)"
-  success: "oklch(0.75 0.18 145)"
-  warning: "oklch(0.84 0.18 75)"
-  alert: "oklch(0.84 0.18 50)"
-  error: "oklch(0.72 0.18 25)"
+  secondary: "oklch(0.930 0.008 49.76)"
+  secondary-foreground: "oklch(0.180 0.020 49.76)"
+  muted: "oklch(0.950 0.006 49.76)"
+  muted-foreground: "oklch(0.420 0.020 49.76)"
+  base-100: "oklch(0.940 0.008 64.35)"
+  base-200: "oklch(0.880 0.012 64.35)"
+  base-300: "oklch(0.820 0.015 64.35)"
+  destructive: "oklch(0.50 0.190 25.00)"
+  info: "oklch(0.50 0.18 245)"
+  success: "oklch(0.48 0.18 145)"
+  warning: "oklch(0.48 0.17 75)"
+  alert: "oklch(0.50 0.18 50)"
+  error: "oklch(0.50 0.18 25)"
 typography:
   display:
     fontFamily: "Figtree, system-ui, arial"
@@ -123,19 +123,19 @@ The palette is intentionally narrow: one warm neutral scale, one accent, and a f
 - **Ember Orange, Hover** (`oklch(0.763 0.188 36.91)`): Lightened hover state for the same accent — buttons brighten on hover rather than darken, reinforcing warmth.
 
 ### Secondary
-- **Warm Parchment** (`oklch(0.966 0.003 49.76)`): Near-neutral warm off-white, used for secondary button fills and muted surface backgrounds. Its foreground pairing, **Ink Charcoal** (`oklch(0.210 0.006 49.76)`), is near-black with a faint warm cast.
+- **Warm Parchment** (`oklch(0.930 0.008 49.76)`): Near-neutral warm off-white, used for secondary button fills and muted surface backgrounds. Its foreground pairing, **Ink Charcoal** (`oklch(0.180 0.020 49.76)`), is near-black with a faint warm cast.
 
 ### Neutral
 - **Warm White** (`oklch(1.00 0.007 64.35)`): Page background (light mode).
 - **Warm Charcoal** (`oklch(0.16 0.020 64.35)`): Page foreground / body text (light mode); this same value becomes the *background* of the footer band, giving the footer a deliberately inverted, always-dark anchor at the base of the public site regardless of theme.
 - **Paper Card** (`oklch(0.98 0.008 64.35)`): Card and popover surfaces, barely lifted off the page background.
-- **Hairline Border** (`oklch(0.87 0.015 64.35)`): Structural borders on non-glass surfaces (inputs, dividers).
-- **Muted Ink** (`oklch(0.492 0.016 49.76)`): Secondary text — descriptions, captions, nav links at rest.
-- **Base Shade 100/200/300** (`oklch(0.940 / 0.880 / 0.820 0.0035 64.35)`): A tight three-step tonal ramp for stacked flat surfaces (e.g. sidebar layers in the dashboard) where glass treatment isn't used.
+- **Hairline Border** (`oklch(0.86 0.015 64.35)`): Structural borders on non-glass surfaces (inputs, dividers).
+- **Muted Ink** (`oklch(0.420 0.020 49.76)`): Secondary text — descriptions, captions, nav links at rest.
+- **Base Shade 100/200/300** (`oklch(0.940 / 0.880 / 0.820 0.008–0.015 64.35)`): A tight three-step tonal ramp for stacked flat surfaces (e.g. sidebar layers in the dashboard) where glass treatment isn't used.
 
 ### Feedback & Tags
-A fixed hue rotation carries all status and categorization color, kept separate from the brand accent so status never gets confused with "the button color":
-- **Info** (`oklch(0.72 0.18 245)`) · **Success** (`oklch(0.75 0.18 145)`) · **Warning** (`oklch(0.84 0.18 75)`) · **Alert** (`oklch(0.84 0.18 50)`) · **Error / Destructive** (`oklch(0.70–0.72 0.19 25)`)
+A fixed hue rotation carries all status and categorization color, calibrated to meet WCAG AA contrast (≥ 4.5:1) in both light and dark modes:
+- **Info** (`oklch(0.50 0.18 245)`) · **Success** (`oklch(0.48 0.18 145)`) · **Warning** (`oklch(0.48 0.17 75)`) · **Alert** (`oklch(0.50 0.18 50)`) · **Error / Destructive** (`oklch(0.50 0.18 25)`)
 - An 8-hue **label palette** (red, orange, yellow, green, teal, blue, purple, pink, all at matched lightness/chroma) exists specifically for user-assigned tags (e.g. Kanban card labels) — never reused for UI chrome.
 
 ### Named Rules
