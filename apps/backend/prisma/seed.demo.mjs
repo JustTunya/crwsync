@@ -27,9 +27,12 @@ import bcrypt from "bcrypt";
 import Redis from "ioredis";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = existsSync(resolve(SCRIPT_DIR, "../../..", "package.json"))
+  ? resolve(SCRIPT_DIR, "../../..")
+  : resolve(SCRIPT_DIR, "..");
 const SEED_ASSETS = existsSync(resolve(SCRIPT_DIR, "seed-assets"))
   ? resolve(SCRIPT_DIR, "seed-assets")
-  : resolve(SCRIPT_DIR, "../../..", "apps/backend/prisma/seed-assets");
+  : resolve(REPO_ROOT, "apps/backend/prisma/seed-assets");
 const DOCS_DIR = resolve(SEED_ASSETS, "documents");
 const AVATARS_DIR = resolve(SEED_ASSETS, "avatars");
 const ASSETS_DIR = SEED_ASSETS;
@@ -49,7 +52,10 @@ function parseEnvFile(path) {
   return out;
 }
 
-const backendEnv = parseEnvFile(resolve(REPO_ROOT, "apps/backend/.env"));
+const backendEnv = {
+  ...parseEnvFile(resolve(REPO_ROOT, "apps/backend/.env")),
+  ...parseEnvFile(resolve(REPO_ROOT, ".env")),
+};
 const demoEnvPath = resolve(REPO_ROOT, ".env.demo");
 const demoEnv = parseEnvFile(demoEnvPath);
 
