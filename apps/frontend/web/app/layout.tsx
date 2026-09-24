@@ -26,10 +26,10 @@ export const metadata: Metadata = {
   description,
   applicationName: "crwsync",
   authors: [{ name: "Tunya Lénárd-Sándor", url: "https://www.linkedin.com/in/lenard-tunya/" }],
-  keywords: ["real-time collaboration", "kanban", "team chat", "NestJS", "Next.js", "Socket.IO", "BullMQ", "Prisma", "portfolio"],
   openGraph: {
     type: "website",
     siteName: "crwsync",
+    locale: "en_US",
     url: siteUrl,
     title,
     description,
