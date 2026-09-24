@@ -47,6 +47,7 @@
     "eslint-config-next": "^16.0.8",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-import": "^2.32.0",
+    "playwright": "^1.62.1",
     "prettier": "^3.6.2",
     "turbo": "^2.9.14",
     "typescript": "^5.8.3"
