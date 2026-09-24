@@ -1,8 +1,9 @@
 import { LegalPage, LegalSection } from "@/components/legal/legal-page";
 
 export const metadata = {
-  title: "Terms of Service — crwsync",
-  description: "The terms governing use of the crwsync demo platform.",
+  title: "Terms of Service",
+  alternates: { canonical: "/legal/terms" },
+  description: "The terms governing use of the crwsync demo platform: accounts, acceptable use, workspace content, and the limits of a portfolio project.",
 };
 
 export default function TermsPage() {

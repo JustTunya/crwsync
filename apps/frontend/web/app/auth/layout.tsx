@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { AuthHeader } from "@/components/auth-header";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default function AuthLayout({
   children,
@@ -7,7 +10,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="relative min-h-screen w-full flex flex-col overflow-x-hidden">
-      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 h-[420px] w-[420px] rounded-full bg-primary/20 blur-[140px]" />
+      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 h-105 w-105 rounded-full bg-primary/20 blur-[140px]" />
 
       <AuthHeader />
 
