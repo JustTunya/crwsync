@@ -31,7 +31,6 @@ export function TryDemoButton({ size = "default" }: { size?: "default" | "lg" })
         type="button"
         onClick={handleClick}
         disabled={pending || !DEMO_IDENTIFIER || !DEMO_PASSWORD}
-        aria-label="Sign in to a shared live demo account, not your own"
         className={cn(
           "group relative inline-flex items-center justify-center rounded-lg bg-primary font-semibold text-primary-foreground whitespace-nowrap cursor-pointer",
           "disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
@@ -40,6 +39,7 @@ export function TryDemoButton({ size = "default" }: { size?: "default" | "lg" })
       >
         <span className="absolute inset-0 rounded-lg bg-linear-to-t from-foreground/15 to-transparent transition-colors group-hover:from-foreground/30" />
         <span className="relative">{pending ? "Signing in…" : "Try Live Demo"}</span>
+        <span className="sr-only">, signs in to a shared demo account, not your own</span>
       </button>
       {!state.success && state.message && (
         <span role="alert" className="text-xs text-error">{state.message}</span>
