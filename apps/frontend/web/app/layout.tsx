@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { Figtree } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { UserProvider } from "@/providers/user.provider";
-import { getSession } from "@/lib/auth.server";
 import { I18nProvider } from "@crwsync/i18n";
 import { SkipToContent } from "@/components/a11y/skip-to-content";
 import { siteUrl } from "@/lib/site";
@@ -51,12 +48,7 @@ export const metadata: Metadata = {
   }
 };
 
-async function UserSession({ children }: { children: React.ReactNode }) {
-  const user = await getSession();
-  return <UserProvider user={user}>{children}</UserProvider>;
-}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -67,9 +59,7 @@ export default async function RootLayout({
         <I18nProvider>
           <SkipToContent />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <Suspense fallback={<div className="min-h-screen w-screen bg-background overflow-x-hidden" />}>
-              <UserSession>{children}</UserSession>
-            </Suspense>
+            {children}
           </ThemeProvider>
         </I18nProvider>
       </body>
