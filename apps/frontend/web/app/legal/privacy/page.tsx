@@ -1,8 +1,9 @@
 import { LegalPage, LegalSection } from "@/components/legal/legal-page";
 
 export const metadata = {
-  title: "Privacy Policy — crwsync",
-  description: "How crwsync collects, uses, and lets you control your data.",
+  title: "Privacy Policy",
+  alternates: { canonical: "/legal/privacy" },
+  description: "How the crwsync demo collects, uses, and protects your account, workspace, and session data, and the controls you have over it.",
 };
 
 export default function PrivacyPage() {

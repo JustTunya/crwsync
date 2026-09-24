@@ -6,6 +6,7 @@ import { UserProvider } from "@/providers/user.provider";
 import { getSession } from "@/lib/auth.server";
 import { I18nProvider } from "@crwsync/i18n";
 import { SkipToContent } from "@/components/a11y/skip-to-content";
+import { siteUrl } from "@/lib/site";
 import "@crwsync/styles";
 
 const figtree = Figtree({
@@ -18,10 +19,9 @@ const figtree = Figtree({
   adjustFontFallback: true
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_WEB_URL ?? "https://crwsync.xyz";
-const title = "crwsync: real-time crew collaboration, engineered end to end";
+const title = "crwsync: real-time crew collaboration, end to end";
 const description =
-  "A production-shaped team workspace: boards, chat, files, and schedules kept in sync over WebSockets, behind a NestJS API with Redis fan-out, BullMQ queues, and Postgres. Built solo, with a live demo.";
+  "Boards, chat, files, and schedules synced over WebSockets on a NestJS, Redis, BullMQ, and Postgres stack. Built solo, with a live demo.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -36,15 +36,15 @@ export const metadata: Metadata = {
     url: siteUrl,
     title,
     description,
-    images: [{ url: "/demo/poster.png", alt: "The crwsync dashboard with a board, chat, and files open" }],
+    images: [{ url: "/demo/poster.png", width: 1920, height: 1080, alt: "The crwsync dashboard with a board, chat, and files open" }],
   },
   twitter: {
     card: "summary_large_image",
     title,
     description,
-    images: ["/demo/poster.png"],
+    images: [{ url: "/demo/poster.png", alt: "The crwsync dashboard with a board, chat, and files open" }],
   },
-  robots: { index: true, follow: true },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
   appleWebApp: {
     title: "crwsync",
     statusBarStyle: "default"

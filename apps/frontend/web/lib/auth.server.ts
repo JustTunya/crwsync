@@ -1,6 +1,6 @@
 import "server-only";
 
-import axios, { AxiosInstance, isAxiosError } from "axios";
+import axios, { AxiosInstance } from "axios";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import type { SessionUserType } from "@crwsync/types";
@@ -33,8 +33,7 @@ export const getSession = cache(async (): Promise<SessionUserType | undefined> =
   try {
     const me = await client.get("/auth/me");
     return me.data as SessionUserType;
-  } catch (err) {
-    if (isAxiosError(err) && err.response?.status === 401) return undefined;
-    throw err;
+  } catch {
+    return undefined;
   }
 });

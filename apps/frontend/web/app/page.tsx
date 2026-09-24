@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Header from "@/components/home/header";
 import Hero from "@/components/home/hero";
@@ -10,24 +11,38 @@ import Architecture from "@/components/home/architecture";
 import { Rigor } from "@/components/home/rigor";
 import { FinalCta } from "@/components/home/final-cta";
 import { Builder } from "@/components/home/builder";
+import { siteUrl } from "@/lib/site";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const Footer = dynamic(() => import("@/components/home/footer"), {
   loading: () => <div className="h-40 border-t border-border" />,
   ssr: true,
 });
 
-const jsonLd = {
-  "@context": "https://schema.org",
+const author = { "@type": "Person", name: "Tunya Lénárd-Sándor", url: "https://www.linkedin.com/in/lenard-tunya/" };
+
+const softwareApplication = {
   "@type": "SoftwareApplication",
+  "@id": `${siteUrl}/#app`,
   name: "crwsync",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
-  url: "https://crwsync.xyz",
+  url: siteUrl,
+  image: `${siteUrl}/demo/poster.png`,
   description:
     "A production-shaped team workspace: boards, chat, files, and schedules kept in sync over WebSockets, behind a NestJS API with Redis fan-out, BullMQ queues, and Postgres.",
-  author: { "@type": "Person", name: "Tunya Lénárd-Sándor", url: "https://www.linkedin.com/in/lenard-tunya/" },
+  author,
   codeRepository: "https://github.com/justtunya/crwsync",
   license: "https://polyformproject.org/licenses/noncommercial/1.0.0/",
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    softwareApplication,
+    { "@type": "WebSite", "@id": `${siteUrl}/#website`, url: siteUrl, name: "crwsync", inLanguage: "en", publisher: author },
+  ],
 };
 
 export default function Home() {
