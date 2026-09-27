@@ -8,6 +8,6 @@
     "screenshot": "node --env-file=../../.env.demo scripts/screenshot.ts"
   },
   "devDependencies": {
-    "playwright": "^1.62.1"
+    "playwright": "^1.63.0"
   }
 }
