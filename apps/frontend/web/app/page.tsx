@@ -82,7 +82,7 @@ export default function Home() {
             id="built"
             title="How it's built"
             lead="For technical evaluators: the services, the write path, and the safeguards behind the product. Each section names the code that does the work."
-            className="pb-0 sm:pb-0"
+            className="pb-0 sm:pb-0 flow-root"
           />
           <Topology />
 
