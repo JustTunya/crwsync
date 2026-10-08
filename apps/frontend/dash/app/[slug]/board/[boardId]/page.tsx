@@ -9,11 +9,12 @@ import type { Task, BoardColumn } from "@crwsync/types";
 import { useWorkspace } from "@/providers/workspace.provider";
 import { KanbanCol } from "@/components/kanban/KanbanCol";
 import { KanbanTaskOverlay } from "@/components/kanban/KanbanTask";
-import { BoardToolbar } from "@/components/kanban/BoardToolbar";
-import { DigestBoardButton } from "@/components/ai/AiActions";
+import { BoardToolbar, FilterBarToggle } from "@/components/kanban/BoardToolbar";
+import { AiBarToggle, BoardAiActions } from "@/components/ai/AiActions";
 import { BoardListView } from "@/components/kanban/BoardListView";
 import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/use-boards";
 import { useBoardSocket } from "@/hooks/use-board-socket";
+import { usePersistedOpen } from "@/hooks/use-persisted-open";
 import { useBoardFilters } from "@/hooks/use-board-filters";
 import { LSidebarToggle } from "@/components/l-sidebar";
 import { RSidebarToggle } from "@/components/r-sidebar";
@@ -103,6 +104,8 @@ export default function BoardPage() {
     filteredColumns,
   } = useBoardFilters(board);
 
+  const [filterBarOpen, setFilterBarOpen] = usePersistedOpen("crwsync:bar:board-filters");
+  const [aiBarOpen, setAiBarOpen] = usePersistedOpen("crwsync:bar:board-ai");
   const [state, dispatch] = useReducer(boardReducer, initialState);
   const { addingTaskFor, editingTask, activeTask, addingColumn, columnName, taskTitle } = state;
 
@@ -245,13 +248,18 @@ export default function BoardPage() {
           <LSidebarToggle />
           <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{board.name}</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <DigestBoardButton workspaceId={workspaceId} boardId={board.id} />
+        <div className="flex items-center gap-1">
+          <FilterBarToggle open={filterBarOpen} onToggle={() => setFilterBarOpen(!filterBarOpen)} count={activeFilterCount} />
+          <AiBarToggle open={aiBarOpen} onToggle={() => setAiBarOpen(!aiBarOpen)} />
           <RSidebarToggle />
         </div>
       </div>
 
+      <BoardAiActions workspaceId={workspaceId} boardId={board.id} open={aiBarOpen} onClose={() => setAiBarOpen(false)} />
+
       <BoardToolbar
+        open={filterBarOpen}
+        onClose={() => setFilterBarOpen(false)}
         workspaceId={workspaceId}
         filters={filters}
         view={view}

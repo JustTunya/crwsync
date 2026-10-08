@@ -7,10 +7,13 @@ import * as aiService from "@/services/ai.service";
 import { useAiRun, useAiStatus } from "@/hooks/use-ai";
 import { useBoard, useCreateTask } from "@/hooks/use-boards";
 import { useWorkspaceModules } from "@/hooks/use-workspace-modules";
+import { SparklesIcon } from "@hugeicons/core-free-icons";
+import { BarToggle, CollapsibleBar } from "@/components/collapsible-bar";
 import { AI_CONTROL, AI_SELECT, AiButton, AiDialog } from "@/components/ai/AiDialog";
 import { cn } from "@/lib/utils";
 
 const HOUR_MS = 3_600_000;
+export const AI_BAR_ID = "ai-actions-bar";
 
 const SINCE_OPTIONS = [
   { label: "Last 24 hours", hours: 24 },
@@ -20,7 +23,7 @@ const SINCE_OPTIONS = [
 
 const sinceIso = (hours: number) => new Date(Date.now() - hours * HOUR_MS).toISOString();
 
-function useAiEnabled() {
+export function useAiEnabled() {
   return useAiStatus().data?.enabled === true;
 }
 
@@ -131,21 +134,41 @@ export function ChatAiActions({
   roomId,
   selecting,
   onToggleSelecting,
+  open,
+  onClose,
 }: {
   workspaceId: string;
   roomId: string;
   selecting: boolean;
   onToggleSelecting: () => void;
+  open: boolean;
+  onClose: () => void;
 }) {
   const enabled = useAiEnabled();
   if (!enabled) return null;
 
   return (
-    <div className="flex items-center gap-2">
+    <CollapsibleBar id={AI_BAR_ID} label="AI tools" open={open} onClose={onClose}>
       <SummarizeRoomButton workspaceId={workspaceId} roomId={roomId} />
       <AiButton label={selecting ? "Cancel selection" : "Draft tasks"} onClick={onToggleSelecting} active={selecting} />
-    </div>
+    </CollapsibleBar>
   );
+}
+
+export function BoardAiActions({ workspaceId, boardId, open, onClose }: { workspaceId: string; boardId: string; open: boolean; onClose: () => void }) {
+  if (!useAiEnabled()) return null;
+
+  return (
+    <CollapsibleBar id={AI_BAR_ID} label="AI tools" open={open} onClose={onClose}>
+      <DigestBoardButton workspaceId={workspaceId} boardId={boardId} />
+    </CollapsibleBar>
+  );
+}
+
+export function AiBarToggle({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  if (!useAiEnabled()) return null;
+
+  return <BarToggle id={AI_BAR_ID} label="AI tools" icon={SparklesIcon} open={open} onToggle={onToggle} />;
 }
 
 export function TaskDraftsDialog({

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Calendar01Icon, Chat01Icon, CheckmarkSquare02Icon, File01Icon } from "@hugeicons/core-free-icons";
 
@@ -26,7 +27,21 @@ const FEATURES = [
 
 export function Claude() {
   return (
-    <div>
+    <div className="relative isolate">
+      <Image
+        src="/claude.webp"
+        alt=""
+        width={320}
+        height={320}
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-16 -z-10 size-72 rotate-12 opacity-10 select-none motion-safe:animate-[spin_90s_linear_infinite]"
+      />
+      <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-4 shadow-sm">
+        <span className="flex size-9 items-center justify-center rounded-full bg-[#d97757]/15 ring-1 ring-[#d97757]/30">
+          <Image src="/claude.webp" alt="Claude" width={20} height={20} priority className="size-5" />
+        </span>
+        <span className="text-sm font-medium">Built with Claude</span>
+      </div>
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {FEATURES.map((feature) => (
           <li key={feature.title} className="rounded-xl border border-border bg-card p-5 shadow-sm">

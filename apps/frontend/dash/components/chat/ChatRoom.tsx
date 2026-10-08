@@ -15,7 +15,8 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { UserAvatar } from "@/components/user-avatar";
 import { LSidebarToggle } from "@/components/l-sidebar";
 import { RSidebarToggle } from "@/components/r-sidebar";
-import { ChatAiActions, TaskDraftsDialog } from "@/components/ai/AiActions";
+import { usePersistedOpen } from "@/hooks/use-persisted-open";
+import { AiBarToggle, ChatAiActions, TaskDraftsDialog } from "@/components/ai/AiActions";
 import { AI_CONTROL } from "@/components/ai/AiDialog";
 import type { TypingUser } from "@/components/chat/TypingIndicator";
 
@@ -126,6 +127,8 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
     };
   }, [roomId, clearRoom]);
 
+  const [aiBarOpen, setAiBarOpen] = usePersistedOpen("crwsync:bar:chat-ai");
+
   return (
     <div className="size-full flex flex-col">
       <div className="flex items-center justify-between gap-3 h-16 px-4 border-b border-base-200">
@@ -142,11 +145,13 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
             <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{room?.name || "Chat"}</h1>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <ChatAiActions workspaceId={workspaceId} roomId={roomId} selecting={selecting} onToggleSelecting={toggleSelecting} />
+        <div className="flex items-center gap-1">
+          <AiBarToggle open={aiBarOpen} onToggle={() => setAiBarOpen(!aiBarOpen)} />
           <RSidebarToggle />
         </div>
       </div>
+
+      <ChatAiActions workspaceId={workspaceId} roomId={roomId} selecting={selecting} onToggleSelecting={toggleSelecting} open={aiBarOpen} onClose={() => setAiBarOpen(false)} />
 
       {!isConnected && (
         <div className="w-full p-1 bg-muted">

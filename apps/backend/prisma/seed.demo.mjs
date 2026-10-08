@@ -10,6 +10,8 @@
  * with actual uploaded documents, pinned modules, notifications, and analytics.
  *
  * Idempotent: drops and rebuilds the demo workspace and demo users safely.
+ * Open tasks carry due dates relative to run time: most are in the future and
+ * a few are overdue, so the board and week view show both states.
  */
 
 import { readFileSync, existsSync } from "node:fs";
@@ -276,6 +278,7 @@ const COLUMNS = [
 const BACKLOG_TASKS = [
   {
     title: "Split the workspace bundle by route",
+    due: 12,
     priority: "LOW",
     assignee: null,
     labels: ["perf", "frontend"],
@@ -289,6 +292,7 @@ const BACKLOG_TASKS = [
   },
   {
     title: "Audit focus rings on the invite modal",
+    due: 9,
     priority: "MEDIUM",
     assignee: "member",
     labels: ["a11y", "ui"],
@@ -301,6 +305,7 @@ const BACKLOG_TASKS = [
   },
   {
     title: "Retry policy for presence socket",
+    due: -2,
     priority: "HIGH",
     assignee: "backendDev",
     labels: ["infra", "realtime"],
@@ -309,6 +314,7 @@ const BACKLOG_TASKS = [
   },
   {
     title: "Drop legacy avatar upload path",
+    due: 11,
     priority: "LOW",
     assignee: "owner",
     labels: ["cleanup"],
@@ -316,6 +322,7 @@ const BACKLOG_TASKS = [
   },
   {
     title: "Postgres index on chat_messages.room_id",
+    due: 7,
     priority: "MEDIUM",
     assignee: "backendDev",
     labels: ["database", "perf"],
@@ -324,6 +331,7 @@ const BACKLOG_TASKS = [
   },
   {
     title: "Document module reorder contract",
+    due: 10,
     priority: "NONE",
     assignee: "designer",
     labels: ["docs"],
@@ -335,7 +343,7 @@ const IN_PROGRESS_TASKS = [
   {
     title: "Fix flaky socket reconnect on tab wake",
     priority: "MEDIUM",
-    due: null,
+    due: 1,
     startedDaysAgo: 2,
     assignee: "owner",
     labels: ["bug", "realtime"],
@@ -395,7 +403,7 @@ const IN_PROGRESS_TASKS = [
   {
     title: "Velocity chart tooltip clips at edge",
     priority: "LOW",
-    due: 8,
+    due: -1,
     startedDaysAgo: 2,
     assignee: "owner",
     labels: ["ui", "chart"],
@@ -407,6 +415,7 @@ const IN_PROGRESS_TASKS = [
 const IN_REVIEW_TASKS = [
   {
     title: "Read receipts batch write",
+    due: 2,
     priority: "HIGH",
     assignee: "owner",
     startedDaysAgo: 6,
@@ -424,6 +433,7 @@ const IN_REVIEW_TASKS = [
   },
   {
     title: "Sidebar project droppable hit area",
+    due: -3,
     priority: "MEDIUM",
     assignee: "owner",
     startedDaysAgo: 5,
@@ -432,6 +442,7 @@ const IN_REVIEW_TASKS = [
   },
   {
     title: "Invite email template dark mode",
+    due: 5,
     priority: "LOW",
     assignee: "member",
     startedDaysAgo: 7,
@@ -1060,6 +1071,7 @@ async function seed() {
     await createTaskWithDetails(sprintColumns.Backlog.id, (i + 1) * POSITION_GAP, {
       ...t,
       assigneeId: t.assignee ? seededUsers[t.assignee].id : null,
+      dueDate: ahead(t.due),
     });
   }
 
@@ -1068,7 +1080,7 @@ async function seed() {
     await createTaskWithDetails(sprintColumns["In Progress"].id, (i + 1) * POSITION_GAP, {
       ...t,
       assigneeId: seededUsers[t.assignee]?.id ?? owner.id,
-      dueDate: t.due ? ahead(t.due) : null,
+      dueDate: ahead(t.due),
       inProgressAt: ago(t.startedDaysAgo),
       createdAt: ago(t.startedDaysAgo + 3),
       activities: [
@@ -1083,6 +1095,7 @@ async function seed() {
     await createTaskWithDetails(sprintColumns["In Review"].id, (i + 1) * POSITION_GAP, {
       ...t,
       assigneeId: seededUsers[t.assignee]?.id ?? owner.id,
+      dueDate: ahead(t.due),
       inProgressAt: ago(t.startedDaysAgo),
       createdAt: ago(t.startedDaysAgo + 4),
       activities: [
@@ -1109,11 +1122,11 @@ async function seed() {
 
   // Roadmap Board Tasks
   const ROADMAP_TASKS = [
-    { col: "Future Proposals", title: "WebAuthn & Passkey passwordless login support", priority: "MEDIUM", assignee: "backendDev" },
-    { col: "Future Proposals", title: "Enterprise SAML 2.0 SSO Integration", priority: "LOW", assignee: null },
-    { col: "In Discovery", title: "Real-time collaborative canvas & whiteboarding", priority: "HIGH", assignee: "designer" },
-    { col: "In Discovery", title: "Automated AI task summarization in chat threads", priority: "MEDIUM", assignee: "owner" },
-    { col: "Prioritized", title: "Custom webhook triggers for task status transitions", priority: "HIGH", assignee: "member" },
+    { col: "Future Proposals", title: "WebAuthn & Passkey passwordless login support", priority: "MEDIUM", assignee: "backendDev", due: 42 },
+    { col: "Future Proposals", title: "Enterprise SAML 2.0 SSO Integration", priority: "LOW", assignee: null, due: 56 },
+    { col: "In Discovery", title: "Real-time collaborative canvas & whiteboarding", priority: "HIGH", assignee: "designer", due: 21 },
+    { col: "In Discovery", title: "Automated AI task summarization in chat threads", priority: "MEDIUM", assignee: "owner", due: 28 },
+    { col: "Prioritized", title: "Custom webhook triggers for task status transitions", priority: "HIGH", assignee: "member", due: 14 },
     { col: "Completed", title: "Granular workspace role permissions system", priority: "URGENT", assignee: "owner", completedAt: ago(5), inProgressAt: ago(10) },
   ];
 
@@ -1122,6 +1135,7 @@ async function seed() {
       title: rt.title,
       priority: rt.priority,
       assigneeId: rt.assignee ? seededUsers[rt.assignee].id : null,
+      dueDate: rt.due ? ahead(rt.due) : null,
       completedAt: rt.completedAt ?? null,
       inProgressAt: rt.inProgressAt ?? null,
     });
