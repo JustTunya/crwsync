@@ -1,20 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { Figtree } from "next/font/google";
 import * as Sentry from "@sentry/nextjs";
 import { AlertTriangle } from "lucide-react";
 import { GlassBox } from "@/components/ui/glassbox";
 import { Button, buttonVariants } from "@/components/ui/button";
 import "@crwsync/styles";
-
-const figtree = Figtree({
-  variable: "--font-figtree",
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  display: "swap",
-  fallback: ["system-ui", "arial"],
-});
 
 export default function GlobalError({
   error,
@@ -29,7 +20,7 @@ export default function GlobalError({
 
   return (
     <html lang="en">
-      <body className={`${figtree.variable} font-figtree antialiased`}>
+      <body className="font-sans antialiased">
         <div className="min-h-screen w-screen flex items-center justify-center bg-background px-4">
           <GlassBox className="gap-4 text-center">
             <div className="flex items-center justify-center size-12 rounded-full bg-primary/10">

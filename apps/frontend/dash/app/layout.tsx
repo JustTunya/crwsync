@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Figtree } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/providers/user.provider";
 import { QueryProvider } from "@/providers/query.provider";
@@ -11,14 +11,14 @@ import { LiveAnnouncerProvider } from "@/components/a11y/live-announcer";
 import { SkipToContent } from "@/components/a11y/skip-to-content";
 import "@crwsync/styles";
 
-const figtree = Figtree({
+const figtree = localFont({
+  src: "./fonts/figtree-latin-wght.woff2",
   variable: "--font-figtree",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "800"],
+  weight: "300 800",
   display: "swap",
   preload: true,
   fallback: ["system-ui", "arial"],
-  adjustFontFallback: true
+  adjustFontFallback: "Arial"
 });
 
 export const metadata: Metadata = {
