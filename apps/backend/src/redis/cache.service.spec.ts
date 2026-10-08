@@ -517,3 +517,30 @@ describe("CacheService.onModuleInit/onModuleDestroy", () => {
     await expect(cacheService.onModuleDestroy()).resolves.toBeUndefined();
   });
 });
+
+describe("CacheService.incrWithTtl", () => {
+  let cacheService: CacheService;
+  let mockRedis: { incr: jest.Mock; expire: jest.Mock };
+
+  beforeEach(() => {
+    mockRedis = { incr: jest.fn(), expire: jest.fn().mockResolvedValue(1) };
+    cacheService = new CacheService({ get: jest.fn().mockReturnValue("crwsync:") } as unknown as ConfigService);
+    (cacheService as unknown as { redis: typeof mockRedis }).redis = mockRedis;
+  });
+
+  it("sets the expiry only when the counter is created", async () => {
+    mockRedis.incr.mockResolvedValueOnce(1).mockResolvedValueOnce(2);
+
+    await expect(cacheService.incrWithTtl("k", 60)).resolves.toBe(1);
+    await expect(cacheService.incrWithTtl("k", 60)).resolves.toBe(2);
+
+    expect(mockRedis.expire).toHaveBeenCalledTimes(1);
+    expect(mockRedis.expire).toHaveBeenCalledWith("k", 60);
+  });
+
+  it("returns 0 when Redis fails", async () => {
+    mockRedis.incr.mockRejectedValue(new Error("Redis connection refused"));
+
+    await expect(cacheService.incrWithTtl("k", 60)).resolves.toBe(0);
+  });
+});

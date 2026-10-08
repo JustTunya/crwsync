@@ -174,6 +174,17 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async incrWithTtl(key: string, ttlSeconds: number): Promise<number> {
+    try {
+      const count = await this.redis.incr(key);
+      if (count === 1) await this.redis.expire(key, ttlSeconds);
+      return count;
+    } catch (error) {
+      this.logger.warn(`Cache incr error for key ${key}: ${error}`);
+      return 0;
+    }
+  }
+
   async acquireLock(key: string, ttlSeconds: number): Promise<boolean> {
     try {
       const result = await this.redis.set(key, "1", "EX", ttlSeconds, "NX");

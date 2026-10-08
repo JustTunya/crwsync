@@ -12,6 +12,7 @@ export const CacheKeys = {
   workspaceStatisticsPattern: (workspaceId: string) => `ws:${workspaceId}:statistics:*`,
   workspaceHome: (workspaceId: string, userId: string) => `ws:${workspaceId}:home:${userId}`,
   workspaceHomePattern: (workspaceId: string) => `ws:${workspaceId}:home:*`,
+  aiUsage: (userId: string, day: string) => `ai:usage:${userId}:${day}`,
 };
 
 export const CacheTTL = {
@@ -23,4 +24,5 @@ export const CacheTTL = {
   VERIFICATION: 300, // 5 minutes
   SEARCH: 30, // 30 seconds
   WORKSPACE_HOME: 120, // 2 minutes
+  AI_USAGE: 90000, // 25 hours, outlasts the UTC day it counts
 };
