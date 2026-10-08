@@ -16,7 +16,7 @@ export default function Hero() {
             One workspace for the work your team shares.
           </h1>
           <p className="mt-6 max-w-[58ch] text-base sm:text-lg text-muted-foreground leading-normal text-pretty">
-            Small teams often run work across a task tracker, a chat app, and a file drive, and lose context moving between them. crwsync puts boards, chat rooms, files, and schedules in one workspace, and every change shows up in every open tab without a refresh.
+            Small teams often run work across a task tracker, a chat app, and a file drive, and lose context moving between them. crwsync puts boards, chat rooms, files, and schedules in one workspace, and every change shows up in every open tab without a refresh. Optional Claude-powered summaries, digests, and task drafts keep long threads and busy boards readable.
           </p>
           <div className="w-full mt-8 flex flex-row items-center justify-center sm:justify-start gap-3">
             <TryDemoButton size="lg" />

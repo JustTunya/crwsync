@@ -18,7 +18,7 @@ const figtree = Figtree({
 
 const title = "crwsync: boards, chat, and files for small teams";
 const description =
-  "A shared workspace for small teams: task boards, chat rooms, files, and schedules in one place, updated live in every open tab. Join the early-access waitlist or try the demo.";
+  "A shared workspace for small teams: task boards, chat rooms, files, and schedules in one place, updated live in every open tab, with optional Claude-powered summaries. Join the early-access waitlist or try the demo.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

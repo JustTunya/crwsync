@@ -68,9 +68,9 @@ resource limits.
   way in the demo as in any workspace.
 - Optional AI features (summary, digest, task drafts, stand-up) call the
   Anthropic API server-side; see the README for configuration.
-- Licensed under PolyForm Noncommercial 1.0.0 — source is public for reading/
-  study/personal/educational use; commercial use requires a separate license
-  from the author.
+- Licensed under FSL-1.1-ALv2 (Functional Source License, Apache 2.0 future
+  license) — source is public to read and use except for competing offerings;
+  each release converts to Apache 2.0 after two years.
 
 ## Brand Commitments
 

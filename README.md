@@ -6,32 +6,49 @@
   <img src="apps/frontend/web/public/logo@orange.svg" alt="CRWSync" width="280">
 </picture>
 
-### Real-Time Collaborative Workspace Platform
+### The shared workspace for small teams, with Claude built in
 
-Boards, chat, files, and schedules for small teams, kept in sync across
-every open tab — with optional Claude-powered summaries, digests, and task
-drafts. Early access: join the waitlist on the site.
+Boards, chat, files, and schedules in one place, live in every open tab, with
+optional Claude-powered summaries, digests, task drafts, and stand-up notes.
+
+**Early access** · built by [Tunya Lénárd-Sándor](https://www.linkedin.com/in/lenard-tunya/) ·
+[Join the waitlist](https://crwsync.xyz/#early-access) · a shared demo with sample data is available from the site
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat&logo=nextdotjs&logoColor=white&labelColor=1A1816)](https://nextjs.org)
-[![React](https://img.shields.io/badge/React-19-149ECA?style=flat&logo=react&logoColor=white&labelColor=1A1816)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white&labelColor=1A1816)](https://www.typescriptlang.org)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38BDF8?style=flat&logo=tailwindcss&logoColor=white&labelColor=1A1816)](https://tailwindcss.com)
-[![Framer Motion](https://img.shields.io/badge/Framer_Motion-Animation-C85A2A?style=flat&logo=framer&logoColor=white&labelColor=1A1816)](https://www.framer.com/motion/)
 [![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=flat&logo=nestjs&logoColor=white&labelColor=1A1816)](https://nestjs.com)
-[![Prisma](https://img.shields.io/badge/Prisma-7-3982CE?style=flat&logo=prisma&logoColor=white&labelColor=1A1816)](https://www.prisma.io)
-[![Socket.IO](https://img.shields.io/badge/Socket.IO-Realtime-010101?style=flat&logo=socketdotio&logoColor=white&labelColor=1A1816)](https://socket.io)
-[![BullMQ](https://img.shields.io/badge/BullMQ-Queues-DC2626?style=flat&labelColor=1A1816)](https://docs.bullmq.io)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql&logoColor=white&labelColor=1A1816)](https://www.postgresql.org)
-[![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat&logo=redis&logoColor=white&labelColor=1A1816)](https://redis.io)
-[![Turborepo](https://img.shields.io/badge/Turborepo-Monorepo-EF4444?style=flat&logo=turborepo&logoColor=white&labelColor=1A1816)](https://turbo.build)
-[![pnpm](https://img.shields.io/badge/pnpm-10-F69220?style=flat&logo=pnpm&logoColor=white&labelColor=1A1816)](https://pnpm.io)
-[![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-B93826?style=flat&labelColor=1A1816)](LICENSE)
+[![License: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-B93826?style=flat&labelColor=1A1816)](LICENSE)
 
 </div>
 
 ---
 
-## About
+## Why crwsync
+
+Small teams often run work across a task tracker, a chat app, and a file
+drive, and lose context moving between them. crwsync keeps boards, chat, files,
+and schedules in one workspace, and uses Claude to keep long threads and busy
+boards readable.
+
+## Claude-powered
+
+- **Chat summaries** — catch up on a busy room in a few lines.
+- **Board digests** — what moved, what is stuck, what is due.
+- **Task drafts from messages** — turn a thread into draft tasks; nothing is created until a member confirms.
+- **Stand-up notes** — a per-member yesterday, today, and blockers note.
+
+Optional, off by default, server-side only, and member-triggered. See
+[AI features](#ai-features-optional) for configuration and data handling.
+
+## Business direction
+
+Planned, not yet built: free early access today, a paid tier for larger teams,
+and a hosted product with a documented self-host path. No prices are set.
+Commercial licensing or partnership: contact@crwsync.xyz.
+
+## Architecture at a glance
+
 
 crwsync is a shared workspace for small teams and crews that run work from
 boards, chat, and files. A team signs in, organizes work into projects, moves
@@ -45,9 +62,6 @@ marketing portal, an authenticated dashboard, and a NestJS API — share one
 root domain via subdomains in production, isolating public traffic from
 authenticated workloads, and run together locally through a unified
 Turborepo pipeline.
-
-crwsync is in early access and built by one person. A shared demo account
-with seeded sample data is available from the public site.
 
 ## Features
 
@@ -235,9 +249,7 @@ are not.
 
 ## License
 
-Licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE).
-
-The source is public so it can be read, studied, and used for personal or
-educational purposes. **Commercial use — including running this as, or as
-part of, an actual business — is not permitted without a separate license
-from the author.** Reach out if you'd like to discuss one.
+Source-available under the [Functional Source License 1.1, Apache 2.0 future license](LICENSE)
+(FSL-1.1-ALv2). You can read, study, and use the code for any purpose except
+offering a competing product or service; each release converts to Apache 2.0
+two years after publication. Commercial licensing: contact@crwsync.xyz.

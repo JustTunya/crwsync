@@ -13,6 +13,7 @@ import { FinalCta } from "@/components/home/final-cta";
 import { Builder } from "@/components/home/builder";
 import { WhoFor } from "@/components/home/who-for";
 import { EarlyAccess } from "@/components/home/early-access";
+import { Claude } from "@/components/home/claude";
 import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -36,7 +37,7 @@ const softwareApplication = {
     "A shared workspace for small teams: task boards, chat rooms, files, and schedules in one place, updated live in every open tab.",
   author,
   codeRepository: "https://github.com/justtunya/crwsync",
-  license: "https://polyformproject.org/licenses/noncommercial/1.0.0/",
+  license: "https://fsl.software/",
 };
 
 const jsonLd = {
@@ -73,6 +74,16 @@ export default function Home() {
           >
             <Reveal>
               <Surfaces />
+            </Reveal>
+          </Section>
+
+          <Section
+            id="ai"
+            title="Claude reads the room so you do not have to"
+            lead="Optional AI features for the work a small crew repeats every day: catching up, planning the day, and turning conversation into tasks."
+          >
+            <Reveal>
+              <Claude />
             </Reveal>
           </Section>
 

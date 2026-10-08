@@ -45,8 +45,9 @@ export function EarlyAccess() {
             Early access
           </h2>
           <p className="mt-5 max-w-[56ch] text-base sm:text-lg text-muted-foreground text-pretty">
-            crwsync is not open for general sign-up yet and there is no pricing. Leave your email and we will write when
-            early access opens. We store only what this form collects and use it only for that.
+            crwsync is not open for general sign-up yet. Early access is free and nothing is charged today; paid plans
+            for larger teams are planned. Leave your email and we will write when early access opens. We store only
+            what this form collects and use it only for that.
           </p>
         </div>
 

@@ -48,7 +48,7 @@ export default function Footer() {
               href="https://github.com/justtunya/crwsync/blob/main/LICENSE"
               className="underline underline-offset-2 hover:text-foreground"
             >
-              PolyForm Noncommercial License 1.0.0
+              Functional Source License 1.1 (Apache 2.0 future license)
             </Link>
             .
           </p>

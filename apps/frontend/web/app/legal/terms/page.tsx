@@ -103,8 +103,9 @@ export default function TermsPage() {
 
       <LegalSection heading="11. Source &amp; License">
         <p>
-          crwsync&apos;s source is public for reading, study, and personal or educational use under the PolyForm
-          Noncommercial 1.0.0 license. Commercial use requires a separate license from the author.
+          crwsync&apos;s source is public under the Functional Source License 1.1 (Apache 2.0 future license). You may
+          read, study, and use it for any purpose except offering a competing product or service, and each release
+          becomes Apache 2.0 two years after it is published. Commercial licensing is available from the author.
         </p>
       </LegalSection>
 
