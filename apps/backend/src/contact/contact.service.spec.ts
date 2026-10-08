@@ -5,7 +5,7 @@ import { ContactDto } from "src/contact/dto/contact.dto";
 describe("ContactService", () => {
   let service: ContactService;
   let emailService: { sendEmail: jest.Mock };
-  const originalAdminMail = process.env.ADMIN_MAIL;
+  const originalContactEmail = process.env.CONTACT_EMAIL;
 
   beforeEach(() => {
     emailService = { sendEmail: jest.fn().mockResolvedValue(undefined) };
@@ -13,25 +13,25 @@ describe("ContactService", () => {
   });
 
   afterEach(() => {
-    process.env.ADMIN_MAIL = originalAdminMail;
+    process.env.CONTACT_EMAIL = originalContactEmail;
   });
 
-  it("sends the contact form to the configured admin email", async () => {
-    process.env.ADMIN_MAIL = "admin@example.com";
+  it("sends the contact form to the configured contact email", async () => {
+    process.env.CONTACT_EMAIL = "contact@example.com";
     const dto: ContactDto = { name: "Alex", email: "alex@example.com", message: "Hello there" };
 
     await service.submitContact(dto);
 
     expect(emailService.sendEmail).toHaveBeenCalledWith({
-      to: "admin@example.com",
+      to: "contact@example.com",
       subject: "New Contact from Alex",
       template: "./contact-form",
       context: { name: "Alex", email: "alex@example.com", message: "Hello there" },
     });
   });
 
-  it("no-ops without sending an email when ADMIN_MAIL is not configured", async () => {
-    delete process.env.ADMIN_MAIL;
+  it("no-ops without sending an email when CONTACT_EMAIL is not configured", async () => {
+    delete process.env.CONTACT_EMAIL;
     const dto: ContactDto = { name: "Alex", email: "alex@example.com", message: "Hello there" };
 
     await service.submitContact(dto);

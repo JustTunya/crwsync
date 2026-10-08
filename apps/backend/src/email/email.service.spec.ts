@@ -7,6 +7,7 @@ describe("EmailService", () => {
   let mailerService: { sendMail: jest.Mock };
 
   beforeEach(() => {
+    process.env.CONTACT_EMAIL = "contact@example.com";
     mailerService = { sendMail: jest.fn().mockResolvedValue(undefined) };
     service = new EmailService(mailerService as unknown as MailerService);
   });
@@ -25,7 +26,7 @@ describe("EmailService", () => {
       to: "user@example.com",
       subject: "Welcome",
       template: "./welcome",
-      context: { name: "Alex" },
+      context: { contactEmail: "contact@example.com", name: "Alex" },
     });
   });
 

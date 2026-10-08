@@ -159,6 +159,7 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ (matrix.app == 'web' || matrix.app == 'dash') && secrets.NEXT_PUBLIC_API_URL || '' }}
             NEXT_PUBLIC_DASH_URL=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DASH_URL || '' }}
             NEXT_PUBLIC_WEB_URL=${{ matrix.app == 'dash' && secrets.NEXT_PUBLIC_WEB_URL || '' }}
+            NEXT_PUBLIC_CONTACT_EMAIL=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_CONTACT_EMAIL || '' }}
             NEXT_PUBLIC_DEMO_IDENTIFIER=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DEMO_IDENTIFIER || '' }}
             NEXT_PUBLIC_DEMO_PASSWORD=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DEMO_PASSWORD || '' }}
             NEXT_PUBLIC_SENTRY_DSN=${{ (matrix.app == 'web' && secrets.NEXT_PUBLIC_SENTRY_DSN_WEB) || (matrix.app == 'dash' && secrets.NEXT_PUBLIC_SENTRY_DSN_DASH) || '' }}
@@ -198,7 +199,7 @@ jobs:
       MAIL_PORT: ${{ secrets.MAIL_PORT }}
       MAIL_USER: ${{ secrets.MAIL_USER }}
       MAIL_PASS: ${{ secrets.MAIL_PASS }}
-      ADMIN_MAIL: ${{ secrets.ADMIN_MAIL }}
+      CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
       JWT_ACCESS_TOKEN_SECRET: ${{ secrets.JWT_ACCESS_TOKEN_SECRET }}
       JWT_ACCESS_TOKEN_EXPIRATION: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}
       COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
