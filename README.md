@@ -8,10 +8,9 @@
 
 ### Real-Time Collaborative Workspace Platform
 
-An enterprise-grade collaborative workspace, engineered end to end — public
-portal, authenticated dashboard, and a horizontally scalable real-time
-backend keeping tasks, files, and distributed teams in perfect sync.
-Portfolio project.
+Boards, chat, files, and schedules for small teams, kept in sync across
+every open tab — with optional Claude-powered summaries, digests, and task
+drafts. Early access: join the waitlist on the site.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat&logo=nextdotjs&logoColor=white&labelColor=1A1816)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-149ECA?style=flat&logo=react&logoColor=white&labelColor=1A1816)](https://react.dev)
@@ -34,13 +33,11 @@ Portfolio project.
 
 ## About
 
-crwsync is a fictional crew-collaboration platform built as a complete,
-production-shaped application — not a static mockup. It demonstrates a real
-enterprise workflow with the rigor of a production system: a team signs in,
-organizes work into projects, moves tasks around a shared board, and watches
-teammates' changes land instantly, while a decoupled backend enforces auth,
-queues background work, and fans out real-time state over WebSockets at
-scale.
+crwsync is a shared workspace for small teams and crews that run work from
+boards, chat, and files. A team signs in, organizes work into projects, moves
+tasks around a shared board, and watches teammates' changes land instantly,
+while a decoupled backend enforces auth, queues background work, and fans out
+real-time state over WebSockets.
 
 The architecture reflects deliberate separation of concerns rather than a
 single monolith: three independently deployable services — a public
@@ -49,11 +46,8 @@ root domain via subdomains in production, isolating public traffic from
 authenticated workloads, and run together locally through a unified
 Turborepo pipeline.
 
-**This is a demo project.** No real customers, no production traffic. It
-exists to showcase a complete, enterprise-grade collaborative-workspace flow
-end to end: sign up → create a project → invite a crew → sync tasks and
-files in real time, with the same auth, queueing, and real-time
-infrastructure a production SaaS product would run.
+crwsync is in early access and built by one person. A shared demo account
+with seeded sample data is available from the public site.
 
 ## Features
 
@@ -190,7 +184,31 @@ Create a `.env` in each of `apps/frontend/web`, `apps/frontend/dash`, and
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS` | an SMTP provider (e.g. Zoho Mail), for transactional email |
 | `CORS_ORIGIN`, `APP_URL`, `ACCESS_COOKIE_DOMAIN`, `REFRESH_COOKIE_DOMAIN` | `localhost` for local dev |
 | `STORAGE_ENDPOINT`, `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_REGION` | `docker-compose.dev.yml` MinIO credentials locally; an S3-compatible bucket (e.g. Cloudflare R2) in production |
+| `CONTACT_EMAIL` (backend), `NEXT_PUBLIC_CONTACT_EMAIL` (web) | the inbox that receives contact-form messages and the address shown on the site and in legal pages; the committed default is a placeholder |
+| `AI_ENABLED`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `AI_DAILY_LIMIT_PER_USER`, `AI_MAX_INPUT_MESSAGES` | optional AI features, see below |
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE` | optional — leave blank to run without error monitoring locally |
+
+### AI features (optional)
+
+The API can call Claude for four features: a chat-room summary, a board
+digest, task drafts from selected messages, and a per-member stand-up. They
+are off unless `AI_ENABLED=true`; with it off, every AI endpoint answers 404
+and the dashboard hides the buttons. All calls are made server-side through
+a BullMQ `ai` queue and the browser polls a job-status endpoint, so the key
+never reaches a client.
+
+| Variable | Meaning |
+| --- | --- |
+| `AI_ENABLED` | `true` to enable. The API refuses to start if this is `true` and the key or model is missing. |
+| `ANTHROPIC_API_KEY` | Anthropic API key. Set it in your deployment secrets, never in the repo. |
+| `ANTHROPIC_MODEL` | Model ID used for every request. Not hardcoded; pick a current ID from the Anthropic docs. |
+| `AI_DAILY_LIMIT_PER_USER` | Requests per user per UTC day (default 20). Over the limit the API answers 429. |
+| `AI_MAX_INPUT_MESSAGES` | Most chat messages sent in one request (default 200). |
+
+Only the fields a feature needs (author display name, timestamp, text, task
+titles and dates) are sent to Anthropic. Request metadata (user, workspace,
+feature, token counts, latency) is logged; message content and model output
+are not.
 
 ## Layout of the codebase
 
@@ -199,7 +217,7 @@ Create a `.env` in each of `apps/frontend/web`, `apps/frontend/dash`, and
   files, schedules, statistics, search, and settings (Next.js App Router)
 - `apps/backend` — NestJS API, Socket.IO gateway, BullMQ workers, modularized
   by domain (`auth`, `workspace`, `board`, `chat`, `files`, `search`,
-  `statistics`, `notification`, `storage`, `contact`, …)
+  `statistics`, `notification`, `storage`, `contact`, `waitlist`, `ai`, …)
 - `packages/types` — shared domain types and operation-result shapes used by
   both frontends and the backend
 - `packages/styles` — shared Tailwind design tokens/config
@@ -207,12 +225,13 @@ Create a `.env` in each of `apps/frontend/web`, `apps/frontend/dash`, and
 - `packages/i18n` — shared localization strings/hooks (English, Spanish)
 - `stack.yml` — production Docker Swarm deployment definition
 
-## What's simulated
+## About the demo
 
-- No real customers or production workspaces — seed/demo data only.
+- The shared demo account holds seeded sample data. Anyone can open it, so do
+  not enter anything private.
 - Email delivery requires your own SMTP credentials; none are provisioned.
-- Every other layer — auth, queues, real-time sync, data integrity — runs
-  exactly as it would in production.
+- Auth, queues, real-time sync, and data integrity run the same way in the
+  demo as in any other workspace.
 
 ## License
 

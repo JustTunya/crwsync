@@ -8,31 +8,28 @@ web
 
 ## Users
 
-Two distinct audiences, addressed by different surfaces:
+Two audiences, addressed by different surfaces:
 
-- **Portfolio evaluators** (recruiters, hiring managers, technical reviewers,
-  potential clients) — visit the public marketing portal (`apps/frontend/web`)
-  to judge engineering and product-design skill. Their job: quickly assess
-  whether this person can build a real, production-shaped system, not just a
-  static mockup.
-- **Crew/team members** (the in-product fictional persona) — use the
-  authenticated dashboard (`apps/frontend/dash`) as if crwsync were a real
-  SaaS product: sign in, organize work into projects, move tasks on a shared
-  board, invite teammates, watch changes sync in real time.
+- **Small teams and crews** (renovation crews, small studios, volunteer
+  organisations) — evaluate crwsync from the public portal
+  (`apps/frontend/web`) and use the authenticated dashboard
+  (`apps/frontend/dash`): sign in, organize work into projects, move tasks on
+  a shared board, invite teammates, watch changes sync in real time.
+- **Technical evaluators** (engineers, reviewers) — read the "How it's built"
+  part of the portal to judge the architecture.
 
 ## Product Purpose
 
-crwsync is a fictional crew-collaboration platform built as a complete,
-production-shaped application — not a static mockup — to demonstrate a full
-enterprise workflow end to end: sign up → create a project → invite a crew →
-sync tasks and files in real time. Success for the portfolio evaluator is
-recognizing production-grade engineering rigor; success for the in-app persona
-is a workspace that behaves like a real, reliable collaboration product.
+crwsync is a shared workspace for small teams: boards, chat, files, and
+schedules in one place, updated live in every open tab, with optional
+Claude-powered summaries and digests. It is in early access, built by one
+person. Success is a workspace that behaves like a reliable collaboration
+product and a landing page that says plainly what it is.
 
 ## Positioning
 
 Emphasis is **production-grade architecture** over UI polish (though the UI is
-still designed with care). What a neighboring portfolio project could not
+still designed with care). What a neighboring project could not
 truthfully copy: three independently deployable services (public portal,
 authenticated dashboard, NestJS API) sharing one root domain via subdomains,
 real-time state fan-out over Socket.IO with a Redis adapter for horizontal
@@ -65,10 +62,12 @@ resource limits.
 - Auth: short-lived JWTs, HTTP-only secure cookies, bcrypt-hashed passwords,
   scheduled purge of expired sessions.
 - Data: PostgreSQL via Prisma, schema/migrations as source of truth.
-- **This is a demo project**: no real customers or production traffic; seed/
-  demo data only. Email delivery requires the operator's own SMTP
-  credentials — none are provisioned. Every other layer (auth, queues,
-  real-time sync, data integrity) runs as it would in production.
+- **Early access**: the shared demo account holds seeded sample data. Email
+  delivery requires the operator's own SMTP credentials — none are
+  provisioned. Auth, queues, real-time sync, and data integrity run the same
+  way in the demo as in any workspace.
+- Optional AI features (summary, digest, task drafts, stand-up) call the
+  Anthropic API server-side; see the README for configuration.
 - Licensed under PolyForm Noncommercial 1.0.0 — source is public for reading/
   study/personal/educational use; commercial use requires a separate license
   from the author.
@@ -82,16 +81,15 @@ resource limits.
 
 ## Evidence on Hand
 
-- README.md is the authoritative feature/stack description and already
-  reads as polished, professional portfolio copy — treat it as a strong
-  source for claims, not as something to re-derive from scratch.
-- No testimonials, case studies, press, or real customer evidence exist or
-  should be fabricated — this is explicitly a demo/portfolio project.
+- README.md is the authoritative feature/stack description — treat it as a
+  strong source for claims, not as something to re-derive from scratch.
+- No testimonials, case studies, press, customer counts, or pricing exist and
+  none should be fabricated. Use placeholders and flag them.
 
 ## Product Principles
 
 1. Every claim must be truthfully demonstrable in the running app — no
-   claims the code doesn't back up (this is being judged as real
+   claims the code doesn't back up (this is judged as real
    engineering work).
 2. Public marketing surfaces and authenticated product surfaces are built
    and evaluated as genuinely separate services, not one app with a login
