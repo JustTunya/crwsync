@@ -162,7 +162,7 @@ jobs:
             NEXT_PUBLIC_CONTACT_EMAIL=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_CONTACT_EMAIL || '' }}
             NEXT_PUBLIC_DEMO_IDENTIFIER=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DEMO_IDENTIFIER || '' }}
             NEXT_PUBLIC_DEMO_PASSWORD=${{ matrix.app == 'web' && secrets.NEXT_PUBLIC_DEMO_PASSWORD || '' }}
-            NEXT_PUBLIC_SENTRY_DSN=${{ (matrix.app == 'web' && secrets.NEXT_PUBLIC_SENTRY_DSN_WEB) || (matrix.app == 'dash' && secrets.NEXT_PUBLIC_SENTRY_DSN_DASH) || '' }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ (matrix.app == 'web' && secrets.NEXT_PUBLIC_SENTRY_DNS_WEB) || (matrix.app == 'dash' && secrets.NEXT_PUBLIC_SENTRY_DNS_DASH) || '' }}
             SENTRY_ORG=${{ (matrix.app == 'web' || matrix.app == 'dash') && secrets.SENTRY_ORG || '' }}
             SENTRY_PROJECT=${{ (matrix.app == 'web' && secrets.SENTRY_PROJECT_WEB) || (matrix.app == 'dash' && secrets.SENTRY_PROJECT_DASH) || '' }}
             SENTRY_RELEASE=${{ (matrix.app == 'web' || matrix.app == 'dash') && github.sha || '' }}
@@ -187,10 +187,10 @@ jobs:
       NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
       NEXT_PUBLIC_WEB_URL: ${{ secrets.NEXT_PUBLIC_WEB_URL }}
       NEXT_PUBLIC_DASH_URL: ${{ secrets.NEXT_PUBLIC_DASH_URL }}
-      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DNS }}
       SENTRY_RELEASE: ${{ github.sha }}
-      NEXT_PUBLIC_SENTRY_DSN_WEB: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN_WEB }}
-      NEXT_PUBLIC_SENTRY_DSN_DASH: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN_DASH }}
+      NEXT_PUBLIC_SENTRY_DSN_WEB: ${{ secrets.NEXT_PUBLIC_SENTRY_DNS_WEB }}
+      NEXT_PUBLIC_SENTRY_DSN_DASH: ${{ secrets.NEXT_PUBLIC_SENTRY_DNS_DASH }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PRISMA_LOG_QUERY: ${{ secrets.PRISMA_LOG_QUERY }}
       REDIS_PASS: ${{ secrets.REDIS_PASS }}
