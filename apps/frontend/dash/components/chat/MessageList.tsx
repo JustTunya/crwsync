@@ -5,6 +5,7 @@ import type { ChatMessage, ChatReadReceipt } from "@crwsync/types";
 import { format } from "date-fns";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { TypingIndicator, type TypingUser } from "@/components/chat/TypingIndicator";
+import { cn } from "@/lib/utils";
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -18,9 +19,10 @@ interface MessageListProps {
   typingUsers?: TypingUser[];
   markAsRead?: (id: string) => void;
   readReceipts?: Record<string, ChatReadReceipt>;
+  selection?: { selectedIds: Set<string>; onToggle: (id: string) => void };
 }
 
-export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage, onToggleReaction, typingUsers, markAsRead, readReceipts }: MessageListProps) {
+export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage, onToggleReaction, typingUsers, markAsRead, readReceipts, selection }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const wasAtBottomRef = useRef(true);
@@ -162,7 +164,23 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
                 <div className="w-full h-px bg-base-200 rounded-full" />
               </div>
             )}
-            <div id={`msg-${message.id}`} className="flex flex-col">
+            <div id={`msg-${message.id}`} className={cn("flex flex-col", selection && "relative rounded-lg", selection?.selectedIds.has(message.id) && "bg-primary/10")}>
+              {selection && !message.id.startsWith("pending_") && (
+                <button
+                  type="button"
+                  aria-pressed={selection.selectedIds.has(message.id)}
+                  aria-label="Select message"
+                  onClick={() => selection.onToggle(message.id)}
+                  className="absolute inset-0 z-10 cursor-pointer rounded-lg focus-visible:ring-3 focus-visible:ring-primary/50"
+                >
+                  <span
+                    className={cn(
+                      "absolute right-2 top-2 size-4 rounded border-[1.5px]",
+                      selection.selectedIds.has(message.id) ? "border-primary bg-primary" : "border-base-300 bg-background",
+                    )}
+                  />
+                </button>
+              )}
               <MessageBubble
                 message={message}
                 isSelf={message.sender_id === currentUserId}

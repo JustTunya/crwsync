@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import type { ChatMessage } from "@crwsync/types";
 import { useTranslation } from "@crwsync/i18n";
@@ -15,6 +15,8 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { UserAvatar } from "@/components/user-avatar";
 import { LSidebarToggle } from "@/components/l-sidebar";
 import { RSidebarToggle } from "@/components/r-sidebar";
+import { ChatAiActions, TaskDraftsDialog } from "@/components/ai/AiActions";
+import { AI_CONTROL } from "@/components/ai/AiDialog";
 import type { TypingUser } from "@/components/chat/TypingIndicator";
 
 const EMPTY_MESSAGES: ChatMessage[] = [];
@@ -49,6 +51,22 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
   const readReceipts = useChatStore((s) => s.readReceipts.get(roomId)) ?? {};
 
   const { sendMessage, editMessage, deleteMessage, sendTypingStart, sendTypingStop, toggleReaction, markAsRead } = useChatSocket({ workspaceId, roomId, currentUserId });
+
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [draftsOpen, setDraftsOpen] = useState(false);
+
+  const toggleSelecting = () => {
+    setSelecting((v) => !v);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelected = (id: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
 
   const prevLastMessageIdRef = useRef<string | null>(null);
   const lastMessage = messages[messages.length - 1];
@@ -124,7 +142,10 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
             <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{room?.name || "Chat"}</h1>
           )}
         </div>
-        <RSidebarToggle />
+        <div className="flex items-center gap-2">
+          <ChatAiActions workspaceId={workspaceId} roomId={roomId} selecting={selecting} onToggleSelecting={toggleSelecting} />
+          <RSidebarToggle />
+        </div>
       </div>
 
       {!isConnected && (
@@ -142,6 +163,34 @@ export function ChatRoom({ workspaceId, roomId, currentUserId }: ChatRoomProps) 
         typingUsers={typingUsers}
         markAsRead={markAsRead}
         readReceipts={readReceipts}
+        selection={selecting ? { selectedIds, onToggle: toggleSelected } : undefined}
+      />
+
+      {selecting && (
+        <div className="flex items-center justify-between gap-3 border-t border-base-200 bg-muted/40 px-4 py-2">
+          <p className="text-xs font-semibold text-muted-foreground">
+            {selectedIds.size === 0 ? "Select the messages to turn into tasks." : `${selectedIds.size} selected`}
+          </p>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={toggleSelecting} className={AI_CONTROL}>
+              Cancel
+            </button>
+            <button type="button" disabled={selectedIds.size === 0} onClick={() => setDraftsOpen(true)} className={AI_CONTROL}>
+              Draft tasks with AI
+            </button>
+          </div>
+        </div>
+      )}
+
+      <TaskDraftsDialog
+        workspaceId={workspaceId}
+        roomId={roomId}
+        messageIds={[...selectedIds]}
+        open={draftsOpen}
+        onOpenChange={(open) => {
+          setDraftsOpen(open);
+          if (!open) toggleSelecting();
+        }}
       />
 
       <ChatInput

@@ -10,6 +10,7 @@ import { useWorkspace } from "@/providers/workspace.provider";
 import { KanbanCol } from "@/components/kanban/KanbanCol";
 import { KanbanTaskOverlay } from "@/components/kanban/KanbanTask";
 import { BoardToolbar } from "@/components/kanban/BoardToolbar";
+import { DigestBoardButton } from "@/components/ai/AiActions";
 import { BoardListView } from "@/components/kanban/BoardListView";
 import { useBoard, useCreateColumn, useCreateTask, useMoveTask } from "@/hooks/use-boards";
 import { useBoardSocket } from "@/hooks/use-board-socket";
@@ -244,7 +245,10 @@ export default function BoardPage() {
           <LSidebarToggle />
           <h1 className="text-lg font-semibold leading-tight overflow-hidden text-ellipsis">{board.name}</h1>
         </div>
-        <RSidebarToggle />
+        <div className="flex items-center gap-2">
+          <DigestBoardButton workspaceId={workspaceId} boardId={board.id} />
+          <RSidebarToggle />
+        </div>
       </div>
 
       <BoardToolbar

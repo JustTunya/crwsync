@@ -25,8 +25,9 @@ export async function joinWaitlist(data: WaitlistPayload): Promise<WaitlistState
   } catch (error) {
     if (isAxiosError(error)) {
       if (error.response?.status === 429) return { success: false, message: "Too many requests. Please try again later." };
-      const message = error.response?.data?.message;
-      return { success: false, message: Array.isArray(message) ? message[0] : message || "An unexpected error occurred" };
+      const detail = error.response?.data?.error;
+      const message = typeof detail === "string" ? detail : detail?.message;
+      return { success: false, message: (Array.isArray(message) ? message[0] : message) || "An unexpected error occurred" };
     }
     return { success: false, message: "An unexpected error occurred" };
   }
