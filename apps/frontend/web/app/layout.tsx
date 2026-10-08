@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import { I18nProvider } from "@crwsync/i18n";
 import { SkipToContent } from "@/components/a11y/skip-to-content";
 import { siteUrl } from "@/lib/site";
 import "@crwsync/styles";
 
-const figtree = Figtree({
+const figtree = localFont({
+  src: "./fonts/figtree-latin-wght.woff2",
   variable: "--font-figtree",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "800"],
+  weight: "300 800",
   display: "swap",
   preload: true,
   fallback: ["system-ui", "arial"],
-  adjustFontFallback: true
+  adjustFontFallback: "Arial"
 });
 
 const title = "crwsync: boards, chat, and files for small teams";
