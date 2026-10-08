@@ -362,3 +362,12 @@ Tier 1 alone is not "requires no additional changes or updates" — no shipped s
 2. **Incidents Are Visible, Not Silent**: error tracking and log aggregation exist across all three apps.
 3. **Security Is a Process, Not a One-Off Fix**: recurring dependency scans and a documented rotation/audit cadence exist.
 4. **The Product Is Legally and Operationally Deployable**: legal pages, data export/deletion, and full auth flows (reset, verification) exist.
+
+---
+
+## 7. Business Direction (Planned)
+
+- **Now:** free early access through the waitlist; the shared demo shows the product with sample data.
+- **Next:** a paid tier for larger teams, with limits and pricing to be decided from waitlist feedback.
+- **Later:** a hosted product with a documented self-host path under FSL-1.1-ALv2.
+- AI features stay optional, member-triggered and capped per user per day, so cost per workspace stays predictable.

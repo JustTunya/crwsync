@@ -7,12 +7,13 @@ const columns = [
     links: [
       { href: "/auth/signin", label: "Sign in" },
       { href: "/auth/signup", label: "Create account" },
-      { href: "/#product", label: "Surfaces" },
-      { href: "/#architecture", label: "Architecture" },
+      { href: "/#product", label: "Product" },
+      { href: "/#early-access", label: "Early access" },
+      { href: "/#built", label: "How it's built" },
     ],
   },
   {
-    title: "Builder",
+    title: "Company",
     links: [
       { href: "https://github.com/justtunya/crwsync", label: "Source on GitHub" },
       { href: "https://www.linkedin.com/in/lenard-tunya/", label: "LinkedIn" },
@@ -38,9 +39,19 @@ export default function Footer() {
             <Image src="/logo@white.svg" alt="crwsync" width={162} height={24} className="hidden h-6 w-auto dark:block" />
           </Link>
           <p className="max-w-[40ch] text-sm text-muted-foreground">
-            A production-shaped collaboration platform, built solo as a portfolio system. Demo data only.
+            Boards, chat, and files for small teams.
           </p>
           <p className="text-xs text-muted-foreground">© 2026 Tunya Lénárd-Sándor. All rights reserved.</p>
+          <p className="max-w-[48ch] text-xs text-muted-foreground">
+            Source available under the{" "}
+            <Link
+              href="https://github.com/justtunya/crwsync/blob/main/LICENSE"
+              className="underline underline-offset-2 hover:text-foreground"
+            >
+              Functional Source License 1.1 (Apache 2.0 future license)
+            </Link>
+            .
+          </p>
         </div>
         {columns.map((column) => (
           <div key={column.title} className="md:col-span-2">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Header from "@/components/home/header";
 import Footer from "@/components/home/footer";
+import { contactEmail } from "@/lib/site";
 
 interface LegalPageProps {
   eyebrow: string;
@@ -28,12 +29,10 @@ export function LegalPage({ eyebrow, title, lastUpdated, children }: LegalPagePr
 
           <div className="p-6 sm:p-8 bg-linear-to-br from-foreground/8 via-foreground/5 to-foreground/4 border-[1.5px] border-foreground/10 backdrop-saturate-100 shadow-md shadow-black/5 rounded-xl">
             <p className="text-sm text-muted-foreground leading-relaxed">
-              crwsync is a solo-built portfolio project demonstrating a production-shaped SaaS architecture — not a
-              company with live customers. This document is written the way a real product&apos;s would be, so you
-              can judge that engineering discipline for yourself, but no real personal data is processed outside of
-              what you enter into this demo. Questions go to{" "}
-              <a href="mailto:support@crwsync.xyz" className="text-accent underline underline-offset-2">
-                support@crwsync.xyz
+              crwsync is an early-stage workspace product built and run by one person. This page describes how the
+              service handles your account and workspace data. Questions go to{" "}
+              <a href={`mailto:${contactEmail}`} className="text-accent underline underline-offset-2">
+                {contactEmail}
               </a>
               .
             </p>

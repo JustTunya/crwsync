@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import type { MemberWorkloadStat } from "@crwsync/types";
 import { UserAvatar } from "@/components/user-avatar";
+import { MemberStandup } from "@/components/ai/AiActions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,7 @@ export function MemberWorkloadTable({
                   <th className="pb-2.5 font-medium text-center">Completed</th>
                   <th className="pb-2.5 font-medium text-center">Overdue</th>
                   <th className="pb-2.5 font-medium text-right">Avg. Cycle Time</th>
+                  <th className="pb-2.5"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
@@ -147,6 +149,10 @@ export function MemberWorkloadTable({
                         <span className="font-semibold tabular-nums text-foreground font-mono">
                           {formatCycleTime(member.avgCycleTimeSeconds)}
                         </span>
+                      </td>
+
+                      <td className="py-3 pl-3 text-right">
+                        <MemberStandup memberId={member.userId} name={member.name} />
                       </td>
                     </tr>
                   );

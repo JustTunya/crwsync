@@ -7,6 +7,7 @@ describe("EmailService", () => {
   let mailerService: { sendMail: jest.Mock };
 
   beforeEach(() => {
+    process.env.CONTACT_EMAIL = "contact@example.com";
     mailerService = { sendMail: jest.fn().mockResolvedValue(undefined) };
     service = new EmailService(mailerService as unknown as MailerService);
   });
@@ -25,8 +26,18 @@ describe("EmailService", () => {
       to: "user@example.com",
       subject: "Welcome",
       template: "./welcome",
-      context: { name: "Alex" },
+      context: { contactEmail: "contact@example.com", name: "Alex" },
     });
+  });
+
+  it("falls back to the default contact email when CONTACT_EMAIL is unset", async () => {
+    delete process.env.CONTACT_EMAIL;
+
+    await service.sendEmail({ to: "user@example.com", subject: "Welcome", template: "./welcome", context: {} });
+
+    expect(mailerService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ context: { contactEmail: "contact@crwsync.xyz" } }),
+    );
   });
 
   it("propagates errors from the mailer service", async () => {

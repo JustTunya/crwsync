@@ -32,6 +32,8 @@ import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { RolesGuard } from "src/common/guards/roles.guard";
 import { BullModule } from "@nestjs/bullmq";
 import { ContactModule } from "src/contact/contact.module";
+import { WaitlistModule } from "src/waitlist/waitlist.module";
+import { AiModule } from "src/ai/ai.module";
 
 @Module({
   imports: [
@@ -75,6 +77,8 @@ import { ContactModule } from "src/contact/contact.module";
     ChatModule,
     FilesModule,
     ContactModule,
+    WaitlistModule,
+    AiModule,
     NotificationModule,
     StatisticsModule,
   ],

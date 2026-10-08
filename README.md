@@ -6,41 +6,55 @@
   <img src="apps/frontend/web/public/logo@orange.svg" alt="CRWSync" width="280">
 </picture>
 
-### Real-Time Collaborative Workspace Platform
+### The shared workspace for small teams, with Claude built in
 
-An enterprise-grade collaborative workspace, engineered end to end — public
-portal, authenticated dashboard, and a horizontally scalable real-time
-backend keeping tasks, files, and distributed teams in perfect sync.
-Portfolio project.
+Boards, chat, files, and schedules in one place, live in every open tab, with
+optional Claude-powered summaries, digests, task drafts, and stand-up notes.
+
+**Early access** · built by [Tunya Lénárd-Sándor](https://www.linkedin.com/in/lenard-tunya/) ·
+[Join the waitlist](https://crwsync.xyz/#early-access) · a shared demo with sample data is available from the site
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat&logo=nextdotjs&logoColor=white&labelColor=1A1816)](https://nextjs.org)
-[![React](https://img.shields.io/badge/React-19-149ECA?style=flat&logo=react&logoColor=white&labelColor=1A1816)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white&labelColor=1A1816)](https://www.typescriptlang.org)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38BDF8?style=flat&logo=tailwindcss&logoColor=white&labelColor=1A1816)](https://tailwindcss.com)
-[![Framer Motion](https://img.shields.io/badge/Framer_Motion-Animation-C85A2A?style=flat&logo=framer&logoColor=white&labelColor=1A1816)](https://www.framer.com/motion/)
 [![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=flat&logo=nestjs&logoColor=white&labelColor=1A1816)](https://nestjs.com)
-[![Prisma](https://img.shields.io/badge/Prisma-7-3982CE?style=flat&logo=prisma&logoColor=white&labelColor=1A1816)](https://www.prisma.io)
-[![Socket.IO](https://img.shields.io/badge/Socket.IO-Realtime-010101?style=flat&logo=socketdotio&logoColor=white&labelColor=1A1816)](https://socket.io)
-[![BullMQ](https://img.shields.io/badge/BullMQ-Queues-DC2626?style=flat&labelColor=1A1816)](https://docs.bullmq.io)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql&logoColor=white&labelColor=1A1816)](https://www.postgresql.org)
-[![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat&logo=redis&logoColor=white&labelColor=1A1816)](https://redis.io)
-[![Turborepo](https://img.shields.io/badge/Turborepo-Monorepo-EF4444?style=flat&logo=turborepo&logoColor=white&labelColor=1A1816)](https://turbo.build)
-[![pnpm](https://img.shields.io/badge/pnpm-10-F69220?style=flat&logo=pnpm&logoColor=white&labelColor=1A1816)](https://pnpm.io)
-[![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-B93826?style=flat&labelColor=1A1816)](LICENSE)
+[![License: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-B93826?style=flat&labelColor=1A1816)](LICENSE)
 
 </div>
 
 ---
 
-## About
+## Why crwsync
 
-crwsync is a fictional crew-collaboration platform built as a complete,
-production-shaped application — not a static mockup. It demonstrates a real
-enterprise workflow with the rigor of a production system: a team signs in,
-organizes work into projects, moves tasks around a shared board, and watches
-teammates' changes land instantly, while a decoupled backend enforces auth,
-queues background work, and fans out real-time state over WebSockets at
-scale.
+Small teams often run work across a task tracker, a chat app, and a file
+drive, and lose context moving between them. crwsync keeps boards, chat, files,
+and schedules in one workspace, and uses Claude to keep long threads and busy
+boards readable.
+
+## Claude-powered
+
+- **Chat summaries** — catch up on a busy room in a few lines.
+- **Board digests** — what moved, what is stuck, what is due.
+- **Task drafts from messages** — turn a thread into draft tasks; nothing is created until a member confirms.
+- **Stand-up notes** — a per-member yesterday, today, and blockers note.
+
+Optional, off by default, server-side only, and member-triggered. See
+[AI features](#ai-features-optional) for configuration and data handling.
+
+## Business direction
+
+Planned, not yet built: free early access today, a paid tier for larger teams,
+and a hosted product with a documented self-host path. No prices are set.
+Commercial licensing or partnership: contact@crwsync.xyz.
+
+## Architecture at a glance
+
+
+crwsync is a shared workspace for small teams and crews that run work from
+boards, chat, and files. A team signs in, organizes work into projects, moves
+tasks around a shared board, and watches teammates' changes land instantly,
+while a decoupled backend enforces auth, queues background work, and fans out
+real-time state over WebSockets.
 
 The architecture reflects deliberate separation of concerns rather than a
 single monolith: three independently deployable services — a public
@@ -48,12 +62,6 @@ marketing portal, an authenticated dashboard, and a NestJS API — share one
 root domain via subdomains in production, isolating public traffic from
 authenticated workloads, and run together locally through a unified
 Turborepo pipeline.
-
-**This is a demo project.** No real customers, no production traffic. It
-exists to showcase a complete, enterprise-grade collaborative-workspace flow
-end to end: sign up → create a project → invite a crew → sync tasks and
-files in real time, with the same auth, queueing, and real-time
-infrastructure a production SaaS product would run.
 
 ## Features
 
@@ -190,7 +198,31 @@ Create a `.env` in each of `apps/frontend/web`, `apps/frontend/dash`, and
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS` | an SMTP provider (e.g. Zoho Mail), for transactional email |
 | `CORS_ORIGIN`, `APP_URL`, `ACCESS_COOKIE_DOMAIN`, `REFRESH_COOKIE_DOMAIN` | `localhost` for local dev |
 | `STORAGE_ENDPOINT`, `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_REGION` | `docker-compose.dev.yml` MinIO credentials locally; an S3-compatible bucket (e.g. Cloudflare R2) in production |
+| `CONTACT_EMAIL` (backend), `NEXT_PUBLIC_CONTACT_EMAIL` (web) | the inbox that receives contact-form messages and the address shown on the site and in legal pages; the committed default is a placeholder |
+| `AI_ENABLED`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `AI_DAILY_LIMIT_PER_USER`, `AI_MAX_INPUT_MESSAGES` | optional AI features, see below |
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE` | optional — leave blank to run without error monitoring locally |
+
+### AI features (optional)
+
+The API can call Claude for four features: a chat-room summary, a board
+digest, task drafts from selected messages, and a per-member stand-up. They
+are off unless `AI_ENABLED=true`; with it off, every AI endpoint answers 404
+and the dashboard hides the buttons. All calls are made server-side through
+a BullMQ `ai` queue and the browser polls a job-status endpoint, so the key
+never reaches a client.
+
+| Variable | Meaning |
+| --- | --- |
+| `AI_ENABLED` | `true` to enable. The API refuses to start if this is `true` and the key or model is missing. |
+| `ANTHROPIC_API_KEY` | Anthropic API key. Set it in your deployment secrets, never in the repo. |
+| `ANTHROPIC_MODEL` | Model ID used for every request. Not hardcoded; pick a current ID from the Anthropic docs. |
+| `AI_DAILY_LIMIT_PER_USER` | Requests per user per UTC day (default 20). Over the limit the API answers 429. |
+| `AI_MAX_INPUT_MESSAGES` | Most chat messages sent in one request (default 200). |
+
+Only the fields a feature needs (author display name, timestamp, text, task
+titles and dates) are sent to Anthropic. Request metadata (user, workspace,
+feature, token counts, latency) is logged; message content and model output
+are not.
 
 ## Layout of the codebase
 
@@ -199,7 +231,7 @@ Create a `.env` in each of `apps/frontend/web`, `apps/frontend/dash`, and
   files, schedules, statistics, search, and settings (Next.js App Router)
 - `apps/backend` — NestJS API, Socket.IO gateway, BullMQ workers, modularized
   by domain (`auth`, `workspace`, `board`, `chat`, `files`, `search`,
-  `statistics`, `notification`, `storage`, `contact`, …)
+  `statistics`, `notification`, `storage`, `contact`, `waitlist`, `ai`, …)
 - `packages/types` — shared domain types and operation-result shapes used by
   both frontends and the backend
 - `packages/styles` — shared Tailwind design tokens/config
@@ -207,18 +239,17 @@ Create a `.env` in each of `apps/frontend/web`, `apps/frontend/dash`, and
 - `packages/i18n` — shared localization strings/hooks (English, Spanish)
 - `stack.yml` — production Docker Swarm deployment definition
 
-## What's simulated
+## About the demo
 
-- No real customers or production workspaces — seed/demo data only.
+- The shared demo account holds seeded sample data. Anyone can open it, so do
+  not enter anything private.
 - Email delivery requires your own SMTP credentials; none are provisioned.
-- Every other layer — auth, queues, real-time sync, data integrity — runs
-  exactly as it would in production.
+- Auth, queues, real-time sync, and data integrity run the same way in the
+  demo as in any other workspace.
 
 ## License
 
-Licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE).
-
-The source is public so it can be read, studied, and used for personal or
-educational purposes. **Commercial use — including running this as, or as
-part of, an actual business — is not permitted without a separate license
-from the author.** Reach out if you'd like to discuss one.
+Source-available under the [Functional Source License 1.1, Apache 2.0 future license](LICENSE)
+(FSL-1.1-ALv2). You can read, study, and use the code for any purpose except
+offering a competing product or service; each release converts to Apache 2.0
+two years after publication. Commercial licensing: contact@crwsync.xyz.

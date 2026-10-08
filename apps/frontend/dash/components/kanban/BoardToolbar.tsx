@@ -10,12 +10,15 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { UserAvatar } from "@/components/user-avatar";
 import { useWorkspaceMembers } from "@/hooks/use-workspaces";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { BarToggle, CollapsibleBar } from "@/components/collapsible-bar";
 import { cn } from "@/lib/utils";
 import type { BoardFilters, BoardFilterListKey, BoardViewMode, DueDateFilter } from "@/hooks/use-board-filters";
 
 // Shared "glass control" surface — the visual baseline every toolbar button, select and toggle shares.
 const CONTROL =
   "flex items-center h-8 gap-1.5 px-3 rounded-lg border-[1.5px] border-base-300 bg-foreground/10 shadow-md/5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/15 outline-none focus-visible:ring-3 focus-visible:ring-primary/50 focus-visible:border-primary cursor-pointer";
+
+export const FILTER_BAR_ID = "board-filter-bar";
 
 const PRIORITY_DOT: Record<TaskPriorityEnum, string> = {
   NONE: "bg-muted-foreground",
@@ -45,6 +48,8 @@ interface BoardToolbarProps {
   onSetView: (value: BoardViewMode) => void;
   onClearFilters: () => void;
   onAddColumn: () => void;
+  open: boolean;
+  onClose: () => void;
 }
 
 export function BoardToolbar({
@@ -59,6 +64,8 @@ export function BoardToolbar({
   onSetView,
   onClearFilters,
   onAddColumn,
+  open,
+  onClose,
 }: BoardToolbarProps) {
   const { data: members } = useWorkspaceMembers(workspaceId);
   const assignableMembers = (members ?? []).filter((m) => availableAssigneeIds.has(m.user_id));
@@ -132,10 +139,10 @@ export function BoardToolbar({
     sections.push({ label: "Due date", rows: dueRows });
 
     return (
-      <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-base-200 shrink-0">
+      <CollapsibleBar id={FILTER_BAR_ID} label="Filters" open={open} onClose={onClose}>
         <MobileFilterSheet count={activeFilterCount} onClearFilters={onClearFilters} sections={sections} />
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 ml-auto">
           {view === "kanban" && (
             <button type="button" aria-label="Add column" onClick={onAddColumn} className={cn(CONTROL, "px-2.5")}>
               <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
@@ -143,13 +150,13 @@ export function BoardToolbar({
           )}
           {viewToggle}
         </div>
-      </div>
+      </CollapsibleBar>
     );
   }
 
   return (
-    <div className="flex items-center justify-between gap-2 px-6 py-2.5 border-b border-base-200 shrink-0 flex-wrap">
-      <div className="flex items-center gap-2 flex-wrap">
+    <CollapsibleBar id={FILTER_BAR_ID} label="Filters" open={open} onClose={onClose}>
+      <div className="flex items-center gap-2 flex-wrap flex-1">
         {assignableMembers.length > 0 && (
           <FilterPopover label="Assignee" icon={UserIcon} count={filters.assignees.length}>
             {assigneeRows}
@@ -188,8 +195,12 @@ export function BoardToolbar({
 
         {viewToggle}
       </div>
-    </div>
+    </CollapsibleBar>
   );
+}
+
+export function FilterBarToggle({ open, onToggle, count }: { open: boolean; onToggle: () => void; count: number }) {
+  return <BarToggle id={FILTER_BAR_ID} label="Filters" icon={FilterIcon} open={open} onToggle={onToggle} badge={count} />;
 }
 
 function FilterPopover({ label, icon, count, active, children }: { label: string; icon: HugeiconsIconProps["icon"]; count?: number; active?: boolean; children: React.ReactNode }) {

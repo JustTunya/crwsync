@@ -559,3 +559,13 @@ model Notification {
   @@index([user_id, is_read, created_at], map: "idx_notification_user_unread")
   @@map("notifications")
 }
+
+model WaitlistEntry {
+  id         String   @id @default(uuid()) @db.Uuid
+  email      String   @unique(map: "idx_waitlist_email") @db.Citext
+  team_size  String   @db.Text
+  use_case   String?  @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  @@map("waitlist_entries")
+}

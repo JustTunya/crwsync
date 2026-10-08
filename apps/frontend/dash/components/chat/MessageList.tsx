@@ -3,8 +3,10 @@
 import { useEffect, useRef, Fragment } from "react";
 import type { ChatMessage, ChatReadReceipt } from "@crwsync/types";
 import { format } from "date-fns";
+import { CheckIcon } from "lucide-react";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { TypingIndicator, type TypingUser } from "@/components/chat/TypingIndicator";
+import { cn } from "@/lib/utils";
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -18,9 +20,10 @@ interface MessageListProps {
   typingUsers?: TypingUser[];
   markAsRead?: (id: string) => void;
   readReceipts?: Record<string, ChatReadReceipt>;
+  selection?: { selectedIds: Set<string>; onToggle: (id: string) => void };
 }
 
-export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage, onToggleReaction, typingUsers, markAsRead, readReceipts }: MessageListProps) {
+export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLoadingMore, onEditMessage, onDeleteMessage, onToggleReaction, typingUsers, markAsRead, readReceipts, selection }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const wasAtBottomRef = useRef(true);
@@ -150,6 +153,8 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
 
       {messages.map((message, index) => {
         const showDate = isNewDay(index);
+        const selected = !!selection?.selectedIds.has(message.id);
+        const selectable = !!selection && !message.id.startsWith("pending_");
 
         return (
           <Fragment key={message.id}>
@@ -162,20 +167,54 @@ export function MessageList({ messages, currentUserId, onLoadMore, hasMore, isLo
                 <div className="w-full h-px bg-base-200 rounded-full" />
               </div>
             )}
-            <div id={`msg-${message.id}`} className="flex flex-col">
-              <MessageBubble
-                message={message}
-                isSelf={message.sender_id === currentUserId}
-                isConsecutive={isConsecutive(index)}
-                isLastInGroup={isLastInGroup(index)}
-                isPending={message.id.startsWith("pending_")}
-                onEditMessage={onEditMessage}
-                onDeleteMessage={onDeleteMessage}
-                onToggleReaction={onToggleReaction}
-                readReceipts={Object.values(readReceipts || {}).filter(
-                  (r) => r.message_id === message.id && r.user_id !== currentUserId
-                )}
-              />
+            <div
+              id={`msg-${message.id}`}
+              onClick={
+                selectable
+                  ? (e) => !(e.target as HTMLElement).closest("button, a, input") && selection.onToggle(message.id)
+                  : undefined
+              }
+              className={cn(
+                "flex",
+                selection && "items-stretch rounded-lg transition-colors",
+                selectable && "cursor-pointer hover:bg-muted/50",
+                selected && "bg-primary/10 hover:bg-primary/10",
+              )}
+            >
+              {selection && (
+                <div className="flex w-11 shrink-0 items-center justify-center">
+                  {selectable && (
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={selected}
+                      aria-label="Select message"
+                      onClick={() => selection.onToggle(message.id)}
+                      className={cn(
+                        "flex size-6 cursor-pointer items-center justify-center rounded-md border-2 outline-none transition-colors focus-visible:ring-3 focus-visible:ring-primary/50",
+                        selected ? "border-primary bg-primary text-primary-foreground" : "border-base-300 bg-background hover:border-primary",
+                      )}
+                    >
+                      {selected && <CheckIcon className="size-4" strokeWidth={3} />}
+                    </button>
+                  )}
+                </div>
+              )}
+              <div className="flex min-w-0 flex-1 flex-col">
+                <MessageBubble
+                  message={message}
+                  isSelf={message.sender_id === currentUserId}
+                  isConsecutive={isConsecutive(index)}
+                  isLastInGroup={isLastInGroup(index)}
+                  isPending={message.id.startsWith("pending_")}
+                  onEditMessage={onEditMessage}
+                  onDeleteMessage={onDeleteMessage}
+                  onToggleReaction={onToggleReaction}
+                  readReceipts={Object.values(readReceipts || {}).filter(
+                    (r) => r.message_id === message.id && r.user_id !== currentUserId
+                  )}
+                />
+              </div>
             </div>
           </Fragment>
         );

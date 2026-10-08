@@ -11,7 +11,7 @@ export class EmailService {
       to: data.to,
       subject: data.subject,
       template: data.template,
-      context: data.context,
+      context: { contactEmail: process.env.CONTACT_EMAIL ?? "contact@crwsync.xyz", ...data.context },
     });
   }
 }

@@ -53,8 +53,8 @@ const runtimeGroups: Group[] = [
   {
     label: "Edge",
     nodes: [
-      { id: "cloudflare", label: "Cloudflare", detail: "DNS, TLS, CDN, DDoS", icon: "./cloudflare.svg" },
-      { id: "nginx", label: "Nginx", detail: "Routing per subdomain", icon: "./nginx.svg" },
+      { id: "cloudflare", label: "Cloudflare", detail: "DNS, TLS, CDN, DDoS", icon: "/cloudflare.svg" },
+      { id: "nginx", label: "Nginx", detail: "Routing per subdomain", icon: "/nginx.svg" },
     ],
   },
   {
@@ -101,16 +101,16 @@ const pipelineGroups: Group[] = [
   {
     label: "CI",
     nodes: [
-      { id: "git", label: "Push to main", detail: "Triggers the pipeline", icon: "./github.svg" },
-      { id: "lint", label: "Lint", detail: "Every package", icon: "./eslint.svg" },
-      { id: "test", label: "Unit tests", detail: "Every package", icon: "./jest.svg" },
+      { id: "git", label: "Push to main", detail: "Triggers the pipeline", icon: "/github.svg" },
+      { id: "lint", label: "Lint", detail: "Every package", icon: "/eslint.svg" },
+      { id: "test", label: "Unit tests", detail: "Every package", icon: "/jest.svg" },
     ],
   },
   {
     label: "CD",
     nodes: [
-      { id: "build", label: "Docker build", detail: "One image per service", icon: "./docker.svg" },
-      { id: "ghcr", label: "Registry", detail: "Pushed to GHCR", icon: "./github.svg" },
+      { id: "build", label: "Docker build", detail: "One image per service", icon: "/docker.svg" },
+      { id: "ghcr", label: "Registry", detail: "Pushed to GHCR", icon: "/github.svg" },
       { id: "deploy", label: "Deploy", detail: "Swarm rolling update", icon: Rocket01Icon, fillIcon: true },
     ],
   },

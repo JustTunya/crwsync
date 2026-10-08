@@ -9,15 +9,15 @@ export class ContactService {
   constructor(private readonly emailService: EmailService) {}
 
   async submitContact(dto: ContactDto): Promise<void> {
-    const adminEmail = process.env.ADMIN_MAIL;
+    const contactEmail = process.env.CONTACT_EMAIL;
     
-    if (!adminEmail) {
-      this.logger.error("ADMIN_MAIL is not defined in environment variables. Cannot send contact form submission.");
+    if (!contactEmail) {
+      this.logger.error("CONTACT_EMAIL is not defined in environment variables. Cannot send contact form submission.");
       return;
     }
 
     await this.emailService.sendEmail({
-      to: adminEmail,
+      to: contactEmail,
       subject: `New Contact from ${dto.name}`,
       template: "./contact-form",
       context: {

@@ -6,6 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { CancelCircleIcon, CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import { submitContactMessage } from "@/services/contact.service";
 import { cn } from "@/lib/utils";
+import { contactEmail } from "@/lib/site";
 
 const inputClass =
   "w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-placeholder transition-[border-color,box-shadow] hover:border-foreground/30 focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20";
@@ -16,13 +17,11 @@ export function Builder() {
       <div className="mx-auto grid max-w-6xl lg:grid-cols-2 lg:border-x lg:border-border">
         <div className="px-4 sm:px-8 py-16 sm:py-24 lg:border-r lg:border-border">
           <h2 id="contact-title" className="text-3xl sm:text-4xl font-bold tracking-tight leading-[1.1] text-balance">
-            Built solo by Tunya Lénárd-Sándor
+            Built by Tunya Lénárd-Sándor
           </h2>
           <p className="mt-5 max-w-[56ch] text-base sm:text-lg text-muted-foreground text-pretty">
-            Portal, dashboard, API, queues, real-time layer, and deployment, all from one keyboard. crwsync exists to show what a production-shaped system looks like when one engineer owns every layer of it.
-          </p>
-          <p className="mt-4 max-w-[56ch] text-base text-muted-foreground text-pretty">
-            Open to full-stack and platform roles, and to contract work. If the architecture on this page is the kind you want in your team, send a message.
+            Solo founder and the only engineer so far. Questions about the product, the waitlist, or how something is built can go through the form or to{" "}
+            <a href={`mailto:${contactEmail}`} className="text-foreground underline underline-offset-2">{contactEmail}</a>.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -30,7 +29,7 @@ export function Builder() {
               href="https://github.com/justtunya/crwsync"
               className="inline-flex h-10 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold transition-colors hover:border-foreground/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
-              Read the source on GitHub
+              GitHub
             </Link>
             <Link
               href="https://www.linkedin.com/in/lenard-tunya/"
@@ -43,15 +42,11 @@ export function Builder() {
           <dl className="mt-10 grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
             <div>
               <dt className="font-semibold">What is simulated</dt>
-              <dd className="mt-1 text-muted-foreground">Demo data only, no real customers. Email delivery needs your own SMTP credentials.</dd>
+              <dd className="mt-1 text-muted-foreground">The workspace content. The boards, rooms, and files in the shared demo account are seeded sample data.</dd>
             </div>
             <div>
               <dt className="font-semibold">What is not</dt>
-              <dd className="mt-1 text-muted-foreground">Auth, queues, real-time sync, and data integrity run exactly as they would in production.</dd>
-            </div>
-            <div>
-              <dt className="font-semibold">License</dt>
-              <dd className="mt-1 text-muted-foreground">PolyForm Noncommercial 1.0.0. Read it, study it, run it for yourself. Commercial use needs a separate license.</dd>
+              <dd className="mt-1 text-muted-foreground">Auth, queues, real-time sync, and data integrity run the same way in the demo as in any other workspace.</dd>
             </div>
             <div>
               <dt className="font-semibold">Stack</dt>
@@ -129,7 +124,7 @@ function ContactForm() {
           rows={6}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="A role, a project, or a question about how something here is built."
+          placeholder="A question about the product, the waitlist, or how something here is built."
           className={cn(inputClass, "resize-y min-h-32")}
         />
       </div>

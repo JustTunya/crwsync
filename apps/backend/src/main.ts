@@ -62,6 +62,15 @@ async function bootstrap() {
     }
   }
 
+  if (config.get<string>("AI_ENABLED") === "true") {
+    for (const key of ["ANTHROPIC_API_KEY", "ANTHROPIC_MODEL"]) {
+      if (!config.get<string>(key)) {
+        logger.error(`${key} must be set when AI_ENABLED=true`);
+        process.exit(1);
+      }
+    }
+  }
+
   const cookieSecret = config.get<string>("COOKIE_SECRET");
   app.use(cookieParser(cookieSecret));
 
