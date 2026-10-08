@@ -30,6 +30,16 @@ describe("EmailService", () => {
     });
   });
 
+  it("falls back to the default contact email when CONTACT_EMAIL is unset", async () => {
+    delete process.env.CONTACT_EMAIL;
+
+    await service.sendEmail({ to: "user@example.com", subject: "Welcome", template: "./welcome", context: {} });
+
+    expect(mailerService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ context: { contactEmail: "contact@crwsync.xyz" } }),
+    );
+  });
+
   it("propagates errors from the mailer service", async () => {
     mailerService.sendMail.mockRejectedValue(new Error("SMTP down"));
 
