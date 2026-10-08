@@ -9,6 +9,7 @@ import { GlassBox } from "@/components/ui/glassbox";
 import { Button } from "@/components/ui/button";
 import { Lead } from "@/components/ui/lead";
 import { variants } from "@/lib/utils";
+import { contactEmail } from "@/lib/site";
 
 type Status = "pending" | "success" | "expired" | "error";
 
@@ -140,8 +141,8 @@ export function EmailVerification({ token }: { token: string | null }) {
               />
               <p className="text-xs sm:text-sm text-center text-muted-foreground">
                 Still stuck? Contact{" "}
-                <a className="text-primary underline underline-offset-2" href="mailto:support@crwsync.xyz">
-                  support@crwsync.xyz
+                <a className="text-primary underline underline-offset-2" href={`mailto:${contactEmail}`}>
+                  {contactEmail}
                 </a>
               </p>
             </div>

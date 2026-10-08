@@ -11,6 +11,8 @@ import Architecture from "@/components/home/architecture";
 import { Rigor } from "@/components/home/rigor";
 import { FinalCta } from "@/components/home/final-cta";
 import { Builder } from "@/components/home/builder";
+import { WhoFor } from "@/components/home/who-for";
+import { EarlyAccess } from "@/components/home/early-access";
 import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -31,7 +33,7 @@ const softwareApplication = {
   url: siteUrl,
   image: `${siteUrl}/demo/poster.png`,
   description:
-    "A production-shaped team workspace: boards, chat, files, and schedules kept in sync over WebSockets, behind a NestJS API with Redis fan-out, BullMQ queues, and Postgres.",
+    "A shared workspace for small teams: task boards, chat rooms, files, and schedules in one place, updated live in every open tab.",
   author,
   codeRepository: "https://github.com/justtunya/crwsync",
   license: "https://polyformproject.org/licenses/noncommercial/1.0.0/",
@@ -53,15 +55,14 @@ export default function Home() {
       <main id="main-content" className="flex-1">
         <MotionRoot>
           <Hero />
-          <Topology />
 
           <Section
-            id="sync"
-            title="One write. Every tab, every instance."
-            lead="Every change takes the same path: the dashboard updates at once, the API validates and persists, and the gateway fans the confirmed state out to everyone else. Pick a flow and step through what actually runs."
+            id="who"
+            title="Who it's for"
+            lead="Small teams and crews that run their work from boards, chat, and files, and want it in one place. These are example scenarios, not customer accounts."
           >
             <Reveal>
-              <WritePath />
+              <WhoFor />
             </Reveal>
           </Section>
 
@@ -72,6 +73,26 @@ export default function Home() {
           >
             <Reveal>
               <Surfaces />
+            </Reveal>
+          </Section>
+
+          <EarlyAccess />
+
+          <Section
+            id="built"
+            title="How it's built"
+            lead="For technical evaluators: the services, the write path, and the safeguards behind the product. Each section names the code that does the work."
+            className="pb-0 sm:pb-0"
+          />
+          <Topology />
+
+          <Section
+            id="sync"
+            title="One write. Every tab, every instance."
+            lead="Every change takes the same path: the dashboard updates at once, the API validates and persists, and the gateway fans the confirmed state out to everyone else. Pick a flow and step through what actually runs."
+          >
+            <Reveal>
+              <WritePath />
             </Reveal>
           </Section>
 

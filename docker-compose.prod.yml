@@ -95,6 +95,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
         NEXT_PUBLIC_DASH_URL: ${NEXT_PUBLIC_DASH_URL:-http://localhost:3001}
+        NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-contact@example.com}
     container_name: crwsync-web-prod
     restart: always
     ports:

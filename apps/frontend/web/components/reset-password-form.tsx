@@ -16,6 +16,7 @@ import { variants } from "@/lib/utils";
 import { getResetToken, resetPassword } from "@/services/auth.service";
 import { ResetPasswordPayload, ResetPasswordState } from "@crwsync/types";
 import { Lead } from "./ui/lead";
+import { contactEmail } from "@/lib/site";
 
 const initState: ResetPasswordState = {
   success: false,
@@ -174,8 +175,8 @@ export function ResetPasswordForm({ token } : { token: string | null }) {
               />
               <p className="text-xs sm:text-sm text-center text-muted-foreground">
                 Still stuck? Contact{" "}
-                <a className="text-primary underline underline-offset-2" href="mailto:support@crwsync.xyz">
-                  support@crwsync.xyz
+                <a className="text-primary underline underline-offset-2" href={`mailto:${contactEmail}`}>
+                  {contactEmail}
                 </a>
               </p>
             </>

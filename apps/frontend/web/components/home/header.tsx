@@ -17,10 +17,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { href: "/#sync", title: "How it syncs" },
+  { href: "/#who", title: "Who it's for" },
   { href: "/#product", title: "Product" },
-  { href: "/#architecture", title: "Architecture" },
-  { href: "/#reliability", title: "Reliability" },
+  { href: "/#early-access", title: "Early access" },
+  { href: "/#built", title: "How it's built" },
   { href: "/#contact", title: "Contact" },
 ];
 
