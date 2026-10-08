@@ -315,9 +315,6 @@ jobs:
             -w /app \
             ${BACKEND_IMAGE} node prisma/seed.demo.mjs
 
-      - name: Remove old stack if exists
-        run: docker stack rm crwsync || true
-
       - name: Ensure network exists
         run: |
           docker network inspect crwsync_net >/dev/null 2>&1 || \
