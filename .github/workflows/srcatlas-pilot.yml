@@ -1,0 +1,17 @@
+# srcatlas pilot (srcatlas/srcatlas#60). This file exists only on the pilot branch and is never merged.
+name: srcatlas
+on:
+  pull_request:
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: srcatlas/srcatlas@88de1f6fa59284bb98aab11fccf7e356c389475c
+        with:
+          version: 0.12.0
