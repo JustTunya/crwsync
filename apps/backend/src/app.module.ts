@@ -34,6 +34,7 @@ import { BullModule } from "@nestjs/bullmq";
 import { ContactModule } from "src/contact/contact.module";
 import { WaitlistModule } from "src/waitlist/waitlist.module";
 import { AiModule } from "src/ai/ai.module";
+import { PilotModule } from "src/pilot/pilot.module";
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { AiModule } from "src/ai/ai.module";
     ContactModule,
     WaitlistModule,
     AiModule,
+    PilotModule,
     NotificationModule,
     StatisticsModule,
   ],

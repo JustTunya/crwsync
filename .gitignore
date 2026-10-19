@@ -68,3 +68,4 @@ graphify-out/
 
 # === Playwright ===
 .playwright-mcp/
+.srcatlas/

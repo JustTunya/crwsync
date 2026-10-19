@@ -1,0 +1,20 @@
+# Written by `srcatlas init`: keeps one pull request comment with the architecture changes (docs/action.md).
+name: srcatlas
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the base commit must exist
+      - uses: srcatlas/srcatlas@v0
+        with:
+          version: 0.13.0
